@@ -32,64 +32,30 @@ export class ShopeeAuthManager {
     console.log(`Região: ${this.config.region}`);
     console.log(`URL de Redirecionamento: ${this.config.redirectUrl}`);
     
-    // Parâmetros conforme documentação atualizada
-    const params: Record<string, string> = {
-      partner_id: this.config.partnerId,
-      timestamp: timestamp.toString(),
-      redirect: this.config.redirectUrl,
-      // Adicionando state para prevenção de CSRF
-      state: `cipshopee_${Date.now()}`
-    };
+    // Gerar assinatura HMAC-SHA256 para o endpoint de autorização
+    const signatureBaseString = `${this.config.partnerId}${basePathForShopAuthorize}${timestamp}`;
+    console.log(`Assinatura - String base: ${signatureBaseString}`);
     
-    // Gerar assinatura HMAC-SHA256 usando a utility function
-    // Método generateSignature detecta automaticamente o endpoint auth_partner e usa o formato correto
-    const signature = generateSignature(
-      this.config.partnerId, 
-      this.config.partnerKey, 
-      basePathForShopAuthorize, 
-      timestamp, 
-      undefined, 
-      undefined, 
-      false
-    );
+    const hmac = createHmac('sha256', this.config.partnerKey);
+    hmac.update(signatureBaseString);
+    const signature = hmac.digest('hex');
     
     // Obter URL base da API para a região configurada
     const baseUrl = getApiBaseUrl(this.config.region);
     
-    // Montar URL completa de autorização
-    const url = new URL(`${baseUrl}${basePathForShopAuthorize}`);
+    // Criar a URL manualmente para evitar problemas de codificação
+    const stateParam = `cipshopee_${Date.now()}`;
     
-    // Adicionar todos os parâmetros necessários
-    url.searchParams.append('partner_id', this.config.partnerId);
-    url.searchParams.append('timestamp', timestamp.toString());
-    url.searchParams.append('sign', signature);
-    url.searchParams.append('redirect', this.config.redirectUrl);
-    url.searchParams.append('state', params.state);
+    // Construir a URL diretamente como string para evitar problemas de codificação
+    let urlString = `${baseUrl}${basePathForShopAuthorize}?`;
+    urlString += `partner_id=${this.config.partnerId}`;
+    urlString += `&timestamp=${timestamp}`;
+    urlString += `&sign=${signature}`;
+    urlString += `&redirect=${encodeURIComponent(this.config.redirectUrl)}`;
+    urlString += `&state=${encodeURIComponent(stateParam)}`;
     
-    // Obter a string da URL e verificar problemas de codificação
-    let urlString = url.toString();
-    
-    // Verificar e corrigir qualquer problema com o parâmetro 'timestamp'
-    if (!urlString.includes('timestamp=') && (urlString.includes('×tamp=') || urlString.includes('amp='))) {
-      console.error('Erro na codificação da URL: problema com o parâmetro timestamp');
-      
-      // Corrigir diferentes variações do problema
-      if (urlString.includes('×tamp=')) {
-        urlString = urlString.replace('×tamp=', 'timestamp=');
-      } else if (urlString.includes('amp=')) {
-        urlString = urlString.replace('amp=', 'timestamp=');
-      }
-      
-      console.log(`URL de autorização corrigida: ${urlString}`);
-    } else {
-      console.log(`URL de autorização gerada: ${urlString}`);
-    }
-    
-    // Verificação adicional para garantir que todos os parâmetros estão presentes
-    if (!urlString.includes('partner_id=') || !urlString.includes('timestamp=') || 
-        !urlString.includes('sign=') || !urlString.includes('redirect=')) {
-      console.error('ALERTA: URL de autorização pode estar incompleta, verifique os parâmetros');
-    }
+    // Log da URL gerada
+    console.log(`URL de autorização gerada: ${urlString}`);
     
     return urlString;
   }
