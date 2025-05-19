@@ -31,20 +31,34 @@ export class ShopeeAuthManager {
     console.log(`Região: ${this.config.region}`);
     console.log(`URL de Redirecionamento: ${this.config.redirectUrl}`);
     
-    // Gerando assinatura no formato esperado pela Shopee
-    // A string base para assinatura deve incluir: partner_id + api_path + timestamp
+    // Parâmetros para o cálculo da assinatura
+    const params: Record<string, string> = {
+      partner_id: this.config.partnerId,
+      timestamp: timestamp.toString()
+    };
+    
+    // Ordenar parâmetros em ordem alfabética 
+    const sortedParams = Object.keys(params).sort().map(key => `${key}=${params[key as keyof typeof params]}`).join('&');
+    
+    // Construir a string base para assinatura
+    const baseString = `${basePathForShopAuthorize}?${sortedParams}`;
+    
+    // Gerar assinatura HMAC-SHA256
     const signature = generateSignature(
       this.config.partnerId, 
       this.config.partnerKey, 
-      basePathForShopAuthorize, 
-      timestamp
+      baseString, 
+      timestamp,
+      undefined,
+      undefined,
+      true // Usar a string base diretamente
     );
     
     // Obter URL base da API para a região configurada
     const baseUrl = getApiBaseUrl(this.config.region);
-    const url = new URL(baseUrl + basePathForShopAuthorize);
     
-    // Parâmetros obrigatórios conforme documentação
+    // Montar URL completa de autorização
+    const url = new URL(`${baseUrl}${basePathForShopAuthorize}`);
     url.searchParams.append('partner_id', this.config.partnerId);
     url.searchParams.append('timestamp', timestamp.toString());
     url.searchParams.append('sign', signature);
@@ -65,30 +79,53 @@ export class ShopeeAuthManager {
       const baseUrl = getApiBaseUrl(this.config.region);
       const path = AUTH.GET_TOKEN;
       
-      // Usando a assinatura correta conforme documentação - sem token de acesso nesta etapa
+      // Parâmetros para o request, conforme documentação da Shopee
+      const params: Record<string, any> = {
+        partner_id: Number(this.config.partnerId),
+        code,
+        shop_id: Number(shopId),
+        timestamp
+      };
+      
+      // Ordenar parâmetros em ordem alfabética para gerar a string base para assinatura
+      const sortedParamKeys = Object.keys(params).sort();
+      const sortedParams = sortedParamKeys.map(key => `${key}=${params[key]}`).join('&');
+      
+      // Construir a string base para assinatura conforme a documentação
+      const baseString = `${path}?${sortedParams}`;
+      
+      // Gerar assinatura HMAC-SHA256
       const signature = generateSignature(
         this.config.partnerId,
         this.config.partnerKey,
-        path,
-        timestamp
+        baseString,
+        timestamp,
+        undefined,
+        undefined,
+        true // Usar a string base diretamente
       );
       
       console.log('Obtendo token de acesso - URL:', `${baseUrl}${path}`);
-      console.log('Obtendo token de acesso - Dados:', { code, shop_id: Number(shopId), partner_id: Number(this.config.partnerId) });
+      console.log('Obtendo token de acesso - String base para assinatura:', baseString);
+      console.log('Obtendo token de acesso - Dados:', params);
       
-      const response = await axios.post(`${baseUrl}${path}`, {
-        code,
-        shop_id: Number(shopId),
-        partner_id: Number(this.config.partnerId),
-      }, {
-        params: {
-          partner_id: this.config.partnerId,
-          timestamp,
-          sign: signature,
-        },
+      // Configurar headers conforme documentação
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `SHA256 ${signature}`
+      };
+      
+      // Fazer a requisição com os parâmetros e assinatura
+      const response = await axios({
+        method: 'post',
+        url: `${baseUrl}${path}`,
+        data: params,
+        headers: headers
       });
       
       const data = response.data;
+      
+      console.log('Resposta da API de token:', JSON.stringify(data, null, 2));
       
       if (data.error) {
         throw {
@@ -99,10 +136,9 @@ export class ShopeeAuthManager {
       }
       
       // Calcular expiração do token (data atual + refresh_token_valid_time em segundos)
+      const expiresIn = data.expire_in || 14400; // Padrão: 4 horas
       const expiresAt = new Date();
-      expiresAt.setSeconds(
-        expiresAt.getSeconds() + data.refresh_token_valid_time || 30 * 24 * 60 * 60 // Padrão: 30 dias
-      );
+      expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
       
       return {
         accessToken: data.access_token,
@@ -110,7 +146,8 @@ export class ShopeeAuthManager {
         expiresAt,
         shopId,
       };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erro ao obter token de acesso:', error.response?.data || error.message);
       throw parseApiError(error);
     }
   }
