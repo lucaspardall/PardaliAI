@@ -1,0 +1,150 @@
+2025-05-19 15:02:12.63
+52524a55
+User
+> rest-express@1.0.0 start
+2025-05-19 15:02:12.63
+52524a55
+User
+> NODE_ENV=production node dist/index.js
+2025-05-19 15:02:14.07
+52524a55
+User
+Warning: connect.session() MemoryStore is not
+2025-05-19 15:02:14.07
+52524a55
+User
+designed for a production environment, as it will leak
+2025-05-19 15:02:14.07
+52524a55
+User
+memory, and will not scale past a single process.
+2025-05-19 15:02:14.39
+52524a55
+User
+6:02:14 PM [express] serving on port 5000
+2025-05-19 15:02:19.77
+52524a55
+User
+6:02:19 PM [express] POST /api/shopee/webhook 200 in 6ms
+2025-05-19 15:02:29.91
+52524a55
+User
+6:02:29 PM [express] POST /api/shopee/webhook 200 in 3ms
+2025-05-19 15:02:41.52
+52524a55
+User
+6:02:41 PM [express] POST /api/shopee/webhook 200 in 3ms
+2025-05-19 15:02:57.86
+52524a55
+User
+6:02:57 PM [express] POST /api/shopee/webhook 200 in 2ms
+2025-05-19 15:03:03.66
+52524a55
+User
+6:03:03 PM [express] POST /api/shopee/webhook 200 in 3ms
+2025-05-19 15:03:07.71
+52524a55
+User
+6:03:07 PM [express] POST /api/shopee/webhook 200 in 6ms
+2025-05-19 15:03:07.91
+52524a55
+User
+6:03:07 PM [express] POST /api/shopee/webhook 200 in 2ms
+2025-05-19 15:03:10.43
+52524a55
+User
+6:03:10 PM [express] POST /api/shopee/webhook 200 in 2ms
+2025-05-19 15:03:16.54
+52524a55
+User
+6:03:16 PM [express] POST /api/shopee/webhook 200 in 3ms
+2025-05-19 15:03:23.95
+52524a55
+User
+6:03:23 PM [express] GET /api/auth/user 401 in 3ms :: {"message":"Unauthorized"}
+2025-05-19 15:03:24.36
+52524a55
+User
+6:03:24 PM [express] POST /api/shopee/webhook 200 in 4ms
+2025-05-19 15:03:25.30
+52524a55
+User
+6:03:25 PM [express] POST /api/shopee/webhook 200 in 3ms
+2025-05-19 15:03:26.14
+52524a55
+User
+Mon, 19 May 2025 18:03:26 GMT express deprecated req.host: Use req.hostname instead at file:/home/runner/workspace/node_modules/openid-client/build/passport.js:165:49
+2025-05-19 15:03:26.14
+52524a55
+User
+6:03:26 PM [express] GET /api/login 302 in 9ms
+2025-05-19 15:03:29.46
+52524a55
+User
+file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76
+2025-05-19 15:03:29.46
+52524a55
+User
+const result = await client.query(query, params);
+2025-05-19 15:03:29.46
+52524a55
+User
+^
+2025-05-19 15:03:29.46
+52524a55
+User
+2025-05-19 15:03:29.46
+52524a55
+User
+TypeError: client.query is not a function
+2025-05-19 15:03:29.46
+52524a55
+User
+at NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:33)
+2025-05-19 15:03:29.46
+52524a55
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/insert.js:178:30
+2025-05-19 15:03:29.46
+52524a55
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-05-19 15:03:29.46
+52524a55
+User
+at QueryPromise.execute (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/insert.js:177:19)
+2025-05-19 15:03:29.46
+52524a55
+User
+at QueryPromise.then (file:///home/runner/workspace/node_modules/drizzle-orm/query-promise.js:21:17)
+2025-05-19 15:03:29.46
+52524a55
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-05-19 15:03:29.46
+52524a55
+User
+2025-05-19 15:03:29.46
+52524a55
+User
+Node.js v20.18.1
+2025-05-19 15:03:29.48
+52524a55
+User
+npm notice
+2025-05-19 15:03:29.48
+52524a55
+User
+npm notice New major version of npm available! 10.8.2 -> 11.4.0
+2025-05-19 15:03:29.48
+52524a55
+User
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.4.0
+2025-05-19 15:03:29.48
+52524a55
+User
+npm notice To update run: npm install -g npm@11.4.0
+2025-05-19 15:03:29.48
+52524a55
+User
+npm notice

@@ -1,0 +1,102 @@
+2025-05-19 15:03:26.14
+52524a55
+User
+Mon, 19 May 2025 18:03:26 GMT express deprecated req.host: Use req.hostname instead at file:/home/runner/workspace/node_modules/openid-client/build/passport.js:165:49
+2025-05-19 15:03:26.14
+52524a55
+User
+6:03:26 PM [express] GET /api/login 302 in 9ms
+2025-05-19 15:03:29.46
+52524a55
+User
+file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76
+2025-05-19 15:03:29.46
+52524a55
+User
+const result = await client.query(query, params);
+2025-05-19 15:03:29.46
+52524a55
+User
+^
+2025-05-19 15:03:29.46
+52524a55
+User
+2025-05-19 15:03:29.46
+52524a55
+User
+TypeError: client.query is not a function
+2025-05-19 15:03:29.46
+52524a55
+User
+at NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:33)
+2025-05-19 15:03:29.46
+52524a55
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/insert.js:178:30
+2025-05-19 15:03:29.46
+52524a55
+User
+at Object.startActiveSpan (file:///home/runner/workspace/node_modules/drizzle-orm/tracing.js:8:14)
+2025-05-19 15:03:29.46
+52524a55
+User
+at QueryPromise.execute (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/query-builders/insert.js:177:19)
+2025-05-19 15:03:29.46
+52524a55
+User
+at QueryPromise.then (file:///home/runner/workspace/node_modules/drizzle-orm/query-promise.js:21:17)
+2025-05-19 15:03:29.46
+52524a55
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-05-19 15:03:29.46
+52524a55
+User
+2025-05-19 15:03:29.46
+52524a55
+User
+Node.js v20.18.1
+2025-05-19 15:03:29.48
+52524a55
+User
+npm notice
+2025-05-19 15:03:29.48
+52524a55
+User
+npm notice New major version of npm available! 10.8.2 -> 11.4.0
+2025-05-19 15:03:29.48
+52524a55
+User
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.4.0
+2025-05-19 15:03:29.48
+52524a55
+User
+npm notice To update run: npm install -g npm@11.4.0
+2025-05-19 15:03:29.48
+52524a55
+User
+npm notice
+2025-05-19 15:03:29.49
+52524a55
+System
+command finished with error [npm run start]: exit status 1
+2025-05-19 15:03:34.45
+52524a55
+User
+> rest-express@1.0.0 start
+2025-05-19 15:03:34.45
+52524a55
+User
+> NODE_ENV=production node dist/index.js
+2025-05-19 15:03:39.95
+52524a55
+User
+Warning: connect.session() MemoryStore is not
+2025-05-19 15:03:39.95
+52524a55
+User
+designed for a production environment, as it will leak
+2025-05-19 15:03:39.95
+52524a55
+User
+memory, and will not scale past a single process.
