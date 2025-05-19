@@ -126,14 +126,18 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
       
-      // Executa a consulta com tratamento de erro mais específico
-      const results = await db
-        .select()
-        .from(shopeeStores)
-        .where(eq(shopeeStores.userId, userId));
+      // Uso de SQL bruto para contornar problemas de preparação de parâmetros
+      const query = `
+        SELECT * FROM "shopee_stores" 
+        WHERE "user_id" = $1
+        ORDER BY "created_at" DESC
+      `;
       
-      console.log(`Encontradas ${results.length} lojas para o usuário ${userId}`);
-      return results;
+      const result = await sql.query(query, [userId]);
+      const stores = result.rows as ShopeeStore[];
+      
+      console.log(`Encontradas ${stores.length} lojas para o usuário ${userId}`);
+      return stores;
     } catch (error) {
       console.error("Erro detalhado em getStoresByUserId:", error);
       if (error instanceof Error) {
