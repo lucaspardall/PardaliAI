@@ -46,13 +46,18 @@ export class ShopeeAuthManager {
     // Criar a URL manualmente para evitar problemas de codificação
     const stateParam = `cipshopee_${Date.now()}`;
     
-    // Construir a URL diretamente como string para evitar problemas de codificação
-    let urlString = `${baseUrl}${basePathForShopAuthorize}?`;
-    urlString += `partner_id=${this.config.partnerId}`;
-    urlString += `&timestamp=${timestamp}`;
-    urlString += `&sign=${signature}`;
-    urlString += `&redirect=${encodeURIComponent(this.config.redirectUrl)}`;
-    urlString += `&state=${encodeURIComponent(stateParam)}`;
+    // Construir a URL com a classe URL para garantir formatação correta
+    const url = new URL(`${baseUrl}${basePathForShopAuthorize}`);
+    
+    // Adicionar parâmetros usando searchParams
+    url.searchParams.append('partner_id', this.config.partnerId);
+    url.searchParams.append('timestamp', timestamp.toString());
+    url.searchParams.append('sign', signature);
+    url.searchParams.append('redirect', this.config.redirectUrl);
+    url.searchParams.append('state', stateParam);
+    
+    // Converter para string
+    const urlString = url.toString();
     
     // Log da URL gerada
     console.log(`URL de autorização gerada: ${urlString}`);

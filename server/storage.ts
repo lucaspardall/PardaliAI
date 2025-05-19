@@ -120,22 +120,13 @@ export class DatabaseStorage implements IStorage {
   async getStoresByUserId(userId: string): Promise<ShopeeStore[]> {
     console.log(`Buscando lojas para o usuário: ${userId}`);
     try {
-      // Verifica se temos um shopeeStores definido antes de fazer a consulta
-      if (!shopeeStores) {
-        console.error("Tabela shopeeStores não está definida");
-        return [];
-      }
-      
-      // Uso de SQL bruto para contornar problemas de preparação de parâmetros
-      const query = `
-        SELECT * FROM "shopee_stores" 
-        WHERE "user_id" = $1
-        ORDER BY "created_at" DESC
-      `;
-      
-      const result = await sql.query(query, [userId]);
-      const stores = result.rows as ShopeeStore[];
-      
+      // Usando o Drizzle ORM sem SQL direto
+      const stores = await db
+        .select()
+        .from(shopeeStores)
+        .where(eq(shopeeStores.userId, userId))
+        .orderBy(desc(shopeeStores.createdAt));
+        
       console.log(`Encontradas ${stores.length} lojas para o usuário ${userId}`);
       return stores;
     } catch (error) {
