@@ -7,6 +7,7 @@ import { ShopeeAuthConfig, ShopeeAuthTokens, ShopeeApiResponse } from './types';
 import { ShopeeAuthManager } from './auth';
 import { generateSignature, getTimestamp, getApiBaseUrl, parseApiError } from './utils';
 import { storage } from '../storage';
+import { ShopeeCache } from './cache';
 
 // Configurações de limitação de taxa padrão
 const DEFAULT_RATE_LIMIT = {
