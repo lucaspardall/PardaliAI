@@ -21,20 +21,43 @@ export class ShopeeAuthManager {
    */
   getAuthorizationUrl(): string {
     const timestamp = getTimestamp();
-    const baseUrl = getApiBaseUrl(this.config.region);
-    const path = AUTH.AUTHORIZE;
+    const path = AUTH.AUTHORIZE; // Agora contém a URL completa
+    
+    // Criar objeto de estado que a Shopee espera
+    const state = {
+      nonce: Math.random().toString(36).substring(2, 15),
+      id: Number(this.config.partnerId),
+      auth_shop: 1,
+      next_url: "https://open.shopee.com/authorize?isRedirect=true",
+      is_auth: 0
+    };
+    
+    // Convertendo para base64
+    const stateStr = Buffer.from(JSON.stringify(state)).toString('base64');
+    
+    // Gerando assinatura no formato esperado pela Shopee
     const signature = generateSignature(
       this.config.partnerId, 
       this.config.partnerKey, 
-      path, 
+      "/api/v1/oauth2/callback", 
       timestamp
     );
     
-    const url = new URL(baseUrl + path);
-    url.searchParams.append('partner_id', this.config.partnerId);
-    url.searchParams.append('timestamp', timestamp.toString());
+    // Construção da URL com todos os parâmetros necessários
+    const url = new URL(path);
+    url.searchParams.append('client_id', this.config.partnerId);
+    url.searchParams.append('lang', 'pt');
+    url.searchParams.append('login_types', '[1,4,2]');
+    url.searchParams.append('max_auth_age', '3600');
+    url.searchParams.append('redirect_uri', 'https://open.shopee.com/api/v1/oauth2/callback');
+    url.searchParams.append('region', 'BR');
+    url.searchParams.append('required_passwd', 'true');
+    url.searchParams.append('respond_code', 'code');
+    url.searchParams.append('scope', 'profile');
     url.searchParams.append('sign', signature);
-    url.searchParams.append('redirect', this.config.redirectUrl);
+    url.searchParams.append('state', stateStr);
+    url.searchParams.append('timestamp', timestamp.toString());
+    url.searchParams.append('title', 'sla_title_open_platform_app_login');
     
     return url.toString();
   }
