@@ -5,8 +5,6 @@ import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
-// import connectPg from "connect-pg-simple";
-import memorystore from "memorystore";
 import { storage } from "./storage";
 
 if (!process.env.REPLIT_DOMAINS) {
@@ -26,20 +24,14 @@ const getOidcConfig = memoize(
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   
-  // Usando MemoryStore para armazenamento de sessão
-  const MemoryStore = memorystore(session);
-  const sessionStore = new MemoryStore({
-    checkPeriod: sessionTtl
-  });
-  
+  // Usar armazenamento em memória para sessões (mais simples, evita conflitos)
   return session({
     secret: process.env.SESSION_SECRET || 'temp-session-secret-for-development',
-    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Definir como false para desenvolvimento para permitir cookies em HTTP
       maxAge: sessionTtl,
     },
   });
