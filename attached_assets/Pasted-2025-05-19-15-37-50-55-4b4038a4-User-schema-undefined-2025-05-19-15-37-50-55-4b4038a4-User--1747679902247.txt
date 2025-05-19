@@ -1,0 +1,136 @@
+2025-05-19 15:37:50.55
+4b4038a4
+User
+schema: undefined,
+2025-05-19 15:37:50.55
+4b4038a4
+User
+table: undefined,
+2025-05-19 15:37:50.55
+4b4038a4
+User
+column: undefined,
+2025-05-19 15:37:50.55
+4b4038a4
+User
+dataType: undefined,
+2025-05-19 15:37:50.55
+4b4038a4
+User
+constraint: undefined,
+2025-05-19 15:37:50.55
+4b4038a4
+User
+file: 'postgres.c',
+2025-05-19 15:37:50.55
+4b4038a4
+User
+line: '1735',
+2025-05-19 15:37:50.55
+4b4038a4
+User
+routine: 'exec_bind_message',
+2025-05-19 15:37:50.55
+4b4038a4
+User
+sourceError: undefined
+2025-05-19 15:37:50.55
+4b4038a4
+User
+}
+2025-05-19 15:37:50.60
+4b4038a4
+User
+6:37:50 PM [express] GET /api/auth/user 200 in 170ms :: {"id":"41750934","email":"llouback4@gmail.co…
+2025-05-19 15:37:52.35
+4b4038a4
+User
+severity: 'ERROR',
+2025-05-19 15:37:52.35
+4b4038a4
+User
+code: '08P01',
+2025-05-19 15:37:52.35
+4b4038a4
+User
+detail: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+hint: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+position: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+internalPosition: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+internalQuery: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+where: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+schema: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+table: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+column: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+dataType: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+constraint: undefined,
+2025-05-19 15:37:52.35
+4b4038a4
+User
+file: 'postgres.c',
+2025-05-19 15:37:52.35
+4b4038a4
+User
+line: '1735',
+2025-05-19 15:37:52.35
+4b4038a4
+User
+routine: 'exec_bind_message',
+2025-05-19 15:37:52.35
+4b4038a4
+User
+sourceError: undefined
+2025-05-19 15:37:52.35
+4b4038a4
+User
+}
+2025-05-19 15:37:52.35
+4b4038a4
+User
+Error fetching notifications: NeonDbError: bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-05-19 15:37:52.35
+4b4038a4
+User
+at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+2025-05-19 15:37:52.35
+4b4038a4
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-05-19 15:37:52.35
+4b4038a4
+User
+at async Function.query (file:///home/runner/workspace/dist/index.js:166:22)
+2025-05-19 15:37:52.35
+4b4038a4
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
