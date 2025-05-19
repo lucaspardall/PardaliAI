@@ -1,3 +1,4 @@
+
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
 
@@ -11,7 +12,7 @@ import { User } from "@shared/schema";
 import { db, sql } from "./db";
 
 if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+  console.warn("Environment variable REPLIT_DOMAINS not provided, using hostname fallback");
 }
 
 const getOidcConfig = memoize(
@@ -50,12 +51,12 @@ export function getSession() {
   
   return session({
     secret: process.env.SESSION_SECRET || 'temp-session-secret-for-development',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: false, // Permitir HTTP para desenvolvimento
+      secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
       sameSite: 'lax'
     },
@@ -119,6 +120,29 @@ async function upsertUser(
   }
 }
 
+// Função auxiliar para obter domínios e URLs de callback
+function getDomainInfo() {
+  // Obtém a lista de domínios dos variáveis de ambiente
+  const domains = process.env.REPLIT_DOMAINS 
+    ? process.env.REPLIT_DOMAINS.split(",").filter(d => d.trim()) 
+    : [];
+
+  // Adiciona o domínio de produção se estiver definido
+  if (process.env.PRODUCTION_DOMAIN && !domains.includes(process.env.PRODUCTION_DOMAIN)) {
+    domains.push(process.env.PRODUCTION_DOMAIN);
+  }
+
+  // Adiciona cipshopee.replit.app como fallback se não houver domínios
+  if (domains.length === 0) {
+    domains.push('cipshopee.replit.app');
+  }
+
+  // Gera URLs de callback para cada domínio
+  const callbackUrls = domains.map(domain => `https://${domain}/api/callback`);
+
+  return { domains, callbackUrls };
+}
+
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
@@ -126,6 +150,11 @@ export async function setupAuth(app: Express) {
   app.use(passport.session());
 
   const config = await getOidcConfig();
+  const { domains, callbackUrls } = getDomainInfo();
+
+  // Registra os domínios para depuração
+  console.log('[Auth] Domínios configurados:', domains.join(', '));
+  console.log('[Auth] URLs de callback:', callbackUrls.join(', '));
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
@@ -144,47 +173,38 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Adicionar log para depuração
-  console.log('[Auth] Domínios configurados:', process.env.REPLIT_DOMAINS);
-  
   try {
-    // Adiciona as estratégias com base nos domínios configurados
-    const domains = process.env.REPLIT_DOMAINS!.split(",").filter(d => d.trim());
-    
-    if (domains.length === 0) {
-      throw new Error("Nenhum domínio válido configurado em REPLIT_DOMAINS");
-    }
-    
-    // Adiciona uma estratégia genérica para capturar qualquer domínio (mais flexível)
-    const genericCallbackURL = `https://${domains[0]}/api/callback`;
-    console.log(`[Auth] Configurando estratégia genérica com callback: ${genericCallbackURL}`);
-    
-    passport.use(new Strategy(
+    // Cria uma estratégia principal com todos os URLs de callback permitidos
+    passport.use('replitauth', new Strategy(
       {
-        name: "replitauth:generic",
+        name: 'replitauth',
         config,
         scope: "openid email profile offline_access",
-        callbackURL: genericCallbackURL,
+        callbackURL: callbackUrls[0], // URL principal
+        params: {
+          // Permitir múltiplos URLs de redirecionamento
+          redirect_uri: callbackUrls
+        }
       },
       verify
     ));
+
+    console.log(`[Auth] Estratégia principal criada com nome 'replitauth'`);
     
     // Configura estratégias específicas para cada domínio
-    for (const domain of domains) {
-      const callbackURL = `https://${domain}/api/callback`;
-      console.log(`[Auth] Configurando estratégia para domínio: ${domain} com callback: ${callbackURL}`);
-      
-      const strategy = new Strategy(
+    domains.forEach((domain, index) => {
+      const strategyName = `replitauth:${domain}`;
+      passport.use(strategyName, new Strategy(
         {
-          name: `replitauth:${domain}`,
+          name: strategyName,
           config,
           scope: "openid email profile offline_access",
-          callbackURL,
+          callbackURL: callbackUrls[index],
         },
-        verify,
-      );
-      passport.use(strategy);
-    }
+        verify
+      ));
+      console.log(`[Auth] Estratégia criada: ${strategyName}`);
+    });
   } catch (error) {
     console.error("[Auth] Erro ao configurar estratégias:", error);
   }
@@ -194,30 +214,21 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     try {
-      const hostname = req.hostname;
+      const hostname = req.hostname || '';
       console.log(`[Auth] Iniciando login com hostname: ${hostname}`);
       
-      // Tenta encontrar estratégias disponíveis
-      const availableStrategies = Object.keys(passport._strategies)
-        .filter(key => key.startsWith('replitauth:'));
+      // Tenta encontrar a melhor estratégia para este domínio
+      let strategyName = `replitauth:${hostname}`;
       
-      console.log(`[Auth] Estratégias disponíveis para login:`, availableStrategies);
-      
-      if (availableStrategies.length === 0) {
-        throw new Error('Nenhuma estratégia replitauth disponível');
+      // Se a estratégia específica não existir, usa a estratégia padrão
+      if (!passport._strategies[strategyName]) {
+        strategyName = 'replitauth';
+        console.log(`[Auth] Usando estratégia padrão: ${strategyName}`);
+      } else {
+        console.log(`[Auth] Usando estratégia específica: ${strategyName}`);
       }
       
-      // Tenta usar a estratégia específica para o hostname atual,
-      // ou a estratégia genérica, ou a primeira disponível
-      const strategyName = passport._strategies[`replitauth:${hostname}`] 
-        ? `replitauth:${hostname}` 
-        : (passport._strategies['replitauth:generic'] 
-          ? 'replitauth:generic' 
-          : availableStrategies[0]);
-      
-      console.log(`[Auth] Usando estratégia para login: ${strategyName}`);
-      
-      passport.authenticate(strategyName, {
+      return passport.authenticate(strategyName, {
         prompt: "login consent",
         scope: ["openid", "email", "profile", "offline_access"],
       })(req, res, next);
@@ -236,45 +247,25 @@ export async function setupAuth(app: Express) {
       
       // Se não tiver código, não prossegue
       if (!req.query.code) {
-        console.log('[Auth] Requisição de callback sem código de autorização');
+        console.error('[Auth] Requisição de callback sem código de autorização');
         return res.redirect('/login-error');
       }
       
-      const hostname = req.hostname;
-      console.log(`[Auth] Hostname: ${hostname}`);
-      
-      // Obtém todas as estratégias disponíveis
-      const availableStrategies = Object.keys(passport._strategies)
-        .filter(key => key.startsWith('replitauth:'));
-      
-      console.log(`[Auth] Estratégias disponíveis:`, availableStrategies);
-      
-      // Se não há estratégias disponíveis, redireciona para erro
-      if (availableStrategies.length === 0) {
-        console.error('[Auth] Nenhuma estratégia replitauth registrada');
-        return res.redirect('/login-error');
-      }
-      
-      // Usa a primeira estratégia disponível diretamente
-      const strategyName = availableStrategies[0];
-      console.log(`[Auth] Usando estratégia: ${strategyName}`);
-      
-      // Customiza o callback para mais controle
-      passport.authenticate(strategyName, function(err: any, user: any, info: any) {
+      // Tenta autenticar utilizando a estratégia principal
+      passport.authenticate('replitauth', (err: any, user: any, info: any) => {
         if (err) {
           console.error('[Auth] Erro durante autenticação:', err);
           return res.redirect('/login-error');
         }
         
         if (!user) {
-          console.error('[Auth] Usuário não retornado pela estratégia', info);
+          console.error('[Auth] Usuário não retornado pela estratégia:', info);
           return res.redirect('/login-error');
         }
         
-        // Login manual para evitar problemas
-        req.login(user, function(err) {
-          if (err) {
-            console.error('[Auth] Erro ao criar sessão:', err);
+        req.login(user, function(loginErr) {
+          if (loginErr) {
+            console.error('[Auth] Erro ao criar sessão:', loginErr);
             return res.redirect('/login-error');
           }
           
