@@ -52,14 +52,15 @@ export function getSession() {
   return session({
     secret: process.env.SESSION_SECRET || 'temp-session-secret-for-development',
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true, // Alterado para true para garantir que sessões sejam criadas
     store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Alterado para false para desenvolvimento
       maxAge: sessionTtl,
       sameSite: 'lax'
     },
+    name: 'cipshopee.sid' // Nome único para o cookie
   });
 }
 
@@ -174,17 +175,13 @@ export async function setupAuth(app: Express) {
   };
 
   try {
-    // Cria uma estratégia principal com todos os URLs de callback permitidos
+    // Cria uma estratégia principal simplificada
     passport.use('replitauth', new Strategy(
       {
         name: 'replitauth',
         config,
         scope: "openid email profile offline_access",
-        callbackURL: callbackUrls[0], // URL principal
-        params: {
-          // Permitir múltiplos URLs de redirecionamento
-          redirect_uri: callbackUrls
-        }
+        callbackURL: callbackUrls[0] // URL principal
       },
       verify
     ));
@@ -217,26 +214,25 @@ export async function setupAuth(app: Express) {
       const hostname = req.hostname || '';
       console.log(`[Auth] Iniciando login com hostname: ${hostname}`);
       
-      // Tenta encontrar a melhor estratégia para este domínio
-      let strategyName = `replitauth:${hostname}`;
+      // Gerar e armazenar estado para verificação de segurança
+      const state = require('crypto').randomBytes(16).toString('hex');
+      req.session.authState = state;
       
-      // Se a estratégia específica não existir, usa a estratégia padrão
-      if (!passport._strategies[strategyName]) {
-        strategyName = 'replitauth';
-        console.log(`[Auth] Usando estratégia padrão: ${strategyName}`);
-      } else {
-        console.log(`[Auth] Usando estratégia específica: ${strategyName}`);
-      }
+      console.log(`[Auth] Estado gerado para segurança: ${state}`);
+      
+      // Usar a estratégia padrão simplificada
+      const strategyName = 'replitauth';
       
       return passport.authenticate(strategyName, {
         prompt: "login consent",
         scope: ["openid", "email", "profile", "offline_access"],
+        state: state // Passar o estado para verificação no retorno
       })(req, res, next);
     } catch (error) {
       console.error('[Auth] Erro ao iniciar login:', error);
       res.status(500).json({ 
         message: 'Falha ao iniciar processo de autenticação',
-        error: error.message
+        error: typeof error === 'object' ? error.message : 'Erro desconhecido'
       });
     }
   });
@@ -250,6 +246,22 @@ export async function setupAuth(app: Express) {
         console.error('[Auth] Requisição de callback sem código de autorização');
         return res.redirect('/login-error');
       }
+      
+      // Verificar o estado para prevenir ataques CSRF
+      const receivedState = req.query.state as string;
+      const savedState = req.session.authState;
+      
+      console.log(`[Auth] Verificando estados - recebido: ${receivedState}, salvo: ${savedState}`);
+      
+      if (!savedState || receivedState !== savedState) {
+        console.error('[Auth] Estado inválido/não correspondente');
+        // Limpar o estado da sessão
+        delete req.session.authState;
+        return res.redirect('/login-error?error=invalid_state');
+      }
+      
+      // Limpar o estado da sessão após verificação
+      delete req.session.authState;
       
       // Tenta autenticar utilizando a estratégia principal
       passport.authenticate('replitauth', (err: any, user: any, info: any) => {
