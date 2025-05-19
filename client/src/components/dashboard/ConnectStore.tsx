@@ -73,6 +73,30 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
     // Redirecionar para o endpoint de autorização da Shopee
     window.location.href = '/api/shopee/authorize';
   };
+  
+  // Função para simular conexão OAuth (para ambiente de desenvolvimento)
+  const handleSimulateOAuth = () => {
+    setIsConnecting(true);
+    
+    // Simular fluxo OAuth com timeout
+    setTimeout(() => {
+      // Gerar ID de loja aleatório
+      const randomShopId = `shop_${Math.floor(Math.random() * 1000000)}`;
+      
+      // Criar loja de demonstração
+      connectStoreMutation.mutate({
+        shopName: "Minha Loja Shopee (Demo)",
+        shopId: randomShopId,
+        shopRegion: "BR",
+        accessToken: `demo_access_token_${randomShopId}`,
+        refreshToken: `demo_refresh_token_${randomShopId}`,
+        tokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias a partir de agora
+        isActive: true
+      });
+      
+      setIsConnecting(false);
+    }, 2000);
+  };
 
   // Handle manual connection form submission
   const handleManualConnect = (e: React.FormEvent) => {
@@ -201,23 +225,44 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
           </div>
         </div>
         
-        <Button 
-          onClick={handleConnectOAuth} 
-          disabled={isConnecting || connectStoreMutation.isPending}
-          className="w-full"
-        >
-          {(isConnecting || connectStoreMutation.isPending) ? (
-            <>
-              <i className="ri-loader-2-line animate-spin mr-2"></i>
-              Conectando...
-            </>
-          ) : (
-            <>
-              <i className="ri-link mr-2"></i>
-              Conectar com Shopee
-            </>
-          )}
-        </Button>
+        <div className="flex flex-col gap-3">
+          <Button 
+            onClick={handleConnectOAuth} 
+            disabled={isConnecting || connectStoreMutation.isPending}
+            className="w-full"
+          >
+            {(isConnecting || connectStoreMutation.isPending) ? (
+              <>
+                <i className="ri-loader-2-line animate-spin mr-2"></i>
+                Conectando...
+              </>
+            ) : (
+              <>
+                <i className="ri-link mr-2"></i>
+                Conectar com Shopee
+              </>
+            )}
+          </Button>
+          
+          <Button 
+            onClick={handleSimulateOAuth} 
+            disabled={isConnecting || connectStoreMutation.isPending}
+            className="w-full"
+            variant="outline"
+          >
+            {(isConnecting || connectStoreMutation.isPending) ? (
+              <>
+                <i className="ri-loader-2-line animate-spin mr-2"></i>
+                Simulando conexão...
+              </>
+            ) : (
+              <>
+                <i className="ri-test-tube-line mr-2"></i>
+                Simular conexão (para desenvolvimento)
+              </>
+            )}
+          </Button>
+        </div>
         
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
