@@ -32,10 +32,36 @@ export class ShopeeAuthManager {
     console.log(`Região: ${this.config.region}`);
     console.log(`URL de Redirecionamento: ${this.config.redirectUrl}`);
     
-    // Gerar assinatura HMAC-SHA256 para o endpoint de autorização
-    const signatureBaseString = `${this.config.partnerId}${basePathForShopAuthorize}${timestamp}`;
+    // Criar o estado único para CSRF protection
+    const stateParam = `cipshopee_${Date.now()}`;
+    
+    // Criar os parâmetros conforme documentação: IMPORTANTE ordenar alfabeticamente
+    const params: Record<string, string> = {
+      partner_id: this.config.partnerId,
+      redirect: this.config.redirectUrl,
+      state: stateParam,
+      timestamp: timestamp.toString()
+    };
+    
+    // Ordenar os parâmetros alfabeticamente e gerar a string de consulta
+    const orderedParams = Object.keys(params).sort().reduce(
+      (obj, key) => { 
+        obj[key] = params[key]; 
+        return obj;
+      }, 
+      {} as Record<string, string>
+    );
+    
+    // Converter para query string
+    const queryString = Object.entries(orderedParams)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&');
+    
+    // Formar a string base para a assinatura
+    const signatureBaseString = `${basePathForShopAuthorize}?${queryString}`;
     console.log(`Assinatura - String base: ${signatureBaseString}`);
     
+    // Gerar assinatura HMAC-SHA256
     const hmac = createHmac('sha256', this.config.partnerKey);
     hmac.update(signatureBaseString);
     const signature = hmac.digest('hex');
@@ -43,18 +69,16 @@ export class ShopeeAuthManager {
     // Obter URL base da API para a região configurada
     const baseUrl = getApiBaseUrl(this.config.region);
     
-    // Criar a URL manualmente para evitar problemas de codificação
-    const stateParam = `cipshopee_${Date.now()}`;
-    
     // Construir a URL com a classe URL para garantir formatação correta
     const url = new URL(`${baseUrl}${basePathForShopAuthorize}`);
     
-    // Adicionar parâmetros usando searchParams
-    url.searchParams.append('partner_id', this.config.partnerId);
-    url.searchParams.append('timestamp', timestamp.toString());
+    // Adicionar todos os parâmetros usando searchParams
+    Object.entries(orderedParams).forEach(([key, value]) => {
+      url.searchParams.append(key, value);
+    });
+    
+    // Adicionar a assinatura
     url.searchParams.append('sign', signature);
-    url.searchParams.append('redirect', this.config.redirectUrl);
-    url.searchParams.append('state', stateParam);
     
     // Converter para string
     const urlString = url.toString();
