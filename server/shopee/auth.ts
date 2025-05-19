@@ -23,8 +23,7 @@ export class ShopeeAuthManager {
   getAuthorizationUrl(): string {
     const timestamp = getTimestamp();
     
-    // De acordo com a documentação, precisamos usar o endpoint correto
-    // Usando a URL de autorização da loja para o Brasil
+    // De acordo com a documentação da API v2, o endpoint correto para autorização
     const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
     
     // Gerando assinatura no formato esperado pela Shopee

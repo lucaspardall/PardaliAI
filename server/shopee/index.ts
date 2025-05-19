@@ -74,3 +74,4 @@ export * from './auth';
 export * from './client';
 export * from './utils';
 export * from './endpoints';
+export * from './cache';
