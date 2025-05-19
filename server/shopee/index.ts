@@ -1,31 +1,36 @@
+
 /**
  * Interface principal para interação com a API Shopee
  */
 import { ShopeeClient } from './client';
 import { ShopeeAuthConfig, ShopeeAuthTokens } from './types';
 import { storage } from '../storage';
+import { getTokenCache } from './cache';
 
 // Configuração padrão para ambiente de desenvolvimento
 const DEFAULT_CONFIG: ShopeeAuthConfig = {
-  partnerId: process.env.SHOPEE_PARTNER_ID || '',
-  partnerKey: process.env.SHOPEE_PARTNER_KEY || '',
-  redirectUrl: process.env.SHOPEE_REDIRECT_URL || `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}/api/shopee/callback`,
+  partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
+  partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
+  redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cip-shopee.replit.app/api/shopee/callback',
   region: 'BR'
 };
 
 /**
- * Cria uma instância do cliente Shopee a partir da configuração fornecida ou padrão
- * @param config Configuração personalizada (opcional)
+ * Cria uma instância do cliente API da Shopee
+ * @param config Configuração opcional (usa valores padrão se não fornecida)
  */
-export function createClient(config: Partial<ShopeeAuthConfig> = {}): ShopeeClient {
+export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
   const fullConfig: ShopeeAuthConfig = {
     ...DEFAULT_CONFIG,
-    ...config
+    ...config,
+    // Customizar URL de redirecionamento baseado no ambiente
+    redirectUrl: process.env.NODE_ENV === 'development' 
+      ? `${process.env.REPLIT_URL || 'http://localhost:5000'}/api/shopee/callback` 
+      : (config?.redirectUrl || DEFAULT_CONFIG.redirectUrl)
   };
   
-  if (!fullConfig.partnerId || !fullConfig.partnerKey) {
-    throw new Error('Shopee API credentials not provided. Please set SHOPEE_PARTNER_ID and SHOPEE_PARTNER_KEY environment variables.');
-  }
+  // Inicializar o cache de tokens se ainda não existir
+  const tokenCache = getTokenCache();
   
   return new ShopeeClient(fullConfig);
 }
