@@ -1,0 +1,149 @@
+Guia Completo de Implementação
+1. Geração da Assinatura (Parâmetro sign)
+python
+import hmac
+import hashlib
+from urllib.parse import urlencode
+
+def generate_signature(partner_key, path, params):
+    # 1. Ordenar parâmetros alfabeticamente
+    ordered_params = sorted(params.items())
+    
+    # 2. Criar query string
+    query_string = urlencode(ordered_params)
+    
+    # 3. Concatenar path + query
+    base_str = f"{path}?{query_string}"
+    
+    # 4. Calcular HMAC-SHA256
+    return hmac.new(
+        partner_key.encode(),
+        base_str.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+# Exemplo de uso
+params = {
+    "partner_id": "2011285",
+    "redirect": "https://cipshopee.replit.app/api/shopee/callback",
+    "state": "cipshopee_1747689738762",
+    "timestamp": "1747689738"
+}
+
+signature = generate_signature(
+    "SUA_PARTNER_KEY_SECRETA",  # Obter no painel Shopee
+    "/api/v2/shop/auth_partner",
+    params
+)
+2. Fluxo Completo de Autenticação
+Diagram
+Code
+sequenceDiagram
+    participant Cliente
+    participant SaaS
+    participant Shopee
+    
+    Cliente->>SaaS: Clica "Conectar Loja"
+    SaaS->>Shopee: Redireciona para URL de auth
+    Shopee->>Cliente: Login Shopee + Autorização
+    Cliente->>SaaS: Retorna com code e state
+    SaaS->>Shopee: POST /auth/token (code + sign)
+    Shopee-->>SaaS: Retorna access_token e refresh_token
+    SaaS->>DB: Armazena tokens criptografados
+3. Implementação do Endpoint de Callback
+javascript
+// Exemplo em Express.js
+app.get('/api/shopee/callback', async (req, res) => {
+  try {
+    // Validar parâmetros
+    const { code, state, shop_id } = req.query;
+    
+    // 1. Verificar state original
+    if(state !== getStoredState(state)) {
+      return res.status(403).send("State mismatch");
+    }
+
+    // 2. Obter access token
+    const tokenResponse = await axios.post(
+      'https://partner.shopeemobile.com.br/api/v2/auth/token/get',
+      {
+        partner_id: process.env.SHOPEE_PARTNER_ID,
+        code,
+        shop_id
+      },
+      {
+        headers: {
+          'Authorization': `sha256 ${generateSignature(...)}`,
+          'X-Partner-Id': process.env.SHOPEE_PARTNER_ID
+        }
+      }
+    );
+
+    // 3. Armazenar tokens de forma segura
+    await saveShopeeTokens({
+      shop_id,
+      access_token: encrypt(tokenResponse.data.access_token),
+      refresh_token: encrypt(tokenResponse.data.refresh_token),
+      expires_at: Date.now() + tokenResponse.data.expire_in * 1000
+    });
+
+    res.redirect('/dashboard?success=true');
+    
+  } catch (error) {
+    console.error('Auth error:', error);
+    res.redirect('/error?code=shopee_auth_failed');
+  }
+});
+4. Boas Práticas de Segurança
+Validação de State:
+
+javascript
+// Gerar state único
+const generateState = () => {
+  return `cipshopee_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+};
+Criptografia de Tokens:
+
+javascript
+const encrypt = (text) => {
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-cbc', 
+    Buffer.from(process.env.CRYPTO_KEY), iv);
+  return iv.toString('hex') + ':' + 
+    cipher.update(text, 'utf8', 'hex') + 
+    cipher.final('hex');
+};
+Renovação de Tokens:
+
+javascript
+const refreshToken = async (shop_id) => {
+  const stored = await getTokens(shop_id);
+  const response = await axios.post(
+    'https://partner.shopeemobile.com.br/api/v2/auth/access_token/get',
+    {
+      partner_id: process.env.SHOPEE_PARTNER_ID,
+      refresh_token: decrypt(stored.refresh_token),
+      shop_id
+    },
+    { headers: { ... } }
+  );
+  // Atualizar tokens no banco
+};
+5. Tratamento de Erros Comuns
+Código HTTP	Erro	Ação
+400	Invalid signature	Regerar assinatura com parâmetros ordenados
+401	Expired token	Executar refresh token
+403	State mismatch	Verificar armazenamento de state
+429	Rate limit	Implementar retry com backoff exponencial
+6. Monitoramento Recomendado
+javascript
+// Exemplo de métricas
+const statsd = require('node-statsd')();
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    statsd.timing('shopee.auth_time', Date.now() - start);
+    statsd.increment(`shopee.auth.${res.statusCode}`);
+  });
+  next();
+});
