@@ -66,17 +66,31 @@ export class ShopeeAuthManager {
     url.searchParams.append('redirect', this.config.redirectUrl);
     url.searchParams.append('state', params.state);
     
-    // Verificar se a URL está corretamente formatada - garantindo que timestamp está correto
-    const urlString = url.toString();
-    if (urlString.includes('×tamp=')) {
+    // Obter a string da URL e verificar problemas de codificação
+    let urlString = url.toString();
+    
+    // Verificar e corrigir qualquer problema com o parâmetro 'timestamp'
+    if (!urlString.includes('timestamp=') && (urlString.includes('×tamp=') || urlString.includes('amp='))) {
       console.error('Erro na codificação da URL: problema com o parâmetro timestamp');
-      // Corrigir manualmente a URL substituindo o caractere incorreto
-      const correctedUrl = urlString.replace('×tamp=', 'timestamp=');
-      console.log(`URL de autorização corrigida: ${correctedUrl}`);
-      return correctedUrl;
+      
+      // Corrigir diferentes variações do problema
+      if (urlString.includes('×tamp=')) {
+        urlString = urlString.replace('×tamp=', 'timestamp=');
+      } else if (urlString.includes('amp=')) {
+        urlString = urlString.replace('amp=', 'timestamp=');
+      }
+      
+      console.log(`URL de autorização corrigida: ${urlString}`);
+    } else {
+      console.log(`URL de autorização gerada: ${urlString}`);
     }
     
-    console.log(`URL de autorização gerada: ${urlString}`);
+    // Verificação adicional para garantir que todos os parâmetros estão presentes
+    if (!urlString.includes('partner_id=') || !urlString.includes('timestamp=') || 
+        !urlString.includes('sign=') || !urlString.includes('redirect=')) {
+      console.error('ALERTA: URL de autorização pode estar incompleta, verifique os parâmetros');
+    }
+    
     return urlString;
   }
 
