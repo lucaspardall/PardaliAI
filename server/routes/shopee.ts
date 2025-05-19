@@ -19,7 +19,45 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Gerar URL de autorização
     const authUrl = shopeeClient.getAuthorizationUrl();
     
-    // Redirecionar para a URL de autorização
+    // Registrar a URL gerada para debug
+    console.log("Authorization URL generated:", authUrl);
+    
+    // Se estamos em desenvolvimento, mostrar opções para o usuário
+    if (process.env.NODE_ENV === 'development') {
+      return res.send(`
+        <html>
+          <head>
+            <title>Redirecionamento para Shopee</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+              body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+              .card { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+              .btn { display: inline-block; padding: 10px 16px; border-radius: 4px; text-decoration: none; margin: 10px 5px 10px 0; }
+              .primary { background: #ff5722; color: white; }
+              .secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
+              pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+            </style>
+          </head>
+          <body>
+            <h1>Redirecionamento para Autenticação Shopee</h1>
+            <div class="card">
+              <h2>Informações</h2>
+              <p>A URL de autorização da Shopee foi gerada. No ambiente de produção você seria redirecionado automaticamente.</p>
+              <p>Como estamos em ambiente de desenvolvimento, você tem as seguintes opções:</p>
+            </div>
+            
+            <div class="card">
+              <h2>URL de Autorização</h2>
+              <pre>${authUrl}</pre>
+              <a href="${authUrl}" class="btn primary">Ir para Autorização da Shopee</a>
+              <a href="/dashboard" class="btn secondary">Voltar para o Dashboard</a>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+    
+    // Em produção, redirecionar diretamente
     res.redirect(authUrl);
   } catch (error: any) {
     console.error('Error starting Shopee OAuth flow:', error);
