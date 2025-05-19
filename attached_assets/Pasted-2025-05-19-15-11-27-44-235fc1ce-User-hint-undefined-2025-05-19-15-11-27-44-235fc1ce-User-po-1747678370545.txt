@@ -1,0 +1,160 @@
+2025-05-19 15:11:27.44
+235fc1ce
+User
+hint: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+position: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+internalPosition: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+where: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+table: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+constraint: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+file: 'postgres.c',
+2025-05-19 15:11:27.44
+235fc1ce
+User
+Error fetching stores: NeonDbError: bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-05-19 15:11:27.44
+235fc1ce
+User
+at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+2025-05-19 15:11:27.44
+235fc1ce
+User
+at async Function.query (file:///home/runner/workspace/dist/index.js:166:22)
+2025-05-19 15:11:27.44
+235fc1ce
+User
+at async file:///home/runner/workspace/dist/index.js:1550:22 {
+2025-05-19 15:11:27.44
+235fc1ce
+User
+detail: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+hint: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+internalPosition: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+internalQuery: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+where: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+schema: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+table: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+column: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+constraint: undefined,
+2025-05-19 15:11:27.44
+235fc1ce
+User
+file: 'postgres.c',
+2025-05-19 15:11:27.44
+235fc1ce
+User
+line: '1735',
+2025-05-19 15:11:27.44
+235fc1ce
+User
+routine: 'exec_bind_message',
+2025-05-19 15:11:27.44
+235fc1ce
+User
+sourceError: undefined
+2025-05-19 15:11:27.44
+235fc1ce
+User
+}
+2025-05-19 15:11:27.81
+235fc1ce
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-05-19 15:11:27.81
+235fc1ce
+User
+at async Function.query (file:///home/runner/workspace/dist/index.js:166:22)
+2025-05-19 15:11:27.81
+235fc1ce
+User
+code: '08P01',
+2025-05-19 15:11:27.81
+235fc1ce
+User
+detail: undefined,
+2025-05-19 15:11:27.81
+235fc1ce
+User
+hint: undefined,
+2025-05-19 15:11:27.81
+235fc1ce
+User
+position: undefined,
+2025-05-19 15:11:27.81
+235fc1ce
+User
+where: undefined,
+2025-05-19 15:11:27.81
+235fc1ce
+User
+schema: undefined,
+2025-05-19 15:11:27.81
+235fc1ce
+User
+table: undefined,
+2025-05-19 15:11:27.81
+235fc1ce
+User
+column: undefined,
+2025-05-19 15:11:27.81
+235fc1ce
+User
+line: '1735',
+2025-05-19 15:11:27.81
+235fc1ce
+User
+at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+2025-05-19 15:11:27.81
+235fc1ce
+User
+hint: undefined,
+2025-05-19 15:11:27.81
+235fc1ce
+User
+position: undefined,
+2025-05-19 15:11:27.81
+235fc1ce
+User
+internalQuery: undefined,

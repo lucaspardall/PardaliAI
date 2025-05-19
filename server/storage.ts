@@ -118,11 +118,17 @@ export class DatabaseStorage implements IStorage {
 
   // Store operations
   async getStoresByUserId(userId: string): Promise<ShopeeStore[]> {
-    return db
-      .select()
-      .from(shopeeStores)
-      .where(eq(shopeeStores.userId, userId))
-      .orderBy(desc(shopeeStores.createdAt));
+    try {
+      return await db
+        .select()
+        .from(shopeeStores)
+        .where(eq(shopeeStores.userId, userId))
+        .orderBy(desc(shopeeStores.createdAt));
+    } catch (error) {
+      console.error("Error in getStoresByUserId:", error);
+      // Retorna array vazio em caso de erro para não quebrar a aplicação
+      return [];
+    }
   }
 
   async getStoreById(id: number): Promise<ShopeeStore | undefined> {
