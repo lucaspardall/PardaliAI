@@ -60,12 +60,16 @@ export class ShopeeAuthManager {
       const baseUrl = getApiBaseUrl(this.config.region);
       const path = AUTH.GET_TOKEN;
       
+      // Usando a assinatura correta conforme documentação - sem token de acesso nesta etapa
       const signature = generateSignature(
         this.config.partnerId,
         this.config.partnerKey,
         path,
         timestamp
       );
+      
+      console.log('Obtendo token de acesso - URL:', `${baseUrl}${path}`);
+      console.log('Obtendo token de acesso - Dados:', { code, shop_id: Number(shopId), partner_id: Number(this.config.partnerId) });
       
       const response = await axios.post(`${baseUrl}${path}`, {
         code,

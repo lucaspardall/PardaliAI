@@ -44,7 +44,8 @@ export function getApiBaseUrl(region: ShopeeRegion): string {
  * @param partnerKey Chave secreta do Parceiro/App
  * @param path Caminho do endpoint da API
  * @param timestamp Timestamp UNIX em segundos
- * @param extraParams Parâmetros adicionais para assinatura
+ * @param accessToken Token de acesso (opcional, apenas para endpoints autenticados)
+ * @param shopId ID da loja (opcional, apenas para endpoints específicos da loja)
  * @returns Assinatura hexadecimal
  */
 export function generateSignature(
@@ -52,17 +53,24 @@ export function generateSignature(
   partnerKey: string, 
   path: string, 
   timestamp: number,
-  extraParams: Record<string, string> = {}
+  accessToken?: string,
+  shopId?: string
 ): string {
-  // A base string para assinatura é composta por:
-  // {parceiro_id}{caminho_api}{timestamp}{parâmetros_adicionais_em_ordem}
+  // A string base varia conforme o tipo de endpoint:
+  // Para autorização inicial: baseString = partnerId + apiPath + timestamp
+  // Para endpoints autenticados de loja: baseString = partnerId + apiPath + timestamp + accessToken + shopId
   let baseString = `${partnerId}${path}${timestamp}`;
   
-  // Adicionar parâmetros extras em ordem alfabética
-  const orderedParams = Object.keys(extraParams).sort();
-  for (const key of orderedParams) {
-    baseString += extraParams[key];
+  // Adicionar token de acesso e ID da loja se fornecidos (para APIs autenticadas)
+  if (accessToken) {
+    baseString += accessToken;
   }
+  
+  if (shopId) {
+    baseString += shopId;
+  }
+  
+  console.log('Assinatura - String base:', baseString);
   
   // Gerar assinatura HMAC-SHA256 usando o partnerKey como segredo
   const hmac = createHmac('sha256', partnerKey);

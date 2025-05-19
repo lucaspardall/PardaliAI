@@ -1,0 +1,129 @@
+Documentação e Informações Necessárias para Integração Shopee
+1. Credenciais da Shopee Open Platform
+
+Partner ID: Identificador único fornecido pela Shopee ao registrar sua aplicação
+Partner Key: Chave secreta usada para assinar requisições
+URL de Callback: Deve ser configurada no painel de desenvolvedor e seguir o formato HTTPS
+Observação: As credenciais podem ser obtidas no console da Shopee Open Platform após aprovação da aplicação
+
+2. Documentação Técnica da API
+
+Versão da API: A Shopee usa a API v2.0 (OpenAPI v2)
+Autenticação OAuth: Fluxo em duas etapas (código de autorização e troca por token de acesso)
+Assinatura HMAC-SHA256: Necessária para validar solicitações
+
+Formato: hash_hmac('sha256', baseString, partnerKey, false)
+Onde baseString = partnerId + apiPath + timestamp + accessToken + shopId
+
+
+Códigos de Status: Documentados na seção de referência da API
+
+3. Informações Específicas de Região
+
+URL para Brasil: partner.shopee.com.br
+Endpoints Regionais:
+
+Produção (Brasil): https://partner.shopee.com.br/api/v2/
+Sandbox/Teste: https://partner.uat.shopeemobile.com/api/v2/
+
+
+Headers Específicos: X-TIMESTAMP, X-SIGN, X-PARTNER-ID, Authorization
+
+4. Informações de Formato da Comunicação
+
+Parâmetro "state": Opcional, usado para manter estado entre requisições
+Formato de endpoints: /api/v2/{recurso}/{ação}
+Headers HTTP necessários:
+
+Content-Type: application/json
+Authorization: Bearer {access_token} (para endpoints autenticados)
+
+
+
+5. Requisitos de Segurança
+
+Validação de Assinatura: Usando HMAC-SHA256
+Renovação de Tokens:
+
+Endpoint: /api/v2/auth/access_token/get
+Parâmetros: refresh_token, partner_id, shop_id
+
+
+Política de Expiração:
+
+Access Token: 4 horas
+Refresh Token: 30 dias
+
+
+
+6. Configurações de URL e Domínios
+
+Domínios Permitidos: Apenas URLs HTTPS registradas no console
+Formato de Callback: https://{seu-dominio}/callback
+Requisitos SSL: Certificado válido, TLS 1.2+
+
+7. Documentação de Endpoints da API
+
+Autenticação:
+
+/api/v2/shop/auth_partner (URL de autorização)
+/api/v2/auth/token/get (obter token)
+/api/v2/auth/access_token/get (renovar token)
+
+
+Loja:
+
+/api/v2/shop/get_shop_info
+
+
+Produtos:
+
+/api/v2/product/get_item_list
+/api/v2/product/get_item_detail
+
+
+Pedidos:
+
+/api/v2/order/get_order_list
+/api/v2/order/get_order_detail
+
+
+
+8. Tipos de Permissões
+
+Escopos Necessários:
+
+ShopAuth: Autorização da loja
+Orders: Gerenciamento de pedidos
+Products: Gerenciamento de produtos
+Returns: Gerenciamento de devoluções
+Logistics: Gerenciamento logístico
+
+
+
+9. Ambientes de Teste e Produção
+
+Ambiente Sandbox: https://partner.uat.shopeemobile.com/api/v2/
+Ambiente Produção: https://partner.shopee.com.br/api/v2/
+Procedimento "Go Live": Envio de documentação e aprovação pela equipe da Shopee
+
+10. Referências de implementação
+
+Exemplo de Autenticação:
+
+// Gerar URL de autorização
+$partnerId = "SEU_PARTNER_ID";
+$partnerKey = "SEU_PARTNER_KEY";
+$redirectUrl = "SUA_URL_CALLBACK";
+$timestamp = time();
+$path = "/api/v2/shop/auth_partner";
+$baseString = $partnerId . $path . $timestamp;
+$sign = hash_hmac('sha256', $baseString, $partnerKey, false);
+
+$authUrl = "https://partner.shopee.com.br/api/v2/shop/auth_partner?partner_id=" . $partnerId . "&timestamp=" . $timestamp . "&sign=" . $sign . "&redirect=" . urlencode($redirectUrl);
+
+Tratamento de Erros:
+
+Verifique o campo "error" na resposta
+Códigos comuns:
+*
