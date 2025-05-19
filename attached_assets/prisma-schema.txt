@@ -1,0 +1,173 @@
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  replitId          String         @unique
+  email             String?        @unique
+  name              String?
+  avatarUrl         String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  // Informações de plano
+  plan              String         @default("free") // free, starter, pro, enterprise
+  planStatus        String         @default("active") // active, canceled, past_due
+  planExpiresAt     DateTime?
+  
+  // Limites de uso
+  aiCreditsLeft     Int            @default(10)
+  storeLimit        Int            @default(1)
+  
+  // Relações
+  shopeeStores      ShopeeStore[]
+  aiRequests        AIRequest[]
+  notifications     Notification[]
+}
+
+model ShopeeStore {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String         @db.ObjectId
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Dados da Shopee
+  shopId            String         @unique
+  shopName          String
+  shopLogo          String?
+  shopRegion        String         @default("BR")
+  
+  // Autenticação
+  accessToken       String
+  refreshToken      String
+  tokenExpiresAt    DateTime
+  
+  // Status
+  isActive          Boolean        @default(true)
+  lastSyncAt        DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  
+  // Métricas agregadas
+  totalProducts     Int            @default(0)
+  averageCtr        Float?
+  monthlyRevenue    Float?
+  
+  // Relações
+  products          Product[]
+  storeMetrics      StoreMetric[]
+}
+
+model Product {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  shopId            String         @db.ObjectId
+  store             ShopeeStore    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  
+  // Dados do produto
+  productId         String
+  name              String
+  description       String?        @db.String
+  price             Float
+  stock             Int
+  images            String[]
+  category          String?
+  status            String         @default("active") // active, inactive, deleted
+  
+  // Métricas de performance
+  ctr               Float?
+  views             Int?
+  sales             Int?
+  revenue           Float?
+  
+  // Datas
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  lastSyncAt        DateTime?
+  
+  // Relações
+  optimizations     ProductOptimization[]
+  
+  @@unique([shopId, productId])
+}
+
+model ProductOptimization {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  productId         String         @db.ObjectId
+  product           Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Dados originais
+  originalTitle     String?
+  originalDesc      String?        @db.String
+  originalKeywords  String?
+  
+  // Sugestões da IA
+  suggestedTitle    String?
+  suggestedDesc     String?        @db.String
+  suggestedKeywords String?
+  reasoningNotes    String?        @db.String
+  
+  // Status
+  status            String         @default("pending") // pending, applied, ignored
+  appliedAt         DateTime?
+  feedbackRating    Int?           // 1-5 estrelas
+  
+  createdAt         DateTime       @default(now())
+  aiRequestId       String?        @db.ObjectId
+}
+
+model StoreMetric {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  storeId           String         @db.ObjectId
+  store             ShopeeStore    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  date              DateTime
+  
+  // Métricas diárias
+  totalViews        Int?
+  totalSales        Int?
+  totalRevenue      Float?
+  averageCtr        Float?
+  productCount      Int?
+  
+  createdAt         DateTime       @default(now())
+  
+  @@unique([storeId, date])
+}
+
+model AIRequest {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String         @db.ObjectId
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Dados da requisição
+  type              String         // product_optimization, product_creation, store_diagnosis
+  input             Json
+  output            Json?
+  
+  // Status
+  status            String         @default("pending") // pending, processing, completed, failed
+  processingTime    Int?           // em milissegundos
+  errorMessage      String?
+  
+  createdAt         DateTime       @default(now())
+  completedAt       DateTime?
+}
+
+model Notification {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String         @db.ObjectId
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title             String
+  message           String
+  type              String         // info, success, warning, error
+  isRead            Boolean        @default(false)
+  actionUrl         String?
+  
+  createdAt         DateTime       @default(now())
+}

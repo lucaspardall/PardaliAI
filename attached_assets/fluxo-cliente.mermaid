@@ -1,0 +1,62 @@
+flowchart TD
+    %% Cores e estilos
+    classDef landingPage fill:#f9d6ff,stroke:#333,stroke-width:1px
+    classDef auth fill:#d0f0c0,stroke:#333,stroke-width:1px
+    classDef dashboard fill:#c8e6ff,stroke:#333,stroke-width:1px
+    classDef product fill:#ffe6cc,stroke:#333,stroke-width:1px
+    classDef ai fill:#fff2cc,stroke:#333,stroke-width:1px
+    classDef payment fill:#ffcccc,stroke:#333,stroke-width:1px
+
+    %% Fluxo principal do cliente
+    A[Visita à Landing Page] -->|CTA "Comece grátis"| B{Já tem conta?}
+    A -->|Aprende sobre o CIP| A1[Vê demonstração e benefícios]
+    A1 -->|Decide experimentar| B
+    
+    %% Autenticação
+    B -->|Não| C[Cadastro com Replit Auth]
+    B -->|Sim| D[Login com Replit Auth]
+    C --> F[Acessa Dashboard]
+    D --> F
+    
+    %% Dashboard
+    F -->|Primeira vez| G[Onboarding interativo]
+    F -->|Loja conectada| H[Visualiza métricas da loja]
+    F -->|Sem loja| I[Tela de conexão com Shopee]
+    G --> I
+    I -->|OAuth Shopee| J[Autoriza acesso]
+    J -->|Sincroniza dados| H
+    
+    %% Ações principais
+    H -->|Navegação| K[Visualiza lista de produtos]
+    H -->|Alerta IA| L[Notificação de baixa performance]
+    K -->|Seleciona produto| M[Detalhe do produto]
+    L -->|Clicar em alerta| M
+    
+    %% Produtos
+    M -->|Ver métricas| N[Gráficos de performance]
+    M -->|Otimizar produto| O[Inicia otimização com IA]
+    
+    %% Fluxo IA
+    O -->|Envia dados| P[Processamento IA]
+    P -->|Recebe sugestões| Q[Preview Antes/Depois]
+    Q -->|Aplicar| R[Envio para Shopee]
+    Q -->|Ignorar| S[Feedback e razão]
+    Q -->|Salvar| T[Guarda para depois]
+    
+    R -->|Sucesso| U[Confirmação e métricas]
+    S --> M
+    T -->|Retoma depois| Q
+
+    %% Planos e pagamentos
+    H -->|Menu superior| V[Gerenciar assinatura]
+    V -->|Escolhe plano| W[Visualiza opções de plano]
+    W -->|Seleção| X[Página de checkout]
+    X -->|Confirma| Y[Atualiza plano do usuário]
+    
+    %% Aplicar classes
+    class A,A1 landingPage
+    class B,C,D auth
+    class F,G,H,I,J dashboard
+    class K,L,M,N product
+    class O,P,Q,R,S,T,U ai
+    class V,W,X,Y payment
