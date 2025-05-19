@@ -21,6 +21,18 @@ interface SidebarLayoutProps {
   title: string;
 }
 
+// Componente de navegação para evitar aninhamento de <a>
+const NavItem = ({ href, icon, label, isActive }: { href: string; icon: string; label: string; isActive: boolean }) => {
+  return (
+    <div className="nav-item">
+      <Link href={href} className={`sidebar-link ${isActive ? 'active' : ''}`}>
+        <i className={`${icon} mr-3 text-lg`}></i>
+        {label}
+      </Link>
+    </div>
+  );
+};
+
 export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
   const [location] = useLocation();
   const { user } = useAuth();
@@ -67,12 +79,13 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
         <div className="px-3 py-4 flex-1 overflow-auto">
           <div className="space-y-1">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <a className={`sidebar-link ${location === item.href ? 'active' : ''}`}>
-                  <i className={`${item.icon} mr-3 text-lg`}></i>
-                  {item.label}
-                </a>
-              </Link>
+              <NavItem 
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                isActive={location === item.href}
+              />
             ))}
           </div>
           
@@ -82,12 +95,13 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
             </h3>
             <div className="mt-2 space-y-1">
               {settingsItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <a className={`sidebar-link ${location === item.href ? 'active' : ''}`}>
-                    <i className={`${item.icon} mr-3 text-lg`}></i>
-                    {item.label}
-                  </a>
-                </Link>
+                <NavItem 
+                  key={item.href}
+                  href={item.href}
+                  icon={item.icon}
+                  label={item.label}
+                  isActive={location === item.href}
+                />
               ))}
             </div>
           </div>
@@ -112,9 +126,14 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
                 Plano {user?.plan === 'free' ? 'Gratuito' : user?.plan === 'starter' ? 'Starter' : user?.plan === 'pro' ? 'Pro' : 'Enterprise'}
               </p>
             </div>
-            <a href="/api/logout" className="ml-auto text-gray-400 hover:text-white">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="ml-auto text-gray-400 hover:text-white"
+              onClick={() => window.location.href = '/api/logout'} 
+            >
               <i className="ri-logout-box-r-line"></i>
-            </a>
+            </Button>
           </div>
         </div>
       </aside>
@@ -143,12 +162,13 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
         <div className="px-3 py-4 h-[calc(100%-64px-72px)] overflow-y-auto">
           <div className="space-y-1">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <a className={`sidebar-link ${location === item.href ? 'active' : ''}`}>
-                  <i className={`${item.icon} mr-3 text-lg`}></i>
-                  {item.label}
-                </a>
-              </Link>
+              <NavItem 
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                isActive={location === item.href}
+              />
             ))}
           </div>
           
@@ -158,12 +178,13 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
             </h3>
             <div className="mt-2 space-y-1">
               {settingsItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <a className={`sidebar-link ${location === item.href ? 'active' : ''}`}>
-                    <i className={`${item.icon} mr-3 text-lg`}></i>
-                    {item.label}
-                  </a>
-                </Link>
+                <NavItem 
+                  key={item.href}
+                  href={item.href}
+                  icon={item.icon}
+                  label={item.label}
+                  isActive={location === item.href}
+                />
               ))}
             </div>
           </div>
@@ -188,9 +209,14 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
                 Plano {user?.plan === 'free' ? 'Gratuito' : user?.plan === 'starter' ? 'Starter' : user?.plan === 'pro' ? 'Pro' : 'Enterprise'}
               </p>
             </div>
-            <a href="/api/logout" className="ml-auto text-gray-400 hover:text-white">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="ml-auto text-gray-400 hover:text-white"
+              onClick={() => window.location.href = '/api/logout'} 
+            >
               <i className="ri-logout-box-r-line"></i>
-            </a>
+            </Button>
           </div>
         </div>
       </aside>
