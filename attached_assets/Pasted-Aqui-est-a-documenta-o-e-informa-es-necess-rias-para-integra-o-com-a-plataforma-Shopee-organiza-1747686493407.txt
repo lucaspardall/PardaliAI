@@ -1,0 +1,57 @@
+Aqui está a documentação e informações necessárias para integração com a plataforma Shopee, organizada por categorias e com base nas melhores práticas e fontes oficiais:
+
+1. Credenciais da Shopee Open Platform14
+Partner ID (ID do parceiro): Obtido no painel de desenvolvedor da Shopee (App management > App list > App key) 14.
+
+Partner Key (Chave secreta): Gerada no mesmo local do Partner ID, com acesso restrito via ícone de visualização 14.
+
+Shop ID: Encontrado no URL da loja (ex: https://shopee.com.br/shop/12345678 → ID: 12345678) 14.
+
+Domínio da conta: Define a região (ex: Brasil → partner.shopeemobile.com.br) 14.
+
+2. Documentação Técnica da API
+Autenticação OAuth 2.0: Requer configuração de client ID e secret no painel de integração, com fluxo de autorização via redirecionamento 14.
+
+Assinatura HMAC-SHA256: Utilizada para validar solicitações, com especificações detalhadas na documentação universal de conectores OAuth 2.0 14.
+
+Endpoints regionais: URLs variam por região (ex: Brasil usa partner.shopeemobile.com.br/api/v2) 14.
+
+3. Configuração de URLs e Domínios
+URL de callback: Deve ser pré-aprovada pela Shopee e configurada com SSL válido 14.
+
+Domínios permitidos: Listados no painel de segurança da aplicação para evitar redirecionamentos não autorizados 14.
+
+4. Requisitos de Segurança
+Tokens de acesso: Expiração em 4 horas (access token) e 30 dias (refresh token), com renovação via endpoint dedicado 14.
+
+Criptografia: AES-256 para proteger chaves e dados sensíveis 14.
+
+Validação de assinatura: Exige cálculo preciso do HMAC-SHA256 com Partner Key 14.
+
+5. Fluxos de Integração
+Autorização de loja:
+
+Solicitar permissões via escopos (ex: shopee.order.read, shopee.product.write) 13.
+
+Redirecionar usuário para aprovação na Shopee 14.
+
+Receber código de autorização e trocar por tokens 14.
+
+Integração de NFes: Exemplo com Qive mostra importação automática de XMLs via API 13.
+
+6. Ambientes e Testes
+Sandbox vs Produção: Dados de teste usam Partner ID/Key específicos, enquanto produção exige aprovação via "Go Live" 14.
+
+Exemplo de erro comum: Parâmetros incorretos em queries (ex: NeonDbError por descompasso entre placeholders e valores) 13.
+
+7. Referências de Implementação
+Exemplo de conexão:
+
+javascript
+const shopeeConfig = {
+  domain: 'partner.shopeemobile.com.br',
+  partner_id: 'SEU_PARTNER_ID',
+  partner_key: 'SEU_PARTNER_KEY',
+  shop_id: 'SEU_SHOP_ID'
+};
+Tratamento de erros: Monitorar códigos como 08P01 (erro de protocolo PostgreSQL) para ajustar parâmetros 13.
