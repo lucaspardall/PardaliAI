@@ -26,7 +26,7 @@ export function getApiBaseUrl(region: ShopeeRegion): string {
     'ID': 'https://partner.shopeemobile.com',
     'VN': 'https://partner.shopeemobile.com',
     'PH': 'https://partner.shopeemobile.com',
-    'BR': 'https://open.shopee.com.br',
+    'BR': 'https://partner.shopeemobile.com.br',
     'MX': 'https://partner.shopee.com.mx',
     'CO': 'https://partner.shopee.com.co',
     'CL': 'https://partner.shopee.cl',
