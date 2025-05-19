@@ -70,6 +70,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
 /**
  * Callback para o fluxo de autorização OAuth da Shopee
+ * Esta rota responde em /api/shopee/callback
  */
 router.get('/callback', isAuthenticated, async (req: Request, res: Response) => {
   try {
