@@ -40,33 +40,18 @@ export class ShopeeAuthManager {
       timestamp
     );
     
-    // Para o Brasil, usamos um domínio específico para a autorização
-    let authUrl;
-    if (this.config.region === 'BR') {
-      // URL específica para o Brasil
-      authUrl = 'https://seller.shopee.com.br/open/authorize';
-      
-      const url = new URL(authUrl);
-      url.searchParams.append('id', this.config.partnerId);
-      url.searchParams.append('token', signature);
-      url.searchParams.append('redirect', this.config.redirectUrl);
-      
-      console.log(`URL de autorização gerada para o Brasil: ${url.toString()}`);
-      return url.toString();
-    } else {
-      // URL padrão para outras regiões
-      const baseUrl = getApiBaseUrl(this.config.region);
-      const url = new URL(baseUrl + basePathForShopAuthorize);
-      
-      // Parâmetros obrigatórios conforme documentação
-      url.searchParams.append('partner_id', this.config.partnerId);
-      url.searchParams.append('timestamp', timestamp.toString());
-      url.searchParams.append('sign', signature);
-      url.searchParams.append('redirect', this.config.redirectUrl);
-      
-      console.log(`URL de autorização gerada: ${url.toString()}`);
-      return url.toString();
-    }
+    // Obter URL base da API para a região configurada
+    const baseUrl = getApiBaseUrl(this.config.region);
+    const url = new URL(baseUrl + basePathForShopAuthorize);
+    
+    // Parâmetros obrigatórios conforme documentação
+    url.searchParams.append('partner_id', this.config.partnerId);
+    url.searchParams.append('timestamp', timestamp.toString());
+    url.searchParams.append('sign', signature);
+    url.searchParams.append('redirect', this.config.redirectUrl);
+    
+    console.log(`URL de autorização gerada: ${url.toString()}`);
+    return url.toString();
   }
 
   /**
