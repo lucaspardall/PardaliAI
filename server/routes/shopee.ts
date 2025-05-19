@@ -58,7 +58,19 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     }
     
     // Em produção, redirecionar diretamente
-    res.redirect(authUrl);
+    // Usamos um HTML com meta refresh para evitar problemas de codificação da URL
+    res.send(`
+      <html>
+        <head>
+          <meta http-equiv="refresh" content="0;url=${authUrl}">
+          <title>Redirecionando para Shopee</title>
+        </head>
+        <body>
+          <p>Redirecionando para autenticação na Shopee...</p>
+          <p>Se você não for redirecionado automaticamente, <a href="${authUrl}">clique aqui</a>.</p>
+        </body>
+      </html>
+    `);
   } catch (error: any) {
     console.error('Error starting Shopee OAuth flow:', error);
     res.status(500).json({
