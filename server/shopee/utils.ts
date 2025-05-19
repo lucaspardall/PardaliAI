@@ -13,51 +13,29 @@ export function getTimestamp(): number {
 }
 
 /**
- * Obtém a URL base da API da Shopee com base na região
+ * Obtém a URL base da API de acordo com a região
  * @param region Região da Shopee
- * @param isAuthUrl Se a URL é para autorização (true) ou para API (false)
+ * @returns URL base da API
  */
-export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false): string {
-  // Se for URL de autorização, usa o domínio de autenticação para vendedores
-  if (isAuthUrl) {
-    const authRegionMap: Record<ShopeeRegion, string> = {
-      SG: 'https://seller.shopee.sg',    // Singapura
-      MY: 'https://seller.shopee.com.my', // Malásia
-      TH: 'https://seller.shopee.co.th',  // Tailândia
-      TW: 'https://seller.shopee.tw',     // Taiwan
-      ID: 'https://seller.shopee.co.id',  // Indonésia
-      VN: 'https://seller.shopee.vn',     // Vietnã
-      PH: 'https://seller.shopee.ph',     // Filipinas
-      BR: 'https://seller.shopee.com.br', // Brasil
-      MX: 'https://seller.shopee.com.mx', // México
-      CO: 'https://seller.shopee.com.co', // Colômbia
-      CL: 'https://seller.shopee.cl',     // Chile
-      PL: 'https://seller.shopee.pl',     // Polônia
-      ES: 'https://seller.shopee.es',     // Espanha
-      FR: 'https://seller.shopee.fr',     // França
-    };
-    return authRegionMap[region] || authRegionMap.BR;
-  }
-
-  // URL para API regular
+export function getApiBaseUrl(region: ShopeeRegion): string {
   const regionMap: Record<ShopeeRegion, string> = {
-    SG: 'https://openapi.shopee.com',    // Singapura
-    MY: 'https://openapi.shopee.com.my', // Malásia
-    TH: 'https://openapi.shopee.co.th',  // Tailândia
-    TW: 'https://openapi.shopee.tw',     // Taiwan
-    ID: 'https://openapi.shopee.co.id',  // Indonésia
-    VN: 'https://openapi.shopee.vn',     // Vietnã
-    PH: 'https://openapi.shopee.ph',     // Filipinas
-    BR: 'https://partner.shopeemobile.com', // Brasil (mesmo do mobile)
-    MX: 'https://openapi.shopee.com.mx', // México
-    CO: 'https://openapi.shopee.com.co', // Colômbia
-    CL: 'https://openapi.shopee.cl',     // Chile
-    PL: 'https://openapi.shopee.pl',     // Polônia
-    ES: 'https://openapi.shopee.es',     // Espanha
-    FR: 'https://openapi.shopee.fr',     // França
+    'SG': 'https://partner.shopeemobile.com',
+    'MY': 'https://partner.shopeemobile.com',
+    'TH': 'https://partner.shopeemobile.com',
+    'TW': 'https://partner.shopeemobile.com',
+    'ID': 'https://partner.shopeemobile.com',
+    'VN': 'https://partner.shopeemobile.com',
+    'PH': 'https://partner.shopeemobile.com',
+    'BR': 'https://openplatform.shopee.com.br',
+    'MX': 'https://partner.shopee.com.mx',
+    'CO': 'https://partner.shopee.com.co',
+    'CL': 'https://partner.shopee.cl',
+    'PL': 'https://partner.shopee.pl',
+    'ES': 'https://partner.shopee.es',
+    'FR': 'https://partner.shopee.fr'
   };
 
-  return regionMap[region] || regionMap.BR; // Retorna Brasil como padrão
+  return regionMap[region] || regionMap['SG'];
 }
 
 /**

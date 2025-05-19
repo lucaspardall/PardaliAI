@@ -1,4 +1,3 @@
-
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
 
@@ -12,7 +11,7 @@ import { User } from "@shared/schema";
 import { db, sql } from "./db";
 
 if (!process.env.REPLIT_DOMAINS) {
-  console.warn("Environment variable REPLIT_DOMAINS not provided, using hostname fallback");
+  throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
 const getOidcConfig = memoize(
@@ -33,34 +32,23 @@ export function getSession() {
   
   // Usar PostgreSQL para armazenamento de sessão
   const PgStore = connectPg(session);
-  let sessionStore;
-  
-  try {
-    sessionStore = new PgStore({
-      // Usar o cliente SQL com a função 'query' que adicionamos
-      pool: sql,
-      tableName: 'sessions',
-      createTableIfMissing: true
-    });
-    console.log('[Auth] Sessão configurada com PostgreSQL');
-  } catch (error) {
-    console.error('[Auth] Erro ao configurar sessão com PostgreSQL, usando memória:', error);
-    // Fallback para armazenamento em memória
-    sessionStore = new session.MemoryStore();
-  }
+  const sessionStore = new PgStore({
+    // Usar o cliente SQL com a função 'query' que adicionamos
+    pool: sql,
+    tableName: 'sessions',
+    createTableIfMissing: true
+  });
   
   return session({
     secret: process.env.SESSION_SECRET || 'temp-session-secret-for-development',
     resave: false,
-    saveUninitialized: true, // Alterado para true para garantir que sessões sejam criadas
+    saveUninitialized: false,
     store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: false, // Alterado para false para desenvolvimento
+      secure: false, // Definir como false para desenvolvimento para permitir cookies em HTTP
       maxAge: sessionTtl,
-      sameSite: 'lax'
     },
-    name: 'cipshopee.sid' // Nome único para o cookie
   });
 }
 
@@ -77,13 +65,6 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
-  console.log('[Auth] Tentando salvar usuário com claims:', JSON.stringify({
-    id: claims["sub"],
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"]
-  }));
-  
   try {
     // Tenta salvar no banco de dados
     await storage.upsertUser({
@@ -98,7 +79,6 @@ async function upsertUser(
       aiCreditsLeft: 10,
       storeLimit: 1
     });
-    console.log('[Auth] Usuário salvo com sucesso no banco de dados');
   } catch (error) {
     console.error("Erro ao salvar usuário no banco de dados, usando armazenamento em memória:", error);
     
@@ -121,29 +101,6 @@ async function upsertUser(
   }
 }
 
-// Função auxiliar para obter domínios e URLs de callback
-function getDomainInfo() {
-  // Obtém a lista de domínios dos variáveis de ambiente
-  const domains = process.env.REPLIT_DOMAINS 
-    ? process.env.REPLIT_DOMAINS.split(",").filter(d => d.trim()) 
-    : [];
-
-  // Adiciona o domínio de produção se estiver definido
-  if (process.env.PRODUCTION_DOMAIN && !domains.includes(process.env.PRODUCTION_DOMAIN)) {
-    domains.push(process.env.PRODUCTION_DOMAIN);
-  }
-
-  // Adiciona cipshopee.replit.app como fallback se não houver domínios
-  if (domains.length === 0) {
-    domains.push('cipshopee.replit.app');
-  }
-
-  // Gera URLs de callback para cada domínio
-  const callbackUrls = domains.map(domain => `https://${domain}/api/callback`);
-
-  return { domains, callbackUrls };
-}
-
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
@@ -151,11 +108,6 @@ export async function setupAuth(app: Express) {
   app.use(passport.session());
 
   const config = await getOidcConfig();
-  const { domains, callbackUrls } = getDomainInfo();
-
-  // Registra os domínios para depuração
-  console.log('[Auth] Domínios configurados:', domains.join(', '));
-  console.log('[Auth] URLs de callback:', callbackUrls.join(', '));
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
@@ -174,124 +126,35 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  try {
-    // Cria uma estratégia principal simplificada
-    passport.use('replitauth', new Strategy(
+  for (const domain of process.env
+    .REPLIT_DOMAINS!.split(",")) {
+    const strategy = new Strategy(
       {
-        name: 'replitauth',
+        name: `replitauth:${domain}`,
         config,
         scope: "openid email profile offline_access",
-        callbackURL: callbackUrls[0] // URL principal
+        callbackURL: `https://${domain}/api/callback`,
       },
-      verify
-    ));
-
-    console.log(`[Auth] Estratégia principal criada com nome 'replitauth'`);
-    
-    // Configura estratégias específicas para cada domínio
-    domains.forEach((domain, index) => {
-      const strategyName = `replitauth:${domain}`;
-      passport.use(strategyName, new Strategy(
-        {
-          name: strategyName,
-          config,
-          scope: "openid email profile offline_access",
-          callbackURL: callbackUrls[index],
-        },
-        verify
-      ));
-      console.log(`[Auth] Estratégia criada: ${strategyName}`);
-    });
-  } catch (error) {
-    console.error("[Auth] Erro ao configurar estratégias:", error);
+      verify,
+    );
+    passport.use(strategy);
   }
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    try {
-      const hostname = req.hostname || '';
-      console.log(`[Auth] Iniciando login com hostname: ${hostname}`);
-      
-      // Gerar e armazenar estado para verificação de segurança
-      const state = require('crypto').randomBytes(16).toString('hex');
-      req.session.authState = state;
-      
-      console.log(`[Auth] Estado gerado para segurança: ${state}`);
-      
-      // Usar a estratégia padrão simplificada
-      const strategyName = 'replitauth';
-      
-      return passport.authenticate(strategyName, {
-        prompt: "login consent",
-        scope: ["openid", "email", "profile", "offline_access"],
-        state: state // Passar o estado para verificação no retorno
-      })(req, res, next);
-    } catch (error) {
-      console.error('[Auth] Erro ao iniciar login:', error);
-      res.status(500).json({ 
-        message: 'Falha ao iniciar processo de autenticação',
-        error: typeof error === 'object' ? error.message : 'Erro desconhecido'
-      });
-    }
+    passport.authenticate(`replitauth:${req.hostname}`, {
+      prompt: "login consent",
+      scope: ["openid", "email", "profile", "offline_access"],
+    })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    try {
-      console.log(`[Auth] Recebendo callback com query params:`, req.query);
-      
-      // Se não tiver código, não prossegue
-      if (!req.query.code) {
-        console.error('[Auth] Requisição de callback sem código de autorização');
-        return res.redirect('/login-error');
-      }
-      
-      // Verificar o estado para prevenir ataques CSRF
-      const receivedState = req.query.state as string;
-      const savedState = req.session.authState;
-      
-      console.log(`[Auth] Verificando estados - recebido: ${receivedState}, salvo: ${savedState}`);
-      
-      if (!savedState || receivedState !== savedState) {
-        console.error('[Auth] Estado inválido/não correspondente');
-        // Limpar o estado da sessão
-        delete req.session.authState;
-        return res.redirect('/login-error?error=invalid_state');
-      }
-      
-      // Limpar o estado da sessão após verificação
-      delete req.session.authState;
-      
-      // Tenta autenticar utilizando a estratégia principal
-      passport.authenticate('replitauth', (err: any, user: any, info: any) => {
-        if (err) {
-          console.error('[Auth] Erro durante autenticação:', err);
-          return res.redirect('/login-error');
-        }
-        
-        if (!user) {
-          console.error('[Auth] Usuário não retornado pela estratégia:', info);
-          return res.redirect('/login-error');
-        }
-        
-        req.login(user, function(loginErr) {
-          if (loginErr) {
-            console.error('[Auth] Erro ao criar sessão:', loginErr);
-            return res.redirect('/login-error');
-          }
-          
-          console.log('[Auth] Login bem-sucedido, redirecionando para /', { 
-            userId: user?.claims?.sub 
-          });
-          
-          return res.redirect('/');
-        });
-      })(req, res, next);
-    } catch (error) {
-      console.error('[Auth] Erro crítico no callback:', error);
-      return res.redirect('/login-error');
-    }
+    passport.authenticate(`replitauth:${req.hostname}`, {
+      successReturnToOrRedirect: "/",
+      failureRedirect: "/api/login",
+    })(req, res, next);
   });
 
   app.get("/api/logout", (req, res) => {
@@ -302,15 +165,6 @@ export async function setupAuth(app: Express) {
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );
-    });
-  });
-  
-  // Adicionar rota para erros de login
-  app.get("/login-error", (req, res) => {
-    console.log('[Auth] Erro no processo de login');
-    res.status(401).json({ 
-      message: "Falha na autenticação com o Replit", 
-      redirectTo: "/api/login" 
     });
   });
   

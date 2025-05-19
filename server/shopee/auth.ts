@@ -19,14 +19,12 @@ export class ShopeeAuthManager {
   /**
    * Gera URL para o fluxo de autorização OAuth
    * Implementa o fluxo de autorização conforme documentação oficial da Shopee Open Platform
-   * mas usando a interface de vendedor para uma melhor experiência do usuário
    */
   getAuthorizationUrl(): string {
     const timestamp = getTimestamp();
     
     // De acordo com a documentação da API v2, o endpoint correto para autorização
-    // Este caminho será anexado à URL base do vendedor ou da API
-    const basePathForShopAuthorize = '/shop/auth_partner';
+    const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
     
     console.log(`Gerando URL de autorização para a Shopee`);
     console.log(`Partner ID: ${this.config.partnerId}`);
@@ -43,8 +41,7 @@ export class ShopeeAuthManager {
     );
     
     // Obter URL base da API para a região configurada
-    // Usando interface de vendedor para autorização
-    const baseUrl = getApiBaseUrl(this.config.region, true);
+    const baseUrl = getApiBaseUrl(this.config.region);
     const url = new URL(baseUrl + basePathForShopAuthorize);
     
     // Parâmetros obrigatórios conforme documentação
