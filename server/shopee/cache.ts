@@ -5,6 +5,7 @@
  */
 
 import NodeCache from 'node-cache';
+import { ShopeeAuthTokens } from './types';
 
 // Tempos de expiração em segundos
 const CACHE_TTL = {
@@ -175,5 +176,18 @@ export const ShopeeCache = {
   invalidateProductCache,
   invalidateAllShopCache,
 };
+
+/**
+ * Obtém cache específico para tokens de autenticação
+ */
+export function getTokenCache() {
+  return {
+    getToken: (shopId: string) => getCachedItem<ShopeeAuthTokens>(`${CACHE_PREFIX.SHOP}token:${shopId}`),
+    setToken: (shopId: string, tokens: ShopeeAuthTokens) => 
+      setCachedItem(`${CACHE_PREFIX.SHOP}token:${shopId}`, tokens, CACHE_TTL.SHOP_INFO),
+    removeToken: (shopId: string) => 
+      removeCachedItem(`${CACHE_PREFIX.SHOP}token:${shopId}`)
+  };
+}
 
 export default ShopeeCache;

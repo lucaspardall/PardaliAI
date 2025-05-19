@@ -5,7 +5,7 @@
 import { ShopeeClient } from './client';
 import { ShopeeAuthConfig, ShopeeAuthTokens } from './types';
 import { storage } from '../storage';
-import { getTokenCache } from './cache';
+import { ShopeeCache } from './cache';
 
 // Configuração padrão para ambiente de desenvolvimento
 const DEFAULT_CONFIG: ShopeeAuthConfig = {
@@ -29,8 +29,7 @@ export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
       : (config?.redirectUrl || DEFAULT_CONFIG.redirectUrl)
   };
   
-  // Inicializar o cache de tokens se ainda não existir
-  const tokenCache = getTokenCache();
+  // Inicializar o cache (já está sendo feito pela importação)
   
   return new ShopeeClient(fullConfig);
 }
