@@ -168,7 +168,10 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const hostname = req.hostname;
+    console.log(`[Auth] Iniciando login com hostname: ${hostname}`);
+    
+    passport.authenticate(`replitauth:${hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
@@ -176,10 +179,18 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     console.log(`[Auth] Recebendo callback com query params:`, req.query);
-    console.log(`[Auth] Hostname: ${req.hostname}`);
+    const hostname = req.hostname;
+    console.log(`[Auth] Hostname: ${hostname}`);
+    
+    // Verificar se a estratégia existe para o hostname atual
+    const strategyName = `replitauth:${hostname}`;
+    if (!passport._strategies[strategyName]) {
+      console.error(`[Auth] Estratégia ${strategyName} não encontrada. Estratégias disponíveis:`, Object.keys(passport._strategies));
+      return res.redirect('/login-error');
+    }
     
     // Usar authenticate com um callback personalizado para depuração
-    passport.authenticate(`replitauth:${req.hostname}`, { failureRedirect: '/login-error' })(req, res, function() {
+    passport.authenticate(strategyName, { failureRedirect: '/login-error' })(req, res, function() {
       console.log('[Auth] Login bem-sucedido, redirecionando para /', { userId: (req.user as any)?.claims?.sub });
       return res.redirect('/');
     });
