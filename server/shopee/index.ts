@@ -15,6 +15,13 @@ const DEFAULT_CONFIG: ShopeeAuthConfig = {
   region: 'BR'
 };
 
+// Registrar a configuração atual para debug
+console.log('[Shopee Config] Configuração da API Shopee:', {
+  partnerId: DEFAULT_CONFIG.partnerId,
+  redirectUrl: DEFAULT_CONFIG.redirectUrl,
+  region: DEFAULT_CONFIG.region
+});
+
 /**
  * Cria uma instância do cliente API da Shopee
  * @param config Configuração opcional (usa valores padrão se não fornecida)

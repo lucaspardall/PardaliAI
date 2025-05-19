@@ -72,18 +72,24 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
  * Callback para o fluxo de autorização OAuth da Shopee
  * Esta rota responde em /api/shopee/callback
  */
-router.get('/callback', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/callback', async (req: Request, res: Response) => {
   try {
-    console.log(`Recebendo callback da Shopee com parâmetros:`, req.query);
+    console.log(`[Shopee Callback] Recebendo callback da Shopee com parâmetros:`, req.query);
+    console.log(`[Shopee Callback] URL completa: ${req.protocol}://${req.get('host')}${req.originalUrl}`);
+    console.log(`[Shopee Callback] Headers:`, req.headers);
+    
     const { code, shop_id } = req.query;
 
     if (!code || !shop_id) {
-      console.error('Parâmetros obrigatórios ausentes na callback da Shopee:', req.query);
+      console.error('[Shopee Callback] Parâmetros obrigatórios ausentes:', req.query);
       return res.status(400).json({
         message: 'Missing required parameters',
         error: 'Missing code or shop_id'
       });
     }
+    
+    // Removi a verificação de autenticação para o callback, pois o usuário ainda não está autenticado 
+    // durante o redirecionamento da Shopee
 
     // Criar cliente da API
     const shopeeClient = createClient();
