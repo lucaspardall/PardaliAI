@@ -46,13 +46,13 @@ export interface IStorage {
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, data: Partial<Product>): Promise<Product | undefined>;
   deleteProduct(id: number): Promise<boolean>;
-  
+
   // Product Optimization operations
   getOptimizationsByProductId(productId: number): Promise<ProductOptimization[]>;
   getOptimizationById(id: number): Promise<ProductOptimization | undefined>;
   createOptimization(optimization: InsertProductOptimization): Promise<ProductOptimization>;
   updateOptimization(id: number, data: Partial<ProductOptimization>): Promise<ProductOptimization | undefined>;
-  
+
   // Metrics operations
   getStoreMetrics(storeId: number, days?: number): Promise<StoreMetric[]>;
   createStoreMetric(metric: InsertStoreMetric): Promise<StoreMetric>;
@@ -118,14 +118,28 @@ export class DatabaseStorage implements IStorage {
 
   // Store operations
   async getStoresByUserId(userId: string): Promise<ShopeeStore[]> {
+    console.log(`Buscando lojas para o usuário: ${userId}`);
     try {
-      return await db
+      // Construir a query sem executá-la imediatamente
+      const query = db
         .select()
         .from(shopeeStores)
         .where(eq(shopeeStores.userId, userId))
         .orderBy(desc(shopeeStores.createdAt));
+
+      // Log da query sendo construída (para fins de debug)
+      console.log("Query sendo executada:", JSON.stringify(query.toSQL()));
+
+      // Executar a query
+      const results = await query;
+      console.log(`Encontradas ${results.length} lojas para o usuário ${userId}`);
+      return results;
     } catch (error) {
-      console.error("Error in getStoresByUserId:", error);
+      console.error("Erro detalhado em getStoresByUserId:", error);
+      if (error instanceof Error) {
+        console.error("Mensagem:", error.message);
+        console.error("Stack:", error.stack);
+      }
       // Retorna array vazio em caso de erro para não quebrar a aplicação
       return [];
     }
@@ -256,7 +270,7 @@ export class DatabaseStorage implements IStorage {
   async getStoreMetrics(storeId: number, days = 7): Promise<StoreMetric[]> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    
+
     return db
       .select()
       .from(storeMetrics)
@@ -347,7 +361,7 @@ export class MemStorage implements IStorage {
   private metrics = new Map<number, StoreMetric>();
   private aiRequests = new Map<number, AiRequest>();
   private notifications = new Map<number, Notification>();
-  
+
   private storeIdCounter = 1;
   private productIdCounter = 1;
   private optimizationIdCounter = 1;
@@ -378,7 +392,7 @@ export class MemStorage implements IStorage {
   async updateUserPlan(userId: string, plan: string, expiresAt?: Date): Promise<User | undefined> {
     const user = this.users.get(userId);
     if (!user) return undefined;
-    
+
     const updatedUser: User = {
       ...user,
       plan,
@@ -392,7 +406,7 @@ export class MemStorage implements IStorage {
   async updateUserAiCredits(userId: string, credits: number): Promise<User | undefined> {
     const user = this.users.get(userId);
     if (!user) return undefined;
-    
+
     const updatedUser: User = {
       ...user,
       aiCreditsLeft: credits,
@@ -435,7 +449,7 @@ export class MemStorage implements IStorage {
   async updateStore(id: number, data: Partial<ShopeeStore>): Promise<ShopeeStore | undefined> {
     const store = this.stores.get(id);
     if (!store) return undefined;
-    
+
     const updatedStore: ShopeeStore = {
       ...store,
       ...data,
@@ -478,7 +492,7 @@ export class MemStorage implements IStorage {
   async updateProduct(id: number, data: Partial<Product>): Promise<Product | undefined> {
     const product = this.products.get(id);
     if (!product) return undefined;
-    
+
     const updatedProduct: Product = {
       ...product,
       ...data,
@@ -518,7 +532,7 @@ export class MemStorage implements IStorage {
   async updateOptimization(id: number, data: Partial<ProductOptimization>): Promise<ProductOptimization | undefined> {
     const optimization = this.optimizations.get(id);
     if (!optimization) return undefined;
-    
+
     const updatedOptimization: ProductOptimization = {
       ...optimization,
       ...data,
@@ -531,7 +545,7 @@ export class MemStorage implements IStorage {
   async getStoreMetrics(storeId: number, days = 7): Promise<StoreMetric[]> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
-    
+
     return Array.from(this.metrics.values())
       .filter(metric => 
         metric.storeId === storeId && metric.date >= startDate
@@ -576,7 +590,7 @@ export class MemStorage implements IStorage {
   async updateAiRequest(id: number, data: Partial<AiRequest>): Promise<AiRequest | undefined> {
     const request = this.aiRequests.get(id);
     if (!request) return undefined;
-    
+
     const updatedRequest: AiRequest = {
       ...request,
       ...data,
@@ -596,7 +610,7 @@ export class MemStorage implements IStorage {
   async markNotificationAsRead(id: number): Promise<boolean> {
     const notification = this.notifications.get(id);
     if (!notification) return false;
-    
+
     this.notifications.set(id, {
       ...notification,
       isRead: true
