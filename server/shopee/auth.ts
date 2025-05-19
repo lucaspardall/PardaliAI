@@ -53,7 +53,7 @@ export class ShopeeAuthManager {
     
     console.log(`URL de autorização gerada: ${url.toString()}`);
     
-    return url.toString();urn url.toString();
+    return url.toString();
   }
 
   /**
