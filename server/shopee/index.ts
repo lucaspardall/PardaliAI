@@ -9,7 +9,7 @@ import { storage } from '../storage';
 const DEFAULT_CONFIG: ShopeeAuthConfig = {
   partnerId: process.env.SHOPEE_PARTNER_ID || '',
   partnerKey: process.env.SHOPEE_PARTNER_KEY || '',
-  redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cip-shopee.replit.app/api/shopee/callback',
+  redirectUrl: process.env.SHOPEE_REDIRECT_URL || `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}/api/shopee/callback`,
   region: 'BR'
 };
 

@@ -1,0 +1,66 @@
+Agora vamos implementar a Integração Robusta com a API da Shopee para o CIP Shopee usando o método PREVC.
+
+## P - PLANEJAMENTO
+
+Escopo da tarefa: 
+Implementar um cliente API robusto para a Shopee que permita autenticação OAuth, sincronização de produtos e métricas, e gerenciamento seguro de tokens.
+
+Requisitos funcionais:
+1. Autenticação OAuth completa com a API da Shopee
+2. Implementação de endpoints para produtos, métricas e informações da loja
+3. Sistema de sincronização de dados em background
+4. Gestão de tokens com refresh automático
+5. Interface de administração da conexão
+
+Requisitos não funcionais:
+1. Segurança no armazenamento e gestão de tokens
+2. Performance otimizada para minimizar tempo de resposta
+3. Tratamento robusto de erros da API
+4. Resiliente a falhas temporárias da API
+5. Logs detalhados para debugging
+
+Guidelines de desenvolvimento:
+- Utilizar padrão de design para separar cliente API, autenticação e lógica de negócios
+- Implementar sistema de retry para falhas temporárias (máximo 3 tentativas)
+- Criar mecanismos de cache para reduzir chamadas à API
+- Seguir as convenções de código do projeto existente
+
+Pacotes previstos:
+- `axios@1.6.2`: Para requisições HTTP
+- `crypto`: Para geração de assinaturas HMAC-SHA256
+- `jsonwebtoken@9.0.2`: Para gestão de tokens internos
+- `node-cache@5.1.2`: Para cache de respostas frequentes
+
+Mitigação de riscos:
+- Verificar todas as dependências contra vulnerabilidades
+- Implementar validação rigorosa de entrada/saída
+- Nunca armazenar tokens em texto puro no banco de dados
+- Limitar número de tentativas de autenticação
+- Implementar timeouts adequados para todas as chamadas à API
+
+Plano de execução:
+1. Cliente API Base
+   - 1.1 Implementar classe base para comunicação HTTP
+   - 1.2 Criar sistema de geração de assinatura HMAC-SHA256
+   - 1.3 Implementar mecanismo de refresh token
+   - 1.4 Desenvolver tratamento de erros centralizado
+
+2. Endpoints Específicos
+   - 2.1 Implementar endpoints de autenticação
+   - 2.2 Criar endpoints para produtos e categorias
+   - 2.3 Desenvolver endpoints para métricas e estatísticas
+   - 2.4 Implementar endpoints para informações da loja
+
+3. Sistema de Sincronização
+   - 3.1 Criar serviço de sincronização em background
+   - 3.2 Implementar sistema de filas para operações em lote
+   - 3.3 Desenvolver mecanismo de rastreamento de progresso
+   - 3.4 Criar sistema de alertas para falhas de sincronização
+
+4. Interface de Administração
+   - 4.1 Criar página de status da conexão
+   - 4.2 Implementar controles para sincronização manual
+   - 4.3 Desenvolver visualização de logs e erros
+   - 4.4 Criar formulário para reconexão/reset da autenticação
+
+Por favor, confirme seu entendimento deste planejamento e sugira ajustes se necessário ANTES de iniciar qualquer implementação.
