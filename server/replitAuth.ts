@@ -182,15 +182,34 @@ export async function setupAuth(app: Express) {
     const hostname = req.hostname;
     console.log(`[Auth] Hostname: ${hostname}`);
     
-    // Verificar se a estratégia existe para o hostname atual
-    const strategyName = `replitauth:${hostname}`;
+    // Tentar com o domínio configurado do REPLIT_DOMAINS
+    const domains = process.env.REPLIT_DOMAINS?.split(",") || [];
+    console.log(`[Auth] Domínios disponíveis:`, domains);
+    
+    // Tenta usar o hostname atual ou um dos domínios configurados
+    let strategyName = `replitauth:${hostname}`;
+    
+    // Se a estratégia com o hostname atual não existir, tenta usar o primeiro domínio configurado
+    if (!passport._strategies[strategyName] && domains.length > 0) {
+      strategyName = `replitauth:${domains[0]}`;
+      console.log(`[Auth] Tentando estratégia alternativa: ${strategyName}`);
+    }
+    
+    // Verifica novamente se a estratégia existe
     if (!passport._strategies[strategyName]) {
-      console.error(`[Auth] Estratégia ${strategyName} não encontrada. Estratégias disponíveis:`, Object.keys(passport._strategies));
+      console.error(`[Auth] Nenhuma estratégia válida encontrada. Estratégias disponíveis:`, Object.keys(passport._strategies));
       return res.redirect('/login-error');
     }
     
     // Usar authenticate com um callback personalizado para depuração
-    passport.authenticate(strategyName, { failureRedirect: '/login-error' })(req, res, function() {
+    passport.authenticate(strategyName, { 
+      failureRedirect: '/login-error',
+      failWithError: true
+    })(req, res, function(err: any) {
+      if (err) {
+        console.error('[Auth] Erro durante autenticação:', err);
+        return res.redirect('/login-error');
+      }
       console.log('[Auth] Login bem-sucedido, redirecionando para /', { userId: (req.user as any)?.claims?.sub });
       return res.redirect('/');
     });
