@@ -32,12 +32,21 @@ export function getSession() {
   
   // Usar PostgreSQL para armazenamento de sessão
   const PgStore = connectPg(session);
-  const sessionStore = new PgStore({
-    // Usar o cliente SQL com a função 'query' que adicionamos
-    pool: sql,
-    tableName: 'sessions',
-    createTableIfMissing: true
-  });
+  let sessionStore;
+  
+  try {
+    sessionStore = new PgStore({
+      // Usar o cliente SQL com a função 'query' que adicionamos
+      pool: sql,
+      tableName: 'sessions',
+      createTableIfMissing: true
+    });
+    console.log('[Auth] Sessão configurada com PostgreSQL');
+  } catch (error) {
+    console.error('[Auth] Erro ao configurar sessão com PostgreSQL, usando memória:', error);
+    // Fallback para armazenamento em memória
+    sessionStore = new session.MemoryStore();
+  }
   
   return session({
     secret: process.env.SESSION_SECRET || 'temp-session-secret-for-development',
@@ -46,8 +55,9 @@ export function getSession() {
     store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: false, // Definir como false para desenvolvimento para permitir cookies em HTTP
+      secure: process.env.NODE_ENV === 'production', // HTTPS apenas em produção
       maxAge: sessionTtl,
+      sameSite: 'lax'
     },
   });
 }
@@ -65,6 +75,13 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
+  console.log('[Auth] Tentando salvar usuário com claims:', JSON.stringify({
+    id: claims["sub"],
+    email: claims["email"],
+    firstName: claims["first_name"],
+    lastName: claims["last_name"]
+  }));
+  
   try {
     // Tenta salvar no banco de dados
     await storage.upsertUser({
@@ -79,6 +96,7 @@ async function upsertUser(
       aiCreditsLeft: 10,
       storeLimit: 1
     });
+    console.log('[Auth] Usuário salvo com sucesso no banco de dados');
   } catch (error) {
     console.error("Erro ao salvar usuário no banco de dados, usando armazenamento em memória:", error);
     
@@ -151,9 +169,33 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+    console.log(`[Auth] Recebendo callback com query params:`, req.query);
+    console.log(`[Auth] Hostname: ${req.hostname}`);
+    
+    // Usar authenticate com um callback personalizado para depuração
+    passport.authenticate(`replitauth:${req.hostname}`, (err, user, info) => {
+      console.log('[Auth] Resultado auth:', { err, user: !!user, info });
+      
+      if (err) {
+        console.error('[Auth] Erro durante autenticação:', err);
+        return res.redirect('/api/login');
+      }
+      
+      if (!user) {
+        console.log('[Auth] Usuário não autenticado:', info);
+        return res.redirect('/api/login');
+      }
+      
+      // Login manual para garantir que a sessão seja salva
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error('[Auth] Erro no login:', loginErr);
+          return res.redirect('/api/login');
+        }
+        
+        console.log('[Auth] Login bem-sucedido, redirecionando para /', { userId: (user as any).claims?.sub });
+        return res.redirect('/');
+      });
     })(req, res, next);
   });
 
