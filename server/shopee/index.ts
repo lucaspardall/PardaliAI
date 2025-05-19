@@ -23,9 +23,15 @@ export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
   // Configurar URL de redirecionamento com base no ambiente
   let redirectUrl = config?.redirectUrl || DEFAULT_CONFIG.redirectUrl;
   
-  // Em ambiente de desenvolvimento, usamos a URL do Replit ou localhost
+  // Em ambiente de desenvolvimento, usamos a URL do Replit
   if (process.env.NODE_ENV === 'development') {
-    const baseUrl = process.env.REPLIT_URL || 'http://localhost:5000';
+    // Obter a URL do Replit a partir do ambiente
+    const replitUrl = process.env.REPL_SLUG 
+      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+      : process.env.REPLIT_URL;
+    
+    // Usar a URL do Replit se disponível, caso contrário localhost
+    const baseUrl = replitUrl || 'https://cipshopee.replit.app';
     redirectUrl = `${baseUrl}/api/shopee/callback`;
     console.log(`[Ambiente de desenvolvimento] URL de redirecionamento configurada: ${redirectUrl}`);
   } else {
