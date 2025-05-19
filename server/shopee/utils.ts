@@ -26,7 +26,7 @@ export function getApiBaseUrl(region: ShopeeRegion): string {
     'ID': 'https://partner.shopeemobile.com',
     'VN': 'https://partner.shopeemobile.com',
     'PH': 'https://partner.shopeemobile.com',
-    'BR': 'https://partner.shopeemobile.com.br',
+    'BR': 'https://open.shopee.com.br',
     'MX': 'https://partner.shopee.com.mx',
     'CO': 'https://partner.shopee.com.co',
     'CL': 'https://partner.shopee.cl',
@@ -53,21 +53,42 @@ export function generateSignature(
   partnerKey: string, 
   path: string, 
   timestamp: number,
-  accessToken?: string,
-  shopId?: string
+  accessToken?: { access_token: string },
+  shopId?: { shop_id: string },
+  useBaseStringDirectly: boolean = false
 ): string {
-  // A string base varia conforme o tipo de endpoint:
-  // Para autorização inicial: baseString = partnerId + apiPath + timestamp
-  // Para endpoints autenticados de loja: baseString = partnerId + apiPath + timestamp + accessToken + shopId
-  let baseString = `${partnerId}${path}${timestamp}`;
-
-  // Adicionar token de acesso e ID da loja se fornecidos (para APIs autenticadas)
-  if (accessToken) {
-    baseString += accessToken;
-  }
-
-  if (shopId) {
-    baseString += shopId;
+  let baseString = '';
+  
+  if (useBaseStringDirectly) {
+    // Usar a string base fornecida diretamente (útil para endpoints que precisam de formato específico)
+    baseString = path;
+  } else {
+    // A nova documentação da Shopee v2 requer formatação específica
+    // Construir string base conforme a documentação:
+    // Para endpoints não autenticados: 
+    //   baseString = endpoint + "?" + parâmetros em ordem alfabética
+    
+    // Criar mapa de parâmetros
+    const params: Record<string, string> = {
+      'partner_id': partnerId,
+      'timestamp': timestamp.toString()
+    };
+    
+    // Adicionar token de acesso se fornecido
+    if (accessToken) {
+      params['access_token'] = accessToken.access_token;
+    }
+    
+    // Adicionar shop_id se fornecido
+    if (shopId) {
+      params['shop_id'] = shopId.shop_id;
+    }
+    
+    // Ordenar parâmetros em ordem alfabética por chave
+    const sortedParams = Object.keys(params).sort().map(key => `${key}=${params[key]}`).join('&');
+    
+    // Construir a string base conforme a documentação
+    baseString = `${path}?${sortedParams}`;
   }
 
   console.log('Assinatura - String base:', baseString);
