@@ -120,18 +120,13 @@ export class DatabaseStorage implements IStorage {
   async getStoresByUserId(userId: string): Promise<ShopeeStore[]> {
     console.log(`Buscando lojas para o usuário: ${userId}`);
     try {
-      // Construir a query sem executá-la imediatamente
-      const query = db
+      // Executar a query diretamente sem construí-la em variável
+      const results = await db
         .select()
         .from(shopeeStores)
         .where(eq(shopeeStores.userId, userId))
         .orderBy(desc(shopeeStores.createdAt));
-
-      // Log da query sendo construída (para fins de debug)
-      console.log("Query sendo executada:", JSON.stringify(query.toSQL()));
-
-      // Executar a query
-      const results = await query;
+        
       console.log(`Encontradas ${results.length} lojas para o usuário ${userId}`);
       return results;
     } catch (error) {
@@ -327,12 +322,23 @@ export class DatabaseStorage implements IStorage {
 
   // Notification operations
   async getNotificationsByUserId(userId: string, limit = 10): Promise<Notification[]> {
-    return db
-      .select()
-      .from(notifications)
-      .where(eq(notifications.userId, userId))
-      .orderBy(desc(notifications.createdAt))
-      .limit(limit);
+    try {
+      // Execute diretamente sem construir a consulta em etapas
+      const results = await db
+        .select()
+        .from(notifications)
+        .where(eq(notifications.userId, userId))
+        .orderBy(desc(notifications.createdAt))
+        .limit(limit);
+      return results;
+    } catch (error) {
+      console.error("Erro ao buscar notificações:", error);
+      if (error instanceof Error) {
+        console.error("Mensagem:", error.message);
+      }
+      // Retorna array vazio em caso de erro para não quebrar a aplicação
+      return [];
+    }
   }
 
   async markNotificationAsRead(id: number): Promise<boolean> {
