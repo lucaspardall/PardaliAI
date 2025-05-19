@@ -230,15 +230,24 @@ export class ShopeeClient {
    */
   async connect(code: string, shopId: string): Promise<ShopeeAuthTokens> {
     try {
+      console.log(`Iniciando conexão com a Shopee para código: ${code} e shopId: ${shopId}`);
       const tokens = await this.authManager.getAccessToken(code, shopId);
       this.tokens = tokens;
+      
+      console.log(`Tokens obtidos com sucesso: ${JSON.stringify({
+        accessToken: tokens.accessToken ? '***' : undefined,
+        refreshToken: tokens.refreshToken ? '***' : undefined,
+        expiresAt: tokens.expiresAt,
+        shopId: tokens.shopId
+      })}`);
       
       // Salvar os tokens no armazenamento
       await this.saveTokensToStorage(tokens);
       
       return tokens;
     } catch (error) {
-      console.error('Failed to connect with Shopee:', error);
+      console.error(`Erro ao conectar com a Shopee: ${error.message}`, error);
+      throw error;('Failed to connect with Shopee:', error);
       throw error;
     }
   }

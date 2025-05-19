@@ -70,8 +70,28 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
 
   // Handle real OAuth connection with Shopee
   const handleConnectOAuth = () => {
-    // Redirecionar para o endpoint de autorização da Shopee
-    window.location.href = '/api/shopee/authorize';
+    try {
+      setIsConnecting(true);
+      // Exibir indicador de carregamento antes do redirecionamento
+      toast({
+        title: "Iniciando conexão",
+        description: "Você será redirecionado para autorização da Shopee em instantes...",
+        variant: "default",
+      });
+      
+      // Atraso pequeno para garantir que o toast seja exibido antes do redirecionamento
+      setTimeout(() => {
+        // Redirecionar para o endpoint de autorização da Shopee
+        window.location.href = '/api/shopee/authorize';
+      }, 1000);
+    } catch (error) {
+      setIsConnecting(false);
+      toast({
+        title: "Erro ao iniciar conexão",
+        description: "Não foi possível iniciar o processo de conexão com a Shopee.",
+        variant: "destructive",
+      });
+    }
   };
   
   // Função para simular conexão OAuth (para ambiente de desenvolvimento)

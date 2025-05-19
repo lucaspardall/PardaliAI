@@ -26,6 +26,11 @@ export class ShopeeAuthManager {
     // De acordo com a documentação da API v2, o endpoint correto para autorização
     const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
     
+    console.log(`Gerando URL de autorização para a Shopee`);
+    console.log(`Partner ID: ${this.config.partnerId}`);
+    console.log(`Região: ${this.config.region}`);
+    console.log(`URL de Redirecionamento: ${this.config.redirectUrl}`);
+    
     // Gerando assinatura no formato esperado pela Shopee
     // A string base para assinatura deve incluir: partner_id + api_path + timestamp
     const signature = generateSignature(
@@ -46,7 +51,9 @@ export class ShopeeAuthManager {
     url.searchParams.append('sign', signature);
     url.searchParams.append('redirect', this.config.redirectUrl);
     
-    return url.toString();
+    console.log(`URL de autorização gerada: ${url.toString()}`);
+    
+    return url.toString();urn url.toString();
   }
 
   /**

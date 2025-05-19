@@ -74,9 +74,11 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
  */
 router.get('/callback', isAuthenticated, async (req: Request, res: Response) => {
   try {
+    console.log(`Recebendo callback da Shopee com parâmetros:`, req.query);
     const { code, shop_id } = req.query;
     
     if (!code || !shop_id) {
+      console.error('Parâmetros obrigatórios ausentes na callback da Shopee:', req.query);
       return res.status(400).json({
         message: 'Missing required parameters',
         error: 'Missing code or shop_id'

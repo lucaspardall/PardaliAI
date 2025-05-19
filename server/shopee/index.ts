@@ -20,13 +20,22 @@ const DEFAULT_CONFIG: ShopeeAuthConfig = {
  * @param config Configuração opcional (usa valores padrão se não fornecida)
  */
 export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
+  // Configurar URL de redirecionamento com base no ambiente
+  let redirectUrl = config?.redirectUrl || DEFAULT_CONFIG.redirectUrl;
+  
+  // Em ambiente de desenvolvimento, usamos a URL do Replit ou localhost
+  if (process.env.NODE_ENV === 'development') {
+    const baseUrl = process.env.REPLIT_URL || 'http://localhost:5000';
+    redirectUrl = `${baseUrl}/api/shopee/callback`;
+    console.log(`[Ambiente de desenvolvimento] URL de redirecionamento configurada: ${redirectUrl}`);
+  } else {
+    console.log(`[Ambiente de produção] URL de redirecionamento configurada: ${redirectUrl}`);
+  }
+  
   const fullConfig: ShopeeAuthConfig = {
     ...DEFAULT_CONFIG,
     ...config,
-    // Customizar URL de redirecionamento baseado no ambiente
-    redirectUrl: process.env.NODE_ENV === 'development' 
-      ? `${process.env.REPLIT_URL || 'http://localhost:5000'}/api/shopee/callback` 
-      : (config?.redirectUrl || DEFAULT_CONFIG.redirectUrl)
+    redirectUrl
   };
   
   // Inicializar o cache (já está sendo feito pela importação)
