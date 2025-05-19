@@ -20,4 +20,5 @@ const sql = Object.assign(neonClient, {
 
 // Inicializar o cliente Drizzle ORM
 export const db = drizzle(sql, { schema });
+export { sql }; // Export sql directly
 export const client = sql;
