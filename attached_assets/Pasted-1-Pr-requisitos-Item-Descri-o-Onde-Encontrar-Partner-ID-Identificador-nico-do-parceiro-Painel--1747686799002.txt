@@ -1,0 +1,170 @@
+1. Pré-requisitos
+Item	Descrição	Onde Encontrar
+Partner ID	Identificador único do parceiro	Painel do Desenvolvedor Shopee
+Partner Key	Chave secreta para assinatura	Painel do Desenvolvedor Shopee
+Shop ID	ID numérico da loja	URL da loja (ex: shopee.com.br/shop/12345678)
+Redirect URI	URL aprovada para callbacks	Configurada no painel de aplicativos
+2. Configuração Inicial
+Ambientes
+javascript
+// URLs por região (Brasil)
+const SHOPEE_API = {
+  AUTH: 'https://partner.shopeemobile.com.br/api/v2/',
+  ORDER: 'https://partner.shopeemobile.com.br/api/v2/order/',
+  PRODUCT: 'https://partner.shopeemobile.com.br/api/v2/product/'
+};
+Headers Obrigatórios
+http
+Content-Type: application/json
+Authorization: sha256 {assinatura}
+X-Partner-Id: {partner_id}
+X-Timestamp: {unix_timestamp}
+3. Fluxo de Autenticação OAuth 2.0
+Passo 1: Obter Authorization Code
+http
+GET https://partner.shopeemobile.com.br/api/v2/shop/auth_partner?partner_id={partner_id}&redirect={redirect_uri}&state={unique_id}
+Passo 2: Trocar Code por Access Token
+python
+import hashlib
+import hmac
+import time
+
+def generate_signature(partner_key, path, params):
+    base_str = f"{path}?{urlencode(sorted(params.items()))}"
+    return hmac.new(partner_key.encode(), base_str.encode(), hashlib.sha256).hexdigest()
+
+params = {
+    "partner_id": "SEU_PARTNER_ID",
+    "code": "CODE_RECEBIDO",
+    "shop_id": "SEU_SHOP_ID",
+    "timestamp": int(time.time())
+}
+
+signature = generate_signature("SUA_PARTNER_KEY", "/api/v2/auth/token/get", params)
+
+response = requests.post(
+    "https://partner.shopeemobile.com.br/api/v2/auth/token/get",
+    json=params,
+    headers={
+        "Authorization": f"sha256 {signature}",
+        "X-Partner-Id": params["partner_id"],
+        "X-Timestamp": str(params["timestamp"])
+    }
+)
+Resposta Esperada:
+json
+{
+  "access_token": "xxxxxxxx",
+  "refresh_token": "yyyyyyyy",
+  "expire_in": 14400,
+  "shop_id": 12345678
+}
+4. Estrutura de Assinatura HMAC-SHA256
+Fórmula da assinatura:
+
+HMAC-SHA256(
+  PARTNER_KEY, 
+  URL_PATH + "?" + PARAMS_ORDENADOS
+)
+Exemplo Prático:
+
+Parâmetros:
+
+json
+{
+  "partner_id": "1001234",
+  "shop_id": "123456",
+  "timestamp": "1678901234"
+}
+Ordenar parâmetros alfabeticamente:
+
+python
+ordered = "partner_id=1001234&shop_id=123456&timestamp=1678901234"
+Concatenar com path:
+
+/api/v2/product/get_item_list?partner_id=1001234&shop_id=123456&timestamp=1678901234
+Calcular HMAC:
+
+python
+hmac.new(key, msg, hashlib.sha256).hexdigest()
+5. Endpoints Principais
+Produtos
+http
+POST /api/v2/product/get_item_list
+{
+  "pagination_offset": 0,
+  "pagination_entries_per_page": 100,
+  "update_time_from": 1672531200,
+  "update_time_to": 1672617599
+}
+Pedidos
+http
+POST /api/v2/order/get_order_list
+{
+  "time_range_field": "create_time",
+  "time_from": 1672531200,
+  "time_to": 1672617599,
+  "page_size": 100
+}
+Atualização de Estoque
+http
+POST /api/v2/product/update_stock
+{
+  "item_id": 123456789,
+  "stock": 50,
+  "partner_shop_id": 987654321
+}
+6. Tratamento de Erros Comuns
+Código	Erro	Solução
+1004	Invalid signature	Verificar ordenação dos parâmetros e encoding
+2001	Expired access token	Usar refresh_token para obter novo access_token
+2004	Missing required parameter	Validar lista de parâmetros obrigatórios
+3001	Rate limit exceeded	Implementar backoff exponencial
+7. Boas Práticas
+Renovação de Tokens:
+
+python
+def refresh_token(refresh_token):
+    params = {
+        "partner_id": PARTNER_ID,
+        "refresh_token": refresh_token,
+        "timestamp": int(time.time())
+    }
+    signature = generate_signature(PARTNER_KEY, "/api/v2/auth/access_token/get", params)
+    # ... request ...
+Controle de Rate Limit:
+
+python
+import time
+
+def make_request():
+    try:
+        return api_call()
+    except ShopeeAPIError as e:
+        if e.code == 3001:
+            time.sleep(2 ** retry_count)
+            retry()
+Logging:
+
+python
+import logging
+
+shopee_logger = logging.getLogger('shopee_api')
+shopee_logger.setLevel(logging.DEBUG)
+8. Ferramentas Recomendadas
+Postman Collection:
+
+json
+{
+  "variables": {
+    "partner_id": "{{partner_id}}",
+    "signature": "{{signature}}"
+  },
+  "auth": {
+    "type": "hmac-sha256",
+    "hmac": {
+      "algorithm": "sha256",
+      "key": "{{partner_key}}"
+    }
+  }
+}
