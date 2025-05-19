@@ -5,10 +5,14 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { aiService } from "./ai";
 import { z } from "zod";
 import { insertShopeeStoreSchema, insertProductSchema } from "@shared/schema";
+import shopeeRoutes from "./routes/shopee";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   await setupAuth(app);
+  
+  // Register Shopee routes
+  app.use('/api/shopee', shopeeRoutes);
 
   // Auth endpoints
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
