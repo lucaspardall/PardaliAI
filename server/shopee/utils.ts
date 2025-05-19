@@ -19,23 +19,23 @@ export function getTimestamp(): number {
  */
 export function getApiBaseUrl(region: ShopeeRegion): string {
   const regionMap: Record<ShopeeRegion, string> = {
-    SG: 'https://partner.shopeemobile.com',
-    MY: 'https://partner.shopeemobile.com',
-    TH: 'https://partner.shopeemobile.com',
-    TW: 'https://partner.shopeemobile.com',
-    ID: 'https://partner.shopeemobile.com',
-    VN: 'https://partner.shopeemobile.com',
-    PH: 'https://partner.shopeemobile.com',
-    BR: 'https://partner.shopee.com.br',
-    MX: 'https://partner.shopee.mx',
-    CO: 'https://partner.shopee.com.co',
-    CL: 'https://partner.shopee.cl',
-    PL: 'https://partner.shopee.pl',
-    ES: 'https://partner.shopee.es',
-    FR: 'https://partner.shopee.fr'
+    'SG': 'https://partner.shopeemobile.com',
+    'MY': 'https://partner.shopeemobile.com',
+    'TH': 'https://partner.shopeemobile.com',
+    'TW': 'https://partner.shopeemobile.com',
+    'ID': 'https://partner.shopeemobile.com',
+    'VN': 'https://partner.shopeemobile.com',
+    'PH': 'https://partner.shopeemobile.com',
+    'BR': 'https://open-api.shopee.com.br',
+    'MX': 'https://partner.shopee.com.mx',
+    'CO': 'https://partner.shopee.com.co',
+    'CL': 'https://partner.shopee.cl',
+    'PL': 'https://partner.shopee.pl',
+    'ES': 'https://partner.shopee.es',
+    'FR': 'https://partner.shopee.fr'
   };
-  
-  return regionMap[region] || regionMap.SG;
+
+  return regionMap[region] || regionMap['SG'];
 }
 
 /**
@@ -60,22 +60,22 @@ export function generateSignature(
   // Para autorização inicial: baseString = partnerId + apiPath + timestamp
   // Para endpoints autenticados de loja: baseString = partnerId + apiPath + timestamp + accessToken + shopId
   let baseString = `${partnerId}${path}${timestamp}`;
-  
+
   // Adicionar token de acesso e ID da loja se fornecidos (para APIs autenticadas)
   if (accessToken) {
     baseString += accessToken;
   }
-  
+
   if (shopId) {
     baseString += shopId;
   }
-  
+
   console.log('Assinatura - String base:', baseString);
-  
+
   // Gerar assinatura HMAC-SHA256 usando o partnerKey como segredo
   const hmac = createHmac('sha256', partnerKey);
   hmac.update(baseString);
-  
+
   return hmac.digest('hex');
 }
 
@@ -89,11 +89,11 @@ export function parseApiError(error: any): ShopeeApiError {
   if (error.error && error.message) {
     return error;
   }
-  
+
   // Se é um erro do Axios
   if (error.response) {
     const data = error.response.data;
-    
+
     // Extrair mensagem de erro da resposta da API Shopee
     if (data && data.error) {
       return {
@@ -103,7 +103,7 @@ export function parseApiError(error: any): ShopeeApiError {
         response: data
       };
     }
-    
+
     // Erro HTTP genérico
     return {
       error: `HTTP Error ${error.response.status}`,
@@ -111,7 +111,7 @@ export function parseApiError(error: any): ShopeeApiError {
       response: error.response.data
     };
   }
-  
+
   // Erro de rede ou timeout
   if (error.request) {
     return {
@@ -119,7 +119,7 @@ export function parseApiError(error: any): ShopeeApiError {
       message: 'Network Error: The request was made but no response was received'
     };
   }
-  
+
   // Outros erros
   return {
     error: 'UnknownError',
