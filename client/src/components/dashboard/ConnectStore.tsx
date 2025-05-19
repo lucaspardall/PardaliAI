@@ -68,27 +68,10 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
     },
   });
 
-  // Handle OAuth-like connection simulation
+  // Handle real OAuth connection with Shopee
   const handleConnectOAuth = () => {
-    setIsConnecting(true);
-    
-    // Simulate OAuth flow with timeout
-    setTimeout(() => {
-      // Generate random shop ID
-      const randomShopId = `shop_${Math.floor(Math.random() * 1000000)}`;
-      
-      // Create demo store
-      connectStoreMutation.mutate({
-        shopName: "Minha Loja Shopee",
-        shopId: randomShopId,
-        shopRegion: "BR",
-        accessToken: `demo_access_token_${randomShopId}`,
-        refreshToken: `demo_refresh_token_${randomShopId}`,
-        tokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-      });
-      
-      setIsConnecting(false);
-    }, 2000);
+    // Redirecionar para o endpoint de autorização da Shopee
+    window.location.href = '/api/shopee/authorize';
   };
 
   // Handle manual connection form submission
