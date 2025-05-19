@@ -118,29 +118,43 @@ export class DatabaseStorage implements IStorage {
 
   // Store operations
   async getStoresByUserId(userId: string): Promise<ShopeeStore[]> {
-    console.log(`Buscando lojas para o usuário: ${userId}`);
     try {
-      // Verifica se temos um shopeeStores definido antes de fazer a consulta
+      console.log(`Buscando lojas para o usuário ${userId}`);
+
+      // Verificar se a tabela shopeeStores está definida
       if (!shopeeStores) {
         console.error("Tabela shopeeStores não está definida");
         return [];
       }
-      
-      // Executa a consulta com tratamento de erro mais específico
-      const results = await db
-        .select()
-        .from(shopeeStores)
-        .where(eq(shopeeStores.userId, userId));
-      
-      console.log(`Encontradas ${results.length} lojas para o usuário ${userId}`);
-      return results;
-    } catch (error) {
-      console.error("Erro detalhado em getStoresByUserId:", error);
-      if (error instanceof Error) {
-        console.error("Mensagem:", error.message);
-        console.error("Stack:", error.stack);
+
+      try {
+        // Executa a consulta com tratamento de erro mais específico
+        const results = await db
+          .select()
+          .from(shopeeStores)
+          .where(eq(shopeeStores.userId, userId));
+
+        console.log(`Encontradas ${results.length} lojas para o usuário ${userId}`);
+        return results;
+      } catch (queryError) {
+        console.error(`Erro na consulta SQL: ${queryError}`);
+
+        // Método alternativo com SQL direto
+        try {
+          const sql = `SELECT * FROM "shopee_stores" WHERE "user_id" = $1`;
+          // Assuming 'client' is available in the scope, you might need to import it or use the db connection directly
+          // This depends on how your database connection is set up
+          const queryResult = await db.execute(sql`${userId}`); // Modified to use drizzle's sql template tag
+
+          return queryResult.rows || [];
+        } catch (fallbackError) {
+          console.error(`Erro no método fallback: ${fallbackError}`);
+          return [];
+        }
       }
-      // Retorna array vazio em caso de erro para não quebrar a aplicação
+    } catch (error) {
+      // Registra o erro detalhado para diagnóstico
+      console.error(`Erro detalhado em getStoresByUserId: ${error}`);
       return [];
     }
   }
