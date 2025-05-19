@@ -25,7 +25,8 @@ export class ShopeeAuthManager {
     const timestamp = getTimestamp();
     
     // De acordo com a documentação da API v2, o endpoint correto para autorização
-    const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
+    // Este caminho será anexado à URL base do vendedor ou da API
+    const basePathForShopAuthorize = '/shop/auth_partner';
     
     console.log(`Gerando URL de autorização para a Shopee`);
     console.log(`Partner ID: ${this.config.partnerId}`);

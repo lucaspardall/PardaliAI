@@ -48,7 +48,7 @@ export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false):
     ID: 'https://openapi.shopee.co.id',  // Indonésia
     VN: 'https://openapi.shopee.vn',     // Vietnã
     PH: 'https://openapi.shopee.ph',     // Filipinas
-    BR: 'https://openplatform.shopee.com.br', // Brasil
+    BR: 'https://partner.shopeemobile.com', // Brasil (mesmo do mobile)
     MX: 'https://openapi.shopee.com.mx', // México
     CO: 'https://openapi.shopee.com.co', // Colômbia
     CL: 'https://openapi.shopee.cl',     // Chile
