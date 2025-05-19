@@ -50,12 +50,12 @@ export function getSession() {
   
   return session({
     secret: process.env.SESSION_SECRET || 'temp-session-secret-for-development',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // HTTPS apenas em produção
+      secure: false, // Permitir HTTP para desenvolvimento
       maxAge: sessionTtl,
       sameSite: 'lax'
     },
@@ -144,14 +144,20 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
+  // Adicionar log para depuração
+  console.log('[Auth] Domínios configurados:', process.env.REPLIT_DOMAINS);
+  
   for (const domain of process.env
     .REPLIT_DOMAINS!.split(",")) {
+    const callbackURL = `https://${domain}/api/callback`;
+    console.log(`[Auth] Configurando estratégia para domínio: ${domain} com callback: ${callbackURL}`);
+    
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
         config,
         scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
+        callbackURL,
       },
       verify,
     );
@@ -173,30 +179,10 @@ export async function setupAuth(app: Express) {
     console.log(`[Auth] Hostname: ${req.hostname}`);
     
     // Usar authenticate com um callback personalizado para depuração
-    passport.authenticate(`replitauth:${req.hostname}`, (err, user, info) => {
-      console.log('[Auth] Resultado auth:', { err, user: !!user, info });
-      
-      if (err) {
-        console.error('[Auth] Erro durante autenticação:', err);
-        return res.redirect('/api/login');
-      }
-      
-      if (!user) {
-        console.log('[Auth] Usuário não autenticado:', info);
-        return res.redirect('/api/login');
-      }
-      
-      // Login manual para garantir que a sessão seja salva
-      req.login(user, (loginErr) => {
-        if (loginErr) {
-          console.error('[Auth] Erro no login:', loginErr);
-          return res.redirect('/api/login');
-        }
-        
-        console.log('[Auth] Login bem-sucedido, redirecionando para /', { userId: (user as any).claims?.sub });
-        return res.redirect('/');
-      });
-    })(req, res, next);
+    passport.authenticate(`replitauth:${req.hostname}`, { failureRedirect: '/login-error' })(req, res, function() {
+      console.log('[Auth] Login bem-sucedido, redirecionando para /', { userId: (req.user as any)?.claims?.sub });
+      return res.redirect('/');
+    });
   });
 
   app.get("/api/logout", (req, res) => {
@@ -207,6 +193,15 @@ export async function setupAuth(app: Express) {
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );
+    });
+  });
+  
+  // Adicionar rota para erros de login
+  app.get("/login-error", (req, res) => {
+    console.log('[Auth] Erro no processo de login');
+    res.status(401).json({ 
+      message: "Falha na autenticação com o Replit", 
+      redirectTo: "/api/login" 
     });
   });
   
