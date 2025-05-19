@@ -66,8 +66,18 @@ export class ShopeeAuthManager {
     url.searchParams.append('redirect', this.config.redirectUrl);
     url.searchParams.append('state', params.state);
     
-    console.log(`URL de autorização gerada: ${url.toString()}`);
-    return url.toString();
+    // Verificar se a URL está corretamente formatada - garantindo que timestamp está correto
+    const urlString = url.toString();
+    if (urlString.includes('×tamp=')) {
+      console.error('Erro na codificação da URL: problema com o parâmetro timestamp');
+      // Corrigir manualmente a URL substituindo o caractere incorreto
+      const correctedUrl = urlString.replace('×tamp=', 'timestamp=');
+      console.log(`URL de autorização corrigida: ${correctedUrl}`);
+      return correctedUrl;
+    }
+    
+    console.log(`URL de autorização gerada: ${urlString}`);
+    return urlString;
   }
 
   /**
