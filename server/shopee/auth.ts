@@ -18,46 +18,34 @@ export class ShopeeAuthManager {
 
   /**
    * Gera URL para o fluxo de autorização OAuth
+   * Implementa o fluxo de autorização conforme documentação oficial da Shopee Open Platform
    */
   getAuthorizationUrl(): string {
     const timestamp = getTimestamp();
-    const path = AUTH.AUTHORIZE; // Agora contém a URL completa
     
-    // Criar objeto de estado que a Shopee espera
-    const state = {
-      nonce: Math.random().toString(36).substring(2, 15),
-      id: Number(this.config.partnerId),
-      auth_shop: 1,
-      next_url: "https://open.shopee.com/authorize?isRedirect=true",
-      is_auth: 0
-    };
-    
-    // Convertendo para base64
-    const stateStr = Buffer.from(JSON.stringify(state)).toString('base64');
+    // De acordo com a documentação, precisamos usar o endpoint correto
+    // Usando a URL de autorização da loja para o Brasil
+    const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
     
     // Gerando assinatura no formato esperado pela Shopee
+    // A string base para assinatura deve incluir: partner_id + api_path + timestamp
     const signature = generateSignature(
       this.config.partnerId, 
       this.config.partnerKey, 
-      "/api/v1/oauth2/callback", 
+      basePathForShopAuthorize, 
       timestamp
     );
     
     // Construção da URL com todos os parâmetros necessários
-    const url = new URL(path);
-    url.searchParams.append('client_id', this.config.partnerId);
-    url.searchParams.append('lang', 'pt');
-    url.searchParams.append('login_types', '[1,4,2]');
-    url.searchParams.append('max_auth_age', '3600');
-    url.searchParams.append('redirect_uri', 'https://open.shopee.com/api/v1/oauth2/callback');
-    url.searchParams.append('region', 'BR');
-    url.searchParams.append('required_passwd', 'true');
-    url.searchParams.append('respond_code', 'code');
-    url.searchParams.append('scope', 'profile');
-    url.searchParams.append('sign', signature);
-    url.searchParams.append('state', stateStr);
+    // Usamos a base URL da região + o path
+    const baseUrl = getApiBaseUrl(this.config.region);
+    const url = new URL(baseUrl + basePathForShopAuthorize);
+    
+    // Parâmetros obrigatórios conforme documentação
+    url.searchParams.append('partner_id', this.config.partnerId);
     url.searchParams.append('timestamp', timestamp.toString());
-    url.searchParams.append('title', 'sla_title_open_platform_app_login');
+    url.searchParams.append('sign', signature);
+    url.searchParams.append('redirect', this.config.redirectUrl);
     
     return url.toString();
   }
