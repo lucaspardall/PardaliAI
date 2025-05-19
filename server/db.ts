@@ -12,6 +12,15 @@ const enhancedSql = Object.assign(rawSql, {
   // Implementação da função query que o connect-pg-simple espera
   query: async (text: string, params: any[] = []) => {
     try {
+      // Trata o caso de params vazios para evitar erros de binding
+      if (!params || params.length === 0) {
+        const result = await rawSql(text);
+        return {
+          rows: Array.isArray(result) ? result : [],
+          rowCount: Array.isArray(result) ? result.length : 0
+        };
+      }
+      
       const result = await rawSql(text, params);
       // Formata o resultado para o formato que o connect-pg-simple espera
       return {

@@ -120,13 +120,18 @@ export class DatabaseStorage implements IStorage {
   async getStoresByUserId(userId: string): Promise<ShopeeStore[]> {
     console.log(`Buscando lojas para o usuário: ${userId}`);
     try {
-      // Executar a query diretamente sem construí-la em variável
+      // Verifica se temos um shopeeStores definido antes de fazer a consulta
+      if (!shopeeStores) {
+        console.error("Tabela shopeeStores não está definida");
+        return [];
+      }
+      
+      // Executa a consulta com tratamento de erro mais específico
       const results = await db
         .select()
         .from(shopeeStores)
-        .where(eq(shopeeStores.userId, userId))
-        .orderBy(desc(shopeeStores.createdAt));
-        
+        .where(eq(shopeeStores.userId, userId));
+      
       console.log(`Encontradas ${results.length} lojas para o usuário ${userId}`);
       return results;
     } catch (error) {
