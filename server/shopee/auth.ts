@@ -2,6 +2,7 @@
  * Gerenciamento de autenticação OAuth para Shopee API
  */
 import axios from 'axios';
+import { createHmac } from 'crypto';
 import { AUTH } from './endpoints';
 import { ShopeeAuthConfig, ShopeeAuthTokens, ShopeeApiError } from './types';
 import { generateSignature, getTimestamp, getApiBaseUrl, parseApiError } from './utils';
@@ -31,27 +32,25 @@ export class ShopeeAuthManager {
     console.log(`Região: ${this.config.region}`);
     console.log(`URL de Redirecionamento: ${this.config.redirectUrl}`);
     
-    // Parâmetros para o cálculo da assinatura
+    // Parâmetros conforme documentação atualizada
     const params: Record<string, string> = {
       partner_id: this.config.partnerId,
-      timestamp: timestamp.toString()
+      timestamp: timestamp.toString(),
+      redirect: this.config.redirectUrl,
+      // Adicionando state para prevenção de CSRF
+      state: `cipshopee_${Date.now()}`
     };
     
-    // Ordenar parâmetros em ordem alfabética 
-    const sortedParams = Object.keys(params).sort().map(key => `${key}=${params[key as keyof typeof params]}`).join('&');
-    
-    // Construir a string base para assinatura
-    const baseString = `${basePathForShopAuthorize}?${sortedParams}`;
-    
-    // Gerar assinatura HMAC-SHA256
+    // Gerar assinatura HMAC-SHA256 usando a utility function
+    // Método generateSignature detecta automaticamente o endpoint auth_partner e usa o formato correto
     const signature = generateSignature(
       this.config.partnerId, 
       this.config.partnerKey, 
-      baseString, 
-      timestamp,
-      undefined,
-      undefined,
-      true // Usar a string base diretamente
+      basePathForShopAuthorize, 
+      timestamp, 
+      undefined, 
+      undefined, 
+      false
     );
     
     // Obter URL base da API para a região configurada
@@ -59,10 +58,13 @@ export class ShopeeAuthManager {
     
     // Montar URL completa de autorização
     const url = new URL(`${baseUrl}${basePathForShopAuthorize}`);
+    
+    // Adicionar todos os parâmetros necessários
     url.searchParams.append('partner_id', this.config.partnerId);
     url.searchParams.append('timestamp', timestamp.toString());
     url.searchParams.append('sign', signature);
     url.searchParams.append('redirect', this.config.redirectUrl);
+    url.searchParams.append('state', params.state);
     
     console.log(`URL de autorização gerada: ${url.toString()}`);
     return url.toString();

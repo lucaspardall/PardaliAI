@@ -42,10 +42,11 @@ export function getApiBaseUrl(region: ShopeeRegion): string {
  * Gera assinatura HMAC-SHA256 para autenticação com a API Shopee
  * @param partnerId ID do Parceiro/App na Shopee
  * @param partnerKey Chave secreta do Parceiro/App
- * @param path Caminho do endpoint da API
+ * @param path Caminho do endpoint da API ou string base completa
  * @param timestamp Timestamp UNIX em segundos
  * @param accessToken Token de acesso (opcional, apenas para endpoints autenticados)
  * @param shopId ID da loja (opcional, apenas para endpoints específicos da loja)
+ * @param useBaseStringDirectly Se true, usa a string fornecida diretamente
  * @returns Assinatura hexadecimal
  */
 export function generateSignature(
@@ -62,11 +63,13 @@ export function generateSignature(
   if (useBaseStringDirectly) {
     // Usar a string base fornecida diretamente (útil para endpoints que precisam de formato específico)
     baseString = path;
+  } else if (path === '/api/v2/shop/auth_partner') {
+    // Caso especial para autorização OAuth
+    // Formato: partnerId + endpoint + timestamp
+    baseString = `${partnerId}${path}${timestamp}`;
   } else {
-    // A nova documentação da Shopee v2 requer formatação específica
-    // Construir string base conforme a documentação:
-    // Para endpoints não autenticados: 
-    //   baseString = endpoint + "?" + parâmetros em ordem alfabética
+    // Formato padrão para outros endpoints da API
+    // De acordo com a documentação: caminho_api + "?" + parâmetros_ordenados
     
     // Criar mapa de parâmetros
     const params: Record<string, string> = {
