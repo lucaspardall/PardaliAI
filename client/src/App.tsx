@@ -11,6 +11,7 @@ import Products from "@/pages/dashboard/products";
 import ProductDetail from "@/pages/dashboard/product/[id]";
 import OptimizeProduct from "@/pages/dashboard/optimize/[id]";
 import ConnectStore from "@/pages/dashboard/store/connect";
+import ShopeeConnect from "@/pages/shopee-connect";
 import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import { useAuth } from "./hooks/useAuth";
@@ -62,6 +63,9 @@ function Router() {
       </Route>
       <Route path="/dashboard/subscription">
         {() => <ProtectedRoute component={Subscription} />}
+      </Route>
+      <Route path="/dashboard/shopee-connect">
+        {() => <ProtectedRoute component={ShopeeConnect} />}
       </Route>
       
       {/* Fallback to 404 */}
