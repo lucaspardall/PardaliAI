@@ -147,72 +147,148 @@ export async function setupAuth(app: Express) {
   // Adicionar log para depuração
   console.log('[Auth] Domínios configurados:', process.env.REPLIT_DOMAINS);
   
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
-    const callbackURL = `https://${domain}/api/callback`;
-    console.log(`[Auth] Configurando estratégia para domínio: ${domain} com callback: ${callbackURL}`);
+  try {
+    // Adiciona as estratégias com base nos domínios configurados
+    const domains = process.env.REPLIT_DOMAINS!.split(",").filter(d => d.trim());
     
-    const strategy = new Strategy(
+    if (domains.length === 0) {
+      throw new Error("Nenhum domínio válido configurado em REPLIT_DOMAINS");
+    }
+    
+    // Adiciona uma estratégia genérica para capturar qualquer domínio (mais flexível)
+    const genericCallbackURL = `https://${domains[0]}/api/callback`;
+    console.log(`[Auth] Configurando estratégia genérica com callback: ${genericCallbackURL}`);
+    
+    passport.use(new Strategy(
       {
-        name: `replitauth:${domain}`,
+        name: "replitauth:generic",
         config,
         scope: "openid email profile offline_access",
-        callbackURL,
+        callbackURL: genericCallbackURL,
       },
-      verify,
-    );
-    passport.use(strategy);
+      verify
+    ));
+    
+    // Configura estratégias específicas para cada domínio
+    for (const domain of domains) {
+      const callbackURL = `https://${domain}/api/callback`;
+      console.log(`[Auth] Configurando estratégia para domínio: ${domain} com callback: ${callbackURL}`);
+      
+      const strategy = new Strategy(
+        {
+          name: `replitauth:${domain}`,
+          config,
+          scope: "openid email profile offline_access",
+          callbackURL,
+        },
+        verify,
+      );
+      passport.use(strategy);
+    }
+  } catch (error) {
+    console.error("[Auth] Erro ao configurar estratégias:", error);
   }
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    const hostname = req.hostname;
-    console.log(`[Auth] Iniciando login com hostname: ${hostname}`);
-    
-    passport.authenticate(`replitauth:${hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    try {
+      const hostname = req.hostname;
+      console.log(`[Auth] Iniciando login com hostname: ${hostname}`);
+      
+      // Tenta encontrar estratégias disponíveis
+      const availableStrategies = Object.keys(passport._strategies)
+        .filter(key => key.startsWith('replitauth:'));
+      
+      console.log(`[Auth] Estratégias disponíveis para login:`, availableStrategies);
+      
+      if (availableStrategies.length === 0) {
+        throw new Error('Nenhuma estratégia replitauth disponível');
+      }
+      
+      // Tenta usar a estratégia específica para o hostname atual,
+      // ou a estratégia genérica, ou a primeira disponível
+      const strategyName = passport._strategies[`replitauth:${hostname}`] 
+        ? `replitauth:${hostname}` 
+        : (passport._strategies['replitauth:generic'] 
+          ? 'replitauth:generic' 
+          : availableStrategies[0]);
+      
+      console.log(`[Auth] Usando estratégia para login: ${strategyName}`);
+      
+      passport.authenticate(strategyName, {
+        prompt: "login consent",
+        scope: ["openid", "email", "profile", "offline_access"],
+      })(req, res, next);
+    } catch (error) {
+      console.error('[Auth] Erro ao iniciar login:', error);
+      res.status(500).json({ 
+        message: 'Falha ao iniciar processo de autenticação',
+        error: error.message
+      });
+    }
   });
 
   app.get("/api/callback", (req, res, next) => {
-    console.log(`[Auth] Recebendo callback com query params:`, req.query);
-    const hostname = req.hostname;
-    console.log(`[Auth] Hostname: ${hostname}`);
-    
-    // Tentar com o domínio configurado do REPLIT_DOMAINS
-    const domains = process.env.REPLIT_DOMAINS?.split(",") || [];
-    console.log(`[Auth] Domínios disponíveis:`, domains);
-    
-    // Tenta usar o hostname atual ou um dos domínios configurados
-    let strategyName = `replitauth:${hostname}`;
-    
-    // Se a estratégia com o hostname atual não existir, tenta usar o primeiro domínio configurado
-    if (!passport._strategies[strategyName] && domains.length > 0) {
-      strategyName = `replitauth:${domains[0]}`;
-      console.log(`[Auth] Tentando estratégia alternativa: ${strategyName}`);
-    }
-    
-    // Verifica novamente se a estratégia existe
-    if (!passport._strategies[strategyName]) {
-      console.error(`[Auth] Nenhuma estratégia válida encontrada. Estratégias disponíveis:`, Object.keys(passport._strategies));
-      return res.redirect('/login-error');
-    }
-    
-    // Usar authenticate com um callback personalizado para depuração
-    passport.authenticate(strategyName, { 
-      failureRedirect: '/login-error',
-      failWithError: true
-    })(req, res, function(err: any) {
-      if (err) {
-        console.error('[Auth] Erro durante autenticação:', err);
+    try {
+      console.log(`[Auth] Recebendo callback com query params:`, req.query);
+      
+      // Se não tiver código, não prossegue
+      if (!req.query.code) {
+        console.log('[Auth] Requisição de callback sem código de autorização');
         return res.redirect('/login-error');
       }
-      console.log('[Auth] Login bem-sucedido, redirecionando para /', { userId: (req.user as any)?.claims?.sub });
-      return res.redirect('/');
-    });
+      
+      const hostname = req.hostname;
+      console.log(`[Auth] Hostname: ${hostname}`);
+      
+      // Obtém todas as estratégias disponíveis
+      const availableStrategies = Object.keys(passport._strategies)
+        .filter(key => key.startsWith('replitauth:'));
+      
+      console.log(`[Auth] Estratégias disponíveis:`, availableStrategies);
+      
+      // Se não há estratégias disponíveis, redireciona para erro
+      if (availableStrategies.length === 0) {
+        console.error('[Auth] Nenhuma estratégia replitauth registrada');
+        return res.redirect('/login-error');
+      }
+      
+      // Usa a primeira estratégia disponível diretamente
+      const strategyName = availableStrategies[0];
+      console.log(`[Auth] Usando estratégia: ${strategyName}`);
+      
+      // Customiza o callback para mais controle
+      passport.authenticate(strategyName, function(err: any, user: any, info: any) {
+        if (err) {
+          console.error('[Auth] Erro durante autenticação:', err);
+          return res.redirect('/login-error');
+        }
+        
+        if (!user) {
+          console.error('[Auth] Usuário não retornado pela estratégia', info);
+          return res.redirect('/login-error');
+        }
+        
+        // Login manual para evitar problemas
+        req.login(user, function(err) {
+          if (err) {
+            console.error('[Auth] Erro ao criar sessão:', err);
+            return res.redirect('/login-error');
+          }
+          
+          console.log('[Auth] Login bem-sucedido, redirecionando para /', { 
+            userId: user?.claims?.sub 
+          });
+          
+          return res.redirect('/');
+        });
+      })(req, res, next);
+    } catch (error) {
+      console.error('[Auth] Erro crítico no callback:', error);
+      return res.redirect('/login-error');
+    }
   });
 
   app.get("/api/logout", (req, res) => {
