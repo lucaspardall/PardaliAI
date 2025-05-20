@@ -69,6 +69,9 @@ export class ShopeeAuthManager {
     let urlString = `${baseUrl}${basePathForShopAuthorize}?`;
     urlString += `partner_id=${this.config.partnerId}`;
     urlString += `&timestamp=${timestamp}`;
+    urlString += `&sign=${signature}`;
+    urlString += `&redirect=${encodeURIComponent(this.config.redirectUrl)}`;
+    urlString += `&state=${encodeURIComponent(stateParam)}`;
 </old_str>
     urlString += `&sign=${signature}`;
     urlString += `&redirect=${encodeURIComponent(this.config.redirectUrl)}`;
