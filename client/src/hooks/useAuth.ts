@@ -11,13 +11,20 @@ export interface User {
 }
 
 export function useAuth() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/auth/user'],
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutos
+    onSuccess: (data) => {
+      // Se o usuário estiver autenticado e estiver na página inicial, redirecionar para dashboard
+      if (data && location === '/') {
+        console.log('Usuário autenticado, redirecionando para dashboard');
+        setLocation('/dashboard');
+      }
+    }
   });
 
   // Verificar se URL tem parâmetro de login requerido
@@ -38,6 +45,7 @@ export function useAuth() {
 
   return {
     user: data as User | null,
+    isAuthenticated: !!data,
     isLoading,
     error,
     refetch,
