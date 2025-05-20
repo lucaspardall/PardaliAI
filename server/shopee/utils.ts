@@ -27,7 +27,7 @@ export function getApiBaseUrl(region: ShopeeRegion): string {
     'ID': 'https://partner.shopeemobile.com',
     'VN': 'https://partner.shopeemobile.com',
     'PH': 'https://partner.shopeemobile.com',
-    'BR': 'https://partner.shopeemobile.com', // Domínio correto para Brasil (APIs)
+    'BR': 'https://partner.shopeemobile.com', // Domínio global para APIs da Shopee (mesmo para o Brasil)
     'MX': 'https://partner.shopeemobile.com',
     'CO': 'https://partner.shopeemobile.com',
     'CL': 'https://partner.shopeemobile.com',
@@ -47,6 +47,7 @@ export function getApiBaseUrl(region: ShopeeRegion): string {
  * @param timestamp Timestamp UNIX em segundos
  * @param accessToken Token de acesso (opcional, apenas para endpoints autenticados)
  * @param shopId ID da loja (opcional, apenas para endpoints específicos da loja)
+ * @param requestBody Corpo da requisição para métodos POST/PUT (opcional)
  * @param useBaseStringDirectly Se true, usa a string fornecida diretamente
  * @returns Assinatura hexadecimal
  */
@@ -57,6 +58,7 @@ export function generateSignature(
   timestamp: number,
   accessToken?: { access_token: string },
   shopId?: { shop_id: string },
+  requestBody?: any,
   useBaseStringDirectly: boolean = false
 ): string {
   let baseString = '';
@@ -68,31 +70,45 @@ export function generateSignature(
     // Caso especial para autorização OAuth
     // Formato: partnerId + endpoint + timestamp
     baseString = `${partnerId}${path}${timestamp}`;
-  } else {
-    // Formato padrão para outros endpoints da API
-    // De acordo com a documentação: caminho_api + "?" + parâmetros_ordenados
+  } else if (requestBody) {
+    // Endpoints POST/PUT com corpo JSON 
+    // Formato: partnerId + path + timestamp + access_token + shop_id + corpo_json_minificado
+    const minifiedBody = JSON.stringify(requestBody);
     
-    // Criar mapa de parâmetros
-    const params: Record<string, string> = {
-      'partner_id': partnerId,
-      'timestamp': timestamp.toString()
-    };
+    let components = [partnerId, path, timestamp.toString()];
     
-    // Adicionar token de acesso se fornecido
+    // Adicionar access_token se disponível
     if (accessToken) {
-      params['access_token'] = accessToken.access_token;
+      components.push(accessToken.access_token);
     }
     
-    // Adicionar shop_id se fornecido
+    // Adicionar shop_id se disponível
     if (shopId) {
-      params['shop_id'] = shopId.shop_id;
+      components.push(shopId.shop_id);
     }
     
-    // Ordenar parâmetros em ordem alfabética por chave
-    const sortedParams = Object.keys(params).sort().map(key => `${key}=${params[key]}`).join('&');
+    // Adicionar corpo minificado
+    components.push(minifiedBody);
     
-    // Construir a string base conforme a documentação
-    baseString = `${path}?${sortedParams}`;
+    // Concatenar componentes para formar a string base
+    baseString = components.join('');
+  } else {
+    // Endpoints GET autenticados
+    // Formato: partnerId + path + timestamp + access_token + shop_id
+    let components = [partnerId, path, timestamp.toString()];
+    
+    // Adicionar access_token se disponível
+    if (accessToken) {
+      components.push(accessToken.access_token);
+    }
+    
+    // Adicionar shop_id se disponível
+    if (shopId) {
+      components.push(shopId.shop_id);
+    }
+    
+    // Concatenar componentes para formar a string base
+    baseString = components.join('');
   }
 
   console.log('Assinatura - String base:', baseString);

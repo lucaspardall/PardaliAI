@@ -115,16 +115,22 @@ export class ShopeeClient {
       config.params.access_token = this.tokens.accessToken;
       config.params.shop_id = Number(this.tokens.shopId);
       
-      // Gerar assinatura
+      // Gerar assinatura com base no método
+      // Se for POST, PUT, PATCH, incluir o corpo na geração da assinatura
+      const requestBody = ['POST', 'PUT', 'PATCH'].includes(config.method?.toUpperCase() || '') ? config.data : undefined;
+      
       const signature = generateSignature(
         this.config.partnerId,
         this.config.partnerKey,
         path,
         timestamp,
         { 
-          access_token: this.tokens.accessToken,
-          shop_id: this.tokens.shopId,
-        }
+          access_token: this.tokens.accessToken 
+        },
+        { 
+          shop_id: this.tokens.shopId 
+        },
+        requestBody
       );
       
       config.params.sign = signature;
