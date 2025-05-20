@@ -65,7 +65,7 @@ export class ShopeeAuthManager {
 
     // 5. Construir a URL final com todos os parâmetros e assinatura usando URLSearchParams
     // para garantir formatação correta dos parâmetros e evitar erros de digitação
-    const baseUrl = 'https://partner.shopee.com.br';
+    const baseUrl = 'https://partner.shopeemobile.com';
     console.log('Base URL utilizada:', baseUrl);
     
     // Criar objeto URLSearchParams para construir a query string de forma segura
@@ -75,9 +75,6 @@ export class ShopeeAuthManager {
     urlParams.append('sign', signature);
     urlParams.append('redirect', this.config.redirectUrl);
     urlParams.append('state', stateParam);
-    urlParams.append('region', 'BR'); // Forçar região explicitamente para BR
-    urlParams.append('auth_shop', 'true'); // Especificar autenticação para loja
-    urlParams.append('auth_type', 'shop'); // Tipo de autenticação para vendedor
     
     // Construir a URL final usando a query string formatada corretamente
     const urlString = `${baseUrl}${basePathForShopAuthorize}?${urlParams.toString()}`;

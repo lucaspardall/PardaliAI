@@ -54,9 +54,6 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("Começa com https://partner.shopeemobile.com?", authUrl.startsWith("https://partner.shopeemobile.com"));
     console.log("Contém .com.br?", authUrl.includes(".com.br"));
     console.log("Contém open.shopee?", authUrl.includes("open.shopee"));
-    console.log("Contém region=BR?", authUrl.includes("region=BR"));
-    console.log("Contém auth_shop=true?", authUrl.includes("auth_shop=true"));
-    console.log("Contém auth_type=shop?", authUrl.includes("auth_type=shop"));
     console.log("================================================");
     
     // Se estamos em desenvolvimento, mostrar opções para o usuário
