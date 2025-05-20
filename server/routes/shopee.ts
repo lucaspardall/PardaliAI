@@ -107,6 +107,9 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     // Em desenvolvimento, mostrar opções para o usuário
     if (process.env.NODE_ENV === 'development') {
+      // Extrair os componentes da URL para construir o formulário
+      const timestamp = Math.floor(Date.now() / 1000);
+      
       return res.send(`
         <html>
           <head>
@@ -122,6 +125,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
               .instructions { background: #fff8e1; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; }
               .steps { list-style-type: decimal; padding-left: 20px; }
               .steps li { margin-bottom: 10px; }
+              .important { color: #ff0000; font-weight: bold; }
             </style>
           </head>
           <body>
@@ -129,15 +133,48 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
             <div class="card">
               <h2>URL de Autorização</h2>
               <pre>${authUrl}</pre>
-              <a href="${authUrl}" class="btn primary">Ir para Autorização da Shopee</a>
+              
+              <div class="instructions">
+                <p class="important">Detecção de problema com o parâmetro "timestamp"!</p>
+                <p>Use o botão abaixo que utiliza JavaScript para garantir a URL correta:</p>
+              </div>
+              
+              <button id="redirectBtn" class="btn primary">Ir para Autorização da Shopee</button>
               <a href="/dashboard" class="btn secondary">Voltar para o Dashboard</a>
+              
+              <script>
+                // Construir a URL via JavaScript para evitar problemas de codificação
+                document.getElementById('redirectBtn').addEventListener('click', function() {
+                  const url = new URL('https://seller.shopee.com.br/api/v2/shop/auth_partner');
+                  url.searchParams.append('partner_id', '${partnerId}');
+                  url.searchParams.append('timestamp', '${timestamp}');
+                  url.searchParams.append('sign', '${sign}');
+                  url.searchParams.append('redirect', 'https://cipshopee.replit.app/api/shopee/callback');
+                  url.searchParams.append('state', 'cipshopee_${Date.now()}');
+                  url.searchParams.append('region', 'BR');
+                  url.searchParams.append('is_auth_shop', 'true');
+                  url.searchParams.append('login_type', 'seller');
+                  url.searchParams.append('auth_type', 'direct');
+                  url.searchParams.append('shop_id', '');
+                  
+                  console.log('Redirecionando para URL construída via JavaScript:', url.toString());
+                  window.location.href = url.toString();
+                });
+              </script>
             </div>
           </body>
         </html>
       `);
     }
 
-    // Em produção, redirecionamento direto
+    // Em produção, fazer uma verificação para garantir que a URL está correta
+    if (authUrl.includes('×tamp=')) {
+      // Corrigir a URL se estiver corrompida
+      const fixedUrl = authUrl.replace('×tamp=', 'timestamp=');
+      console.log('URL corrigida antes do redirecionamento:', fixedUrl);
+      return res.redirect(fixedUrl);
+    }
+    
     return res.redirect(authUrl);
 
   } catch (error: any) {

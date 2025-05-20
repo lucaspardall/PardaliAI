@@ -52,22 +52,29 @@ export class ShopeeAuthManager {
     const baseUrl = getApiBaseUrl(this.config.region, true); // true para obter a URL de seller
     console.log('Usando URL de autenticação de sellers:', baseUrl);
     
-    // 4. Montar a URL usando URLSearchParams para evitar problemas de codificação
+    // 4. Montar a URL usando a API URL para garantir a codificação correta
     // ⚠️ Os parâmetros críticos são: login_type=seller e auth_type=direct para evitar o login na open platform
-    const params = new URLSearchParams();
-    params.append('partner_id', this.config.partnerId);
-    params.append('timestamp', timestamp.toString()); // Converter explicitamente para string
-    params.append('sign', signature);
-    params.append('redirect', this.config.redirectUrl);
-    params.append('state', stateParam);
-    params.append('region', 'BR');
-    params.append('is_auth_shop', 'true');
-    params.append('login_type', 'seller');
-    params.append('auth_type', 'direct');
-    params.append('shop_id', '');
+    const url = new URL(`${baseUrl}${basePathForShopAuthorize}`);
+    url.searchParams.append('partner_id', this.config.partnerId);
+    url.searchParams.append('timestamp', timestamp.toString()); // Converter explicitamente para string
+    url.searchParams.append('sign', signature);
+    url.searchParams.append('redirect', this.config.redirectUrl);
+    url.searchParams.append('state', stateParam);
+    url.searchParams.append('region', 'BR');
+    url.searchParams.append('is_auth_shop', 'true');
+    url.searchParams.append('login_type', 'seller');
+    url.searchParams.append('auth_type', 'direct');
+    url.searchParams.append('shop_id', '');
     
-    // Construir URL final usando o objeto URLSearchParams
-    let urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
+    // Construir URL final usando o objeto URL (mais robusto que URLSearchParams)
+    let urlString = url.toString();
+    
+    // Verificação adicional específica para o problema do ×tamp
+    if (urlString.includes('×tamp=')) {
+      console.log('ALERTA: Detectado problema de codificação com o parâmetro timestamp!');
+      // Construir manualmente como último recurso
+      urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
+    }
     
     console.log('URL de autorização final:', urlString);
 
