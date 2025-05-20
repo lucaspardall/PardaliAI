@@ -47,7 +47,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     
     // Montar URL manualmente seguindo exatamente o formato validado para Shopee Brasil
     const baseUrl = 'https://partner.shopeemobile.com';
-    let authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller`;
+    let authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct`;
     
     // Verificar estrutura da URL para garantir que não há problemas
     console.log("URL final antes de enviar:", authUrl);
@@ -222,6 +222,15 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     
     // Criar cliente da API
     const shopeeClient = createClient();
+    
+    // Configurar headers específicos para BR
+    const headers = {
+      'X-Region': 'BR',
+      'X-Request-ID': crypto.randomUUID()
+    };
+    
+    // Adicionar headers à requisição
+    shopeeClient.setRequestHeaders(headers);
     
     // Trocar o código por tokens de acesso
     const tokens = await shopeeClient.connect(code as string, shop_id as string);

@@ -424,4 +424,16 @@ export class ShopeeClient {
   getTokens(): ShopeeAuthTokens | null {
     return this.tokens;
   }
+  
+  /**
+   * Define headers personalizados para requisições
+   * Útil para adicionar headers específicos do Brasil
+   */
+  setRequestHeaders(headers: Record<string, string>): void {
+    // Atualizar headers da instância do Axios
+    Object.entries(headers).forEach(([key, value]) => {
+      this.axiosInstance.defaults.headers.common[key] = value;
+    });
+    console.log('Headers personalizados configurados:', headers);
+  }
 }
