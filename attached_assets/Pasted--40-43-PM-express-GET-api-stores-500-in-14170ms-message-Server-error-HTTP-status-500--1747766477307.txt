@@ -1,0 +1,43 @@
+:40:43 PM [express] GET /api/stores 500 in 14170ms :: {"message":"Server error (HTTP status 500): {…
+NeonDbError: Server error (HTTP status 500): {"message":"error connecting to server: connection timed out","code":"","detail":null,"hint":null,"position":null,"internalPosition":null,"internalQuery":null,"severity":"","where":null,"table":null,"column":null,"schema":null,"dataType":null,"constraint":null,"file":null,"line":null,"routine":null}
+    at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1557:64)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Function.query (/home/runner/workspace/server/db.ts:24:22)
+    at async PGStore._asyncQuery (/home/runner/workspace/node_modules/connect-pg-simple/index.js:322:21)
+6:40:45 PM [express] GET /api/notifications 304 in 15810ms :: []
+======= INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE =======
+Usuário autenticado: {
+  claims: {
+    aud: '73ee031f-24e8-4b77-96e8-2cd2724cf5f2',
+    exp: 1747706032,
+    iat: 1747702432,
+    iss: 'https://replit.com/oidc',
+    sub: '41750934',
+    email: 'llouback4@gmail.com',
+    at_hash: 'U-CaeNi2m0Blr4mqywMWDw',
+    username: 'llouback4',
+    auth_time: 1747702432,
+    last_name: 'Louback',
+    first_name: 'Lucas'
+  },
+  expires_at: 1747706032,
+  access_token: '14uEKqq2lIejigtBcJw1rf1NvrcCDofm_Ce8V2FFEXQ',
+  refresh_token: 'SyOH5cOtdrf8FLH-jyjjKv1JNFqPaSHMw7CHzsXud-e'
+}
+Ambiente: development
+Informações de configuração da API:
+Partner ID: 2011285
+URL de redirecionamento configurada: undefined
+===================================================
+String base para assinatura: 2011285/api/v2/shop/auth_partner1747766446
+URL final construída manualmente: https://seller.shopee.com.br/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1747766446&sign=a51def77a24623e83c80dcdff9e0b7cc13d45f4be38e8afe9795ab2c6e8b2774&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1747766446000&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=
+URL final para autorização: https://seller.shopee.com.br/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1747766446&sign=a51def77a24623e83c80dcdff9e0b7cc13d45f4be38e8afe9795ab2c6e8b2774&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1747766446000&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=
+Verificação de parâmetros críticos:
+- region=BR: true
+- login_type=seller: true
+- auth_type=direct: true
+- is_auth_shop=true: true
+✅ URL salva em arquivo para inspeção: shopee_auth_url.txt
+✅ Parâmetro auth_type=direct presente na URL
+================================================
+6:40:46 PM [express] GET /api/shopee/authorize 200 in 340ms

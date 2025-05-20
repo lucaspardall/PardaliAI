@@ -1,0 +1,406 @@
+/**
+ * Integração API Shopee com Login Direto (2025)
+ * 
+ * Este código demonstra como implementar a integração com a API da Shopee
+ * permitindo que seus clientes conectem suas lojas sem precisar de conta na Open Platform.
+ * 
+ * Desenvolvido para uso em Node.js com Express.
+ */
+
+const express = require('express');
+const crypto = require('crypto');
+const axios = require('axios');
+const bodyParser = require('body-parser');
+
+const app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Configurações da sua aplicação Shopee
+const SHOPEE_CONFIG = {
+  partnerId: 'SEU_PARTNER_ID',              // Substitua pelo seu Partner ID
+  partnerKey: 'SUA_PARTNER_KEY',            // Substitua pela sua Partner Key
+  redirectUrl: 'https://seuapp.com/api/shopee/callback',  // URL de redirecionamento
+  region: 'BR'                              // Região (BR, SG, MY, etc.)
+};
+
+// Base URL para API Shopee
+const SHOPEE_API_URL = 'https://partner.shopeemobile.com';
+
+/**
+ * Gera um timestamp UNIX em segundos
+ */
+function getTimestamp() {
+  return Math.floor(Date.now() / 1000);
+}
+
+/**
+ * Gera uma assinatura HMAC-SHA256 para autenticação
+ * 
+ * @param {string} partnerId - ID do parceiro na Shopee
+ * @param {string} partnerKey - Chave secreta do parceiro
+ * @param {string} path - Caminho do endpoint
+ * @param {number} timestamp - Timestamp UNIX em segundos
+ * @param {Object|null} body - Corpo da requisição (para POST)
+ * @return {string} Assinatura no formato hexadecimal
+ */
+function generateSignature(partnerId, partnerKey, path, timestamp, body = null) {
+  let baseString = `${partnerId}${path}${timestamp}`;
+  
+  // Adicionar corpo da requisição para endpoints que usam POST
+  if (body) {
+    baseString += JSON.stringify(body);
+  }
+  
+  // Gerar assinatura HMAC-SHA256
+  const hmac = crypto.createHmac('sha256', partnerKey);
+  hmac.update(baseString);
+  return hmac.digest('hex');
+}
+
+/**
+ * Gera URL de autorização para conexão da loja
+ * 
+ * IMPORTANTE: Esta função gera uma URL que direciona o cliente para o login
+ * de vendedor da Shopee, não para a Open Platform.
+ */
+function getAuthorizationUrl() {
+  const timestamp = getTimestamp();
+  const path = '/api/v2/shop/auth_partner';
+  
+  // Gerar assinatura
+  const signature = generateSignature(
+    SHOPEE_CONFIG.partnerId,
+    SHOPEE_CONFIG.partnerKey,
+    path,
+    timestamp
+  );
+  
+  // Criar parâmetros de URL usando URLSearchParams
+  // Isso evita problemas de codificação com o parâmetro timestamp
+  const params = new URLSearchParams();
+  params.append('partner_id', SHOPEE_CONFIG.partnerId);
+  params.append('timestamp', timestamp.toString());
+  params.append('sign', signature);
+  params.append('redirect', SHOPEE_CONFIG.redirectUrl);
+  params.append('state', `shopee_${Date.now()}`);
+  params.append('region', SHOPEE_CONFIG.region);
+  
+  // Parâmetros críticos para direcionamento ao login do vendedor
+  params.append('is_auth_shop', 'true');
+  params.append('login_type', 'seller');
+  params.append('auth_type', 'direct');
+  params.append('shop_id', '');
+  
+  // Construir URL final
+  const authUrl = `${SHOPEE_API_URL}${path}?${params.toString()}`;
+  console.log('URL de autorização:', authUrl);
+  
+  return authUrl;
+}
+
+/**
+ * Obtém tokens de acesso após autorização
+ * 
+ * @param {string} code - Código de autorização
+ * @param {string} shopId - ID da loja
+ * @return {Promise<Object>} Tokens de acesso
+ */
+async function getAccessToken(code, shopId) {
+  const timestamp = getTimestamp();
+  const path = '/api/v2/auth/token/get';
+  
+  // Preparar corpo da requisição
+  const requestBody = {
+    partner_id: parseInt(SHOPEE_CONFIG.partnerId),
+    code: code,
+    shop_id: parseInt(shopId)
+  };
+  
+  // Gerar assinatura 
+  const signature = generateSignature(
+    SHOPEE_CONFIG.partnerId,
+    SHOPEE_CONFIG.partnerKey,
+    path,
+    timestamp,
+    requestBody
+  );
+  
+  // Construir URL com parâmetros de autenticação
+  const apiUrl = `${SHOPEE_API_URL}${path}?partner_id=${SHOPEE_CONFIG.partnerId}&timestamp=${timestamp}&sign=${signature}`;
+  
+  try {
+    // Fazer requisição para obter tokens
+    const response = await axios.post(apiUrl, requestBody, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = response.data;
+    
+    if (data.error) {
+      throw new Error(`API Error: ${data.error} - ${data.message || 'Unknown error'}`);
+    }
+    
+    // Calcular data de expiração (4 horas = 14400 segundos)
+    const expiresIn = data.expire_in || 14400;
+    const expiresAt = new Date();
+    expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
+    
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresAt: expiresAt,
+      shopId: shopId
+    };
+  } catch (error) {
+    console.error('Erro ao obter token de acesso:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+/**
+ * Atualiza o token de acesso usando o refresh token
+ * 
+ * @param {string} refreshToken - Token de atualização
+ * @param {string} shopId - ID da loja
+ * @return {Promise<Object>} Novos tokens
+ */
+async function refreshAccessToken(refreshToken, shopId) {
+  const timestamp = getTimestamp();
+  const path = '/api/v2/auth/access_token/get';
+  
+  // Preparar corpo da requisição
+  const requestBody = {
+    partner_id: parseInt(SHOPEE_CONFIG.partnerId),
+    refresh_token: refreshToken,
+    shop_id: parseInt(shopId)
+  };
+  
+  // Gerar assinatura
+  const signature = generateSignature(
+    SHOPEE_CONFIG.partnerId,
+    SHOPEE_CONFIG.partnerKey,
+    path,
+    timestamp,
+    requestBody
+  );
+  
+  // Construir URL com parâmetros de autenticação
+  const apiUrl = `${SHOPEE_API_URL}${path}?partner_id=${SHOPEE_CONFIG.partnerId}&timestamp=${timestamp}&sign=${signature}`;
+  
+  try {
+    // Fazer requisição para atualizar tokens
+    const response = await axios.post(apiUrl, requestBody, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = response.data;
+    
+    if (data.error) {
+      throw new Error(`API Error: ${data.error} - ${data.message || 'Unknown error'}`);
+    }
+    
+    // Calcular data de expiração (4 horas = 14400 segundos)
+    const expiresIn = data.expire_in || 14400;
+    const expiresAt = new Date();
+    expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
+    
+    return {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresAt: expiresAt,
+      shopId: shopId
+    };
+  } catch (error) {
+    console.error('Erro ao atualizar token de acesso:', error.response?.data || error.message);
+    throw error;
+  }
+}
+
+/**
+ * Verifica se o token está expirado ou próximo de expirar
+ * 
+ * @param {Date} expiresAt - Data de expiração do token
+ * @param {number} bufferSeconds - Margem de segurança em segundos (padrão: 5 minutos)
+ * @return {boolean} true se o token está expirado
+ */
+function isTokenExpired(expiresAt, bufferSeconds = 300) {
+  const now = new Date();
+  const expirationWithBuffer = new Date(expiresAt);
+  expirationWithBuffer.setSeconds(expirationWithBuffer.getSeconds() - bufferSeconds);
+  
+  return now >= expirationWithBuffer;
+}
+
+/**
+ * Faz uma requisição à API da Shopee
+ * 
+ * @param {string} endpoint - Endpoint da API
+ * @param {string} method - Método HTTP (GET, POST)
+ * @param {Object} params - Parâmetros da requisição
+ * @param {string} accessToken - Token de acesso
+ * @param {string} shopId - ID da loja
+ * @return {Promise<Object>} Resposta da API
+ */
+async function makeApiRequest(endpoint, method, params, accessToken, shopId) {
+  const timestamp = getTimestamp();
+  const path = endpoint;
+  
+  // Gerar assinatura baseada no método
+  const body = method === 'POST' ? params : null;
+  const signature = generateSignature(
+    SHOPEE_CONFIG.partnerId,
+    SHOPEE_CONFIG.partnerKey,
+    path,
+    timestamp,
+    body
+  );
+  
+  // Construir parâmetros comuns para a URL
+  const urlParams = new URLSearchParams();
+  urlParams.append('partner_id', SHOPEE_CONFIG.partnerId);
+  urlParams.append('timestamp', timestamp.toString());
+  urlParams.append('access_token', accessToken);
+  urlParams.append('shop_id', shopId);
+  urlParams.append('sign', signature);
+  
+  // Construir URL completa
+  const apiUrl = `${SHOPEE_API_URL}${path}?${urlParams.toString()}`;
+  
+  try {
+    let response;
+    if (method === 'GET') {
+      response = await axios.get(apiUrl);
+    } else {
+      response = await axios.post(apiUrl, params, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+    
+    const data = response.data;
+    
+    if (data.error) {
+      throw new Error(`API Error: ${data.error} - ${data.message || 'Unknown error'}`);
+    }
+    
+    return data.response;
+  } catch (error) {
+    console.error(`Erro na requisição à API: ${endpoint}`, error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// ----- Rotas do Express ----- //
+
+// Rota para iniciar o fluxo de autorização
+app.get('/api/shopee/connect', (req, res) => {
+  try {
+    const authUrl = getAuthorizationUrl();
+    res.redirect(authUrl);
+  } catch (error) {
+    console.error('Erro ao gerar URL de autorização:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao iniciar processo de autorização',
+      error: error.message
+    });
+  }
+});
+
+// Rota para callback - para onde a Shopee redireciona após autorização
+app.get('/api/shopee/callback', async (req, res) => {
+  try {
+    const { code, shop_id, state } = req.query;
+    
+    if (!code || !shop_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Parâmetros obrigatórios ausentes'
+      });
+    }
+    
+    console.log('Código de autorização recebido:', code);
+    console.log('ID da loja:', shop_id);
+    
+    // Obter tokens de acesso
+    const tokens = await getAccessToken(code, shop_id);
+    
+    // Em um caso real, você salvaria esses tokens no seu banco de dados
+    // associados ao usuário atual
+    // saveTokensToDatabase(userId, tokens);
+    
+    console.log('Tokens obtidos com sucesso!');
+    
+    // Redirecionar para dashboard com sucesso
+    res.redirect('/dashboard?connected=success');
+  } catch (error) {
+    console.error('Erro no callback da Shopee:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao processar autorização',
+      error: error.message
+    });
+  }
+});
+
+// Rota de exemplo para buscar informações da loja
+app.get('/api/shopee/shop-info', async (req, res) => {
+  try {
+    // Em um caso real, você buscaria esses tokens do seu banco de dados
+    // const tokens = await getTokensFromDatabase(userId);
+    const tokens = {
+      accessToken: 'ACCESS_TOKEN',
+      refreshToken: 'REFRESH_TOKEN',
+      expiresAt: new Date('2025-06-01'),
+      shopId: 'SHOP_ID'
+    };
+    
+    // Verificar se o token está expirado
+    if (isTokenExpired(tokens.expiresAt)) {
+      // Atualizar token
+      const newTokens = await refreshAccessToken(tokens.refreshToken, tokens.shopId);
+      
+      // Atualizar tokens no banco de dados
+      // await updateTokensInDatabase(userId, newTokens);
+      
+      // Usar os novos tokens
+      tokens.accessToken = newTokens.accessToken;
+      tokens.refreshToken = newTokens.refreshToken;
+      tokens.expiresAt = newTokens.expiresAt;
+    }
+    
+    // Buscar informações da loja
+    const shopInfo = await makeApiRequest(
+      '/api/v2/shop/get_shop_info',
+      'GET',
+      {},
+      tokens.accessToken,
+      tokens.shopId
+    );
+    
+    res.json({
+      success: true,
+      data: shopInfo
+    });
+  } catch (error) {
+    console.error('Erro ao buscar informações da loja:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao buscar informações da loja',
+      error: error.message
+    });
+  }
+});
+
+// Iniciar o servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`URL de autorização Shopee: http://localhost:${PORT}/api/shopee/connect`);
+});

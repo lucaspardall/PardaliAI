@@ -1,0 +1,367 @@
+Guia Completo: Integrando a API da Shopee em seu SaaS (2025)
+Introdução
+Integrar a API da Shopee em seu SaaS permite que seus clientes conectem suas lojas Shopee diretamente, sem necessidade de criar contas na Open Platform. Este guia abrange todos os aspectos dessa integração, desde a configuração inicial até exemplos práticos de código.
+Índice
+
+Visão Geral da API Shopee
+Configurando sua Conta de Desenvolvedor
+Autenticação e Autorização
+Fluxo OAuth para Conexão de Lojas
+Implementação em Diferentes Linguagens
+Gerenciamento de Tokens
+Endpoints Principais
+Limitações de Taxa (Rate Limits)
+Webhooks e Notificações
+Resolução de Problemas Comuns
+Boas Práticas
+Recursos Adicionais
+
+Visão Geral da API Shopee
+A Shopee oferece uma API REST, atualmente na versão 2.0 (OpenAPI 2.0), que permite a integração com lojas de vendedores em todos os mercados onde a Shopee opera. A API é projetada para permitir que aplicativos terceiros (como seu SaaS) possam:
+
+Gerenciar produtos (listagem, atualização, remoção)
+Processar pedidos
+Gerenciar logística
+Acessar relatórios de marketing
+Obter métricas de desempenho
+E muito mais
+
+A documentação oficial da API está disponível em open.shopee.com.
+Configurando sua Conta de Desenvolvedor
+Para começar a usar a API da Shopee, você precisa de uma conta de desenvolvedor aprovada:
+
+Cadastre-se no Shopee Open Platform
+Crie um aplicativo na seção de Console do desenvolvedor
+Obtenha seu Partner ID e Partner Key
+Configure a URL de redirecionamento para o fluxo OAuth
+Se necessário, configure URLs de webhook
+
+Importante: Apenas você, como desenvolvedor do SaaS, precisa ter uma conta na Open Platform. Seus clientes (vendedores Shopee) usarão suas credenciais comuns da Shopee para autorizar seu aplicativo.
+Autenticação e Autorização
+A API da Shopee utiliza um sistema de autenticação baseado em assinaturas HMAC-SHA256. Cada requisição precisa incluir:
+
+Partner ID (seu ID de parceiro/desenvolvedor)
+Timestamp (em segundos, formato UNIX)
+Sign (assinatura gerada com base nos parâmetros e sua Partner Key)
+Access Token (para endpoints que acessam dados da loja)
+Shop ID (ID da loja do vendedor)
+
+Gerando a Assinatura
+A geração da assinatura varia dependendo do endpoint e se é uma requisição GET ou POST:
+javascript// Exemplo de como gerar uma assinatura para autorização
+function generateSignature(partnerId, partnerKey, path, timestamp) {
+  const baseString = `${partnerId}${path}${timestamp}`;
+  
+  // Usando crypto para Node.js
+  const hmac = crypto.createHmac('sha256', partnerKey);
+  hmac.update(baseString);
+  return hmac.digest('hex');
+}
+Fluxo OAuth para Conexão de Lojas
+O aspecto mais importante para que seus clientes (vendedores) possam conectar suas lojas ao seu SaaS é o fluxo OAuth. Aqui está como implementá-lo corretamente:
+1. Gerando URL de Autorização
+javascriptfunction getAuthorizationUrl(partnerId, partnerKey, redirectUrl) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const path = '/api/v2/shop/auth_partner';
+  
+  // Gerar assinatura
+  const baseString = `${partnerId}${path}${timestamp}`;
+  const signature = generateSignature(partnerId, partnerKey, path, timestamp);
+  
+  // Parâmetros críticos para direcionamento ao login do vendedor
+  const params = new URLSearchParams();
+  params.append('partner_id', partnerId);
+  params.append('timestamp', timestamp.toString());
+  params.append('sign', signature);
+  params.append('redirect', redirectUrl);
+  
+  // Estes parâmetros são essenciais para que o usuário NÃO precise logar na Open Platform
+  params.append('login_type', 'seller');
+  params.append('auth_type', 'direct');
+  params.append('is_auth_shop', 'true');
+  params.append('region', 'BR'); // Ou outra região relevante
+  
+  // Montando a URL final 
+  // IMPORTANTE: Usar partner.shopeemobile.com, não seller.shopee.com.br
+  return `https://partner.shopeemobile.com${path}?${params.toString()}`;
+}
+Esta implementação garante que:
+
+O usuário será direcionado para o login do vendedor, não para a Open Platform
+Após o login, ele poderá autorizar seu aplicativo com apenas alguns cliques
+Não é necessário que o vendedor tenha conta na Open Platform
+
+2. Recebendo o Código de Autorização
+Após autorização, a Shopee redirecionará para sua URL de redirecionamento com os parâmetros:
+
+code: O código de autorização
+shop_id: O ID da loja
+state: O estado que você passou na URL (opcional, para segurança)
+
+3. Trocando o Código por Tokens de Acesso
+javascriptasync function getAccessToken(partnerId, partnerKey, code, shopId) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const path = '/api/v2/auth/token/get';
+  
+  // Corpo da requisição
+  const requestBody = {
+    partner_id: Number(partnerId),
+    code,
+    shop_id: Number(shopId)
+  };
+  
+  // String base para assinatura
+  const baseString = `${partnerId}${path}${timestamp}${JSON.stringify(requestBody)}`;
+  const signature = generateSignature(partnerId, partnerKey, path, timestamp);
+  
+  // Construir URL completa
+  const url = `https://partner.shopeemobile.com${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${signature}`;
+  
+  // Fazer requisição para obter tokens
+  const response = await axios.post(url, requestBody, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  return {
+    accessToken: response.data.access_token,
+    refreshToken: response.data.refresh_token,
+    expiresIn: response.data.expire_in,
+    shopId
+  };
+}
+Implementação em Diferentes Linguagens
+Node.js (com Express)
+Exemplo de implementação de autenticação usando Express:
+javascriptconst express = require('express');
+const crypto = require('crypto');
+const axios = require('axios');
+const app = express();
+
+// Configurações da sua aplicação Shopee
+const config = {
+  partnerId: 'SEU_PARTNER_ID',
+  partnerKey: 'SUA_PARTNER_KEY',
+  redirectUrl: 'https://seuapp.com/shopee/callback'
+};
+
+// Rota para iniciar o fluxo de autorização
+app.get('/connect-shopee', (req, res) => {
+  const authUrl = getAuthorizationUrl(
+    config.partnerId,
+    config.partnerKey,
+    config.redirectUrl
+  );
+  res.redirect(authUrl);
+});
+
+// Rota para receber o callback da Shopee
+app.get('/shopee/callback', async (req, res) => {
+  const { code, shop_id } = req.query;
+  
+  if (!code || !shop_id) {
+    return res.status(400).send('Parâmetros obrigatórios ausentes');
+  }
+  
+  try {
+    // Obter tokens de acesso
+    const tokens = await getAccessToken(
+      config.partnerId,
+      config.partnerKey,
+      code,
+      shop_id
+    );
+    
+    // Salvar tokens no banco de dados associados ao usuário
+    // Isso permite que seu SaaS faça requisições à API da Shopee em nome do vendedor
+    await saveShopeeTokens(req.user.id, tokens);
+    
+    res.redirect('/dashboard?connected=true');
+  } catch (error) {
+    console.error('Erro ao obter tokens:', error);
+    res.status(500).send('Erro ao conectar loja Shopee');
+  }
+});
+
+app.listen(3000, () => {
+  console.log('Servidor rodando na porta 3000');
+});
+Gerenciamento de Tokens
+Os tokens da Shopee expiram após 4 horas. É necessário implementar um sistema para renovar automaticamente esses tokens usando o refresh_token.
+javascriptasync function refreshAccessToken(partnerId, partnerKey, refreshToken, shopId) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const path = '/api/v2/auth/access_token/get';
+  
+  // Corpo da requisição
+  const requestBody = {
+    partner_id: Number(partnerId),
+    refresh_token: refreshToken,
+    shop_id: Number(shopId)
+  };
+  
+  // String base para assinatura
+  const baseString = `${partnerId}${path}${timestamp}${JSON.stringify(requestBody)}`;
+  const signature = generateSignature(partnerId, partnerKey, path, timestamp);
+  
+  // Construir URL completa
+  const url = `https://partner.shopeemobile.com${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${signature}`;
+  
+  // Fazer requisição para renovar tokens
+  const response = await axios.post(url, requestBody, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  return {
+    accessToken: response.data.access_token,
+    refreshToken: response.data.refresh_token,
+    expiresIn: response.data.expire_in,
+    shopId
+  };
+}
+Endpoints Principais
+A API da Shopee possui diversos endpoints para diferentes funcionalidades:
+Produtos
+
+GET /api/v2/product/get_item_list - Listar produtos
+GET /api/v2/product/get_item_base_info - Obter informações básicas
+GET /api/v2/product/get_item_detail - Obter detalhes completos
+POST /api/v2/product/add_item - Adicionar produto
+POST /api/v2/product/update_item - Atualizar produto
+
+Pedidos
+
+GET /api/v2/order/get_order_list - Listar pedidos
+GET /api/v2/order/get_order_detail - Obter detalhes do pedido
+POST /api/v2/order/cancel_order - Cancelar pedido
+POST /api/v2/logistics/ship_order - Enviar pedido
+
+Loja
+
+GET /api/v2/shop/get_shop_info - Obter informações da loja
+GET /api/v2/shop/get_profile - Obter perfil da loja
+
+Logística
+
+GET /api/v2/logistics/get_shipping_parameter - Obter parâmetros de envio
+GET /api/v2/logistics/get_tracking_number - Obter número de rastreamento
+
+Finanças
+
+GET /api/v2/payment/get_escrow_detail - Obter detalhes de pagamento
+GET /api/v2/finance/get_wallet_transactions - Obter transações da carteira
+
+Limitações de Taxa (Rate Limits)
+A Shopee impõe limites de taxa em sua API para garantir a estabilidade do serviço:
+
+Operações de leitura: 1000 requisições por minuto
+Operações de escrita: 500 requisições por minuto
+Operações de mídia (upload): 200 requisições por minuto
+
+Para otimizar o uso da API:
+
+Implementar caching para dados que mudam pouco
+Utilizar estratégia de backoff exponencial para tratamento de erros
+Agrupar operações em batch quando possível
+Monitorar o uso da API para evitar atingir limites
+
+Webhooks e Notificações
+A Shopee permite configurar webhooks para receber notificações em tempo real sobre eventos, como:
+
+Novos pedidos
+Atualizações de status de pedidos
+Cancelamentos
+Devoluções
+Alterações em produtos
+
+Para configurar webhooks:
+
+Configure uma URL de webhook no console de desenvolvedor da Shopee
+Implemente uma rota em seu servidor para receber as notificações
+Verifique a autenticidade das notificações usando a assinatura fornecida
+
+javascript// Exemplo de rota para webhook
+app.post('/shopee-webhook', (req, res) => {
+  // Verificar autenticidade da notificação
+  const requestUrl = req.originalUrl;
+  const body = req.body;
+  const signature = req.headers['authorization'];
+  
+  // Calcular assinatura esperada
+  const calculatedSignature = calculateWebhookSignature(requestUrl, body, config.partnerKey);
+  
+  if (signature !== calculatedSignature) {
+    return res.status(401).send('Assinatura inválida');
+  }
+  
+  // Processar notificação conforme o tipo de evento
+  const eventType = body.event_type;
+  
+  switch (eventType) {
+    case 'order_status_update':
+      processOrderStatusUpdate(body);
+      break;
+    case 'shop_update':
+      processShopUpdate(body);
+      break;
+    // Outros tipos de eventos
+  }
+  
+  // Responder com sucesso
+  res.status(200).send('OK');
+});
+Resolução de Problemas Comuns
+Problema 1: URL de Autorização Incorreta
+Se a URL de autorização estiver redirecionando para a Open Platform em vez do login do vendedor:
+Solução: Certifique-se de que está usando o domínio correto (partner.shopeemobile.com) e que os parâmetros login_type=seller e auth_type=direct estão incluídos.
+Problema 2: Erro "timestamp"
+Se você estiver encontrando problemas com o parâmetro "timestamp" sendo alterado para "×tamp":
+Solução: Use URLSearchParams para construir a URL em vez de concatenação de strings.
+Problema 3: Erro "token not found"
+Solução: Verifique se o Partner ID e Partner Key estão corretos e se o aplicativo está aprovado no console de desenvolvedor.
+Problema 4: Erro "error_auth"
+Solução: Verifique se a loja do vendedor passou pela verificação KYC na Shopee.
+Boas Práticas
+
+Segurança:
+
+Nunca exponha seu Partner Key no frontend
+Armazene tokens em local seguro
+Implemente HTTPS em todas as comunicações
+
+
+Performance:
+
+Implemente cache para dados que mudam pouco
+Use compressão GZIP para reduzir tamanho das requisições
+Utilize conexões persistentes (keep-alive)
+
+
+Confiabilidade:
+
+Implemente retry com backoff exponencial
+Monitore expiração de tokens e renove automaticamente
+Mantenha logs detalhados para diagnóstico
+
+
+UX:
+
+Ofereça feedback claro durante o processo de conexão
+Permita que usuários reconectem lojas facilmente
+Exiba status de conexão visível no dashboard
+
+
+
+Recursos Adicionais
+
+Documentação Oficial da API Shopee
+GitHub - Shopee API (Node.js)
+GitHub - Python Shopee
+GitHub - Shopee Client
+
+
+Conclusão
+Integrar a API da Shopee em seu SaaS permite oferecer uma experiência perfeita para seus clientes, eliminando a necessidade deles criarem contas na Open Platform. O fluxo de autorização direcionado aos vendedores simplifica o processo de conexão e amplia o alcance do seu aplicativo.
+Com a implementação correta dos endpoints, gerenciamento de tokens e práticas recomendadas, você pode criar uma integração robusta e confiável com a Shopee que agregará valor significativo ao seu SaaS.
