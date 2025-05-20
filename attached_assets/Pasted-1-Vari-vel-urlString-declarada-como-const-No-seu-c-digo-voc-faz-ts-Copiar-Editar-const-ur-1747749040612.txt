@@ -1,0 +1,43 @@
+1. Variável urlString declarada como const
+No seu código você faz:
+
+ts
+Copiar
+Editar
+// ...
+const urlString = 'https://partner.shopeemobile.com' + path + '?' + /* … */
+  
+// mais abaixo…
+if (invalidTimestampRegex.test(urlString)) {
+  // ...
+  urlString = urlString.replace(/[×xX]tamp=/, 'timestamp=');
+  //                               ^^^^^^^^^^^^^^^^^^^^^^^^
+}
+– Como urlString é um const, qualquer tentativa de reatribuição (mesmo dentro de um if) lança uma exceção, abortando sua montagem de URL e fazendo você cair no comportamento “fallback” que redireciona à Open Platform.
+Solução: use let urlString = … em vez de const, para permitir o .replace(...) quando o regex detectar o xtamp malformado.
+
+2. Você está usando o domínio genérico da API em vez do domínio de seller (Open Platform)
+O endpoint /api/v2/shop/auth_partner deve ser chamado no domínio de seller (por exemplo https://seller.shopee.com.br no Brasil), não em partner.shopeemobile.com.
+Por padrão o seu getApiBaseUrl(region, false) retorna sempre https://partner.shopeemobile.com. Para o fluxo de autorização de sellers, você precisa chamar getApiBaseUrl(region, true) ou montar o URL manualmente com https://seller.shopee.com.br para o Brasil:
+
+ts
+Copiar
+Editar
+const authDomain = getApiBaseUrl(this.config.region, true); 
+// -> 'https://seller.shopee.com.br' para BR
+const urlString = `${authDomain}${basePath}?${params.toString()}`;
+Isso vai garantir que quem clicar no link seja levado diretamente ao login de seller, e não à Open Platform onde o seu cliente não tem conta.
+
+Resumindo as correções
+Mudar const urlString para let urlString
+
+Usar o domínio de seller, por exemplo:
+
+ts
+Copiar
+Editar
+const authDomain = getApiBaseUrl(this.config.region, true);
+let urlString = `${authDomain}${basePath}?${params.toString()}`;
+Remover ou simplificar todo o bloco de regex de “correção automática” — se você monta o params com URLSearchParams, ele nunca vai gerar xtamp.
+
+Depois dessas duas mudanças, o link sairá sempre correto (timestamp=) e apontando para o fluxo de login de seller, sem passar pela Open Platform.
