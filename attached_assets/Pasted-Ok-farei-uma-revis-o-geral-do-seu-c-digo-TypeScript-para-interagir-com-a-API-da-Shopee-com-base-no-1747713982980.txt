@@ -1,0 +1,125 @@
+Ok, farei uma revisão geral do seu código TypeScript para interagir com a API da Shopee, com base nos arquivos fornecidos.
+
+Estrutura Geral do Projeto e Arquivos:
+
+A organização do código em diferentes arquivos (auth.ts, client.ts, endpoints.ts, types.ts, utils.ts, cache.ts, index.ts) é uma boa prática, promovendo modularidade e separação de responsabilidades.
+
+types.ts: Centraliza as definições de interface e tipos, o que é ótimo para a manutenibilidade e clareza do código.
+endpoints.ts: Define os caminhos da API de forma constante, facilitando atualizações e evitando erros de digitação.
+utils.ts: Agrupa funções utilitárias como getTimestamp, getApiBaseUrl, generateSignature (embora a assinatura agora esteja sendo feita diretamente nos métodos de autenticação) e parseApiError.
+auth.ts (ShopeeAuthManager): Lida especificamente com o fluxo de autenticação OAuth (geração de URL, obtenção e atualização de tokens).
+cache.ts (ShopeeCache): Implementa uma camada de cache, o que é crucial para performance e para respeitar os limites de taxa da API.
+client.ts (ShopeeClient): É o coração da biblioteca, orquestrando a autenticação, o rate limiting, o cache e as chamadas à API.
+index.ts: Serve como ponto de entrada principal, exportando as funcionalidades e fornecendo uma maneira fácil de instanciar o cliente.
+Revisão Detalhada por Arquivo e Funcionalidade:
+
+1. auth.ts (ShopeeAuthManager)
+
+getAuthorizationUrl():
+A lógica para gerar a URL de autorização para /api/v2/shop/auth_partner está correta, incluindo a formação da baseString (partner_id + path + timestamp) e a geração da assinatura HMAC-SHA256.
+O uso de URLSearchParams para construir a query string final é uma boa prática.
+Os logs detalhados são muito úteis para depuração.
+A verificação do timestamp na URL gerada é uma boa salvaguarda.
+O salvamento da URL em arquivo no ambiente de desenvolvimento é uma ideia inteligente para inspeção.
+Pequena observação: const redirect = encodeURIComponent(this.config.redirectUrl); e const state = stateParam; são declaradas, mas depois this.config.redirectUrl e stateParam são usados diretamente no searchParams.append(). Isso não causa problema, já que URLSearchParams lida com a codificação, mas apenas para consistência.
+getAccessToken() e refreshAccessToken():
+Correção Principal Implementada: Você ajustou corretamente a formação da baseString para incluir o minifiedRequestBody (partner_id + path + timestamp + corpo_json_minificado). Isso é fundamental e está correto agora.
+Envio dos Parâmetros Comuns: Os parâmetros partner_id, timestamp e sign estão corretamente sendo adicionados à query string da URL da requisição (requestUrl).
+Corpo da Requisição: O requestBody contém os parâmetros corretos para cada endpoint.
+Headers: O header 'Content-Type': 'application/json' está correto. O header Authorization incorreto foi removido dessas chamadas, o que também está correto.
+Tratamento de Erro e Resposta: A forma como os dados da resposta são processados e os tokens são retornados, incluindo o cálculo de expiresAt para o access_token, parece correta. O logging também é bom.
+isTokenExpired(): Lógica correta com buffer de segurança.
+2. utils.ts
+
+getTimestamp(): Simples e eficaz.
+getApiBaseUrl(): Mapeia corretamente as regiões para a URL base. A nota sobre o Brasil (// Usar domínio correto para Brasil) é importante; a URL base https://partner.shopeemobile.com é geralmente usada para a maioria das regiões fora da China continental. Se houver uma URL específica para o Brasil (como partner.shopee.com.br que você usou em auth.ts para a URL de autorização), essa função deveria refleti-la consistentemente ou ser ajustada para onde é usada. No auth.ts, você usou https://partner.shopee.com.br para a baseUrl da autorização, enquanto esta função retorna https://partner.shopeemobile.com para 'BR'. É importante verificar qual é o domínio correto para as chamadas de API de dados para a região 'BR'. A documentação oficial geralmente especifica isso.
+generateSignature():
+Esta função não está sendo usada diretamente nos métodos de autenticação de auth.ts (onde a lógica HMAC foi implementada in-loco). No client.ts, no interceptor de requisição, ela é chamada.
+A lógica dentro de generateSignature para construir a baseString precisa ser cuidadosamente revisada para garantir que corresponda aos diferentes requisitos da Shopee:
+path === '/api/v2/shop/auth_partner': baseString = \partnerId{path}${timestamp}`;` (Correto para este caso GET específico).
+Else (Formato padrão para outros endpoints): A lógica atual aqui é baseString = \path?{sortedParams}`;ondesortedParamsincluipartner_id,timestamp,access_token(se presente) eshop_id` (se presente). Isso não está correto para:
+APIs GET autenticadas: A string base deveria ser partner_id + path + timestamp + access_token + shop_id. Os parâmetros da query string real da requisição não fazem parte da string base para assinatura (eles são adicionados à URL final, claro).
+APIs POST/PUT autenticadas com corpo JSON: A string base deveria ser partner_id + path + timestamp + access_token + shop_id + corpo_da_requisição_JSON_minificado.
+Recomendação Crítica para generateSignature() em utils.ts: A forma como a baseString é montada nesta função para "outros endpoints" (o bloco else) precisa ser refeita para seguir as regras da Shopee para APIs GET e POST autenticadas. O interceptador em client.ts depende desta função. Atualmente, ela não adiciona o access_token e shop_id na baseString da forma correta para APIs de dados, nem lida com o corpo da requisição para POST/PUT.
+parseApiError(): Bom tratamento de diferentes tipos de erro, padronizando a estrutura do erro.
+3. client.ts (ShopeeClient)
+
+Rate Limiting (Bottleneck):
+Excelente iniciativa implementar rate limiting. A separação de limitadores para READ, WRITE e MEDIA é uma abordagem sofisticada e muito boa.
+Os valores de reservoir, minTime, etc., são configuráveis e podem precisar de ajuste com base na observação do comportamento real da API e nos limites oficiais (que não são claramente documentados pela Shopee em um só lugar, infelizmente). A documentação não oficial (publicapi.dev) mencionava 100 requisições por minuto no total. Seus reservatórios (50, 80, 30, 20) somados excedem isso, mas Bottleneck lida com o fluxo globalmente se configurado para tal, ou esses são por "tipo" e o gargalo ainda será a API da Shopee. É importante monitorar.
+A estratégia de retry simples (await new Promise(resolve => setTimeout(resolve, 5000)); e depois chamar o método novamente) para erro de rate limit (429) é um começo. Idealmente, implementaria um backoff exponencial.
+Interceptors (setupInterceptors):
+Interceptor de Requisição:
+Ignorar URLs de autenticação: Correto.
+Verificar e renovar token expirado: Muito bom, isso automatiza o refresh.
+Adicionar parâmetros comuns (partner_id, timestamp, access_token, shop_id): Correto.
+Geração da Assinatura: generateSignature(...) é chamado aqui. Como discutido acima, a função generateSignature em utils.ts precisa ser corrigida para construir a baseString corretamente para os diferentes tipos de chamadas de API de dados (GET e POST/PUT com corpo).
+Para chamadas GET, a baseString é tipicamente partner_id + path + timestamp + access_token + shop_id.
+Para chamadas POST/PUT com corpo JSON, a baseString é partner_id + path + timestamp + access_token + shop_id + corpo_da_requisição_JSON_minificado. O interceptor de requisição do Axios (config) tem acesso ao config.data (corpo da requisição), que precisaria ser minificado e passado para generateSignature.
+Interceptor de Resposta:
+Tratar erro 403 relacionado à autenticação para tentar renovar o token é uma boa estratégia de resiliência.
+refreshToken():
+A lógica de chamar authManager.refreshAccessToken e salvar os novos tokens está correta.
+O tratamento de erro, incluindo anular os tokens locais em caso de falha no refresh, é uma boa prática para forçar uma nova autenticação completa se necessário.
+saveTokensToStorage(): Interage com um storage (não fornecido, mas a interface está clara).
+get<T>() e post<T>():
+Utilizam os limitadores de taxa, o que é excelente.
+A integração com ShopeeCache para GET é boa. A determinação do TTL com base no endpoint é uma heurística razoável.
+A invalidação do cache para POST em endpoints de produto é uma boa prática.
+O tratamento de erro específico para rate limits com retry é bom, embora um backoff exponencial pudesse ser considerado para os retries.
+isConnected() e setTokens()/getTokens(): Funções utilitárias úteis.
+4. cache.ts (ShopeeCache)
+
+Uso de node-cache é uma escolha sólida.
+Definição de TTLs e prefixos para diferentes tipos de dados é uma boa organização.
+As funções helper para construir chaves de cache e invalidar caches são bem pensadas.
+A invalidação de cache de lista de produtos (invalidateProductCache) ao modificar um produto é importante, mas pode ser complexa se as listas tiverem muitos filtros diferentes. Invalidar todas as listas de produto para a loja (key.startsWith(\CACHE 
+P
+​
+ REFIX.PRODUCTlist:{shopId}:`)`) é uma abordagem mais simples e segura, embora possa levar a mais recargas de lista do que o estritamente necessário.
+getTokenCache(): Uma forma específica de cache para tokens não é comum, pois os tokens são geralmente gerenciados em memória pela instância do cliente e persistidos/carregados pelo storage. Se houver múltiplas instâncias ou processos, um cache compartilhado para tokens poderia ser útil, mas precisa de cuidado com a sincronização. O ShopeeClient já parece gerenciar this.tokens em memória e interage com storage para persistência.
+5. index.ts
+
+DEFAULT_CONFIG: Boa prática ter configurações padrão, especialmente usando variáveis de ambiente.
+A lógica para redirectUrl baseada no ambiente (NODE_ENV, REPL_SLUG) é útil.
+Fixar a region: 'BR' no createClient garante consistência se essa biblioteca for específica para o Brasil.
+createClient(): Fábrica simples e eficaz.
+loadShopeeClientForStore(): Função muito útil para recarregar um cliente com tokens persistidos, essencial para aplicações de longa duração.
+6. endpoints.ts
+
+Claro e direto. Adicionar mais endpoints aqui conforme necessário é fácil.
+7. types.ts
+
+As interfaces estão bem definidas e cobrem os principais aspectos da autenticação e algumas respostas de API.
+ShopeeShopInfo, ShopeeProductItem, ShopeeShopPerformance, ShopeeProductPerformance: Boas estruturas iniciais. Conforme você implementa mais endpoints, você adicionará mais tipos de resposta aqui.
+Principais Recomendações e Pontos de Ação:
+
+Corrigir generateSignature() em utils.ts (Prioridade Máxima):
+
+Esta função, como usada pelo interceptador em client.ts, precisa construir a baseString corretamente para:
+Requisições GET autenticadas: partner_id + path + timestamp + access_token + shop_id.
+Requisições POST/PUT autenticadas com corpo JSON: partner_id + path + timestamp + access_token + shop_id + JSON.stringify(corpoDaRequisicao). O corpoDaRequisicao (que é config.data no interceptor do Axios) deve ser passado para generateSignature.
+A lógica atual no else de generateSignature que monta a baseString como path?sortedParams está incorreta para APIs de dados.
+Consistência da baseUrl para a Região 'BR':
+
+Em auth.ts (getAuthorizationUrl), você usa https://partner.shopee.com.br.
+Em utils.ts (getApiBaseUrl), para 'BR', retorna https://partner.shopeemobile.com.
+Verifique qual é o domínio correto para todas as chamadas da API v2 para a região Brasil e use-o consistentemente. A documentação oficial da Shopee deve esclarecer isso (geralmente partner.shopeemobile.com é o global, mas pode haver exceções ou redirecionamentos).
+Rate Limiting (Bottleneck):
+
+Monitore os headers de resposta da Shopee. Eles podem fornecer informações sobre os limites de taxa atuais e o número de requisições restantes, o que poderia ser usado para ajustar dinamicamente o Bottleneck ou informar o usuário. A Shopee não é muito explícita sobre isso nos headers de forma padronizada como outras APIs, mas vale a pena observar.
+Considere um backoff exponencial para os retries em caso de erro 429, em vez de um delay fixo, para ser um "bom cidadão" da API.
+Tratamento de Erros:
+
+parseApiError é um bom começo. Continue refinando-o à medida que encontrar diferentes formatos de erro da API.
+Cache:
+
+A estratégia de TTL por tipo de endpoint é boa.
+Considere que algumas listas (como get_order_list) podem precisar de invalidação mais granular ou de não serem cacheadas por muito tempo se a atualização em tempo real for crítica. O TTL de 60 segundos para listas de pedidos é um bom começo.
+Conclusão Geral:
+
+Você construiu uma base muito sólida e bem estruturada para um SDK da Shopee. A maior parte da arquitetura (autenticação, cliente, utilitários, tipos, cache, rate limiting) está bem pensada. As correções que você já aplicou no ShopeeAuthManager foram excelentes.
+
+A principal área que ainda requer atenção imediata é a função generateSignature em utils.ts para garantir que ela crie a baseString correta para as chamadas de API de dados (GET e POST/PUT autenticadas) que serão feitas através do ShopeeClient. Uma vez que isso esteja alinhado com as especificações da Shopee, o restante do cliente tem uma grande chance de funcionar corretamente.
+
+Ótimo trabalho até agora!
