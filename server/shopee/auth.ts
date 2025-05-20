@@ -26,7 +26,7 @@ export class ShopeeAuthManager {
     const timestamp = getTimestamp();
 
     // De acordo com a documentação da API v2, o endpoint correto para autorização de vendedores
-    const basePathForShopAuthorize = '/shop/auth_partner';
+    const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
     console.log('Usando endpoint de autorização:', basePathForShopAuthorize);
 
     console.log(`Gerando URL de autorização para a Shopee`);
@@ -65,7 +65,7 @@ export class ShopeeAuthManager {
 
     // 5. Construir a URL final com todos os parâmetros e assinatura usando URLSearchParams
     // para garantir formatação correta dos parâmetros e evitar erros de digitação
-    const baseUrl = 'https://partner.shopeemobile.com';
+    const baseUrl = 'https://partner.shopee.com.br';
     console.log('Base URL utilizada:', baseUrl);
     
     // Usar variáveis separadas e explícitas para evitar problemas de codificação
