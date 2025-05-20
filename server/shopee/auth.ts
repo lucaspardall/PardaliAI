@@ -81,6 +81,16 @@ export class ShopeeAuthManager {
       console.error("URL problemática:", urlString);
       throw new Error(`URL inválida: formato do parâmetro timestamp incorreto`);
     }
+    
+    // Verificação adicional para caracteres inválidos no timestamp
+    const invalidTimestampRegex = /[×xX]tamp=/;
+    if (invalidTimestampRegex.test(urlString)) {
+      console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
+      console.error("URL problemática:", urlString);
+      // Correção automática do problema
+      urlString = urlString.replace(/[×xX]tamp=/, 'timestamp=');
+      console.log("URL corrigida:", urlString);
+    }
 
     // Verificações adicionais para garantir que a URL está correta
     console.log('Verificação da URL completa:', urlString);

@@ -40,14 +40,36 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     const path = '/api/v2/shop/auth_partner';
     const baseString = `${partnerId}${path}${timestamp}`;
     
+    console.log('String base para assinatura:', baseString);
+    
     // Gerar a assinatura HMAC-SHA256
     const hmac = crypto.createHmac('sha256', partnerKey);
     hmac.update(baseString);
     const sign = hmac.digest('hex');
     
     // Montar URL manualmente seguindo exatamente o formato validado para Shopee Brasil
+    // IMPORTANTE: Usar URLSearchParams para garantir a codificação correta dos parâmetros
     const baseUrl = 'https://partner.shopeemobile.com';
-    let authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
+    const params = new URLSearchParams();
+    params.append('partner_id', partnerId);
+    params.append('timestamp', timestamp.toString());
+    params.append('sign', sign);
+    params.append('redirect', redirectUrl);
+    params.append('state', state);
+    params.append('region', 'BR');
+    params.append('is_auth_shop', 'true');
+    params.append('login_type', 'seller');
+    params.append('auth_type', 'direct');
+    params.append('shop_id', '');
+    
+    let authUrl = `${baseUrl}${path}?${params.toString()}`;
+    
+    // Verificar se o parâmetro timestamp está formatado corretamente
+    if (!authUrl.includes('timestamp=')) {
+      console.error("ERRO: Problema na formatação do parâmetro timestamp!");
+      // Forçar a correção do parâmetro se necessário
+      authUrl = authUrl.replace(/[×xX]tamp=/, 'timestamp=');
+    }
     
     // Log simples da URL para verificação
     console.log("URL final para autorização:", authUrl);
