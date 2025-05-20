@@ -39,21 +39,30 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     hmac.update(baseString);
     const sign = hmac.digest('hex');
 
-    // IMPORTANTE: Usar seller.shopee.com.br em vez de partner.shopeemobile.com para login direto
-    const baseUrl = 'https://seller.shopee.com.br';
-
-    // Construção manual da URL para evitar problemas com codificação
-    let authUrl = `${baseUrl}${path}?` +
-                   `partner_id=${partnerId}` + 
-                   `&timestamp=${timestamp}` + 
-                   `&sign=${sign}` + 
-                   `&redirect=${encodeURIComponent(redirectUrl)}` + 
-                   `&state=${encodeURIComponent(state)}` + 
-                   `&region=BR` + 
-                   `&is_auth_shop=true` + 
-                   `&login_type=seller` + 
-                   `&auth_type=direct` +
-                   `&shop_id=`;
+    // Usar a URL padrão da API Shopee para autenticação
+    const baseUrl = 'https://partner.shopeemobile.com';
+    
+    // Usar URLSearchParams para garantir a formatação correta dos parâmetros
+    const params = new URLSearchParams();
+    params.append('partner_id', partnerId);
+    params.append('timestamp', timestamp.toString());
+    params.append('sign', sign);
+    params.append('redirect', redirectUrl);
+    params.append('state', state);
+    params.append('region', 'BR');
+    params.append('is_auth_shop', 'true');
+    params.append('login_type', 'seller');
+    params.append('auth_type', 'direct');
+    params.append('shop_id', '');
+    
+    let authUrl = `${baseUrl}${path}?${params.toString()}`;
+    
+    // Verificar se a URL contém o parâmetro timestamp formatado corretamente
+    if (!authUrl.includes('timestamp=')) {
+      console.error("ERRO: Parâmetro timestamp não encontrado na URL!");
+      console.log("URL problemática:", authUrl);
+    }
+</old_str>
 
     // Verificação e log da URL final
     console.log("URL final para autorização:", authUrl);
