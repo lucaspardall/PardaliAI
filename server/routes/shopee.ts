@@ -39,23 +39,26 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     hmac.update(baseString);
     const sign = hmac.digest('hex');
 
-    // Usar a URL padrão da API Shopee para autenticação
-    const baseUrl = 'https://partner.shopeemobile.com';
+    // IMPORTANTE: Usar o domínio de seller para direcionar ao login do vendedor
+    // Usar seller.shopee.com.br em vez de partner.shopeemobile.com
+    const baseUrl = 'https://seller.shopee.com.br';
     
     // Usar URLSearchParams para garantir a formatação correta dos parâmetros
-    const params = new URLSearchParams();
-    params.append('partner_id', partnerId);
-    params.append('timestamp', timestamp.toString());
-    params.append('sign', sign);
-    params.append('redirect', redirectUrl);
-    params.append('state', state);
-    params.append('region', 'BR');
-    params.append('is_auth_shop', 'true');
-    params.append('login_type', 'seller');
-    params.append('auth_type', 'direct');
-    params.append('shop_id', '');
+    const params = new URLSearchParams({
+      partner_id: partnerId,
+      timestamp: timestamp.toString(),
+      sign: sign,
+      redirect: redirectUrl,
+      state: state,
+      region: 'BR',
+      is_auth_shop: 'true',
+      login_type: 'seller',
+      auth_type: 'direct',
+      shop_id: ''  // intencionalmente vazio
+    });
     
-    let authUrl = `${baseUrl}${path}?${params.toString()}`;
+    // Construir a URL corretamente com os parâmetros formatados
+    const authUrl = `${baseUrl}${path}?${params.toString()}`;
     
     // Verificar se a URL contém o parâmetro timestamp formatado corretamente
     if (!authUrl.includes('timestamp=')) {
