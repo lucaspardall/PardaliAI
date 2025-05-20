@@ -32,10 +32,31 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Registrar a URL gerada para debug com detalhes completos
     console.log("======= DETALHES DA URL DE AUTORIZAÇÃO =======");
     console.log("URL completa:", authUrl);
+    
+    // Verificação detalhada dos parâmetros para diagnóstico
+    try {
+      const urlObj = new URL(authUrl);
+      console.log("Protocolo:", urlObj.protocol);
+      console.log("Host:", urlObj.host);
+      console.log("Parâmetros da query:");
+      console.log("- partner_id:", urlObj.searchParams.get('partner_id'));
+      console.log("- timestamp:", urlObj.searchParams.get('timestamp'));
+      console.log("- sign:", urlObj.searchParams.get('sign'));
+      console.log("- redirect:", urlObj.searchParams.get('redirect'));
+      console.log("- state:", urlObj.searchParams.get('state'));
+      console.log("- region:", urlObj.searchParams.get('region'));
+      console.log("- auth_shop:", urlObj.searchParams.get('auth_shop'));
+      console.log("- auth_type:", urlObj.searchParams.get('auth_type'));
+    } catch (error) {
+      console.error("Erro ao analisar URL:", error);
+    }
+    
     console.log("Começa com https://partner.shopeemobile.com?", authUrl.startsWith("https://partner.shopeemobile.com"));
     console.log("Contém .com.br?", authUrl.includes(".com.br"));
     console.log("Contém open.shopee?", authUrl.includes("open.shopee"));
     console.log("Contém region=BR?", authUrl.includes("region=BR"));
+    console.log("Contém auth_shop=true?", authUrl.includes("auth_shop=true"));
+    console.log("Contém auth_type=shop?", authUrl.includes("auth_type=shop"));
     console.log("================================================");
     
     // Se estamos em desenvolvimento, mostrar opções para o usuário

@@ -63,22 +63,24 @@ export class ShopeeAuthManager {
     hmac.update(baseString);
     const signature = hmac.digest('hex');
 
-    // 5. Construir a URL final com todos os parâmetros e assinatura
-    // Importante: utilizar a URL específica para vendedores com região BR
+    // 5. Construir a URL final com todos os parâmetros e assinatura usando URLSearchParams
+    // para garantir formatação correta dos parâmetros e evitar erros de digitação
     const baseUrl = 'https://partner.shopee.com.br';
     console.log('Base URL utilizada:', baseUrl);
     
-    let urlString = `${baseUrl}${basePathForShopAuthorize}?`;
-    urlString += `partner_id=${this.config.partnerId}`;
-    urlString += `&timestamp=${timestamp}`;
-    urlString += `&sign=${signature}`;
-    urlString += `&redirect=${encodeURIComponent(this.config.redirectUrl)}`;
-    urlString += `&state=${encodeURIComponent(stateParam)}`;
+    // Criar objeto URLSearchParams para construir a query string de forma segura
+    const params = new URLSearchParams();
+    params.append('partner_id', this.config.partnerId);
+    params.append('timestamp', timestamp.toString());
+    params.append('sign', signature);
+    params.append('redirect', this.config.redirectUrl);
+    params.append('state', stateParam);
+    params.append('region', 'BR'); // Forçar região explicitamente para BR
+    params.append('auth_shop', 'true'); // Especificar autenticação para loja
+    params.append('auth_type', 'shop'); // Tipo de autenticação para vendedor
     
-    // Parâmetros adicionais importantes para garantir fluxo de vendedor
-    urlString += `&region=BR`; // Forçar região explicitamente para BR
-    urlString += `&auth_shop=true`; // Especificar autenticação para loja
-    urlString += `&auth_type=shop`; // Tipo de autenticação para vendedor
+    // Construir a URL final usando a query string formatada corretamente
+    const urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
 
     // Log detalhado para debugging
     console.log(`======= DETALHES DE GERAÇÃO DA URL =======`);
@@ -88,6 +90,7 @@ export class ShopeeAuthManager {
     console.log(`Assinatura gerada: ${signature}`);
     console.log(`URL de redirecionamento: ${this.config.redirectUrl}`);
     console.log(`URL de autorização final: ${urlString}`);
+    console.log(`URL final completa: ${urlString}`);
     console.log(`URL começa com https://partner.shopeemobile.com? ${urlString.startsWith('https://partner.shopeemobile.com')}`);
     console.log(`============================================`);
 
