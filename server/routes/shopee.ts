@@ -2,10 +2,8 @@
  * Rotas para autenticação e integração com a API da Shopee
  */
 import { Router, Request, Response } from 'express';
-import { createClient } from '../shopee';
-import { storage } from '../storage';
-import { isAuthenticated } from '../replitAuth';
 import crypto from 'crypto';
+import { isAuthenticated } from '../replitAuth';
 import fs from 'fs';
 
 const router = Router();
@@ -23,64 +21,50 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Criar cliente da API com configuração explícita para BR
-    const shopeeClient = createClient({
-      region: 'BR'
-    });
-    
-    // Implementação manual e direta da URL de autorização para evitar problemas de codificação
     // Gerar timestamp e parâmetros necessários
     const timestamp = Math.floor(Date.now() / 1000);
     const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
     const partnerKey = process.env.SHOPEE_PARTNER_KEY || '';
     const redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
     const state = `cipshopee_${Date.now()}`;
-    
+
     // Criar a string base para assinatura conforme documentação Shopee
     const path = '/api/v2/shop/auth_partner';
     const baseString = `${partnerId}${path}${timestamp}`;
-    
+
     console.log('String base para assinatura:', baseString);
-    
+
     // Gerar a assinatura HMAC-SHA256
     const hmac = crypto.createHmac('sha256', partnerKey);
     hmac.update(baseString);
     const sign = hmac.digest('hex');
-    
-    // Montar URL manualmente seguindo exatamente o formato validado para Shopee Brasil
-    // IMPORTANTE: Usar URLSearchParams para garantir a codificação correta dos parâmetros
-    const baseUrl = 'https://partner.shopeemobile.com';
-    const params = new URLSearchParams();
-    params.append('partner_id', partnerId);
-    params.append('timestamp', timestamp.toString());
-    params.append('sign', sign);
-    params.append('redirect', redirectUrl);
-    params.append('state', state);
-    params.append('region', 'BR');
-    params.append('is_auth_shop', 'true');
-    params.append('login_type', 'seller');
-    params.append('auth_type', 'direct');
-    params.append('shop_id', '');
-    
-    let authUrl = `${baseUrl}${path}?${params.toString()}`;
-    
-    // Verificar se o parâmetro timestamp está formatado corretamente
-    if (!authUrl.includes('timestamp=')) {
-      console.error("ERRO: Problema na formatação do parâmetro timestamp!");
-      // Forçar a correção do parâmetro se necessário
-      authUrl = authUrl.replace(/[×xX]tamp=/, 'timestamp=');
-    }
-    
-    // Log simples da URL para verificação
+
+    // IMPORTANTE: Usar seller.shopee.com.br em vez de partner.shopeemobile.com para login direto
+    const baseUrl = 'https://seller.shopee.com.br';
+
+    // Construção manual da URL para evitar problemas com codificação
+    let authUrl = `${baseUrl}${path}?` +
+                   `partner_id=${partnerId}` + 
+                   `&timestamp=${timestamp}` + 
+                   `&sign=${sign}` + 
+                   `&redirect=${encodeURIComponent(redirectUrl)}` + 
+                   `&state=${encodeURIComponent(state)}` + 
+                   `&region=BR` + 
+                   `&is_auth_shop=true` + 
+                   `&login_type=seller` + 
+                   `&auth_type=direct` +
+                   `&shop_id=`;
+
+    // Verificação e log da URL final
     console.log("URL final para autorização:", authUrl);
-    
-    // Log de verificação dos parâmetros críticos para funcionamento do login direto
+
+    // Verificar parâmetros críticos
     console.log("Verificação de parâmetros críticos:");
     console.log("- region=BR:", authUrl.includes("region=BR"));
     console.log("- login_type=seller:", authUrl.includes("login_type=seller"));
     console.log("- auth_type=direct:", authUrl.includes("auth_type=direct"));
     console.log("- is_auth_shop=true:", authUrl.includes("is_auth_shop=true"));
-    
+
     // Salvar URL em arquivo para inspeção quando necessário
     try {
       fs.writeFileSync('shopee_auth_url.txt', authUrl);
@@ -88,20 +72,17 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     } catch (err) {
       console.error("Não foi possível salvar URL em arquivo:", err);
     }
-    
-    // Verificação crucial do parâmetro auth_type
+
+    // Verificação do parâmetro auth_type
     if (!authUrl.includes('auth_type=direct')) {
       console.error("⚠️ ALERTA CRÍTICO: O parâmetro auth_type=direct não está presente na URL!");
-      console.error("Este parâmetro é essencial para direcionar o login para vendedores (sellers)");
     } else {
       console.log("✅ Parâmetro auth_type=direct presente na URL");
     }
-    
-    // URL final para redirecionamento
-    const finalAuthUrl = authUrl;
+
     console.log("================================================");
-    
-    // Se estamos em desenvolvimento, mostrar opções para o usuário
+
+    // Em desenvolvimento, mostrar opções para o usuário
     if (process.env.NODE_ENV === 'development') {
       return res.send(`
         <html>
@@ -123,43 +104,19 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
           <body>
             <h1>Redirecionamento para Autenticação Shopee</h1>
             <div class="card">
-              <h2>Informações</h2>
-              <p>A URL de autorização da Shopee foi gerada. No ambiente de produção você seria redirecionado automaticamente.</p>
-              <p>Como estamos em ambiente de desenvolvimento, você tem as seguintes opções:</p>
-            </div>
-            
-            <div class="card">
               <h2>URL de Autorização</h2>
-              <pre>${finalAuthUrl}</pre>
-              <a href="${finalAuthUrl}" class="btn primary">Ir para Autorização da Shopee</a>
+              <pre>${authUrl}</pre>
+              <a href="${authUrl}" class="btn primary">Ir para Autorização da Shopee</a>
               <a href="/dashboard" class="btn secondary">Voltar para o Dashboard</a>
             </div>
           </body>
         </html>
       `);
     }
-    
-    // Em produção, redirecionamento simplificado e direto
-    // Usar res.redirect para um redirecionamento HTTP 302 sem modificação da URL
-    console.log("Redirecionando para URL de autorização da Shopee (login direto de seller)");
-    return res.redirect(finalAuthUrl);
-    
-    // No ambiente de desenvolvimento, tentar abrir a URL diretamente também
-    if (process.env.NODE_ENV === 'development') {
-      try {
-        import('open').then(openModule => {
-          const open = openModule.default;
-          console.log('🔗 Tentando abrir URL diretamente no navegador...');
-          open(authUrl).then(() => {
-            console.log('✅ URL aberta com sucesso no navegador padrão.');
-          });
-        }).catch(err => {
-          console.error('❌ Erro ao abrir URL:', err);
-        });
-      } catch (error) {
-        console.error('❌ Erro ao importar módulo open:', error);
-      }
-    }
+
+    // Em produção, redirecionamento direto
+    return res.redirect(authUrl);
+
   } catch (error: any) {
     console.error('Error starting Shopee OAuth flow:', error);
     res.status(500).json({
@@ -177,7 +134,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
   try {
     console.log(`Recebendo callback da Shopee com parâmetros:`, req.query);
     const { code, shop_id } = req.query;
-    
+
     if (!code || !shop_id) {
       console.error('Parâmetros obrigatórios ausentes na callback da Shopee:', req.query);
       return res.status(400).json({
@@ -185,7 +142,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         error: 'Missing code or shop_id'
       });
     }
-    
+
     // Criar cliente da API
     const shopeeClient = createClient();
     
@@ -363,4 +320,6 @@ router.post('/disconnect/:storeId', isAuthenticated, async (req: Request, res: R
   }
 });
 
+import { createClient } from '../shopee';
+import { storage } from '../storage';
 export default router;
