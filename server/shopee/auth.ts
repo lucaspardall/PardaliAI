@@ -37,6 +37,7 @@ export class ShopeeAuthManager {
     const stateParam = `cipshopee_${Date.now()}`;
 
     // 1. Formar a string base para a assinatura conforme documentação
+    // IMPORTANTE: Somente partnerId + path + timestamp são usados para a assinatura
     const baseString = `${this.config.partnerId}${basePathForShopAuthorize}${timestamp}`;
     console.log('String base para assinatura:', baseString);
 
@@ -51,6 +52,7 @@ export class ShopeeAuthManager {
     
     // 4. Montar a URL manualmente como uma string completa
     // ⚠️ A ordem exata dos parâmetros e a ausência de qualquer espaço ou caractere extra é crucial
+    // Seguindo a documentação compartilhada, incluindo todos os parâmetros necessários
     const urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
                       `partner_id=${this.config.partnerId}` + 
                       `&timestamp=${timestamp}` + 
@@ -60,7 +62,8 @@ export class ShopeeAuthManager {
                       `&region=BR` + 
                       `&is_auth_shop=true` + 
                       `&login_type=seller` + 
-                      `&auth_type=direct`;
+                      `&auth_type=direct` +
+                      `&shop_id=`;
     
     console.log('URL de autorização final:', urlString);
 

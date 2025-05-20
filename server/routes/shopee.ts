@@ -52,6 +52,13 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Log simples da URL para verificação
     console.log("URL final para autorização:", authUrl);
     
+    // Log de verificação dos parâmetros críticos para funcionamento do login direto
+    console.log("Verificação de parâmetros críticos:");
+    console.log("- region=BR:", authUrl.includes("region=BR"));
+    console.log("- login_type=seller:", authUrl.includes("login_type=seller"));
+    console.log("- auth_type=direct:", authUrl.includes("auth_type=direct"));
+    console.log("- is_auth_shop=true:", authUrl.includes("is_auth_shop=true"));
+    
     // Salvar URL em arquivo para inspeção quando necessário
     try {
       fs.writeFileSync('shopee_auth_url.txt', authUrl);
