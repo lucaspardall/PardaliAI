@@ -64,11 +64,12 @@ export class ShopeeAuthManager {
 
     // 5. Construir a URL final com todos os parâmetros e assinatura
     // Importante: usando concatenação de string para evitar problemas de codificação
-    // Usando o domínio partner.shopeemobile.com conforme documentação para acesso direto
-    const baseUrl = this.config.region === 'BR' ? 'https://partner.shopeemobile.com.br' : 'https://partner.shopeemobile.com';
+    // Para o Brasil, não adicionar .br no final do domínio
+    const baseUrl = 'https://partner.shopeemobile.com';
     let urlString = `${baseUrl}${basePathForShopAuthorize}?`;
     urlString += `partner_id=${this.config.partnerId}`;
     urlString += `&timestamp=${timestamp}`;
+</old_str>
     urlString += `&sign=${signature}`;
     urlString += `&redirect=${encodeURIComponent(this.config.redirectUrl)}`;
     urlString += `&state=${encodeURIComponent(stateParam)}`;
