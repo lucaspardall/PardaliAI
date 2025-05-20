@@ -1,0 +1,179 @@
+
+https://partner.shopeemobile.com/api/v2/shop/auth_partner
+?partner_id=2011285
+&timestamp=1747715233
+&sign=db6bb628...7f567b4
+&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback
+&state=cipshopee_1747715233012
+&region=BR
+&is_auth_shop=true
+Validação dos Parâmetros
+Parâmetro	Status	Detalhe
+partner_id	✅ Válido	ID de parceiro correto
+timestamp	✅ Válido	Unix timestamp (18/08/2025 ~19:27:13 UTC)
+sign	⚠️ Verificar	Assinatura HMAC-SHA256 (necessário validar)
+redirect	✅ Configurado	URL de callback correta (Replit)
+state	✅ Boa Prática	Identificador único (timestamp + sequência)
+region	✅ Essencial	BR para Brasil
+is_auth_shop	✅ Obrigatório	true para autorização de loja
+Passo a Passo para Implementação
+1. Geração Correta da Assinatura (sign)
+python
+import hmac
+import hashlib
+from urllib.parse import urlencode
+
+def gerar_assinatura_brasil(partner_key, params):
+    # Ordenar parâmetros alfabeticamente
+    params_ordenados = sorted(params.items())
+    
+    # Criar string de consulta
+    query = urlencode(params_ordenados)
+    
+    # Construir base string
+    path = "/api/v2/shop/auth_partner"
+    base_str = f"{path}?{query}"
+    
+    # Calcular HMAC-SHA256
+    return hmac.new(
+        partner_key.encode(),
+        base_str.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+# Parâmetros EXEMPLO
+params = {
+    "partner_id": "2011285",
+    "redirect": "https://cipshopee.replit.app/api/shopee/callback",
+    "state": "cipshopee_1747715233012",
+    "timestamp": "1747715233",
+    "region": "BR",
+    "is_auth_shop": "true"
+}
+
+assinatura = gerar_assinatura_brasil("SUA_PARTNER_KEY", params)
+2. Fluxo de Autenticação para Lojas BR
+Diagram
+Code
+sequenceDiagram
+    Cliente->>Seu Sistema: Clica "Vincular Loja"
+    Seu Sistema->>Shopee BR: Redireciona com URL de Auth
+    Shopee BR->>Cliente: Tela de Login Shopee (seller@shopee.com.br)
+    Cliente->>Shopee BR: Inscreve credenciais de vendedor
+    Shopee BR->>Seu Sistema: Callback com code=ABC123
+    Seu Sistema->>Shopee BR: POST /auth/token/get
+    Shopee BR-->>Seu Sistema: Retorna access_token e refresh_token
+    Seu Sistema->>Banco de Dados: Armazena tokens criptografados
+3. Tratamento do Callback (Exemplo Prático)
+javascript
+// Endpoint: https://cipshopee.replit.app/api/shopee/callback
+import crypto from 'crypto';
+
+app.get('/api/shopee/callback', async (req, res) => {
+  const { code, state, shop_id } = req.query;
+
+  // Validação de segurança
+  if (!state.startsWith('cipshopee_')) {
+    return res.status(403).send('State inválido');
+  }
+
+  try {
+    // Obter tokens
+    const tokenResponse = await axios.post(
+      'https://partner.shopeemobile.com/api/v2/auth/token/get',
+      {
+        partner_id: process.env.SHOPEE_PARTNER_ID,
+        code,
+        shop_id
+      },
+      {
+        headers: {
+          'Authorization': `sha256 ${gerarAssinatura(...)}`,
+          'X-Partner-Id': process.env.SHOPEE_PARTNER_ID,
+          'X-Region': 'BR'
+        }
+      }
+    );
+
+    // Criptografar tokens
+    const encryptedTokens = {
+      access_token: encrypt(tokenResponse.data.access_token),
+      refresh_token: encrypt(tokenResponse.data.refresh_token),
+      expires_at: Date.now() + tokenResponse.data.expire_in * 1000
+    };
+
+    // Salvar no banco de dados
+    await db.collection('lojas').updateOne(
+      { shop_id },
+      { $set: encryptedTokens },
+      { upsert: true }
+    );
+
+    res.redirect('/dashboard?success=true');
+  } catch (error) {
+    console.error('Erro na integração:', error.response?.data || error.message);
+    res.redirect('/erro?codigo=shopee_erro');
+  }
+});
+4. Configurações Específicas para Brasil
+Headers Obrigatórios:
+
+http
+X-Region: BR
+X-Request-ID: {uuid_v4}
+Endpoints Regionais:
+
+javascript
+const ENDPOINTS = {
+  AUTH: 'https://partner.shopeemobile.com/api/v2',
+  ORDERS: 'https://partner.shopeemobile.com.br/api/v2/order',
+  PRODUCTS: 'https://partner.shopeemobile.com.br/api/v2/product'
+};
+Validação de CNPJ/CPF:
+
+python
+def validar_documento_br(documento):
+    # Lógica de validação de CPF/CNPJ
+    if len(documento) == 11:
+        return validar_cpf(documento)
+    elif len(documento) == 14:
+        return validar_cnpj(documento)
+    return False
+5. Boas Práticas para Produção
+Criptografia:
+
+javascript
+const encrypt = (text) => {
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(process.env.CRYPTO_KEY), iv);
+  return Buffer.concat([iv, cipher.update(text), cipher.final()]).toString('base64');
+};
+Monitoramento:
+
+bash
+# Comandos úteis
+curl -X GET "https://partner.shopeemobile.com/api/v2/logs?shop_id=12345" \
+  -H "Authorization: sha256 {assinatura}"
+Política de Retentativas:
+
+javascript
+const obterPedidos = async (shop_id) => {
+  let tentativas = 0;
+  while (tentativas < 3) {
+    try {
+      return await shopeeApi.getOrders(shop_id);
+    } catch (error) {
+      if (error.code === 429) { // Rate limit
+        await new Promise(resolve => setTimeout(resolve, 2 ** tentativas * 1000));
+        tentativas++;
+      } else throw error;
+    }
+  }
+};
+6. Solução de Problemas (Casos BR)
+Cenário	Solução
+Cliente não tem conta Seller	Criar conta em Seller Center BR
+Erro "Região não suportada"	Verificar header X-Region: BR
+Documento inválido	Implementar validador CPF/CNPJ
+Taxas de conversão	Usar currency=BRL em endpoints financeiros
+Documentação Oficial BR:
