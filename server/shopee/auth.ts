@@ -84,7 +84,7 @@ export class ShopeeAuthManager {
     console.log('Verificação do parâmetro timestamp (deve conter "timestamp="):', urlString.includes('timestamp='));
 
     // Verificação visual direta do timestamp para diagnóstico do problema
-    console.log("🔎 Verificação direta do timestamp:", `timestamp=${timestampParam}`);
+    console.log("🔎 Verificação direta do timestamp:", `timestamp=${timestamp}`);
 
     // Salvar URL em um arquivo para inspeção direta (solução definitiva para copiar a URL)
     if (process.env.NODE_ENV === 'development') {
