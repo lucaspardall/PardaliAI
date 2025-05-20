@@ -75,17 +75,18 @@ export class ShopeeAuthManager {
     const timestampParam = timestamp; // Evitar qualquer transformação do nome "timestamp"
     const sign = signature;
     
-    // Usar URLSearchParams para garantir formatação correta dos parâmetros
-    const searchParams = new URLSearchParams();
-    searchParams.append('partner_id', partner_id);
-    searchParams.append('timestamp', String(timestampParam));
-    searchParams.append('sign', sign);
-    searchParams.append('redirect', this.config.redirectUrl);
-    searchParams.append('state', stateParam);
-    searchParams.append('region', 'BR'); // Adicionar explicitamente a região BR na URL
-    searchParams.append('is_auth_shop', 'true'); // Parâmetro importante para direcionar ao fluxo correto de autenticação
+    // Montar a URL manualmente para evitar problemas de codificação com URLSearchParams
+    const urlParams = [
+      `partner_id=${encodeURIComponent(partner_id)}`,
+      `timestamp=${encodeURIComponent(String(timestampParam))}`,
+      `sign=${encodeURIComponent(sign)}`,
+      `redirect=${encodeURIComponent(this.config.redirectUrl)}`,
+      `state=${encodeURIComponent(stateParam)}`,
+      `region=${encodeURIComponent('BR')}`,
+      `is_auth_shop=${encodeURIComponent('true')}`
+    ].join('&');
 
-    const urlString = `${baseUrl}${basePathForShopAuthorize}?${searchParams.toString()}`;
+    const urlString = `${baseUrl}${basePathForShopAuthorize}?${urlParams}`;
 
     // Verificação robusta da URL gerada usando regex para garantir que o timestamp está correto
     if (!urlString.includes('timestamp=')) {

@@ -33,10 +33,28 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("======= DETALHES DA URL DE AUTORIZAÇÃO =======");
     console.log("URL completa:", authUrl);
     
-    // Verificar se a URL já contém parâmetro region, caso não, adicionar
+    // Certificar que estamos usando a URL corretamente
     let finalAuthUrl = authUrl;
-    if (!finalAuthUrl.includes('region=')) {
-      finalAuthUrl = finalAuthUrl + (finalAuthUrl.includes('?') ? '&' : '?') + 'region=BR';
+    
+    // Verificação adicional para garantir que os parâmetros estão corretos
+    try {
+      // Analisar a URL para garantir que os parâmetros estão formatados corretamente
+      const urlObj = new URL(finalAuthUrl);
+      const searchParams = urlObj.searchParams;
+      
+      // Garantir que 'timestamp' está presente e bem formatado
+      if (searchParams.has('timestamp')) {
+        console.log("✅ Timestamp presente na URL:", searchParams.get('timestamp'));
+      } else {
+        console.error("❌ ERRO: Timestamp não encontrado na URL!");
+      }
+      
+      // Reconstruir a URL com os parâmetros verificados
+      finalAuthUrl = urlObj.toString();
+      
+    } catch (error) {
+      console.error("Erro ao processar URL:", error);
+      // Manter a URL original em caso de erro
     }
     
     // Verificação detalhada dos parâmetros para diagnóstico
