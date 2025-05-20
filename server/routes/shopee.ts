@@ -33,6 +33,12 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("======= DETALHES DA URL DE AUTORIZAÇÃO =======");
     console.log("URL completa:", authUrl);
     
+    // Verificar se a URL já contém parâmetro region, caso não, adicionar
+    let finalAuthUrl = authUrl;
+    if (!finalAuthUrl.includes('region=')) {
+      finalAuthUrl = finalAuthUrl + (finalAuthUrl.includes('?') ? '&' : '?') + 'region=BR';
+    }
+    
     // Verificação detalhada dos parâmetros para diagnóstico
     try {
       const urlObj = new URL(authUrl);
@@ -82,8 +88,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
             
             <div class="card">
               <h2>URL de Autorização</h2>
-              <pre>${authUrl}</pre>
-              <a href="${authUrl}" class="btn primary">Ir para Autorização da Shopee</a>
+              <pre>${finalAuthUrl}</pre>
+              <a href="${finalAuthUrl}" class="btn primary">Ir para Autorização da Shopee</a>
               <a href="/dashboard" class="btn secondary">Voltar para o Dashboard</a>
             </div>
           </body>
@@ -96,13 +102,13 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     res.send(`
       <html>
         <head>
-          <meta http-equiv="refresh" content="0;url=${authUrl}">
+          <meta http-equiv="refresh" content="0;url=${finalAuthUrl}">
           <title>Redirecionando para Shopee</title>
         </head>
         <body>
           <p>Redirecionando para autenticação na Shopee...</p>
-          <p>Se você não for redirecionado automaticamente, <a href="${authUrl}">clique aqui</a>.</p>
-          <p><small>URL completa: <code>${authUrl}</code></small></p>
+          <p>Se você não for redirecionado automaticamente, <a href="${finalAuthUrl}">clique aqui</a>.</p>
+          <p><small>URL completa: <code>${finalAuthUrl}</code></small></p>
         </body>
       </html>
     `);

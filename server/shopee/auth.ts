@@ -41,7 +41,8 @@ export class ShopeeAuthManager {
       partner_id: this.config.partnerId,
       timestamp: timestamp.toString(),
       redirect: this.config.redirectUrl,
-      state: stateParam
+      state: stateParam,
+      region: 'BR' // Adicionar explicitamente a região como Brasil
     };
 
     // 1. Ordenar parâmetros alfabeticamente como requerido pela API da Shopee
@@ -81,6 +82,7 @@ export class ShopeeAuthManager {
     searchParams.append('sign', sign);
     searchParams.append('redirect', this.config.redirectUrl);
     searchParams.append('state', stateParam);
+    searchParams.append('region', 'BR'); // Adicionar explicitamente a região BR na URL
 
     const urlString = `${baseUrl}${basePathForShopAuthorize}?${searchParams.toString()}`;
 
