@@ -65,6 +65,9 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       console.error("ERRO: Parâmetro timestamp não encontrado na URL!");
       console.log("URL problemática:", authUrl);
     }
+
+    // Verificação e log da URL final
+    console.log("URL final para autorização:", authUrl);
 </old_str>
 
     // Verificação e log da URL final
