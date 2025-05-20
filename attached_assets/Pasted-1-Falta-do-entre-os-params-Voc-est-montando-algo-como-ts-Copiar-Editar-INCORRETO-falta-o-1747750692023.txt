@@ -1,0 +1,72 @@
+1. Falta do & entre os params
+Você está montando algo como:
+
+ts
+Copiar
+Editar
+// INCORRETO — falta o & entre partner_id e timestamp
+let authUrl = `${authDomain}${path}?partner_id=${partnerId}timestamp=${timestamp}&…`;
+Isso junta “2011285” com “timestamp” numa só string e acaba virando o caractere “×”.
+
+Correção simples usando URLSearchParams
+Substitua toda aquela montagem manual por isto:
+
+ts
+Copiar
+Editar
+const params = new URLSearchParams({
+  partner_id: this.config.partnerId,
+  timestamp: getTimestamp().toString(),
+  sign: signature,
+  redirect: this.config.redirectUrl,
+  state: stateParam,
+  region: 'BR',
+  is_auth_shop: 'true',
+  login_type: 'seller',
+  auth_type: 'direct',
+  shop_id: ''  // intencionalmente vazio
+});
+const authUrl = `${authDomain}${basePath}?${params.toString()}`;
+Isso sempre vai injetar o & certinho entre cada chave=valor, nunca “×tamp”.
+
+2. Domínio de seller vs. partner
+Para enviar seu cliente direto pro login de seller, use:
+
+ts
+Copiar
+Editar
+const authDomain = getApiBaseUrl(this.config.region, /* isAuthUrl */ true);
+// que no BR resolve para 'https://seller.shopee.com.br'
+Em vez de https://partner.shopeemobile.com. Assim o fluxo vai direto pro Seller Center, onde eles têm conta, não pra Open Platform.
+
+3. “token not found”
+Depois que a URL estiver correta, a Shopee te redireciona pra sua callback com ?code=xxx&shop_id=yyy.
+O seu endpoint de token (/api/v2/auth/token/get) só funciona se esses dois parâmetros chegarem. Com a URL malformada, eles nunca vinham, e daí o Shopee respondia errcode=2, token not found.
+
+Resolve isso e, assim que o usuário autorizar, seu callback vai receber code e shop_id corretamente e trocar pelo access token sem erro.
+
+Passos para você:
+Troque a montagem de string manual por URLSearchParams (como acima).
+
+Garanta que authDomain = getApiBaseUrl(region, true).
+
+Teste de novo: a URL deverá sair assim:
+
+perl
+Copiar
+Editar
+https://seller.shopee.com.br/api/v2/shop/auth_partner?
+partner_id=2011285
+&timestamp=1747749805
+&sign=...
+&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback
+&state=cipshopee_...
+®ion=BR
+&is_auth_shop=true
+&login_type=seller
+&auth_type=direct
+&shop_id=
+— Observe o &timestamp= corretamente.
+— Depois de autorizar você receberá na sua rota callback ?code=...&shop_id=..., e daí o token será obtido sem errcode:2.
+
+Com isso o link não sai mais com “×tamp” e o login cai direto no Seller Center, não na Open Platform.
