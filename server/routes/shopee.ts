@@ -130,7 +130,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         createdAt: new Date()
       });
       
-      res.redirect('/dashboard/store/connect?status=reconnected');
+      res.redirect('/dashboard');
     } else {
       // Criar nova loja
       const newStore = await storage.createStore({
@@ -157,7 +157,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         createdAt: new Date()
       });
       
-      res.redirect('/dashboard/store/connect?status=connected');
+      res.redirect('/dashboard');
     }
   } catch (error: any) {
     console.error('Error in Shopee OAuth callback:', error);
@@ -176,7 +176,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
       console.error('Failed to create error notification:', notificationError);
     }
     
-    res.redirect('/dashboard/store/connect?status=error&message=' + encodeURIComponent(error.message || 'Unknown error'));
+    res.redirect('/dashboard?status=error&message=' + encodeURIComponent(error.message || 'Unknown error'));
   }
 });
 
