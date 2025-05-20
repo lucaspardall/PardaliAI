@@ -40,9 +40,9 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     hmac.update(baseString);
     const sign = hmac.digest('hex');
 
-    // IMPORTANTE: Usar o domínio de seller para direcionar ao login do vendedor
-    // Usar seller.shopee.com.br em vez de partner.shopeemobile.com
-    const baseUrl = 'https://seller.shopee.com.br';
+    // IMPORTANTE: Para o endpoint de autorização OAuth, sempre usamos o domínio da API
+    // A autenticação na API DEVE ser feita no domínio partner.shopeemobile.com
+    const baseUrl = 'https://partner.shopeemobile.com';
     
     // Criar parâmetros usando URLSearchParams para garantir formatação correta
     const params = new URLSearchParams();
@@ -145,6 +145,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
               <script>
                 // Construir a URL via JavaScript para evitar problemas de codificação
                 document.getElementById('redirectBtn').addEventListener('click', function() {
+                  // Usar o mesmo domínio que o servidor para consistência
                   const url = new URL('https://partner.shopeemobile.com/api/v2/shop/auth_partner');
                   url.searchParams.append('partner_id', '${partnerId}');
                   url.searchParams.append('timestamp', '${timestamp}');
