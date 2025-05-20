@@ -1,4 +1,3 @@
-
 /**
  * Gerenciamento de autenticação OAuth para Shopee API
  */
@@ -67,14 +66,14 @@ export class ShopeeAuthManager {
     // para garantir formatação correta dos parâmetros e evitar erros de digitação
     const baseUrl = 'https://partner.shopee.com.br';
     console.log('Base URL utilizada:', baseUrl);
-    
+
     // Usar variáveis separadas e explícitas para evitar problemas de codificação
     const partner_id = this.config.partnerId;
     const timestampParam = timestamp; // Evitar qualquer transformação do nome "timestamp"
     const sign = signature;
     const redirect = encodeURIComponent(this.config.redirectUrl);
     const state = stateParam;
-    
+
     // Usar URLSearchParams para garantir formatação correta dos parâmetros
     const searchParams = new URLSearchParams();
     searchParams.append('partner_id', partner_id);
@@ -82,16 +81,16 @@ export class ShopeeAuthManager {
     searchParams.append('sign', sign);
     searchParams.append('redirect', this.config.redirectUrl);
     searchParams.append('state', stateParam);
-    
+
     const urlString = `${baseUrl}${basePathForShopAuthorize}?${searchParams.toString()}`;
-    
+
     // Verificação robusta da URL gerada usando regex para garantir que o timestamp está correto
     if (!urlString.includes('timestamp=')) {
       console.error("ERRO CRÍTICO: A URL gerada não contém o parâmetro 'timestamp=' corretamente!");
       console.error("URL problemática:", urlString);
       throw new Error(`URL inválida: parâmetro timestamp não encontrado na URL`);
     }
-    
+
     // Verificação adicional com regex para garantir integridade completa do parâmetro
     const timestampRegex = /[?&]timestamp=\d+[&$]/;
     if (!timestampRegex.test(urlString)) {
@@ -99,14 +98,14 @@ export class ShopeeAuthManager {
       console.error("URL problemática:", urlString);
       throw new Error(`URL inválida: formato do parâmetro timestamp incorreto`);
     }
-    
+
     // Verificações adicionais para garantir que a URL está correta
     console.log('Verificação da URL completa:', urlString);
     console.log('Verificação do parâmetro timestamp (deve conter "timestamp="):', urlString.includes('timestamp='));
-    
+
     // Verificação visual direta do timestamp para diagnóstico do problema
     console.log("🔎 Verificação direta do timestamp:", `timestamp=${timestampParam}`);
-    
+
     // Salvar URL em um arquivo para inspeção direta (solução definitiva para copiar a URL)
     if (process.env.NODE_ENV === 'development') {
       try {
@@ -117,7 +116,7 @@ export class ShopeeAuthManager {
         }).catch(err => {
           console.error('Erro ao importar fs:', err);
         });
-        
+
         // Tentativa de abrir a URL diretamente em uma nova aba, se disponível
         try {
           // Implementaremos isso mais tarde se necessário com dynamic import
@@ -162,21 +161,26 @@ export class ShopeeAuthManager {
         code,
         shop_id: Number(shopId)
       };
-      
+
       // Corpo JSON minificado para usar na assinatura
       const minifiedRequestBody = JSON.stringify(requestBody);
-      
+
       // String base para assinatura (partner_id + path + timestamp + corpo_json_minificado)
       const baseString = `${this.config.partnerId}${path}${timestamp}${minifiedRequestBody}`;
-      
+
       // Gerar assinatura HMAC-SHA256
       const hmac = createHmac('sha256', this.config.partnerKey);
       hmac.update(baseString);
       const signature = hmac.digest('hex');
 
-      // URL completa com parâmetros comuns na query string
-      const requestUrl = `${baseUrl}${path}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}`;
-      
+      // URL completa com parâmetros comuns na query string usando URLSearchParams para evitar problemas de codificação
+      const urlParams = new URLSearchParams();
+      urlParams.append('partner_id', this.config.partnerId);
+      urlParams.append('timestamp', timestamp.toString());
+      urlParams.append('sign', signature);
+
+      const requestUrl = `${baseUrl}${path}?${urlParams.toString()}`;
+
       console.log('======= DETALHES DA REQUISIÇÃO DE TOKEN =======');
       console.log('URL completa:', requestUrl);
       console.log('String base para assinatura:', baseString);
@@ -239,21 +243,26 @@ export class ShopeeAuthManager {
         shop_id: Number(shopId),
         partner_id: Number(this.config.partnerId)
       };
-      
+
       // Corpo JSON minificado para usar na assinatura
       const minifiedRequestBody = JSON.stringify(requestBody);
-      
+
       // String base para assinatura (partner_id + path + timestamp + corpo_json_minificado)
       const baseString = `${this.config.partnerId}${path}${timestamp}${minifiedRequestBody}`;
-      
+
       // Gerar assinatura HMAC-SHA256
       const hmac = createHmac('sha256', this.config.partnerKey);
       hmac.update(baseString);
       const signature = hmac.digest('hex');
 
-      // URL completa com parâmetros comuns na query string
-      const requestUrl = `${baseUrl}${path}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}`;
-      
+      // URL completa com parâmetros comuns na query string usando URLSearchParams para evitar problemas de codificação
+      const urlParams = new URLSearchParams();
+      urlParams.append('partner_id', this.config.partnerId);
+      urlParams.append('timestamp', timestamp.toString());
+      urlParams.append('sign', signature);
+
+      const requestUrl = `${baseUrl}${path}?${urlParams.toString()}`;
+
       console.log('======= DETALHES DA REQUISIÇÃO DE REFRESH TOKEN =======');
       console.log('URL completa:', requestUrl);
       console.log('String base para assinatura:', baseString);
@@ -271,7 +280,7 @@ export class ShopeeAuthManager {
       });
 
       const data = response.data;
-      
+
       console.log('Resposta da API de refresh token:', JSON.stringify(data, null, 2));
 
       if (data.error) {
