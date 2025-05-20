@@ -64,8 +64,7 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
 
     // 5. Construir a URL final com todos os parâmetros e assinatura
-    // Importante: usando concatenação de string para evitar problemas de codificação
-    // Para o Brasil, não adicionar .br no final do domínio
+    // Importante: definir explicitamente a região como BR para garantir o redirecionamento correto
     const baseUrl = 'https://partner.shopeemobile.com';
     console.log('Base URL utilizada:', baseUrl);
     
@@ -75,6 +74,7 @@ export class ShopeeAuthManager {
     urlString += `&sign=${signature}`;
     urlString += `&redirect=${encodeURIComponent(this.config.redirectUrl)}`;
     urlString += `&state=${encodeURIComponent(stateParam)}`;
+    urlString += `&region=BR`; // Forçar região explicitamente para BR
 
     // Log detalhado para debugging
     console.log(`======= DETALHES DE GERAÇÃO DA URL =======`);
