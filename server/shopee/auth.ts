@@ -47,14 +47,15 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
     console.log('Assinatura gerada:', signature);
 
-    // 3. IMPORTANTE: Para autenticação de vendedores (sellers), use baseUrl global
-    // Para Brasil, mantemos esse domínio global, mas poderíamos usar o getApiBaseUrl com isAuthUrl=true
-    const baseUrl = 'https://partner.shopeemobile.com';
+    // 3. IMPORTANTE: Para autenticação de vendedores (sellers), use o domínio específico para sellers
+    // Para Brasil, usamos o getApiBaseUrl com isAuthUrl=true para direcionar ao login de vendedor
+    const baseUrl = getApiBaseUrl(this.config.region, true); // true para obter a URL de seller
+    console.log('Usando URL de autenticação de sellers:', baseUrl);
     
     // 4. Montar a URL manualmente como uma string completa
     // ⚠️ A ordem exata dos parâmetros e a ausência de qualquer espaço ou caractere extra é crucial
     // ⚠️ Os parâmetros críticos são: login_type=seller e auth_type=direct para evitar o login na open platform
-    const urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
+    let urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
                       `partner_id=${this.config.partnerId}` + 
                       `&timestamp=${timestamp}` + 
                       `&sign=${signature}` + 
@@ -88,7 +89,7 @@ export class ShopeeAuthManager {
     if (invalidTimestampRegex.test(urlString)) {
       console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
       console.error("URL problemática:", urlString);
-      // Correção automática do problema
+      // Correção automática do problema - agora funciona porque urlString é let
       urlString = urlString.replace(/[×xX]tamp=/, 'timestamp=');
       console.log("URL corrigida:", urlString);
     }
