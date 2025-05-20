@@ -1,0 +1,100 @@
+Problema 1: O parâmetro "×tamp" em vez de "timestamp"
+Este é um problema conhecido de codificação de caracteres quando se constrói URLs manualmente. Mesmo com as verificações e correções implementadas no código, o problema persiste.
+Causa:
+O problema ocorre durante a concatenação de strings na construção da URL. Quando a string é manipulada ou transmitida entre sistemas, o caractere "i" em "timestamp" está sendo substituído pelo caractere "×".
+Solução:
+A melhor abordagem é usar o objeto URLSearchParams para construir a URL completamente, em vez de concatenação de strings:
+typescript// Em auth.ts, método getAuthorizationUrl()
+// Substituir a construção manual por:
+const params = new URLSearchParams();
+params.append('partner_id', this.config.partnerId);
+params.append('timestamp', timestamp.toString()); // Converter explicitamente para string
+params.append('sign', signature);
+params.append('redirect', this.config.redirectUrl);
+params.append('state', stateParam);
+params.append('region', 'BR');
+params.append('is_auth_shop', 'true');
+params.append('login_type', 'seller');
+params.append('auth_type', 'direct');
+params.append('shop_id', '');
+
+// Construir URL com o objeto URLSearchParams
+const urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
+Problema 2: Redirecionamento para a Open Platform em vez da interface de vendedor
+Causa:
+Mesmo que os parâmetros login_type=seller e auth_type=direct estejam presentes na URL, o problema pode estar relacionado ao domínio que está sendo usado ou à forma como a Shopee está interpretando esses parâmetros.
+Solução:
+Verifique se está usando o domínio correto para a autenticação de vendedores. Para o Brasil, o correto seria https://seller.shopee.com.br (que já está sendo usado).
+Uma abordagem mais direta é modificar a função getApiBaseUrl em utils.ts para garantir que o domínio correto seja usado:
+typescript// Em utils.ts, certifique-se que a função getApiBaseUrl tenha isso para o Brasil:
+const authRegionMap: Record<ShopeeRegion, string> = {
+  // ... outras regiões
+  'BR': 'https://seller.shopee.com.br', // Certifique-se que este é o domínio para vendedores no Brasil
+};
+Solução completa recomendada:
+
+Modifique o método getAuthorizationUrl em auth.ts para usar URLSearchParams completamente:
+
+typescriptgetAuthorizationUrl(): string {
+  const timestamp = getTimestamp();
+  const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
+  
+  // String base para assinatura
+  const baseString = `${this.config.partnerId}${basePathForShopAuthorize}${timestamp}`;
+  
+  // Gerar assinatura HMAC-SHA256
+  const hmac = createHmac('sha256', this.config.partnerKey);
+  hmac.update(baseString);
+  const signature = hmac.digest('hex');
+  
+  // URL base para autenticação de vendedores
+  const baseUrl = getApiBaseUrl(this.config.region, true);
+  
+  // Criar objeto URLSearchParams e adicionar cada parâmetro individualmente
+  const params = new URLSearchParams();
+  params.append('partner_id', this.config.partnerId);
+  params.append('timestamp', timestamp.toString());
+  params.append('sign', signature);
+  params.append('redirect', this.config.redirectUrl);
+  params.append('state', `cipshopee_${Date.now()}`);
+  params.append('region', 'BR');
+  params.append('is_auth_shop', 'true');
+  params.append('login_type', 'seller');
+  params.append('auth_type', 'direct');
+  params.append('shop_id', '');
+  
+  // Construir URL final
+  const urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
+  
+  // Verificação adicional para garantir que não há caracteres inválidos
+  if (urlString.includes('×tamp=') || urlString.includes('xtamp=')) {
+    console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
+    // Reconstruir a URL manualmente se o problema persistir
+    return `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=cipshopee_${Date.now()}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
+  }
+  
+  return urlString;
+}
+
+Verifique os parâmetros críticos para integrações Shopee Open Platform vs. Seller Center:
+
+A Shopee possui dois sistemas distintos: a Open Platform (para desenvolvedores) e o Seller Center (para vendedores). Os parâmetros críticos para garantir o redirecionamento correto são:
+
+login_type=seller: Garante que o usuário seja enviado para o login de vendedor
+auth_type=direct: Evita o fluxo de login da open platform
+is_auth_shop=true: Indica que é uma autenticação para uma loja
+
+
+Teste manualmente a URL:
+
+Para validar a solução, construa uma URL manualmente com todos os parâmetros necessários e teste-a diretamente no navegador, confirmando que ela redireciona corretamente.
+
+Adicione um console.log mais detalhado:
+
+typescriptconsole.log('URL FINAL COMPLETA (verifique se contém timestamp=):', urlString);
+console.log('Parâmetros críticos presentes:');
+console.log('- timestamp=', urlString.includes('timestamp='));
+console.log('- login_type=seller', urlString.includes('login_type=seller'));
+console.log('- auth_type=direct', urlString.includes('auth_type=direct'));
+console.log('- is_auth_shop=true', urlString.includes('is_auth_shop=true'));
+Este problema específico do "×tamp" é conhecido por ocorrer quando strings são concatenadas manualmente, mas usando o objeto URLSearchParams você deve conseguir evitá-lo completamente.
