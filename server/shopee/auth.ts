@@ -52,20 +52,22 @@ export class ShopeeAuthManager {
     const baseUrl = getApiBaseUrl(this.config.region, true); // true para obter a URL de seller
     console.log('Usando URL de autenticação de sellers:', baseUrl);
     
-    // 4. Montar a URL manualmente como uma string completa
-    // ⚠️ A ordem exata dos parâmetros e a ausência de qualquer espaço ou caractere extra é crucial
+    // 4. Montar a URL usando URLSearchParams para evitar problemas de codificação
     // ⚠️ Os parâmetros críticos são: login_type=seller e auth_type=direct para evitar o login na open platform
-    let urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
-                      `partner_id=${this.config.partnerId}` + 
-                      `&timestamp=${timestamp}` + 
-                      `&sign=${signature}` + 
-                      `&redirect=${encodeURIComponent(this.config.redirectUrl)}` + 
-                      `&state=${encodeURIComponent(stateParam)}` + 
-                      `&region=BR` + 
-                      `&is_auth_shop=true` + 
-                      `&login_type=seller` + 
-                      `&auth_type=direct` +
-                      `&shop_id=`;
+    const params = new URLSearchParams();
+    params.append('partner_id', this.config.partnerId);
+    params.append('timestamp', timestamp.toString()); // Converter explicitamente para string
+    params.append('sign', signature);
+    params.append('redirect', this.config.redirectUrl);
+    params.append('state', stateParam);
+    params.append('region', 'BR');
+    params.append('is_auth_shop', 'true');
+    params.append('login_type', 'seller');
+    params.append('auth_type', 'direct');
+    params.append('shop_id', '');
+    
+    // Construir URL final usando o objeto URLSearchParams
+    let urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
     
     console.log('URL de autorização final:', urlString);
 
@@ -92,7 +94,21 @@ export class ShopeeAuthManager {
       // Correção automática do problema - agora funciona porque urlString é let
       urlString = urlString.replace(/[×xX]tamp=/, 'timestamp=');
       console.log("URL corrigida:", urlString);
+      
+      // Se o problema persistir, usar a abordagem manual como último recurso
+      if (urlString.includes('×tamp=') || urlString.includes('xtamp=')) {
+        console.log("Reconstruindo a URL manualmente como último recurso...");
+        urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
+      }
     }
+    
+    // Log detalhado dos parâmetros críticos para verificação
+    console.log('URL FINAL COMPLETA (verifique se contém timestamp=):', urlString);
+    console.log('Parâmetros críticos presentes:');
+    console.log('- timestamp=', urlString.includes('timestamp='));
+    console.log('- login_type=seller', urlString.includes('login_type=seller'));
+    console.log('- auth_type=direct', urlString.includes('auth_type=direct'));
+    console.log('- is_auth_shop=true', urlString.includes('is_auth_shop=true'));
 
     // Verificações adicionais para garantir que a URL está correta
     console.log('Verificação da URL completa:', urlString);

@@ -44,11 +44,10 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Usar seller.shopee.com.br em vez de partner.shopeemobile.com
     const baseUrl = 'https://seller.shopee.com.br';
     
-    // Criar parâmetros manualmente para garantir formatação correta
-    // Evitando o problema do ×tamp que ocorre com URLSearchParams
+    // Criar parâmetros usando URLSearchParams para garantir formatação correta
     const params = new URLSearchParams();
     params.append('partner_id', partnerId);
-    params.append('timestamp', timestamp.toString());
+    params.append('timestamp', timestamp.toString()); // Conversão explícita para string
     params.append('sign', sign);
     params.append('redirect', redirectUrl);
     params.append('state', state);
@@ -58,9 +57,17 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     params.append('auth_type', 'direct');
     params.append('shop_id', '');
     
-    // Construir a URL manualmente como alternativa ao params.toString()
-    // Isso evita completamente o problema de codificação do timestamp
-    const authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
+    // Construir a URL usando toString do URLSearchParams
+    const authUrl = `${baseUrl}${path}?${params.toString()}`;
+    
+    // Verificar se há o problema do ×tamp na URL
+    if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
+      console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
+      // Reconstruir manualmente como último recurso
+      const manualUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
+      console.log("URL reconstruída manualmente:", manualUrl);
+      return res.redirect(manualUrl);
+    }
     
     // Log da URL apenas para verificação
     console.log("URL final construída manualmente:", authUrl);
