@@ -26,6 +26,7 @@ export class ShopeeAuthManager {
 
     // De acordo com a documentação da API v2, o endpoint correto para autorização
     const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
+    console.log('Usando endpoint de autorização:', basePathForShopAuthorize);
 
     console.log(`Gerando URL de autorização para a Shopee`);
     console.log(`Partner ID: ${this.config.partnerId}`);
@@ -63,7 +64,7 @@ export class ShopeeAuthManager {
 
     // 5. Construir a URL final com todos os parâmetros e assinatura
     // Importante: usando concatenação de string para evitar problemas de codificação
-    const baseUrl = 'https://open.shopee.com.br';
+    const baseUrl = 'https://partner.api.shopee.com'; // Tentar o domínio global da Shopee
     let urlString = `${baseUrl}${basePathForShopAuthorize}?`;
     urlString += `partner_id=${this.config.partnerId}`;
     urlString += `&timestamp=${timestamp}`;
