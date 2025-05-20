@@ -68,17 +68,41 @@ export class ShopeeAuthManager {
     const baseUrl = 'https://partner.shopeemobile.com';
     console.log('Base URL utilizada:', baseUrl);
     
-    // Construir a URL final usando URI encoding para garantir que os parâmetros sejam codificados corretamente
-    const urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
-                      `partner_id=${encodeURIComponent(this.config.partnerId)}&` + 
-                      `timestamp=${encodeURIComponent(timestamp)}&` + 
-                      `sign=${encodeURIComponent(signature)}&` + 
-                      `redirect=${encodeURIComponent(this.config.redirectUrl)}&` + 
-                      `state=${encodeURIComponent(stateParam)}`;
+    // Usar variáveis separadas e explícitas para evitar problemas de codificação
+    const partner_id = this.config.partnerId;
+    const timestampParam = timestamp; // Evitar qualquer transformação do nome "timestamp"
+    const sign = signature;
+    const redirect = encodeURIComponent(this.config.redirectUrl);
+    const state = stateParam;
+    
+    // Construir a URL com concatenação simples para evitar problemas de interpolação
+    const urlString = baseUrl + basePathForShopAuthorize + 
+                      "?partner_id=" + partner_id + 
+                      "&timestamp=" + timestampParam + 
+                      "&sign=" + sign + 
+                      "&redirect=" + redirect + 
+                      "&state=" + state;
+    
+    // Verificação robusta da URL gerada
+    if (!urlString.includes('timestamp=')) {
+      console.error("ERRO CRÍTICO: A URL gerada não contém o parâmetro 'timestamp=' corretamente!");
+      console.error("URL problemática:", urlString);
+    }
     
     // Verificações adicionais para garantir que a URL está correta
     console.log('Verificação da URL completa:', urlString);
     console.log('Verificação do parâmetro timestamp (deve conter "timestamp="):', urlString.includes('timestamp='));
+    
+    // Salvar URL em um arquivo para inspeção direta se necessário (apenas em desenvolvimento)
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const fs = require('fs');
+        fs.writeFileSync('shopee_auth_url.txt', urlString);
+        console.log('URL salva em arquivo para inspeção: shopee_auth_url.txt');
+      } catch (e) {
+        console.error('Não foi possível salvar a URL em arquivo:', e);
+      }
+    }
 
     // Log detalhado para debugging
     console.log(`======= DETALHES DE GERAÇÃO DA URL =======`);
