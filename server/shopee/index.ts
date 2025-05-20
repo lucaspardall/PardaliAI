@@ -11,8 +11,8 @@ import { ShopeeCache } from './cache';
 const DEFAULT_CONFIG: ShopeeAuthConfig = {
   partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
   partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
-  // Usar URL dinâmica baseada no ambiente de execução
-  redirectUrl: process.env.SHOPEE_REDIRECT_URL || (process.env.NODE_ENV === 'development' ? 'https://workspace.replit.app/api/shopee/callback' : 'https://cipshopee.replit.app/api/shopee/callback'),
+  // Sempre usar o domínio de produção cipshopee.replit.app como URL de redirecionamento
+  redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
   region: 'BR'
 };
 
@@ -24,10 +24,8 @@ export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
   // Definir região explicitamente como BR para garantir autenticação correta
   const region = 'BR'; 
   
-  // Obter a URL atual com base no ambiente
-  const currentUrl = process.env.REPL_SLUG 
-    ? `https://${process.env.REPL_SLUG}.replit.app`
-    : 'https://cipshopee.replit.app';
+  // Usar sempre o domínio de produção para integrações Shopee
+  const currentUrl = 'https://cipshopee.replit.app';
   
   // Configurar URL de redirecionamento garantindo formato correto
   const redirectUrl = process.env.SHOPEE_REDIRECT_URL || `${currentUrl}/api/shopee/callback`;
