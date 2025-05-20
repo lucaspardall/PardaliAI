@@ -68,16 +68,11 @@ export class ShopeeAuthManager {
     const baseUrl = 'https://partner.shopeemobile.com';
     console.log('Base URL utilizada:', baseUrl);
     
-    // Criar objeto URLSearchParams para construir a query string de forma segura
-    const urlParams = new URLSearchParams();
-    urlParams.append('partner_id', this.config.partnerId);
-    urlParams.append('timestamp', timestamp.toString());
-    urlParams.append('sign', signature);
-    urlParams.append('redirect', this.config.redirectUrl);
-    urlParams.append('state', stateParam);
+    // Construir a URL final manualmente para evitar problemas de codificação
+    const urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${stateParam}`;
     
-    // Construir a URL final usando a query string formatada corretamente
-    const urlString = `${baseUrl}${basePathForShopAuthorize}?${urlParams.toString()}`;
+    // Verificar se a URL está sendo gerada corretamente (para debug)
+    console.log('Verificação do parâmetro timestamp:', urlString.includes('timestamp='));
 
     // Log detalhado para debugging
     console.log(`======= DETALHES DE GERAÇÃO DA URL =======`);
