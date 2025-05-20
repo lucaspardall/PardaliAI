@@ -49,6 +49,16 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     const baseUrl = 'https://partner.shopeemobile.com';
     let authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true`;
     
+    // Verificar estrutura da URL para garantir que não há problemas
+    console.log("URL final antes de enviar:", authUrl);
+    
+    // Verificar que timestamp está na URL corretamente
+    if (!authUrl.includes(`timestamp=${timestamp}`)) {
+      console.error("AVISO: timestamp não está corretamente incluído na URL!");
+      // Correção de emergência
+      authUrl = authUrl.replace(/[&?]xtamp=\d+/, `&timestamp=${timestamp}`);
+    }
+    
     console.log("URL de autorização gerada manualmente:", authUrl);
     
     // Registrar a URL gerada para debug com detalhes completos

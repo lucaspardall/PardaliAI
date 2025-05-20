@@ -84,12 +84,6 @@ export class ShopeeAuthManager {
       `state=${encodeURIComponent(stateParam)}`,
       `region=${encodeURIComponent('BR')}`,
       `is_auth_shop=${encodeURIComponent('true')}`
-      `timestamp=${encodeURIComponent(String(timestampParam))}`,
-      `sign=${encodeURIComponent(sign)}`,
-      `redirect=${encodeURIComponent(this.config.redirectUrl)}`,
-      `state=${encodeURIComponent(stateParam)}`,
-      `region=${encodeURIComponent('BR')}`,
-      `is_auth_shop=${encodeURIComponent('true')}`
     ].join('&');
 
     const urlString = `${baseUrl}${basePathForShopAuthorize}?${urlParams}`;
