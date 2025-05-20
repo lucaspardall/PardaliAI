@@ -5,6 +5,8 @@ import { Router, Request, Response } from 'express';
 import { createClient } from '../shopee';
 import { storage } from '../storage';
 import { isAuthenticated } from '../replitAuth';
+import crypto from 'crypto';
+import fs from 'fs';
 
 const router = Router();
 
@@ -39,7 +41,6 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     const baseString = `${partnerId}${path}${timestamp}`;
     
     // Gerar a assinatura HMAC-SHA256
-    const crypto = require('crypto');
     const hmac = crypto.createHmac('sha256', partnerKey);
     hmac.update(baseString);
     const sign = hmac.digest('hex');
@@ -89,7 +90,6 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     
     // Salvar URL em arquivo para inspeção manual se necessário 
     try {
-      const fs = require('fs');
       fs.writeFileSync('shopee_auth_url.txt', finalAuthUrl);
       console.log("✅ URL salva em arquivo para inspeção: shopee_auth_url.txt");
     } catch (err) {
