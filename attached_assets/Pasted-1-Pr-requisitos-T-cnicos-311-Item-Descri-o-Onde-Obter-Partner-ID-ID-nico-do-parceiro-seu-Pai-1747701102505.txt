@@ -1,0 +1,175 @@
+1. Pré-requisitos Técnicos 311
+Item	Descrição	Onde Obter
+Partner ID	ID único do parceiro (seu)	Painel Shopee Partner > App Management
+Partner Key	Chave secreta para assinaturas	Painel Shopee Partner > App Key
+Redirect URI	URL de callback aprovada	Ex: https://seusistema.com/api/shopee/callback
+2. Fluxo de Autorização Direta 14
+Diagram
+Code
+sequenceDiagram
+    Cliente->>SaaS: Clica "Conectar Loja"
+    SaaS->>Shopee: Redireciona para URL Partner API
+    Shopee->>Cliente: Login com conta Shopee existente (sem Open Platform)
+    Cliente->>Shopee: Autoriza acesso aos dados
+    Shopee->>SaaS: Retorna code + shop_id via callback
+    SaaS->>Shopee: Troca code por access_token (usando Partner Key)
+    SaaS->>DB: Armazena tokens criptografados
+3. Construção da URL de Autorização 1011
+python
+import hmac
+import hashlib
+from urllib.parse import urlencode
+
+partner_id = "SEU_PARTNER_ID"
+partner_key = "SUA_PARTNER_KEY"
+redirect_uri = "https://seusistema.com/api/shopee/callback"
+state = "BR_" + str(int(time.time()))  # Ex: BR_1747689738
+
+params = {
+    "partner_id": partner_id,
+    "redirect": redirect_uri,
+    "state": state,
+    "timestamp": str(int(time.time()))
+}
+
+# Gerar assinatura HMAC-SHA256
+base_str = f"/api/v2/shop/auth_partner?{urlencode(sorted(params.items()))}"
+signature = hmac.new(partner_key.encode(), base_str.encode(), hashlib.sha256).hexdigest()
+
+url_auth = f"https://partner.shopeemobile.com.br/api/v2/shop/auth_partner?{urlencode(params)}&sign={signature}"
+Exemplo de URL Gerada:
+
+https://partner.shopeemobile.com.br/api/v2/shop/auth_partner?
+  partner_id=2011285
+  &redirect=https%3A%2F%2Fseusistema.com%2Fapi%2Fshopee%2Fcallback
+  &state=BR_1747689738
+  &timestamp=1747689738
+  &sign=a5d56dcdf1ec31bcf4e2f0def96946a7394aa8917a953e7c349c0961dc3e20da
+4. Tratamento do Callback 411
+javascript
+app.get('/api/shopee/callback', async (req, res) => {
+  const { code, shop_id, state } = req.query;
+  
+  // Validar state (prevenir CSRF)
+  if(!validateState(state)) {
+    return res.status(403).send("Autorização inválida");
+  }
+
+  // Obter tokens
+  try {
+    const tokenResponse = await axios.post(
+      'https://partner.shopeemobile.com.br/api/v2/auth/token/get',
+      {
+        partner_id: process.env.SHOPEE_PARTNER_ID,
+        code,
+        shop_id
+      },
+      {
+        headers: {
+          'Authorization': `sha256 ${gerarAssinatura(...)}`,
+          'X-Partner-Id': process.env.SHOPEE_PARTNER_ID
+        }
+      }
+    );
+
+    // Criptografar e armazenar
+    await salvarTokens({
+      shop_id,
+      access_token: encrypt(tokenResponse.data.access_token),
+      refresh_token: encrypt(tokenResponse.data.refresh_token)
+    });
+
+    res.redirect('/integracao-sucesso');
+  } catch (error) {
+    console.error('Erro na autenticação:', error);
+    res.redirect('/erro?codigo=shopee_falha');
+  }
+});
+5. Gerenciamento de Tokens 311
+Ação	Endpoint	Frequência
+Obter novo access_token	/auth/token/get	1x por code
+Renovar access_token	/auth/access_token/get	A cada 4h
+Revogar acesso	/auth/token/cancel	Quando cliente remover integração
+Exemplo de renovação:
+
+python
+def renovar_token(refresh_token):
+    params = {
+        "partner_id": "SEU_ID",
+        "refresh_token": refresh_token,
+        "shop_id": "ID_LOJA",
+        "timestamp": str(int(time.time()))
+    }
+    
+    signature = gerar_assinatura(params, "/api/v2/auth/access_token/get")
+    
+    response = requests.post(
+        "https://partner.shopeemobile.com.br/api/v2/auth/access_token/get",
+        json=params,
+        headers={
+            "Authorization": f"sha256 {signature}",
+            "X-Partner-Id": params["partner_id"]
+        }
+    )
+    return response.json()
+6. Requisitos para Clientes 1014
+Conta ativa de vendedor na Shopee Brasil
+
+CPF/CNPJ válido cadastrado na Shopee
+
+Aceitação dos Termos de Uso da API
+
+Não é necessário:
+
+Cadastro na Open Platform
+
+Conhecimento técnico de APIs
+
+7. Segurança e Compliance 1114
+Criptografia AES-256 para tokens armazenados
+
+Validação de estado (state parameter)
+
+Log de auditoria para todas as interações
+
+Política de retenção de dados (máx. 6 meses)
+
+Certificado SSL obrigatório no callback
+
+8. Solução de Problemas Comuns 311
+Erro	Causa	Solução
+invalid_redirect_uri	URL não registrada	Registrar no Partner Dashboard
+authorization_expired	Token >4h	Usar refresh_token
+shop_not_exists	Loja inativa	Verificar status na Shopee Seller Center
+permission_denied	Escopos insuficientes	Solicitar shopee.order.manage
+9. Dashboard de Monitoramento (Exemplo) 4
+javascript
+// Exemplo de métricas essenciais
+const metrics = {
+  lojas_ativas: await contarLojasIntegradas(),
+  taxas_sincronizacao: calcularTaxaSucessoAPI(),
+  tempo_resposta: monitorarLatenciaShopee(),
+  alertas_seguranca: detectarTentativasInvalidas()
+};
+10. Fluxo do Cliente Final 1014
+Cliente clica "Conectar Loja" no seu SaaS
+
+Redirecionamento para Shopee (tela de login normal)
+
+Login com e-mail/senha existente da Shopee
+
+Autorização de acesso (tela única)
+
+Retorno automático ao seu sistema
+
+Sincronização inicial de produtos/pedidos
+
+Vantagens:
+
+Zero cadastro manual
+
+Sem necessidade de Open Platform
+
+Processo concluído em <1 minuto
+
+Para detalhes técnicos completos, consulte a Documen
