@@ -156,48 +156,41 @@ export class ShopeeAuthManager {
       const baseUrl = getApiBaseUrl(this.config.region);
       const path = AUTH.GET_TOKEN;
 
-      // Parâmetros para o request, conforme documentação da Shopee
-      const params: Record<string, any> = {
+      // Corpo da requisição (parâmetros específicos do endpoint)
+      const requestBody = {
         partner_id: Number(this.config.partnerId),
         code,
-        shop_id: Number(shopId),
-        timestamp
+        shop_id: Number(shopId)
       };
-
-      // Ordenar parâmetros em ordem alfabética para gerar a string base para assinatura
-      const sortedParamKeys = Object.keys(params).sort();
-      const sortedParams = sortedParamKeys.map(key => `${key}=${params[key]}`).join('&');
-
-      // Construir a string base para assinatura conforme a documentação
-      const baseString = `${path}?${sortedParams}`;
-
+      
+      // Corpo JSON minificado para usar na assinatura
+      const minifiedRequestBody = JSON.stringify(requestBody);
+      
+      // String base para assinatura (partner_id + path + timestamp + corpo_json_minificado)
+      const baseString = `${this.config.partnerId}${path}${timestamp}${minifiedRequestBody}`;
+      
       // Gerar assinatura HMAC-SHA256
-      const signature = generateSignature(
-        this.config.partnerId,
-        this.config.partnerKey,
-        baseString,
-        timestamp,
-        undefined,
-        undefined,
-        true // Usar a string base diretamente
-      );
+      const hmac = createHmac('sha256', this.config.partnerKey);
+      hmac.update(baseString);
+      const signature = hmac.digest('hex');
 
-      console.log('Obtendo token de acesso - URL:', `${baseUrl}${path}`);
-      console.log('Obtendo token de acesso - String base para assinatura:', baseString);
-      console.log('Obtendo token de acesso - Dados:', params);
+      // URL completa com parâmetros comuns na query string
+      const requestUrl = `${baseUrl}${path}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}`;
+      
+      console.log('======= DETALHES DA REQUISIÇÃO DE TOKEN =======');
+      console.log('URL completa:', requestUrl);
+      console.log('String base para assinatura:', baseString);
+      console.log('Corpo da requisição:', minifiedRequestBody);
+      console.log('=============================================');
 
-      // Configurar headers conforme documentação
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `SHA256 ${signature}`
-      };
-
-      // Fazer a requisição com os parâmetros e assinatura
+      // Fazer a requisição com os parâmetros no corpo e assinatura na URL
       const response = await axios({
         method: 'post',
-        url: `${baseUrl}${path}`,
-        data: params,
-        headers: headers
+        url: requestUrl,
+        data: requestBody,
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       const data = response.data;
@@ -212,7 +205,7 @@ export class ShopeeAuthManager {
         };
       }
 
-      // Calcular expiração do token (data atual + refresh_token_valid_time em segundos)
+      // Calcular expiração do token (data atual + expire_in em segundos)
       const expiresIn = data.expire_in || 14400; // Padrão: 4 horas
       const expiresAt = new Date();
       expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
@@ -240,26 +233,46 @@ export class ShopeeAuthManager {
       const baseUrl = getApiBaseUrl(this.config.region);
       const path = AUTH.REFRESH_TOKEN;
 
-      const signature = generateSignature(
-        this.config.partnerId,
-        this.config.partnerKey,
-        path,
-        timestamp
-      );
-
-      const response = await axios.post(`${baseUrl}${path}`, {
+      // Corpo da requisição
+      const requestBody = {
         refresh_token: refreshToken,
         shop_id: Number(shopId),
-        partner_id: Number(this.config.partnerId),
-      }, {
-        params: {
-          partner_id: this.config.partnerId,
-          timestamp,
-          sign: signature,
-        },
+        partner_id: Number(this.config.partnerId)
+      };
+      
+      // Corpo JSON minificado para usar na assinatura
+      const minifiedRequestBody = JSON.stringify(requestBody);
+      
+      // String base para assinatura (partner_id + path + timestamp + corpo_json_minificado)
+      const baseString = `${this.config.partnerId}${path}${timestamp}${minifiedRequestBody}`;
+      
+      // Gerar assinatura HMAC-SHA256
+      const hmac = createHmac('sha256', this.config.partnerKey);
+      hmac.update(baseString);
+      const signature = hmac.digest('hex');
+
+      // URL completa com parâmetros comuns na query string
+      const requestUrl = `${baseUrl}${path}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}`;
+      
+      console.log('======= DETALHES DA REQUISIÇÃO DE REFRESH TOKEN =======');
+      console.log('URL completa:', requestUrl);
+      console.log('String base para assinatura:', baseString);
+      console.log('Corpo da requisição:', minifiedRequestBody);
+      console.log('===================================================');
+
+      // Fazer a requisição
+      const response = await axios({
+        method: 'post',
+        url: requestUrl,
+        data: requestBody,
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       const data = response.data;
+      
+      console.log('Resposta da API de refresh token:', JSON.stringify(data, null, 2));
 
       if (data.error) {
         throw {
@@ -269,11 +282,10 @@ export class ShopeeAuthManager {
         };
       }
 
-      // Calcular expiração do token (data atual + refresh_token_valid_time em segundos)
+      // Calcular expiração do token (data atual + expire_in em segundos)
+      const expiresIn = data.expire_in || 14400; // Padrão: 4 horas
       const expiresAt = new Date();
-      expiresAt.setSeconds(
-        expiresAt.getSeconds() + data.refresh_token_valid_time || 30 * 24 * 60 * 60 // Padrão: 30 dias
-      );
+      expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
 
       return {
         accessToken: data.access_token,
@@ -282,6 +294,7 @@ export class ShopeeAuthManager {
         shopId,
       };
     } catch (error) {
+      console.error('Erro ao atualizar token de acesso:', error.response?.data || error.message);
       throw parseApiError(error);
     }
   }
