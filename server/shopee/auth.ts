@@ -74,7 +74,7 @@ export class ShopeeAuthManager {
     const partner_id = this.config.partnerId;
     const timestampParam = timestamp; // Evitar qualquer transformação do nome "timestamp"
     const sign = signature;
-    
+
     // Montar a URL manualmente para evitar problemas de codificação com URLSearchParams
     const urlParams = [
       `partner_id=${encodeURIComponent(partner_id)}`,

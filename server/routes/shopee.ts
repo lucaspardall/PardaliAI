@@ -45,14 +45,9 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     hmac.update(baseString);
     const sign = hmac.digest('hex');
     
-    // Montar URL manualmente com encodeURIComponent para evitar problemas
+    // Montar URL completamente manual para evitar qualquer codificação automática problemática
     const baseUrl = 'https://partner.shopeemobile.com';
-    let authUrl = `${baseUrl}${path}?`;
-    authUrl += `partner_id=${partnerId}`;
-    authUrl += `&timestamp=${timestamp}`;
-    authUrl += `&sign=${sign}`;
-    authUrl += `&redirect=${encodeURIComponent(redirectUrl)}`;
-    authUrl += `&state=${encodeURIComponent(state)}`;
+    let authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true`;
     
     console.log("URL de autorização gerada manualmente:", authUrl);
     
