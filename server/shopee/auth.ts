@@ -47,10 +47,10 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
     console.log('Assinatura gerada:', signature);
 
-    // 3. IMPORTANTE: Para autenticação de vendedores (sellers), use o domínio específico para sellers
-    // Para Brasil, usamos o getApiBaseUrl com isAuthUrl=true para direcionar ao login de vendedor
-    const baseUrl = getApiBaseUrl(this.config.region, true); // true para obter a URL de seller
-    console.log('Usando URL de autenticação de sellers:', baseUrl);
+    // 3. IMPORTANTE: Para o endpoint de autorização OAuth, sempre usamos o domínio da API
+    // A autenticação na API DEVE ser feita no domínio partner.shopeemobile.com, não na interface de vendedor
+    const baseUrl = 'https://partner.shopeemobile.com';
+    console.log('Usando URL de autenticação da API:', baseUrl);
     
     // 4. Montar a URL usando a API URL para garantir a codificação correta
     // ⚠️ Os parâmetros críticos são: login_type=seller e auth_type=direct para evitar o login na open platform

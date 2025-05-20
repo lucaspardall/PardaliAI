@@ -16,7 +16,9 @@ export function getTimestamp(): number {
 /**
  * Obtém a URL base da API de acordo com a região
  * @param region Região da Shopee
- * @param isAuthUrl Se verdadeiro, retorna a URL para autenticação de vendedores
+ * @param isAuthUrl Se verdadeiro, retorna a URL para interface de vendedores
+ * IMPORTANTE: Para endpoints de autenticação OAuth como /api/v2/shop/auth_partner, 
+ * SEMPRE use partner.shopeemobile.com, não as URLs de seller
  * @returns URL base da API
  */
 export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false): string {

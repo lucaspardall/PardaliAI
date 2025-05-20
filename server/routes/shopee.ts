@@ -145,7 +145,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
               <script>
                 // Construir a URL via JavaScript para evitar problemas de codificação
                 document.getElementById('redirectBtn').addEventListener('click', function() {
-                  const url = new URL('https://seller.shopee.com.br/api/v2/shop/auth_partner');
+                  const url = new URL('https://partner.shopeemobile.com/api/v2/shop/auth_partner');
                   url.searchParams.append('partner_id', '${partnerId}');
                   url.searchParams.append('timestamp', '${timestamp}');
                   url.searchParams.append('sign', '${sign}');
