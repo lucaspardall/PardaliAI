@@ -49,79 +49,27 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     const baseUrl = 'https://partner.shopeemobile.com';
     let authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct`;
     
-    // Verificar estrutura da URL para garantir que não há problemas
-    console.log("URL final antes de enviar:", authUrl);
+    // Log simples da URL para verificação
+    console.log("URL final para autorização:", authUrl);
     
-    // Verificar que timestamp está na URL corretamente
-    if (!authUrl.includes(`timestamp=${timestamp}`)) {
-      console.error("AVISO: timestamp não está corretamente incluído na URL!");
-      // Correção de emergência
-      authUrl = authUrl.replace(/[&?]xtamp=\d+/, `&timestamp=${timestamp}`);
-    }
-    
-    console.log("URL de autorização gerada manualmente:", authUrl);
-    
-    // Registrar a URL gerada para debug com detalhes completos
-    console.log("======= DETALHES DA URL DE AUTORIZAÇÃO =======");
-    console.log("URL completa:", authUrl);
-    
-    // Certificar que estamos usando a URL corretamente sem modificá-la
-    const finalAuthUrl = authUrl;
-    
-    // Verificação adicional para garantir que os parâmetros estão corretos
+    // Salvar URL em arquivo para inspeção quando necessário
     try {
-      // Analisar a URL para garantir que os parâmetros estão formatados corretamente
-      const urlObj = new URL(finalAuthUrl);
-      const searchParams = urlObj.searchParams;
-      
-      // Garantir que 'timestamp' está presente e bem formatado
-      if (searchParams.has('timestamp')) {
-        console.log("✅ Timestamp presente na URL:", searchParams.get('timestamp'));
-      } else {
-        console.error("❌ ERRO: Timestamp não encontrado na URL!");
-      }
-      
-      // Importante: NÃO reconstruir ou modificar a URL original
-      // Apenas verificar se contém o parâmetro timestamp corretamente
-      console.log("🔎 Verificação direta do timestamp: timestamp=" + searchParams.get('timestamp'));
-      
-    } catch (error) {
-      console.error("Erro ao processar URL:", error);
-    }
-    
-    // Verificação adicional para diagnóstico do problema ×tamp
-    const containsTimestamp = finalAuthUrl.includes("&timestamp=") || finalAuthUrl.includes("?timestamp=");
-    console.log("Contém parâmetro timestamp corretamente formatado:", containsTimestamp);
-    
-    // Salvar URL em arquivo para inspeção manual se necessário 
-    try {
-      fs.writeFileSync('shopee_auth_url.txt', finalAuthUrl);
+      fs.writeFileSync('shopee_auth_url.txt', authUrl);
       console.log("✅ URL salva em arquivo para inspeção: shopee_auth_url.txt");
     } catch (err) {
       console.error("Não foi possível salvar URL em arquivo:", err);
     }
     
-    // Verificação detalhada dos parâmetros para diagnóstico
-    try {
-      const urlObj = new URL(authUrl);
-      console.log("Protocolo:", urlObj.protocol);
-      console.log("Host:", urlObj.host);
-      console.log("Parâmetros da query:");
-      console.log("- partner_id:", urlObj.searchParams.get('partner_id'));
-      console.log("- timestamp:", urlObj.searchParams.get('timestamp'));
-      console.log("- sign:", urlObj.searchParams.get('sign'));
-      console.log("- redirect:", urlObj.searchParams.get('redirect'));
-      console.log("- state:", urlObj.searchParams.get('state'));
-      console.log("- region:", urlObj.searchParams.get('region'));
-      console.log("- auth_shop:", urlObj.searchParams.get('auth_shop'));
-      console.log("- auth_type:", urlObj.searchParams.get('auth_type'));
-    } catch (error) {
-      console.error("Erro ao analisar URL:", error);
+    // Verificação crucial do parâmetro auth_type
+    if (!authUrl.includes('auth_type=direct')) {
+      console.error("⚠️ ALERTA CRÍTICO: O parâmetro auth_type=direct não está presente na URL!");
+      console.error("Este parâmetro é essencial para direcionar o login para vendedores (sellers)");
+    } else {
+      console.log("✅ Parâmetro auth_type=direct presente na URL");
     }
     
-    console.log("Começa com https://partner.shopeemobile.com?", authUrl.startsWith("https://partner.shopeemobile.com"));
-    console.log("Contém .com.br?", authUrl.includes(".com.br"));
-    console.log("Contém open.shopee?", authUrl.includes("open.shopee"));
+    // URL final para redirecionamento
+    const finalAuthUrl = authUrl;
     console.log("================================================");
     
     // Se estamos em desenvolvimento, mostrar opções para o usuário
@@ -162,21 +110,10 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       `);
     }
     
-    // Em produção, redirecionar diretamente
-    // Usamos um HTML com meta refresh para evitar problemas de codificação da URL
-    res.send(`
-      <html>
-        <head>
-          <meta http-equiv="refresh" content="0;url=${finalAuthUrl}">
-          <title>Redirecionando para Shopee</title>
-        </head>
-        <body>
-          <p>Redirecionando para autenticação na Shopee...</p>
-          <p>Se você não for redirecionado automaticamente, <a href="${finalAuthUrl}">clique aqui</a>.</p>
-          <p><small>URL completa: <code>${finalAuthUrl}</code></small></p>
-        </body>
-      </html>
-    `);
+    // Em produção, redirecionamento simplificado e direto
+    // Usar res.redirect para um redirecionamento HTTP 302 sem modificação da URL
+    console.log("Redirecionando para URL de autorização da Shopee (login direto de seller)");
+    return res.redirect(finalAuthUrl);
     
     // No ambiente de desenvolvimento, tentar abrir a URL diretamente também
     if (process.env.NODE_ENV === 'development') {

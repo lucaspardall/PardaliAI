@@ -36,63 +36,33 @@ export class ShopeeAuthManager {
     // Criar o estado único para CSRF protection
     const stateParam = `cipshopee_${Date.now()}`;
 
-    // Criar objeto de parâmetros para geração da assinatura correta
-    const params: Record<string, string> = {
-      partner_id: this.config.partnerId,
-      timestamp: timestamp.toString(),
-      redirect: this.config.redirectUrl,
-      state: stateParam,
-      region: 'BR', // Adicionar explicitamente a região como Brasil
-      is_auth_shop: 'true', // Importante: Direciona para o fluxo de autenticação de loja, não Open Platform
-      login_type: 'seller', // Parâmetro crucial para forçar o login como vendedor/seller
-      auth_type: 'direct', // Força autenticação direta para o fluxo de seller
-      shop_id: '' // Campo obrigatório vazio para novas conexões
-    };
-
-    // 1. Ordenar parâmetros alfabeticamente como requerido pela API da Shopee
-    const orderedParams = Object.fromEntries(
-      Object.entries(params).sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-    );
-
-    // 2. Converter para query string corretamente codificada
-    const queryString = Object.entries(orderedParams)
-      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-      .join('&');
-
-    // 3. Formar a string base para a assinatura no formato esperado pela Shopee
+    // 1. Formar a string base para a assinatura conforme documentação
     const baseString = `${this.config.partnerId}${basePathForShopAuthorize}${timestamp}`;
+    console.log('String base para assinatura:', baseString);
 
-    // 4. Gerar assinatura HMAC-SHA256 corretamente
+    // 2. Gerar assinatura HMAC-SHA256
     const hmac = createHmac('sha256', this.config.partnerKey);
     hmac.update(baseString);
     const signature = hmac.digest('hex');
+    console.log('Assinatura gerada:', signature);
 
-    // 5. Construir a URL final com todos os parâmetros e assinatura usando URLSearchParams
-    // para garantir formatação correta dos parâmetros e evitar erros de digitação
-    // IMPORTANTE: Usar sempre o domínio global para autorização - neste caso, partner.shopeemobile.com
+    // 3. IMPORTANTE: Usar sempre o domínio global para autorização
     const baseUrl = 'https://partner.shopeemobile.com';
-    console.log('Base URL utilizada:', baseUrl);
-
-    // Usar variáveis separadas e explícitas para evitar problemas de codificação
-    const partner_id = this.config.partnerId;
-    const timestampParam = timestamp; // Evitar qualquer transformação do nome "timestamp"
-    const sign = signature;
-
-    // Montar a URL manualmente no formato exato validado para a Shopee Brasil
-    const urlParams = [
-      `partner_id=${encodeURIComponent(partner_id)}`,
-      `timestamp=${encodeURIComponent(String(timestampParam))}`,
-      `sign=${encodeURIComponent(sign)}`,
-      `redirect=${encodeURIComponent(this.config.redirectUrl)}`,
-      `state=${encodeURIComponent(stateParam)}`,
-      `region=${encodeURIComponent('BR')}`,
-      `is_auth_shop=${encodeURIComponent('true')}`,
-      `login_type=${encodeURIComponent('seller')}`,
-      `auth_type=${encodeURIComponent('direct')}`,
-      `shop_id=${encodeURIComponent('')}`
-    ].join('&');
-
-    const urlString = `${baseUrl}${basePathForShopAuthorize}?${urlParams}`;
+    
+    // 4. Montar a URL manualmente como uma string completa
+    // ⚠️ A ordem exata dos parâmetros e a ausência de qualquer espaço ou caractere extra é crucial
+    const urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
+                      `partner_id=${this.config.partnerId}` + 
+                      `&timestamp=${timestamp}` + 
+                      `&sign=${signature}` + 
+                      `&redirect=${encodeURIComponent(this.config.redirectUrl)}` + 
+                      `&state=${encodeURIComponent(stateParam)}` + 
+                      `&region=BR` + 
+                      `&is_auth_shop=true` + 
+                      `&login_type=seller` + 
+                      `&auth_type=direct`;
+    
+    console.log('URL de autorização final:', urlString);
 
     // Verificação robusta da URL gerada usando regex para garantir que o timestamp está correto
     if (!urlString.includes('timestamp=')) {
