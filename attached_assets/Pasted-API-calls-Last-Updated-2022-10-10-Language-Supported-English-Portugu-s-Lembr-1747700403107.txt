@@ -1,0 +1,420 @@
+API calls
+Last Updated: 2022-10-10
+Language Supported: English / 简体中文 / 繁體中文 / Português
+⚠️ Lembrete: Esse passo a passo só se aplica a chamados da OpenAPI v2.0.
+
+Ambientes de API
+
+
+Atualmente temos dois ambientes para APIs para desenvolvedores locais:
+
+Ambiente de produção
+https://partner.shopeemobile.com/ 
+Ambiente de teste sandbox:
+https://partner.test-stable.shopeemobile.com/
+
+
+Selecione o ambiente com base nos servidores locais de onde você está acessando a plataforma de API.
+
+Métodos de chamadas de API
+
+
+Atualmente, a plataforma OpenAPI só tem dois métodos de solicitações: GET e POST.
+
+
+
+Parâmetros de chamadas na API
+
+
+No documento da API, você vai ver dois tipos de parâmetros:
+
+Common parameter
+Request parameter
+
+
+Para APIs do tipo GET, esses dois parâmetros podem existir ao mesmo tempo, ou apenas o Common parameter vai existir.
+
+
+
+Para APIs do tipo POST, os dois parâmetros vão existir ao mesmo tempo.
+
+
+
+
+A tabela abaixo tem descrições dos Common parameters:
+
+Parâmetros	Descrição
+partner_id	Todas as chamadas de API precisam de um partner ID. Você pode obter o partner ID criando um app na página da Shopee Open Platform > Console App. O partner ID de teste só pode ser usado no ambiente de testes, e o partner ID live só pode ser usado no ambiente de produção.
+timestamp	Todas as chamadas de API precisam de  timestamps (marcação de horário).Exemplo de timestamp: 1610000000.Cada solicitação para a API deve ser feita em até 5 minutos após o horário da timestamp.
+sign	Todas as chamadas de APIs precisam de uma assinatura gerada usando o algoritmo SHA256 algorithm. Diferentes tipos de API tem métodos de criação de assinatura diferentes. Para maiores detalhes, por favor, verifique a seção de Cálculo de Assinaturas deste artigo.
+access_token	Tokens de acesso são necessários para obter e modificar APIs relacionadas a dados de vendedores. Cada token de acesso é válido por 4 horas e pode ser reutilizado dentro de um período de validade. O token de acesso precisa ser atualizado periodicamente. Verifique o artigo sobre Autorização e Autenticação para saber mais sobre como obter e recarregar seus tokens.
+shop_id	O ID de identificação único de uma loja na Shopee que pode ser obtido quando uma loja conceder autorização. Verifique o artigo sobre autorização e autenticação para saber como obter o ID de uma loja.
+merchant_id	O ID de identificação único de um vendedor da Shopee que pode ser obtido depois que o vendedor conceder autorização. O Open API só aceita vendedores internacionais para o uso de um ID de vendedor. Verifique o artigo sobre Aautorização e Aautenticação para saber como obter um ID de vendedor.
+Tipos de Open API
+
+
+No documento de API existem 3 tipos, por conta dos diferentes parâmetros comuns. Os parâmetros públicos existentes são:
+
+Shop API: partner_id, timestamp, sign, access_token, shop_id
+Marchant API: partner_id, timestamp, sign, access_token, merchant_id
+Public API: partner_id, timestamp, sign
+
+
+⚠️ Lembrete: Itens em vermelho estão destacados para indicar que são diferentes daqueles de Puclic APIs.
+
+
+
+A Public APIs não precisa de token de acesso, enquanto as Shop APIs e de Merchant precisam. Isso significa que as Shop APIs e de Merchant só podem receber chamadas depois que a loja conceder autorização.
+
+
+
+Atualmente apenas vendedores internacionais podem usar Merchant API na Shopee. Vendedores locais (BR) não tem acesso.
+
+
+
+Cálculo de Assinatura
+
+
+Passo 1: Criar uma base string:
+
+Diferentes tipos de APIs tem elementos diferentes na base string. Você precisa concatenar o API path (sem host) e os seguintes Common Parameters em uma string única. Você precisa seguir estritamente a sequência (base string) como está descrita abaixo:
+
+
+
+*Exemplo de AP pathI：/api/v2/auth/token/get
+
+
+
+Shop API: partner_id, api path, timestamp, access_token, shop_id
+
+*Exemplo：
+
+partner_id: 2001887
+
+API path: /api/v2/shop/get_shop_info
+
+timestamp: 1655714431
+
+access_token: 59777174636562737266615546704c6d
+
+shop id: 14701711
+
+
+
+Base string=2001887/api/v2/shop/get_shop_info165571443159777174636562737266615546704c6d14701711
+
+
+
+Merchant API: partner_id, api path, timestamp, access_token, merchant_id
+
+*Exemplo:
+
+partner_id: 2001887
+
+API path: /api/v2/global_product/get_category
+
+timestamp: 1655714431
+
+access_token: 09777174636962737266615546704c6d
+
+merchant_id: 1000000
+
+
+
+Base string=2001887/api/v2/global_product/get_category165571443109777174636962737266615546704c6d1000000
+
+
+
+Public API: partner_id, api path, timestamp
+
+*Exemplo:
+
+partner_id:2001887
+
+API pathi: /api/v2/public/get_shops_by_partner
+
+timestamp:1655714431
+
+
+
+Base string=2001887/api/v2/public/get_shops_by_partner1655714431
+
+
+
+Passo 2: Calcular a assinatura usando o algoritmo HMAC-SHA256
+
+
+
+Faça o cálculo da assinatura usando o algoritmo HMAC-SHA256  na base string e na partner key (obtida por meio da página de informações do app Shopee Open Platform). O resultado do cálculo é uma string codificada em hexadecimal.
+
+
+
+*Exemplo：
+
+sign=56f31d01aeda9d08bf456b37f6f6640ef8614b4d6ad49baafe30b39a061f0e26
+
+
+
+Saiba porque você pode encontrar um erro de "Wrong sign" e como o problema pode ser resolvido.
+
+
+
+Exemplo de código:
+
+Python
+#!/usr/bin/envpython
+
+# encoding:utf-8
+
+
+
+import hmac 
+
+import time
+
+import requests
+
+import hashlib
+
+timest=int(time.time())
+
+host="https://partner.shopeemobile.com 
+
+access_token = "random string"
+
+
+
+partner id =80001
+
+partner key = "test....."
+
+
+
+#### call shop level api 
+
+shop id =209920
+
+base string ="%s%s%s%s%s"%(partner id, path timest access token, shop id) 
+
+sign = hmac.new( partner key,base string,hashlib.sha256)hexdigest() 
+
+path ="/api/v2/example/shop level/get"
+
+
+
+url = host + path + "?partner_id=%s&shop_id=%s&timestamp=%s&access_token=%s&sign=%s"%(partner_id, shop_id, timest, access_token, sign) 
+
+headers={"Content-Type":"application/ison"? 
+
+resp=requests.post(urlheaders=headers)
+
+
+
+#### call merchant level api 
+
+merchant id =1234567
+
+base string ="%s%s%s%s%s"%(partner id, path timest, access token, merchant id) 
+
+sign =hmac.new( partner key,base string,hashlib.sha256).hexdigest() 
+
+path ="/api/v2/example/merchant_level/get"
+
+
+
+url = host+ path +"?partner id=%s&merchant id=%s&timestamp=%s&access token=%s&sign=%s"%(partnerid, merchant id, timest, access token, sign) 
+
+headers ={"Content-Type":"application/ison"? resp =requests.eet(urlheaders=headers)
+
+
+
+#### call public api
+
+base string ="%s%s%5%s"%(partner idpathtimestaccess token)
+
+sign= hmac.new( partner keybase stringhashlib.sha256)hexdigest() 
+
+path ="/api/v2/auth merchant/access token/get"
+
+
+
+url = host+path+"?partner id=%s&timestamp=%s&sign=%s%(partner idtimest, sign)
+
+body ={"partner id":partner id, "merchant id": merchant id,"refresh token":"testingtoken") 
+
+headers =["Content-Type":"application/ison"?
+
+resp =requests.post(url,json=bodyheaders=headers)
+Modelo de chamadas para API
+
+
+Para solicitações em APIs do tipo GET, você precisa colocar os Reques Parameter e Common Parameterstda solicitação na URL.
+
+
+
+Exemplo: V2.product.get_category
+
+
+
+API Request URL:
+
+https://partner.shopeemobile.com/api/v2/product/get_category?partner_id=851249&timestamp=1654673582&shop_id=1001094&access_token=367a0a8eb9d1837cbf7c43b587a0faa4&sign=a40fc50a08c382eeee08e2eb00deb8464c6fdcbe4f1c271e033cdbca3ded4d5b&language=zh-hans
+
+
+
+*Para esse endpoint da API，partner_id、timestamp、access_token、shop_id e sign são Common Parameters, e, language é um Request Parameters.
+
+
+
+
+
+Para solicitações em APIs do tipo POST, você precisa inserir os parâmetros comuns na URL  e os parâmetros de solicitação no corpo.
+
+
+
+Exemplo:v2.shop.update_profile
+
+
+
+API Request URL:
+
+https://partner.shopeemobile.com/api/v2/shop/update_profile?partner_id=851249&timestamp=1654673582&shop_id=1001094&access_token=367a0a8eb9d1837cbf7c43b587a0faa4&sign=80cbce8da907d5a1237711409920fc16908a9f9e01b1254ff9cc44aaf0836122
+
+
+
+
+
+Request body:
+
+{
+
+"shop_logo": "https://cf.shopee.sg/file/8424390be4677b0b3c37ce6499ce261a",
+
+"description": "TTest",
+
+"shop_name": "123"
+
+}
+
+
+
+*Para esse endpoint da API，partner_id、timestamp、access_token、shop_id、e sign são Common Parameters, e, shop_log、description e shop_name são Request Parameters.
+
+Parâmetros de resposta da API (response)
+Parameters	Must return？	Description
+request id	Sim	Cada solicitação para a API tem um ID único. Se tiver algum problema com a API, por favor, envie esse ID e as informações da API para receber ajuda mais rapidamente.
+error	Sim	Código de erro. Se a solicitação for bem-sucedida,  o parâmetro de erro vai estar em branco. Se houver algum problema, o código de erro vai ser refletido nesse campo.
+message	Sim	Mensagem de erro. Se a solicitação for bem-sucedida,  o parâmetro vai estar em branco. Se houver algum problema, esse campo vai ter informações detalhadas sobre o erro.
+warning	Sim	Se a chamada for bem-sucedida mas algum dado ou parte da solicitação falhar, a informação vai ser refletida nesse campo
+response	Sim	Se a solicitação for bem-sucedida, os dados correspondentes serão refletidos nesse campo.
+Funções da APIs
+Módulo da API	Descrição da função
+Produtos	Você pode conseguir as seguintes informações:
+Árvore de categorias dos produtos
+Atributos e informações de marcas
+Dados de produtos
+Informações de promoções
+Impulsionar Item e Lista de produtos impulsionados
+Avaliações de produtos e lista de avaliações
+Categorias e atributos recomendados para produtos
+Marcas registradas de produtos
+
+Você pode realizar as seguintes ações:
+Criar, deletar e atualizar informações de produtos.
+Loja	Você pode conseguir as seguintes informações:
+Nome da loja
+Mercado em que a loja está baseada
+Tipo de loja
+
+Você pode realizar as seguintes ações:
+Atualizar informações da loja
+Merchant	*Esse módulo só está disponível para vendedores internacionaisConseguir informações de vendedores (nome/mercado/moeda) e uma lista de todas as lojas administradas pelo vendedor para as quais você tem autorização.
+Produtos Globais	*Esse módulo só está disponível para vendedores internacionaisVocê pode conseguir as seguintes informações:
+Árvore de categorias
+Atributos e informações da marca
+Dados de produtos globais
+Listas de produtos que podem ser anunciados apenas em alguns mercados
+Lista de produtos globais publicados
+Lista de produtos anunciados em mercados específicos
+ID de produtos globais correspondendo a mercados específicos
+Categorias e atributos recomendados para produtos globais
+
+Você pode realizar as seguintes ações:
+Criar, deletar e atualizar produtos globais
+Ativar/desativar sincronização de informações de produtos globais
+Publicar produtos globais
+MediaSpace	Atualizar vídeos e imagens
+Pedidos	Você pode conseguir as seguintes informações:
+Lista de pedidos
+InformaçõÕes de pedidos
+Lista de notas fiscais para envio
+Informações de notas fiscais
+
+Você pode realizar as seguintes ações:
+Gerenciar, separar cancelar pedidos
+Desfazer pedidos separados
+Processar pedidos de cancelamento do vendedor
+Adicionar comentários em pedidos
+Atualizar e baixar notas fiscais
+Logística	Você pode conseguir as seguintes informações:
+Lista de canais logísticosda loja
+Parâmetros de envio
+Números e informações de rastreio
+Formatos de documentos de envio, e documentos de envio
+Lista de endereços da loja
+Você pode realizar as seguintes ações:
+Enviar pedidos / enviar pedidos em massa
+Atualizar endereços da loja
+Ativar / desativar canais da loja
+Deletar endereços da loja
+FirstMile	*Esse módulo só está disponível para vendedores internacionaisVocê pode conseguir as seguintes informações:
+Desvincular pedidos first mile
+Números e detalhes de reastreiro first mile
+Detalhes de pedios first mile
+Documentos de envio de first mile
+Detalhes de canais de first mile
+Devoluções	Você pode conseguir as seguintes informações:
+Lista de pedidos de devolução e reembolso
+Informações de devolução e reembolso
+Plano de devolução e reembolso
+
+Você pode realizar as seguintes ações:
+Confirmar reembolsos
+Enviar disputas
+Negociar reembolsos
+Atualizar evidências de imagem para reembolsos
+Pagamentos	Você pode conseguir as seguintes informações:
+Faturamento de pedidos
+Dados de pagamento
+Dados da carteira
+Lista de pedidos concluídos
+Configurações de parcelamento
+Lista de produtos com pagamento parcelado
+Descontos	Criar, ver, atualizar e deletar promoções com desconto
+Leve mais por menos	Criar, ver, atualizar e deletar ofertas de leve mais por menos
+Ofertas no combo	Criar, ver, atualizar e deletar ofertas no combo
+Cupons	Create, view, update, and delete Vouchers
+Recompensas do seguidor	Criar, ver, atualizar e deletar recompensas do seguidor
+Melhores escolhas	Criar, ver, atualizar e deletar melhores escolhas
+Categorias da loja	Criar, ver, atualizar e deletar categorias da loja
+Performance da loja	Obter dados sobre performance da loja e pontos de penalidade
+Público	Você pode realizar as seguintes ações:
+Lista de lojas que concederam autorização
+Lista de “merchants” que concederam autorização
+Reenviar códigos e atualizar códigos para receber tokens
+Resgatar e recarregar tokens
+Push	Resgatar e atualizar mecânicas de push
+Chat	*Esse módulo só está aberto para vendedores aprovados. Para pedir aprovação, você pode verificar esse FAQ.Você pode conseguir as seguintes informações:
+Lista de chats
+Informações de chat
+Configurações de oferta
+
+Você pode realizar as seguintes ações:
+Deletar chats
+Marcar chats como não lidos
+Fixar chats e desfixar
+Enviar imagens no chat
+Enviar mensagens automáticas e manuais
+Ativar/desativar configuração de ofertas
+Problemas com APIs
+Se você encontrar qualquer problema durante o processo de integração de uma API você pode verificar nossa página de FAQs. Se seu problema persistir, você pode abrir  um ticket, e vamos fazer o melhor para te ajudar.
