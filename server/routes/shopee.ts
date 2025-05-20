@@ -45,7 +45,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     hmac.update(baseString);
     const sign = hmac.digest('hex');
     
-    // Montar URL completamente manual para evitar qualquer codificação automática problemática
+    // Montar URL manualmente seguindo exatamente o formato validado para Shopee Brasil
     const baseUrl = 'https://partner.shopeemobile.com';
     let authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true`;
     

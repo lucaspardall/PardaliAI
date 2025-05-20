@@ -75,9 +75,15 @@ export class ShopeeAuthManager {
     const timestampParam = timestamp; // Evitar qualquer transformação do nome "timestamp"
     const sign = signature;
 
-    // Montar a URL manualmente para evitar problemas de codificação com URLSearchParams
+    // Montar a URL manualmente no formato exato validado para a Shopee Brasil
     const urlParams = [
       `partner_id=${encodeURIComponent(partner_id)}`,
+      `timestamp=${encodeURIComponent(String(timestampParam))}`,
+      `sign=${encodeURIComponent(sign)}`,
+      `redirect=${encodeURIComponent(this.config.redirectUrl)}`,
+      `state=${encodeURIComponent(stateParam)}`,
+      `region=${encodeURIComponent('BR')}`,
+      `is_auth_shop=${encodeURIComponent('true')}`
       `timestamp=${encodeURIComponent(String(timestampParam))}`,
       `sign=${encodeURIComponent(sign)}`,
       `redirect=${encodeURIComponent(this.config.redirectUrl)}`,
