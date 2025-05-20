@@ -64,7 +64,7 @@ export class ShopeeAuthManager {
 
     // 5. Construir a URL final com todos os parâmetros e assinatura usando URLSearchParams
     // para garantir formatação correta dos parâmetros e evitar erros de digitação
-    const baseUrl = 'https://partner.shopee.com.br';
+    const baseUrl = getApiBaseUrl(this.config.region);
     console.log('Base URL utilizada:', baseUrl);
 
     // Usar variáveis separadas e explícitas para evitar problemas de codificação

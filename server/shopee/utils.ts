@@ -18,6 +18,7 @@ export function getTimestamp(): number {
  * @returns URL base da API
  */
 export function getApiBaseUrl(region: ShopeeRegion): string {
+  // Todas as regiões usam o mesmo domínio para API
   const regionMap: Record<ShopeeRegion, string> = {
     'SG': 'https://partner.shopeemobile.com',
     'MY': 'https://partner.shopeemobile.com',
@@ -26,13 +27,13 @@ export function getApiBaseUrl(region: ShopeeRegion): string {
     'ID': 'https://partner.shopeemobile.com',
     'VN': 'https://partner.shopeemobile.com',
     'PH': 'https://partner.shopeemobile.com',
-    'BR': 'https://partner.shopee.com.br', // Domínio correto para Brasil com .br
-    'MX': 'https://partner.shopee.com.mx',
-    'CO': 'https://partner.shopee.com.co',
-    'CL': 'https://partner.shopee.cl',
-    'PL': 'https://partner.shopee.pl',
-    'ES': 'https://partner.shopee.es',
-    'FR': 'https://partner.shopee.fr'
+    'BR': 'https://partner.shopeemobile.com', // Usar domínio correto para Brasil
+    'MX': 'https://partner.shopeemobile.com',
+    'CO': 'https://partner.shopeemobile.com',
+    'CL': 'https://partner.shopeemobile.com',
+    'PL': 'https://partner.shopeemobile.com', 
+    'ES': 'https://partner.shopeemobile.com',
+    'FR': 'https://partner.shopeemobile.com'
   };
 
   return regionMap[region] || regionMap['SG'];
