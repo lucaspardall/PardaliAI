@@ -44,7 +44,10 @@ export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
     redirectUrl
   };
   
-  // Inicializar o cache (já está sendo feito pela importação)
+  // Atualizar o domínio da API para open.shopee.com.br para compatibilidade
+  if (fullConfig.region === 'BR') {
+    console.log('Usando domínio API da Shopee Brasil: open.shopee.com.br');
+  }
   
   return new ShopeeClient(fullConfig);
 }

@@ -65,16 +65,20 @@ export class ShopeeAuthManager {
 
     // 5. Construir a URL final com todos os parâmetros e assinatura
     // Importante: usando concatenação de string para evitar problemas de codificação
-    // Para o Brasil, não adicionar .br no final do domínio
-    const baseUrl = 'https://partner.shopeemobile.com';
+    // Para o Brasil, usar domínio open.shopee.com.br conforme documentação mais recente
+    const baseUrl = 'https://open.shopee.com.br';
     console.log('Base URL utilizada:', baseUrl);
     
-    let urlString = `${baseUrl}${basePathForShopAuthorize}?`;
-    urlString += `partner_id=${this.config.partnerId}`;
-    urlString += `&timestamp=${timestamp}`;
-    urlString += `&sign=${signature}`;
-    urlString += `&redirect=${encodeURIComponent(this.config.redirectUrl)}`;
-    urlString += `&state=${encodeURIComponent(stateParam)}`;
+    // Construir a URL usando URLSearchParams para evitar problemas de codificação
+    const searchParams = new URLSearchParams();
+    searchParams.append('partner_id', this.config.partnerId);
+    searchParams.append('timestamp', timestamp.toString());
+    searchParams.append('sign', signature);
+    searchParams.append('redirect', this.config.redirectUrl);
+    searchParams.append('state', stateParam);
+    
+    // Montar a URL final garantindo que os parâmetros sejam codificados corretamente
+    const urlString = `${baseUrl}${basePathForShopAuthorize}?${searchParams.toString()}`;
 
     // Log detalhado para debugging
     console.log(`======= DETALHES DE GERAÇÃO DA URL =======`);
@@ -84,7 +88,8 @@ export class ShopeeAuthManager {
     console.log(`Assinatura gerada: ${signature}`);
     console.log(`URL de redirecionamento: ${this.config.redirectUrl}`);
     console.log(`URL de autorização final: ${urlString}`);
-    console.log(`URL começa com https://partner.shopeemobile.com? ${urlString.startsWith('https://partner.shopeemobile.com')}`);
+    console.log(`URL começa com ${baseUrl}? ${urlString.startsWith(baseUrl)}`);
+    console.log(`URL final completa: ${urlString}`);
     console.log(`============================================`);
 
     return urlString;
