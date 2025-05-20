@@ -19,8 +19,13 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Gerar URL de autorização
     const authUrl = shopeeClient.getAuthorizationUrl();
     
-    // Registrar a URL gerada para debug
-    console.log("Authorization URL generated:", authUrl);
+    // Registrar a URL gerada para debug com detalhes completos
+    console.log("======= DETALHES DA URL DE AUTORIZAÇÃO =======");
+    console.log("URL completa:", authUrl);
+    console.log("Começa com https://partner.shopeemobile.com?", authUrl.startsWith("https://partner.shopeemobile.com"));
+    console.log("Contém .com.br?", authUrl.includes(".com.br"));
+    console.log("Contém open.shopee?", authUrl.includes("open.shopee"));
+    console.log("================================================");
     
     // Se estamos em desenvolvimento, mostrar opções para o usuário
     if (process.env.NODE_ENV === 'development') {

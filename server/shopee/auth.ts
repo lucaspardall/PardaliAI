@@ -67,6 +67,8 @@ export class ShopeeAuthManager {
     // Importante: usando concatenação de string para evitar problemas de codificação
     // Para o Brasil, não adicionar .br no final do domínio
     const baseUrl = 'https://partner.shopeemobile.com';
+    console.log('Base URL utilizada:', baseUrl);
+    
     let urlString = `${baseUrl}${basePathForShopAuthorize}?`;
     urlString += `partner_id=${this.config.partnerId}`;
     urlString += `&timestamp=${timestamp}`;
@@ -75,9 +77,15 @@ export class ShopeeAuthManager {
     urlString += `&state=${encodeURIComponent(stateParam)}`;
 
     // Log detalhado para debugging
+    console.log(`======= DETALHES DE GERAÇÃO DA URL =======`);
+    console.log(`Partner ID: ${this.config.partnerId}`);
+    console.log(`Path para autorização: ${basePathForShopAuthorize}`);
     console.log(`String base para assinatura: ${baseString}`);
     console.log(`Assinatura gerada: ${signature}`);
+    console.log(`URL de redirecionamento: ${this.config.redirectUrl}`);
     console.log(`URL de autorização final: ${urlString}`);
+    console.log(`URL começa com https://partner.shopeemobile.com? ${urlString.startsWith('https://partner.shopeemobile.com')}`);
+    console.log(`============================================`);
 
     return urlString;
   }
