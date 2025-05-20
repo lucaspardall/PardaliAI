@@ -25,8 +25,8 @@ export class ShopeeAuthManager {
   getAuthorizationUrl(): string {
     const timestamp = getTimestamp();
 
-    // De acordo com a documentação da API v2, o endpoint correto para autorização
-    const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
+    // De acordo com a documentação da API v2, o endpoint correto para autorização de vendedores
+    const basePathForShopAuthorize = '/shop/auth_partner';
     console.log('Usando endpoint de autorização:', basePathForShopAuthorize);
 
     console.log(`Gerando URL de autorização para a Shopee`);
@@ -64,21 +64,21 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
 
     // 5. Construir a URL final com todos os parâmetros e assinatura
-    // Importante: usando concatenação de string para evitar problemas de codificação
-    // Para o Brasil, usar domínio open.shopee.com.br conforme documentação mais recente
-    const baseUrl = 'https://open.shopee.com.br';
+    // Importante: utilizar a URL específica para vendedores com região BR
+    const baseUrl = 'https://partner.shopee.com.br';
     console.log('Base URL utilizada:', baseUrl);
     
-    // Construir a URL usando URLSearchParams para evitar problemas de codificação
-    const searchParams = new URLSearchParams();
-    searchParams.append('partner_id', this.config.partnerId);
-    searchParams.append('timestamp', timestamp.toString());
-    searchParams.append('sign', signature);
-    searchParams.append('redirect', this.config.redirectUrl);
-    searchParams.append('state', stateParam);
+    let urlString = `${baseUrl}${basePathForShopAuthorize}?`;
+    urlString += `partner_id=${this.config.partnerId}`;
+    urlString += `&timestamp=${timestamp}`;
+    urlString += `&sign=${signature}`;
+    urlString += `&redirect=${encodeURIComponent(this.config.redirectUrl)}`;
+    urlString += `&state=${encodeURIComponent(stateParam)}`;
     
-    // Montar a URL final garantindo que os parâmetros sejam codificados corretamente
-    const urlString = `${baseUrl}${basePathForShopAuthorize}?${searchParams.toString()}`;
+    // Parâmetros adicionais importantes para garantir fluxo de vendedor
+    urlString += `&region=BR`; // Forçar região explicitamente para BR
+    urlString += `&auth_shop=true`; // Especificar autenticação para loja
+    urlString += `&auth_type=shop`; // Tipo de autenticação para vendedor
 
     // Log detalhado para debugging
     console.log(`======= DETALHES DE GERAÇÃO DA URL =======`);
@@ -88,8 +88,7 @@ export class ShopeeAuthManager {
     console.log(`Assinatura gerada: ${signature}`);
     console.log(`URL de redirecionamento: ${this.config.redirectUrl}`);
     console.log(`URL de autorização final: ${urlString}`);
-    console.log(`URL começa com ${baseUrl}? ${urlString.startsWith(baseUrl)}`);
-    console.log(`URL final completa: ${urlString}`);
+    console.log(`URL começa com https://partner.shopeemobile.com? ${urlString.startsWith('https://partner.shopeemobile.com')}`);
     console.log(`============================================`);
 
     return urlString;

@@ -11,7 +11,8 @@ import { ShopeeCache } from './cache';
 const DEFAULT_CONFIG: ShopeeAuthConfig = {
   partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
   partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
-  redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
+  // Usar URL dinâmica baseada no ambiente de execução
+  redirectUrl: process.env.SHOPEE_REDIRECT_URL || (process.env.REPL_SLUG ? `https://${process.env.REPL_SLUG}.replit.app/api/shopee/callback` : 'https://cipshopee.replit.app/api/shopee/callback'),
   region: 'BR'
 };
 
@@ -20,34 +21,32 @@ const DEFAULT_CONFIG: ShopeeAuthConfig = {
  * @param config Configuração opcional (usa valores padrão se não fornecida)
  */
 export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
-  // Configurar URL de redirecionamento com base no ambiente
-  let redirectUrl = config?.redirectUrl || DEFAULT_CONFIG.redirectUrl;
+  // Definir região explicitamente como BR para garantir autenticação correta
+  const region = 'BR'; 
   
-  // Em ambiente de desenvolvimento, usamos a URL do Replit
-  if (process.env.NODE_ENV === 'development') {
-    // Obter a URL do Replit a partir do ambiente
-    const replitUrl = process.env.REPL_SLUG 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-      : process.env.REPLIT_URL;
-    
-    // Sempre usar cipshopee.replit.app como domínio principal
-    const baseUrl = 'https://cipshopee.replit.app';
-    redirectUrl = `${baseUrl}/api/shopee/callback`;
-    console.log(`[Ambiente de desenvolvimento] URL de redirecionamento configurada: ${redirectUrl}`);
-  } else {
-    console.log(`[Ambiente de produção] URL de redirecionamento configurada: ${redirectUrl}`);
-  }
+  // Obter a URL atual com base no ambiente
+  const currentUrl = process.env.REPL_SLUG 
+    ? `https://${process.env.REPL_SLUG}.replit.app`
+    : 'https://cipshopee.replit.app';
   
+  // Configurar URL de redirecionamento garantindo formato correto
+  const redirectUrl = process.env.SHOPEE_REDIRECT_URL || `${currentUrl}/api/shopee/callback`;
+  
+  console.log(`[Shopee Client] Configurando cliente com redirectUrl: ${redirectUrl} e região: ${region}`);
+  
+  // Mesclar configurações com valores explícitos
   const fullConfig: ShopeeAuthConfig = {
     ...DEFAULT_CONFIG,
     ...config,
-    redirectUrl
+    redirectUrl,
+    region // Garantir que região é sempre BR
   };
   
-  // Atualizar o domínio da API para open.shopee.com.br para compatibilidade
-  if (fullConfig.region === 'BR') {
-    console.log('Usando domínio API da Shopee Brasil: open.shopee.com.br');
-  }
+  console.log(`[Shopee Client] Configuração final:`, {
+    partnerId: fullConfig.partnerId,
+    region: fullConfig.region,
+    redirectUrl: fullConfig.redirectUrl
+  });
   
   return new ShopeeClient(fullConfig);
 }
