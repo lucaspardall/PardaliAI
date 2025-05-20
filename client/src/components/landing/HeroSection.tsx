@@ -63,7 +63,7 @@ export default function HeroSection() {
                 <svg viewBox="0 0 1000 500" className="w-full h-auto" preserveAspectRatio="none">
                   {/* Graph background */}
                   <rect x="0" y="0" width="1000" height="500" fill="rgba(0,0,0,0.1)" />
-                  
+
                   {/* Grid lines */}
                   <g stroke="rgba(255,255,255,0.1)" strokeWidth="1">
                     {Array.from({ length: 10 }).map((_, i) => (
@@ -73,7 +73,7 @@ export default function HeroSection() {
                       <line key={`v-${i}`} x1={i * 100} y1="0" x2={i * 100} y2="500" />
                     ))}
                   </g>
-                  
+
                   {/* Data bars */}
                   <g>
                     {[350, 280, 400, 320, 450, 380, 480, 420, 500, 550].map((height, i) => (
@@ -89,7 +89,7 @@ export default function HeroSection() {
                       />
                     ))}
                   </g>
-                  
+
                   {/* Performance line */}
                   <polyline 
                     points="50,400 150,350 250,370 350,300 450,280 550,260 650,220 750,180 850,150 950,120" 
@@ -99,7 +99,7 @@ export default function HeroSection() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                  
+
                   {/* Data points */}
                   {[400, 350, 370, 300, 280, 260, 220, 180, 150, 120].map((y, i) => (
                     <circle 

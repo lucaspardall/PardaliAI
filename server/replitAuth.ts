@@ -29,7 +29,7 @@ const inMemoryUsers: Record<string, User> = {};
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  
+
   // Usar PostgreSQL para armazenamento de sessão
   const PgStore = connectPg(session);
   const sessionStore = new PgStore({
@@ -38,7 +38,7 @@ export function getSession() {
     tableName: 'sessions',
     createTableIfMissing: true
   });
-  
+
   return session({
     secret: process.env.SESSION_SECRET || 'temp-session-secret-for-development',
     resave: false,
@@ -81,7 +81,7 @@ async function upsertUser(
     });
   } catch (error) {
     console.error("Erro ao salvar usuário no banco de dados, usando armazenamento em memória:", error);
-    
+
     // Fallback para armazenamento em memória em caso de erro
     const userId = claims["sub"];
     inMemoryUsers[userId] = {
@@ -115,14 +115,14 @@ export async function setupAuth(app: Express) {
   ) => {
     const user = {};
     updateUserSession(user, tokens);
-    
+
     try {
       await upsertUser(tokens.claims());
     } catch (error) {
       console.error("Erro durante a autenticação:", error);
       // Continua mesmo com erro no banco de dados
     }
-    
+
     verified(null, user);
   };
 
@@ -167,13 +167,13 @@ export async function setupAuth(app: Express) {
       );
     });
   });
-  
+
   // Rota modificada para pegar os dados do usuário considerando o fallback em memória
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       let user;
-      
+
       try {
         // Tenta buscar do banco de dados 
         user = await storage.getUser(userId);
@@ -182,7 +182,7 @@ export async function setupAuth(app: Express) {
         // Usa fallback em memória se falhar
         user = inMemoryUsers[userId];
       }
-      
+
       if (!user) {
         // Cria um usuário básico com dados do token se não encontrar
         user = {
@@ -199,11 +199,11 @@ export async function setupAuth(app: Express) {
           aiCreditsLeft: 10,
           storeLimit: 1
         };
-        
+
         // Salva em memória
         inMemoryUsers[userId] = user;
       }
-      
+
       res.json(user);
     } catch (error) {
       console.error("Erro ao buscar dados do usuário:", error);
@@ -212,29 +212,35 @@ export async function setupAuth(app: Express) {
   });
 }
 
+/**
+ * Middleware para verificar autenticação Replit Auth
+ */
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const user = req.user as any;
-
-  if (!req.isAuthenticated() || !user?.claims?.exp) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.claims.exp) {
+  // Em ambiente de desenvolvimento, podemos ignorar autenticação
+  if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
+    req.user = {
+      claims: {
+        sub: 'dev_user',
+        name: 'Developer',
+        picture: '',
+      }
+    };
     return next();
   }
 
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    return res.redirect("/api/login");
+  // Verifica se o usuário está autenticado
+  if (!req.user) {
+    // Para APIs, retornar 401
+    if (req.path.startsWith('/api/')) {
+      return res.status(401).json({ 
+        message: 'Unauthorized',
+        redirectTo: '/?login=required'
+      });
+    }
+
+    // Para páginas, redirecionar para a página inicial com parâmetro de login
+    return res.redirect('/?login=required');
   }
 
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    return next();
-  } catch (error) {
-    return res.redirect("/api/login");
-  }
+  next();
 };
