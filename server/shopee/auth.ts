@@ -64,7 +64,8 @@ export class ShopeeAuthManager {
 
     // 5. Construir a URL final com todos os parâmetros e assinatura
     // Importante: usando concatenação de string para evitar problemas de codificação
-    const baseUrl = 'https://partner.api.shopee.com'; // Tentar o domínio global da Shopee
+    // A documentação mostra que o domínio correto para BR é https://partner.shopeemobile.com
+    const baseUrl = 'https://partner.shopeemobile.com'; 
     let urlString = `${baseUrl}${basePathForShopAuthorize}?`;
     urlString += `partner_id=${this.config.partnerId}`;
     urlString += `&timestamp=${timestamp}`;
