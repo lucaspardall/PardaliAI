@@ -42,7 +42,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // IMPORTANTE: Usar o domínio de seller para direcionar ao login do vendedor
     // Usar seller.shopee.com.br em vez de partner.shopeemobile.com
     const baseUrl = 'https://seller.shopee.com.br';
-    
+
     // Usar URLSearchParams para garantir a formatação correta dos parâmetros
     const params = new URLSearchParams({
       partner_id: partnerId,
@@ -56,19 +56,15 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       auth_type: 'direct',
       shop_id: ''  // intencionalmente vazio
     });
-    
+
     // Construir a URL corretamente com os parâmetros formatados
     const authUrl = `${baseUrl}${path}?${params.toString()}`;
-    
+
     // Verificar se a URL contém o parâmetro timestamp formatado corretamente
     if (!authUrl.includes('timestamp=')) {
       console.error("ERRO: Parâmetro timestamp não encontrado na URL!");
       console.log("URL problemática:", authUrl);
     }
-
-    // Verificação e log da URL final
-    console.log("URL final para autorização:", authUrl);
-</old_str>
 
     // Verificação e log da URL final
     console.log("URL final para autorização:", authUrl);
@@ -160,26 +156,26 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
 
     // Criar cliente da API
     const shopeeClient = createClient();
-    
+
     // Configurar headers específicos para BR
     const headers = {
       'X-Region': 'BR',
       'X-Request-ID': crypto.randomUUID()
     };
-    
+
     // Adicionar headers à requisição
     shopeeClient.setRequestHeaders(headers);
-    
+
     // Trocar o código por tokens de acesso
     const tokens = await shopeeClient.connect(code as string, shop_id as string);
-    
+
     // Obter informações da loja (será implementado posteriormente)
     // Temporariamente vamos utilizar um nome genérico
     const shopName = `Shopee Store ${shop_id}`;
-    
+
     // Verificar se a loja já existe
     const existingStore = await storage.getStoreByShopId(shop_id as string);
-    
+
     if (existingStore) {
       // Atualizar a loja existente
       await storage.updateStore(existingStore.id, {
@@ -189,7 +185,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         isActive: true,
         updatedAt: new Date()
       });
-      
+
       // Criar notificação
       await storage.createNotification({
         userId: (req.user as any).claims.sub,
@@ -199,7 +195,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         isRead: false,
         createdAt: new Date()
       });
-      
+
       res.redirect('/dashboard');
     } else {
       // Criar nova loja
@@ -216,7 +212,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         updatedAt: new Date(),
         totalProducts: 0
       });
-      
+
       // Criar notificação
       await storage.createNotification({
         userId: (req.user as any).claims.sub,
@@ -226,12 +222,12 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         isRead: false,
         createdAt: new Date()
       });
-      
+
       res.redirect('/dashboard');
     }
   } catch (error: any) {
     console.error('Error in Shopee OAuth callback:', error);
-    
+
     // Criar notificação de erro
     try {
       await storage.createNotification({
@@ -245,7 +241,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     } catch (notificationError) {
       console.error('Failed to create error notification:', notificationError);
     }
-    
+
     res.redirect('/dashboard?status=error&message=' + encodeURIComponent(error.message || 'Unknown error'));
   }
 });
@@ -256,13 +252,13 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
 router.get('/status', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any).claims.sub;
-    
+
     // Obter lojas do usuário
     const stores = await storage.getStoresByUserId(userId);
-    
+
     // Verificar se há lojas conectadas
     const connected = stores.some(store => store.isActive);
-    
+
     res.json({
       connected,
       stores: stores.map(store => ({
@@ -291,28 +287,28 @@ router.post('/disconnect/:storeId', isAuthenticated, async (req: Request, res: R
   try {
     const { storeId } = req.params;
     const userId = (req.user as any).claims.sub;
-    
+
     // Verificar se a loja existe e pertence ao usuário
     const store = await storage.getStoreById(parseInt(storeId));
-    
+
     if (!store) {
       return res.status(404).json({
         message: 'Store not found'
       });
     }
-    
+
     if (store.userId !== userId) {
       return res.status(403).json({
         message: 'Access denied'
       });
     }
-    
+
     // Marcar a loja como inativa
     await storage.updateStore(store.id, {
       isActive: false,
       updatedAt: new Date()
     });
-    
+
     // Criar notificação
     await storage.createNotification({
       userId,
@@ -322,7 +318,7 @@ router.post('/disconnect/:storeId', isAuthenticated, async (req: Request, res: R
       isRead: false,
       createdAt: new Date()
     });
-    
+
     res.json({
       message: 'Store disconnected successfully'
     });
