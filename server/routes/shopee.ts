@@ -13,18 +13,8 @@ const router = Router();
  */
 router.get('/authorize', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    console.log("======= INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE =======");
-    console.log("Usuário autenticado:", req.user);
-    console.log("Ambiente:", process.env.NODE_ENV);
-    console.log("Informações de configuração da API:");
-    console.log("Partner ID:", process.env.SHOPEE_PARTNER_ID);
-    console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
-    console.log("===================================================");
-
-    // Criar cliente da API com configuração explícita para BR
-    const shopeeClient = createClient({
-      region: 'BR'
-    });
+    // Criar cliente da API
+    const shopeeClient = createClient();
     
     // Gerar URL de autorização
     const authUrl = shopeeClient.getAuthorizationUrl();
@@ -35,7 +25,6 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("Começa com https://partner.shopeemobile.com?", authUrl.startsWith("https://partner.shopeemobile.com"));
     console.log("Contém .com.br?", authUrl.includes(".com.br"));
     console.log("Contém open.shopee?", authUrl.includes("open.shopee"));
-    console.log("Contém region=BR?", authUrl.includes("region=BR"));
     console.log("================================================");
     
     // Se estamos em desenvolvimento, mostrar opções para o usuário
