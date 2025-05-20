@@ -42,7 +42,8 @@ export class ShopeeAuthManager {
       timestamp: timestamp.toString(),
       redirect: this.config.redirectUrl,
       state: stateParam,
-      region: 'BR' // Adicionar explicitamente a região como Brasil
+      region: 'BR', // Adicionar explicitamente a região como Brasil
+      is_auth_shop: 'true' // Importante: Direciona para o fluxo de autenticação de loja, não Open Platform
     };
 
     // 1. Ordenar parâmetros alfabeticamente como requerido pela API da Shopee
@@ -83,6 +84,7 @@ export class ShopeeAuthManager {
     searchParams.append('redirect', this.config.redirectUrl);
     searchParams.append('state', stateParam);
     searchParams.append('region', 'BR'); // Adicionar explicitamente a região BR na URL
+    searchParams.append('is_auth_shop', 'true'); // Parâmetro importante para direcionar ao fluxo correto de autenticação
 
     const urlString = `${baseUrl}${basePathForShopAuthorize}?${searchParams.toString()}`;
 
