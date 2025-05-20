@@ -26,8 +26,34 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       region: 'BR'
     });
     
-    // Gerar URL de autorização
-    const authUrl = shopeeClient.getAuthorizationUrl();
+    // Implementação manual e direta da URL de autorização para evitar problemas de codificação
+    // Gerar timestamp e parâmetros necessários
+    const timestamp = Math.floor(Date.now() / 1000);
+    const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
+    const partnerKey = process.env.SHOPEE_PARTNER_KEY || '';
+    const redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
+    const state = `cipshopee_${Date.now()}`;
+    
+    // Criar a string base para assinatura conforme documentação Shopee
+    const path = '/api/v2/shop/auth_partner';
+    const baseString = `${partnerId}${path}${timestamp}`;
+    
+    // Gerar a assinatura HMAC-SHA256
+    const crypto = require('crypto');
+    const hmac = crypto.createHmac('sha256', partnerKey);
+    hmac.update(baseString);
+    const sign = hmac.digest('hex');
+    
+    // Montar URL manualmente com encodeURIComponent para evitar problemas
+    const baseUrl = 'https://partner.shopeemobile.com';
+    let authUrl = `${baseUrl}${path}?`;
+    authUrl += `partner_id=${partnerId}`;
+    authUrl += `&timestamp=${timestamp}`;
+    authUrl += `&sign=${sign}`;
+    authUrl += `&redirect=${encodeURIComponent(redirectUrl)}`;
+    authUrl += `&state=${encodeURIComponent(state)}`;
+    
+    console.log("URL de autorização gerada manualmente:", authUrl);
     
     // Registrar a URL gerada para debug com detalhes completos
     console.log("======= DETALHES DA URL DE AUTORIZAÇÃO =======");
