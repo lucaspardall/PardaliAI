@@ -47,7 +47,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     
     // Montar URL manualmente seguindo exatamente o formato validado para Shopee Brasil
     const baseUrl = 'https://partner.shopeemobile.com';
-    let authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true`;
+    let authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller`;
     
     // Verificar estrutura da URL para garantir que não há problemas
     console.log("URL final antes de enviar:", authUrl);

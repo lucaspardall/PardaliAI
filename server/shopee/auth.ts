@@ -43,7 +43,8 @@ export class ShopeeAuthManager {
       redirect: this.config.redirectUrl,
       state: stateParam,
       region: 'BR', // Adicionar explicitamente a região como Brasil
-      is_auth_shop: 'true' // Importante: Direciona para o fluxo de autenticação de loja, não Open Platform
+      is_auth_shop: 'true', // Importante: Direciona para o fluxo de autenticação de loja, não Open Platform
+      login_type: 'seller' // Parâmetro crucial para forçar o login como vendedor/seller
     };
 
     // 1. Ordenar parâmetros alfabeticamente como requerido pela API da Shopee
@@ -83,7 +84,8 @@ export class ShopeeAuthManager {
       `redirect=${encodeURIComponent(this.config.redirectUrl)}`,
       `state=${encodeURIComponent(stateParam)}`,
       `region=${encodeURIComponent('BR')}`,
-      `is_auth_shop=${encodeURIComponent('true')}`
+      `is_auth_shop=${encodeURIComponent('true')}`,
+      `login_type=${encodeURIComponent('seller')}`
     ].join('&');
 
     const urlString = `${baseUrl}${basePathForShopAuthorize}?${urlParams}`;
