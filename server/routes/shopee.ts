@@ -1,3 +1,4 @@
+
 /**
  * Rotas para autenticação e integração com a API da Shopee
  */
@@ -42,7 +43,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // IMPORTANTE: Usar o domínio de seller para direcionar ao login do vendedor
     // Usar seller.shopee.com.br em vez de partner.shopeemobile.com
     const baseUrl = 'https://seller.shopee.com.br';
-
+    
     // Usar URLSearchParams para garantir a formatação correta dos parâmetros
     const params = new URLSearchParams({
       partner_id: partnerId,
@@ -56,10 +57,10 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       auth_type: 'direct',
       shop_id: ''  // intencionalmente vazio
     });
-
+    
     // Construir a URL corretamente com os parâmetros formatados
     const authUrl = `${baseUrl}${path}?${params.toString()}`;
-
+    
     // Verificar se a URL contém o parâmetro timestamp formatado corretamente
     if (!authUrl.includes('timestamp=')) {
       console.error("ERRO: Parâmetro timestamp não encontrado na URL!");
