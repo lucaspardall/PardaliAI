@@ -47,12 +47,13 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
     console.log('Assinatura gerada:', signature);
 
-    // 3. IMPORTANTE: Usar sempre o domínio global para autorização
+    // 3. IMPORTANTE: Para autenticação de vendedores (sellers), use baseUrl global
+    // Para Brasil, mantemos esse domínio global, mas poderíamos usar o getApiBaseUrl com isAuthUrl=true
     const baseUrl = 'https://partner.shopeemobile.com';
     
     // 4. Montar a URL manualmente como uma string completa
     // ⚠️ A ordem exata dos parâmetros e a ausência de qualquer espaço ou caractere extra é crucial
-    // Seguindo a documentação compartilhada, incluindo todos os parâmetros necessários
+    // ⚠️ Os parâmetros críticos são: login_type=seller e auth_type=direct para evitar o login na open platform
     const urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
                       `partner_id=${this.config.partnerId}` + 
                       `&timestamp=${timestamp}` + 

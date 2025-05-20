@@ -63,10 +63,11 @@ export class ShopeeClient {
     
     // Criar instância do Axios
     this.axiosInstance = axios.create({
-      baseURL: getApiBaseUrl(config.region),
+      baseURL: getApiBaseUrl(config.region, false), // false para API normal (não autenticação)
       timeout: 30000, // 30 segundos
       headers: {
         'Content-Type': 'application/json',
+        'X-Region': config.region, // Adicionar região como header padrão
       },
     });
     
@@ -237,7 +238,21 @@ export class ShopeeClient {
   async connect(code: string, shopId: string): Promise<ShopeeAuthTokens> {
     try {
       console.log(`Iniciando conexão com a Shopee para código: ${code} e shopId: ${shopId}`);
+      
+      // Validar parâmetros
+      if (!code || !shopId) {
+        throw new Error("Código de autorização e ID da loja são obrigatórios");
+      }
+      
+      // Obter tokens de acesso
       const tokens = await this.authManager.getAccessToken(code, shopId);
+      
+      // Verificar se recebemos tokens válidos
+      if (!tokens.accessToken || !tokens.refreshToken) {
+        throw new Error("Tokens inválidos retornados pela API da Shopee");
+      }
+      
+      // Atualizar tokens na instância
       this.tokens = tokens;
       
       console.log(`Tokens obtidos com sucesso: ${JSON.stringify({
@@ -253,8 +268,7 @@ export class ShopeeClient {
       return tokens;
     } catch (error) {
       console.error(`Erro ao conectar com a Shopee: ${error.message}`, error);
-      throw error;('Failed to connect with Shopee:', error);
-      throw error;
+      throw parseApiError(error);
     }
   }
 

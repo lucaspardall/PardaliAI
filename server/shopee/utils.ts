@@ -1,3 +1,4 @@
+
 /**
  * Funções utilitárias para a API da Shopee
  */
@@ -15,11 +16,30 @@ export function getTimestamp(): number {
 /**
  * Obtém a URL base da API de acordo com a região
  * @param region Região da Shopee
+ * @param isAuthUrl Se verdadeiro, retorna a URL para autenticação de vendedores
  * @returns URL base da API
  */
-export function getApiBaseUrl(region: ShopeeRegion): string {
-  // Todas as regiões usam o mesmo domínio para API
-  const regionMap: Record<ShopeeRegion, string> = {
+export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false): string {
+  // URLs de autenticação específicas para cada região (para interface de vendedor)
+  const authRegionMap: Record<ShopeeRegion, string> = {
+    'SG': 'https://seller.shopee.sg',
+    'MY': 'https://seller.shopee.com.my',
+    'TH': 'https://seller.shopee.co.th',
+    'TW': 'https://seller.shopee.tw',
+    'ID': 'https://seller.shopee.co.id',
+    'VN': 'https://seller.shopee.vn',
+    'PH': 'https://seller.shopee.ph',
+    'BR': 'https://seller.shopee.com.br',
+    'MX': 'https://seller.shopee.com.mx',
+    'CO': 'https://seller.shopee.com.co',
+    'CL': 'https://seller.shopee.cl',
+    'PL': 'https://seller.shopee.pl',
+    'ES': 'https://seller.shopee.es',
+    'FR': 'https://seller.shopee.fr'
+  };
+
+  // URLs da API para cada região
+  const apiRegionMap: Record<ShopeeRegion, string> = {
     'SG': 'https://partner.shopeemobile.com',
     'MY': 'https://partner.shopeemobile.com',
     'TH': 'https://partner.shopeemobile.com',
@@ -36,7 +56,10 @@ export function getApiBaseUrl(region: ShopeeRegion): string {
     'FR': 'https://partner.shopeemobile.com'
   };
 
-  return regionMap[region] || regionMap['SG'];
+  // Retornar a URL apropriada com base no tipo de URL e região
+  return isAuthUrl 
+    ? authRegionMap[region] || authRegionMap['BR'] 
+    : apiRegionMap[region] || apiRegionMap['BR'];
 }
 
 /**
