@@ -66,16 +66,15 @@ export class ShopeeAuthManager {
 
     // 5. Construir a URL final com todos os parâmetros e assinatura usando URLSearchParams
     // para garantir formatação correta dos parâmetros e evitar erros de digitação
-    const baseUrl = getApiBaseUrl(this.config.region);
+    // IMPORTANTE: Usar sempre o domínio global para autorização - neste caso, partner.shopeemobile.com
+    const baseUrl = 'https://partner.shopeemobile.com';
     console.log('Base URL utilizada:', baseUrl);
 
     // Usar variáveis separadas e explícitas para evitar problemas de codificação
     const partner_id = this.config.partnerId;
     const timestampParam = timestamp; // Evitar qualquer transformação do nome "timestamp"
     const sign = signature;
-    const redirect = encodeURIComponent(this.config.redirectUrl);
-    const state = stateParam;
-
+    
     // Usar URLSearchParams para garantir formatação correta dos parâmetros
     const searchParams = new URLSearchParams();
     searchParams.append('partner_id', partner_id);
@@ -143,6 +142,8 @@ export class ShopeeAuthManager {
     console.log(`URL de autorização final: ${urlString}`);
     console.log(`URL final completa: ${urlString}`);
     console.log(`URL começa com https://partner.shopeemobile.com? ${urlString.startsWith('https://partner.shopeemobile.com')}`);
+    console.log(`Timestamp usado: ${timestamp}`);
+    console.log(`Diferença de tempo atual: ${Math.floor(Date.now() / 1000) - timestamp} segundos`);
     console.log(`============================================`);
 
     return urlString;

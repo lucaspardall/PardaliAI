@@ -76,6 +76,9 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
               .primary { background: #ff5722; color: white; }
               .secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
               pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+              .instructions { background: #fff8e1; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; }
+              .steps { list-style-type: decimal; padding-left: 20px; }
+              .steps li { margin-bottom: 10px; }
             </style>
           </head>
           <body>
