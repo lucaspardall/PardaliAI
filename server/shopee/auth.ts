@@ -76,14 +76,14 @@ export class ShopeeAuthManager {
     const state = stateParam;
     
     // Usar URLSearchParams para garantir formatação correta dos parâmetros
-    const params = new URLSearchParams();
-    params.append('partner_id', partner_id);
-    params.append('timestamp', String(timestampParam));
-    params.append('sign', sign);
-    params.append('redirect', this.config.redirectUrl);
-    params.append('state', stateParam);
+    const searchParams = new URLSearchParams();
+    searchParams.append('partner_id', partner_id);
+    searchParams.append('timestamp', String(timestampParam));
+    searchParams.append('sign', sign);
+    searchParams.append('redirect', this.config.redirectUrl);
+    searchParams.append('state', stateParam);
     
-    const urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
+    const urlString = `${baseUrl}${basePathForShopAuthorize}?${searchParams.toString()}`;
     
     // Verificação robusta da URL gerada usando regex para garantir que o timestamp está correto
     if (!urlString.includes('timestamp=')) {
