@@ -75,13 +75,15 @@ export class ShopeeAuthManager {
     const redirect = encodeURIComponent(this.config.redirectUrl);
     const state = stateParam;
     
-    // Construir a URL com concatenação simples para evitar problemas de interpolação
-    const urlString = baseUrl + basePathForShopAuthorize + 
-                      "?partner_id=" + partner_id + 
-                      "&timestamp=" + timestampParam + 
-                      "&sign=" + sign + 
-                      "&redirect=" + redirect + 
-                      "&state=" + state;
+    // Usar URLSearchParams para garantir formatação correta dos parâmetros
+    const params = new URLSearchParams();
+    params.append('partner_id', partner_id);
+    params.append('timestamp', String(timestampParam));
+    params.append('sign', sign);
+    params.append('redirect', this.config.redirectUrl);
+    params.append('state', stateParam);
+    
+    const urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
     
     // Verificação robusta da URL gerada usando regex para garantir que o timestamp está correto
     if (!urlString.includes('timestamp=')) {
