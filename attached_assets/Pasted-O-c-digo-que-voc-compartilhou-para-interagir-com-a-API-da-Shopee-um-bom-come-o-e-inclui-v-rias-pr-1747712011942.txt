@@ -1,0 +1,90 @@
+O código que você compartilhou para interagir com a API da Shopee é um bom começo e inclui várias práticas recomendadas, como o uso de URLSearchParams e logs detalhados para debugging. No entanto, há alguns pontos críticos, principalmente relacionados à forma como a assinatura (sign) é gerada e como os parâmetros são enviados nas requisições POST, que precisam de ajuste para funcionar corretamente com a API da Shopee.
+
+1. Geração da URL de Autorização (/api/v2/shop/auth_partner)
+
+Estrutura e Parâmetros: A forma como você monta a URL com partner_id, timestamp, sign, redirect e state usando URLSearchParams está correta.
+String Base para Assinatura (Importante!): Para este endpoint (que é um GET para uma página da Shopee), a string base usada para gerar a sign (que você passa para esta função) deve ser a concatenação de: partner_id + caminho_da_api + timestamp.
+caminho_da_api aqui é /api/v2/shop/auth_partner.
+Validade do Timestamp: Como mencionei sobre a URL que você enviou antes, o timestamp deve ser o horário UNIX atual no momento da geração e uso da URL. URLs com timestamps antigos serão rejeitadas.
+2. Obtenção de Tokens de Acesso (getAccessToken - para /api/v2/auth/token/get)
+
+Este método é usado para trocar o code de autorização por um access_token e refresh_token.
+
+Método HTTP: POST está correto.
+Corpo da Requisição (data no Axios):
+Os parâmetros partner_id, code, shop_id estão corretos no corpo.
+O parâmetro timestamp que você incluiu no corpo (params que vira data) geralmente não é necessário no corpo para este endpoint específico. Ele é usado para a assinatura, que vai na URL.
+String Base para Assinatura (Ponto Crítico de Correção):
+Para requisições POST com corpo JSON como esta, a API da Shopee espera que a string base para a assinatura seja: partner_id + caminho_da_api + timestamp + corpo_da_requisição_json_minificado.
+O caminho_da_api é /api/v2/auth/token/get.
+O corpo_da_requisição_json_minificado é o JSON ({ "partner_id": ..., "code": ..., "shop_id": ... }) sem espaços desnecessários ou quebras de linha.
+Sua lógica atual const baseString =path?{sortedParams}; parece estar montando a string base de forma incorreta para uma requisição POST com corpo JSON.
+Envio da Assinatura e Parâmetros Comuns:
+A assinatura (sign) e os outros parâmetros comuns (partner_id, timestamp) devem ser enviados como query parameters na URL, não no header Authorization para esta chamada.
+Exemplo da URL final da requisição POST: https://partner.shopeemobile.com/api/v2/auth/token/get?partner_id=SEU_PARTNER_ID&timestamp=SEU_TIMESTAMP&sign=SUA_SIGNATURE
+O header 'Authorization': \SHA256 ${signature}`` está incorreto para esta chamada. Este header não é usado para a autenticação de chamadas de API da Shopee dessa forma.
+Headers:
+'Content-Type': 'application/json' está correto.
+Expiração do Token: O cálculo de expiresAt para o access_token está correto.
+3. Atualização de Tokens de Acesso (refreshAccessToken - para /api/v2/auth/refresh_token)
+
+Este método usa o refresh_token para obter um novo access_token.
+
+Método HTTP: POST está correto.
+Corpo da Requisição:
+refresh_token, shop_id, partner_id no corpo está correto.
+String Base para Assinatura (Ponto Crítico de Correção):
+Semelhante ao getAccessToken, a string base para este endpoint POST com corpo JSON deve ser: partner_id + caminho_da_api + timestamp + corpo_da_requisição_json_minificado.
+O caminho_da_api é /api/v2/auth/refresh_token (ou /api/v2/auth/access_token/get, pois são aliases para refresh).
+Sua lógica const signature = generateSignature(..., path, ...) onde path é apenas o caminho da API, não está construindo a string base completa necessária.
+Envio da Assinatura e Parâmetros Comuns:
+Correto: partner_id, timestamp, sign são enviados como query parameters na URL (params no config do Axios).
+Expiração do Token:
+A API /api/v2/auth/refresh_token retorna um novo access_token (com seu expire_in) e um novo refresh_token.
+O campo data.refresh_token_valid_time não é um campo padrão retornado por esta API. O expire_in na resposta se refere à validade do novo access_token. O novo refresh_token em si tem sua própria validade longa (e.g., 30 dias), mas isso não é retornado como refresh_token_valid_time.
+Você deve usar data.expire_in (para o access_token) ao calcular o expiresAt do novo access_token.
+4. Verificação de Expiração (isTokenExpired)
+
+A lógica está correta e é uma boa prática incluir um buffer.
+Resumo das Correções Mais Importantes:
+
+Ajuste a Geração da String Base para Assinatura:
+
+Para chamadas GET de autorização (/api/v2/shop/auth_partner): partner_id + path + timestamp.
+Para chamadas POST com corpo JSON (/api/v2/auth/token/get, /api/v2/auth/refresh_token): partner_id + path + timestamp + corpo_da_requisição_JSON_minificado.
+Sua função generateSignature precisa ser capaz de lidar com essas variações, ou o código que a chama precisa preparar a baseString corretamente.
+Envio dos Parâmetros da Requisição para APIs POST com Corpo JSON:
+
+Os dados específicos da API (como code, shop_id, refresh_token) vão no corpo da requisição (data no Axios).
+Os parâmetros comuns de autenticação da chamada (partner_id, timestamp, sign) vão na query string da URL.
+O header Authorization não é usado com SHA256 ${signature}. Para APIs protegidas (após obter o token), você usaria Authorization: Bearer {seu_access_token}.
+Exemplo de como a chamada para getAccessToken deveria ser estruturada (conceitualmente):
+
+TypeScript
+
+// Corpo da requisição (parâmetros específicos do endpoint)
+const requestBody = {
+  partner_id: Number(this.config.partnerId),
+  code,
+  shop_id: Number(shopId),
+  // timestamp NÃO vai aqui geralmente
+};
+const minifiedRequestBody = JSON.stringify(requestBody); // Garanta que não haja espaços extras
+
+// String base para assinatura
+const baseStringForSignature = `${this.config.partnerId}${path}${timestamp}${minifiedRequestBody}`;
+
+const signature = // ... sua lógica para gerar HMAC-SHA256 com baseStringForSignature e partnerKey
+
+// URL com common params na query string
+const requestUrl = `${baseUrl}${path}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}`;
+
+const response = await axios({
+  method: 'post',
+  url: requestUrl,
+  data: requestBody, // Corpo JSON
+  headers: { 'Content-Type': 'application/json' }
+});
+Recomendo revisar cuidadosamente a documentação oficial da Shopee sobre "Signature Generation" e os parâmetros exatos esperados para cada endpoint (no corpo vs. na query string). Os detalhes da assinatura são a causa mais comum de problemas na integração.
+
+Seu código tem uma ótima estrutura de logging, o que vai ajudar muito a identificar problemas após esses ajustes!
