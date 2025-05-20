@@ -11,8 +11,8 @@ import { ShopeeCache } from './cache';
 const DEFAULT_CONFIG: ShopeeAuthConfig = {
   partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
   partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
-  // Usar o mesmo formato para todos os ambientes
-  redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
+  // Usar URL dinâmica baseada no ambiente de execução
+  redirectUrl: process.env.SHOPEE_REDIRECT_URL || (process.env.REPL_SLUG ? `https://${process.env.REPL_SLUG}.replit.app/api/shopee/callback` : 'https://cipshopee.replit.app/api/shopee/callback'),
   region: 'BR'
 };
 
