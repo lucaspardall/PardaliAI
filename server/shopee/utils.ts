@@ -58,10 +58,16 @@ export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false):
     'FR': 'https://partner.shopeemobile.com'
   };
 
-  // Retornar a URL apropriada com base no tipo de URL e região
-  return isAuthUrl 
-    ? authRegionMap[region] || authRegionMap['BR'] 
-    : apiRegionMap[region] || apiRegionMap['BR'];
+  // Para autenticação OAuth direta de vendedores SEMPRE use as URLs de seller específicas da região
+  // Para chamadas de API ainda usamos partner.shopeemobile.com
+  // Esta é a principal diferença que faz o login direto funcionar!
+  if (isAuthUrl) {
+    console.log(`Usando URL de autenticação regional: ${authRegionMap[region] || authRegionMap['BR']}`);
+    return authRegionMap[region] || authRegionMap['BR'];
+  } else {
+    console.log(`Usando URL de API global: ${apiRegionMap[region] || apiRegionMap['BR']}`);
+    return apiRegionMap[region] || apiRegionMap['BR'];
+  }
 }
 
 /**
