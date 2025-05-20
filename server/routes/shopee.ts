@@ -33,8 +33,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("======= DETALHES DA URL DE AUTORIZAÇÃO =======");
     console.log("URL completa:", authUrl);
     
-    // Certificar que estamos usando a URL corretamente
-    let finalAuthUrl = authUrl;
+    // Certificar que estamos usando a URL corretamente sem modificá-la
+    const finalAuthUrl = authUrl;
     
     // Verificação adicional para garantir que os parâmetros estão corretos
     try {
@@ -49,12 +49,25 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
         console.error("❌ ERRO: Timestamp não encontrado na URL!");
       }
       
-      // Reconstruir a URL com os parâmetros verificados
-      finalAuthUrl = urlObj.toString();
+      // Importante: NÃO reconstruir ou modificar a URL original
+      // Apenas verificar se contém o parâmetro timestamp corretamente
+      console.log("🔎 Verificação direta do timestamp: timestamp=" + searchParams.get('timestamp'));
       
     } catch (error) {
       console.error("Erro ao processar URL:", error);
-      // Manter a URL original em caso de erro
+    }
+    
+    // Verificação adicional para diagnóstico do problema ×tamp
+    const containsTimestamp = finalAuthUrl.includes("&timestamp=") || finalAuthUrl.includes("?timestamp=");
+    console.log("Contém parâmetro timestamp corretamente formatado:", containsTimestamp);
+    
+    // Salvar URL em arquivo para inspeção manual se necessário 
+    try {
+      const fs = require('fs');
+      fs.writeFileSync('shopee_auth_url.txt', finalAuthUrl);
+      console.log("✅ URL salva em arquivo para inspeção: shopee_auth_url.txt");
+    } catch (err) {
+      console.error("Não foi possível salvar URL em arquivo:", err);
     }
     
     // Verificação detalhada dos parâmetros para diagnóstico
