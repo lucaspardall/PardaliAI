@@ -83,22 +83,46 @@ export class ShopeeAuthManager {
                       "&redirect=" + redirect + 
                       "&state=" + state;
     
-    // Verificação robusta da URL gerada
+    // Verificação robusta da URL gerada usando regex para garantir que o timestamp está correto
     if (!urlString.includes('timestamp=')) {
       console.error("ERRO CRÍTICO: A URL gerada não contém o parâmetro 'timestamp=' corretamente!");
       console.error("URL problemática:", urlString);
+      throw new Error(`URL inválida: parâmetro timestamp não encontrado na URL`);
+    }
+    
+    // Verificação adicional com regex para garantir integridade completa do parâmetro
+    const timestampRegex = /[?&]timestamp=\d+[&$]/;
+    if (!timestampRegex.test(urlString)) {
+      console.error("ERRO CRÍTICO: O formato do parâmetro 'timestamp=' não está correto!");
+      console.error("URL problemática:", urlString);
+      throw new Error(`URL inválida: formato do parâmetro timestamp incorreto`);
     }
     
     // Verificações adicionais para garantir que a URL está correta
     console.log('Verificação da URL completa:', urlString);
     console.log('Verificação do parâmetro timestamp (deve conter "timestamp="):', urlString.includes('timestamp='));
     
-    // Salvar URL em um arquivo para inspeção direta se necessário (apenas em desenvolvimento)
+    // Verificação visual direta do timestamp para diagnóstico do problema
+    console.log("🔎 Verificação direta do timestamp:", `timestamp=${timestampParam}`);
+    
+    // Salvar URL em um arquivo para inspeção direta (solução definitiva para copiar a URL)
     if (process.env.NODE_ENV === 'development') {
       try {
-        const fs = require('fs');
-        fs.writeFileSync('shopee_auth_url.txt', urlString);
-        console.log('URL salva em arquivo para inspeção: shopee_auth_url.txt');
+        // Usar dynamic import para fs em vez de require para compatibilidade ESM
+        import('fs').then(fs => {
+          fs.writeFileSync('shopee_auth_url.txt', urlString, { encoding: 'utf-8' });
+          console.log('✅ URL salva em arquivo para inspeção: shopee_auth_url.txt');
+        }).catch(err => {
+          console.error('Erro ao importar fs:', err);
+        });
+        
+        // Tentativa de abrir a URL diretamente em uma nova aba, se disponível
+        try {
+          // Implementaremos isso mais tarde se necessário com dynamic import
+          console.log('📝 Para abrir a URL diretamente, você pode adicionar a dependência "open"');
+        } catch (openErr) {
+          console.error('Não foi possível abrir a URL em uma nova aba:', openErr);
+        }
       } catch (e) {
         console.error('Não foi possível salvar a URL em arquivo:', e);
       }

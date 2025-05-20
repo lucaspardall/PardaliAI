@@ -102,9 +102,27 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
         <body>
           <p>Redirecionando para autenticação na Shopee...</p>
           <p>Se você não for redirecionado automaticamente, <a href="${authUrl}">clique aqui</a>.</p>
+          <p><small>URL completa: <code>${authUrl}</code></small></p>
         </body>
       </html>
     `);
+    
+    // No ambiente de desenvolvimento, tentar abrir a URL diretamente também
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        import('open').then(openModule => {
+          const open = openModule.default;
+          console.log('🔗 Tentando abrir URL diretamente no navegador...');
+          open(authUrl).then(() => {
+            console.log('✅ URL aberta com sucesso no navegador padrão.');
+          });
+        }).catch(err => {
+          console.error('❌ Erro ao abrir URL:', err);
+        });
+      } catch (error) {
+        console.error('❌ Erro ao importar módulo open:', error);
+      }
+    }
   } catch (error: any) {
     console.error('Error starting Shopee OAuth flow:', error);
     res.status(500).json({
