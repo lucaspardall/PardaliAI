@@ -69,18 +69,18 @@ export class ShopeeAuthManager {
     console.log('Base URL utilizada:', baseUrl);
     
     // Criar objeto URLSearchParams para construir a query string de forma segura
-    const params = new URLSearchParams();
-    params.append('partner_id', this.config.partnerId);
-    params.append('timestamp', timestamp.toString());
-    params.append('sign', signature);
-    params.append('redirect', this.config.redirectUrl);
-    params.append('state', stateParam);
-    params.append('region', 'BR'); // Forçar região explicitamente para BR
-    params.append('auth_shop', 'true'); // Especificar autenticação para loja
-    params.append('auth_type', 'shop'); // Tipo de autenticação para vendedor
+    const urlParams = new URLSearchParams();
+    urlParams.append('partner_id', this.config.partnerId);
+    urlParams.append('timestamp', timestamp.toString());
+    urlParams.append('sign', signature);
+    urlParams.append('redirect', this.config.redirectUrl);
+    urlParams.append('state', stateParam);
+    urlParams.append('region', 'BR'); // Forçar região explicitamente para BR
+    urlParams.append('auth_shop', 'true'); // Especificar autenticação para loja
+    urlParams.append('auth_type', 'shop'); // Tipo de autenticação para vendedor
     
     // Construir a URL final usando a query string formatada corretamente
-    const urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
+    const urlString = `${baseUrl}${basePathForShopAuthorize}?${urlParams.toString()}`;
 
     // Log detalhado para debugging
     console.log(`======= DETALHES DE GERAÇÃO DA URL =======`);
