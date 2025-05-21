@@ -24,12 +24,12 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     // Importar o cliente Shopee
     const shopeeClient = createClient();
-    
+
     try {
       // Obter a URL de autorização usando o método atualizado
       const authUrl = shopeeClient.getAuthorizationUrl();
       console.log('URL de autorização gerada:', authUrl);
-      
+
       // Registrar informações importantes
       console.log('Partner ID:', process.env.SHOPEE_PARTNER_ID || '2011285');
       console.log('URL de redirecionamento configurada:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
@@ -44,7 +44,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       console.log('- is_auth_shop:', true);
       console.log('- login_type:', 'seller');
       console.log('- auth_type:', 'direct');
-      
+
       // Verificar se o Partner Key está configurado corretamente (sem mostrar o valor real)
       console.log('- Partner Key configurada:', partnerKey ? 'Sim (valor ocultado)' : 'NÃO CONFIGURADA');
 
@@ -199,7 +199,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     for (const [key, value] of urlParams.searchParams.entries()) {
       console.log(`- ${key}: ${value}`);
     }
-    
+
     // Garantir que não haja parâmetros duplicados
     if (authUrl.includes('auth_type=direct') && authUrl.includes('auth_type=shop')) {
       console.warn('⚠️ ALERTA: Parâmetros duplicados detectados. Corrigindo...');
