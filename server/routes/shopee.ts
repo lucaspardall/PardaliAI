@@ -21,39 +21,40 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Importar o cliente Shopee
-    const shopeeClient = createClient();
+    // Nova implementação baseada na URL descoberta em outro SaaS
+    // Preparar parâmetros necessários
+    const clientId = process.env.SHOPEE_PARTNER_ID || '2011285';
+    const clientSecret = process.env.SHOPEE_PARTNER_KEY || '';
+    const redirectUri = 'https://cipshopee.replit.app/api/shopee/callback';
+    const timestamp = Math.floor(Date.now() / 1000);
+    const state = `cipshopee_${Date.now()}`;
     
-    // Obter a URL de autorização usando o método atualizado
-    const authUrl = shopeeClient.getAuthorizationUrl();
-    console.log('URL de autorização gerada:', authUrl);
-      
-    // Registrar informações importantes
-    console.log('Client ID:', process.env.SHOPEE_PARTNER_ID || '2011285');
-    console.log('URL de redirecionamento configurada:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
-
-    // Verificar se há o problema do ×tamp na URL
-    if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
-      console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
-      // Extrair informações do cliente Shopee para reconstrução da URL
-      const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
-      const timestamp = Math.floor(Date.now() / 1000);
-      const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
-      
-      // Reconstruir manualmente como último recurso (apenas parâmetros obrigatórios)
-      const baseUrl = 'https://partner.shopeemobile.com';
-      const path = '/api/v2/shop/auth_partner';
-      
-      // Gerar assinatura para a URL manual
-      const crypto = require('crypto');
-      const partnerKey = process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661';
-      const baseString = `${partnerId}${path}${timestamp}`;
-      const sign = crypto.createHmac('sha256', partnerKey).update(baseString).digest('hex');
-      
-      const manualUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}`;
-      console.log("URL reconstruída manualmente:", manualUrl);
-      return res.redirect(manualUrl);
-    }
+    // Criar a string base para assinatura conforme formato observado
+    const baseString = `${clientId}timestamp${timestamp}redirect_uri${redirectUri}`;
+    console.log("String base para assinatura:", baseString);
+    
+    // Gerar a assinatura HMAC-SHA256
+    const hmac = crypto.createHmac('sha256', clientSecret);
+    hmac.update(baseString);
+    const signature = hmac.digest('hex');
+    console.log("Assinatura gerada:", signature);
+    
+    // Construir URL de autorização no formato correto identificado
+    const authUrl = `https://account.seller.shopee.com/signin/oauth/accountchooser?` +
+                  `client_id=${clientId}&` +
+                  `lang=pt-br&` +
+                  `login_types=%5B1,4,2%5D&` +
+                  `max_auth_age=3600&` +
+                  `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+                  `region=SG&` + // Importante: Mantém SG (Singapura) como na URL exemplo
+                  `required_passwd=true&` +
+                  `respond_code=code&` +
+                  `scope=profile&` +
+                  `sign=${signature}&` +
+                  `timestamp=${timestamp}&` +
+                  `state=${encodeURIComponent(state)}`;
+    
+    console.log("✅ URL de autorização gerada (formato novo):", authUrl);
 
     // Log da URL apenas para verificação
     console.log("URL final construída manualmente:", authUrl);
