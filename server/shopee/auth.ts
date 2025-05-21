@@ -62,23 +62,38 @@ export class ShopeeAuthManager {
     // 4. Construir a URL com os parâmetros para login direto de vendedor conforme documentação
     // Estamos usando a abordagem específica para o Brasil que exige endpoints diferentes
     
-    // Parâmetros para login direto de vendedor no domínio brasileiro
-    // ATENÇÃO: Os endpoints são diferentes para cada região. Brasil usa /authorize
-    let urlString = `${baseUrl}/authorize?` + 
-      `partner_id=${this.config.partnerId}&` +
-      `timestamp=${timestamp}&` +
-      `sign=${signature}&` +
-      `redirect=${encodeURIComponent(this.config.redirectUrl)}`;
-      
-    // Em seguida, adicionamos os parâmetros específicos para login direto no domínio brasileiro
-    urlString += `&state=${encodeURIComponent(stateParam)}` +
-      `&auth_shop=true` +
-      `&auth_type=direct` +
-      `&region=BR` +
-      `&id=${this.config.partnerId}` +
-      `&isRedirect=true` +
-      `&is_agent=false` +
-      `&random=${Math.random().toString(36).substring(2, 15)}`;
+    // Construir URL usando URLSearchParams para garantir que todos os parâmetros sejam adicionados corretamente
+    const params = new URLSearchParams();
+    
+    // Adicionar parâmetros obrigatórios PRIMEIRO (ordem importante)
+    params.append('partner_id', this.config.partnerId);
+    params.append('timestamp', timestamp.toString());
+    params.append('sign', signature); // CRUCIAL: assinatura HMAC-SHA256
+    params.append('redirect', this.config.redirectUrl);
+    
+    // Adicionar parâmetros específicos para login direto no domínio brasileiro
+    params.append('state', stateParam);
+    params.append('auth_shop', 'true');
+    params.append('auth_type', 'direct');
+    params.append('region', 'BR');
+    params.append('id', this.config.partnerId);
+    params.append('isRedirect', 'true');
+    params.append('is_agent', 'false');
+    params.append('login_type', 'seller');
+    params.append('random', Math.random().toString(36).substring(2, 15));
+    
+    // Construir a URL final
+    let urlString = `${baseUrl}/authorize?${params.toString()}`;
+    
+    // Log detalhado dos parâmetros para diagnóstico
+    console.log('PARÂMETROS DA URL DE AUTORIZAÇÃO:');
+    console.log('- partner_id:', this.config.partnerId);
+    console.log('- timestamp:', timestamp);
+    console.log('- sign:', signature); // Verificar se a assinatura está sendo gerada
+    console.log('- redirect:', this.config.redirectUrl);
+    console.log('- auth_type:', 'direct');
+    console.log('- auth_shop:', 'true');
+    console.log('- login_type:', 'seller');
     
     // Log para verificar parâmetros na URL
     console.log('Verificando URL construída manualmente:');

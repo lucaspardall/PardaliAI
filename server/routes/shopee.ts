@@ -59,17 +59,19 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Parâmetros específicos para login direto no domínio brasileiro
     authUrl += `&auth_shop=true&auth_type=direct&id=${partnerId}&isRedirect=true&is_agent=false&random=${random}&region=BR&state=${state}`;
 
-    // Adicionar log para facilitar depuração
-    console.log('URL de autorização (parâmetros separados):', { 
-      partner_id: partnerId,
-      timestamp,
-      sign,
-      redirect: redirectUrl,
-      region: 'BR',
-      is_auth_shop: true,
-      login_type: 'seller',
-      auth_type: 'direct'
-    });
+    // Adicionar log detalhado para facilitar depuração
+    console.log('URL de autorização (parâmetros separados):'); 
+    console.log('- partner_id:', partnerId);
+    console.log('- timestamp:', timestamp);
+    console.log('- sign:', sign, 'comprimento:', sign.length); // Verificar se há assinatura e seu comprimento
+    console.log('- redirect:', redirectUrl);
+    console.log('- region:', 'BR');
+    console.log('- is_auth_shop:', true);
+    console.log('- login_type:', 'seller');
+    console.log('- auth_type:', 'direct');
+    
+    // Verificar se o Partner Key está configurado corretamente (sem mostrar o valor real)
+    console.log('- Partner Key configurada:', partnerKey ? 'Sim (valor ocultado)' : 'NÃO CONFIGURADA');
 
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {

@@ -125,13 +125,26 @@ export function generateSignature(
     baseString = components.join('');
   }
 
+  // Log detalhado para verificar a string base e a geração da assinatura
+  console.log('=================== GERAÇÃO DE ASSINATURA ===================');
   console.log('Assinatura - String base:', baseString);
+  console.log('Comprimento da string base:', baseString.length);
+  console.log('Partner Key fornecida:', partnerKey ? 'Sim (valor ocultado)' : 'NÃO');
+  
+  if (!partnerKey) {
+    console.error('ERRO CRÍTICO: Partner Key não configurada! A assinatura não será válida.');
+  }
 
   // Gerar assinatura HMAC-SHA256 usando o partnerKey como segredo
   const hmac = createHmac('sha256', partnerKey);
   hmac.update(baseString);
+  const signature = hmac.digest('hex');
+  
+  console.log('Assinatura gerada:', signature);
+  console.log('Comprimento da assinatura:', signature.length);
+  console.log('===========================================================');
 
-  return hmac.digest('hex');
+  return signature;
 }
 
 /**
