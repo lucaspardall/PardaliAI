@@ -44,6 +44,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     // IMPORTANTE: Para autorização direta de sellers (vendedores) no Brasil, 
     // precisamos usar o domínio open.shopee.com.br (domínio da Open Platform BR)
+    const region = 'BR';
     const baseUrl = 'https://open.shopee.com.br';
     console.log('Usando domínio Open Platform Brasil:', baseUrl);
 

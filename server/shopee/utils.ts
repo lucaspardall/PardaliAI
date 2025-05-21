@@ -15,42 +15,21 @@ export function getTimestamp(): number {
 /**
  * Obtém a URL base da API de acordo com a região
  * @param region Região da Shopee
- * @param isAuthUrl Se verdadeiro, retorna a URL para interface de vendedores (não usado)
- * IMPORTANTE: Para todas as operações, incluindo autenticação OAuth, 
- * SEMPRE use partner.shopeemobile.com conforme documentação oficial
+ * @param isAuthUrl Se verdadeiro, retorna a URL para interface de vendedores 
  * @returns URL base da API
  */
 export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false): string {
-  // URLs específicas para cada região
-  const regionUrls: Record<ShopeeRegion, string> = {
-    BR: 'https://open.shopee.com.br', // Brasil usa domínio específico
-    // Outras regiões usam o domínio padrão
-    SG: 'https://partner.shopeemobile.com',
-    MY: 'https://partner.shopeemobile.com',
-    TH: 'https://partner.shopeemobile.com',
-    TW: 'https://partner.shopeemobile.com',
-    ID: 'https://partner.shopeemobile.com',
-    VN: 'https://partner.shopeemobile.com',
-    PH: 'https://partner.shopeemobile.com',
-    MX: 'https://partner.shopeemobile.com',
-    CO: 'https://partner.shopeemobile.com',
-    CL: 'https://partner.shopeemobile.com',
-    PL: 'https://partner.shopeemobile.com',
-    ES: 'https://partner.shopeemobile.com',
-    FR: 'https://partner.shopeemobile.com'
-  };
-
-  console.log(`Obtendo URL base para região: ${region}`);
-
-  // Se existir uma URL específica para a região, use-a
-  if (region in regionUrls) {
-    console.log(`URL específica encontrada para ${region}: ${regionUrls[region]}`);
-    return regionUrls[region];
+  // Para o Brasil, precisamos usar o domínio específico para todas as operações
+  if (region === 'BR') {
+    const brUrl = 'https://open.shopee.com.br';
+    console.log(`Usando URL específica do Brasil: ${brUrl}`);
+    return brUrl;
   }
-
-  // Fallback para o domínio padrão
-  console.log('Usando URL padrão: https://partner.shopeemobile.com');
-  return 'https://partner.shopeemobile.com';
+  
+  // Para todas as outras regiões, usar o domínio padrão
+  const defaultUrl = 'https://partner.shopeemobile.com';
+  console.log(`Usando URL padrão para região ${region}: ${defaultUrl}`);
+  return defaultUrl;
 }
 
 /**

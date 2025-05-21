@@ -54,23 +54,22 @@ export class ShopeeAuthManager {
 
     // 3. Usar o domínio específico do seller center do Brasil para login direto
     // Para login direto de vendedor brasileiro, usar o domínio open.shopee.com.br
-    // IMPORTANTE: Para o Brasil, o endpoint correto é /authorize (não /api/v2/shop/auth_partner)
-    const baseUrl = 'https://open.shopee.com.br';
+    const baseUrl = getApiBaseUrl(this.config.region);
     console.log('Usando domínio específico da Open Platform BR:', baseUrl);
     console.log('Usando URL da API Shopee BR:', baseUrl);
-    
+
     // 4. Construir a URL com os parâmetros para login direto de vendedor conforme documentação
     // Estamos usando a abordagem específica para o Brasil que exige endpoints diferentes
-    
+
     // Construir URL usando URLSearchParams para garantir que todos os parâmetros sejam adicionados corretamente
     const params = new URLSearchParams();
-    
+
     // Adicionar parâmetros obrigatórios PRIMEIRO (ordem importante)
     params.append('partner_id', this.config.partnerId);
     params.append('timestamp', timestamp.toString());
     params.append('sign', signature); // CRUCIAL: assinatura HMAC-SHA256
     params.append('redirect', this.config.redirectUrl);
-    
+
     // Adicionar parâmetros específicos para login direto no domínio brasileiro
     params.append('state', stateParam);
     params.append('auth_shop', 'true');
@@ -81,10 +80,10 @@ export class ShopeeAuthManager {
     params.append('is_agent', 'false');
     params.append('login_type', 'seller');
     params.append('random', Math.random().toString(36).substring(2, 15));
-    
+
     // Construir a URL final
     let urlString = `${baseUrl}/authorize?${params.toString()}`;
-    
+
     // Log detalhado dos parâmetros para diagnóstico
     console.log('PARÂMETROS DA URL DE AUTORIZAÇÃO:');
     console.log('- partner_id:', this.config.partnerId);
@@ -94,13 +93,13 @@ export class ShopeeAuthManager {
     console.log('- auth_type:', 'direct');
     console.log('- auth_shop:', 'true');
     console.log('- login_type:', 'seller');
-    
+
     // Log para verificar parâmetros na URL
     console.log('Verificando URL construída manualmente:');
     console.log('auth_type=shop presente:', urlString.includes('auth_type=shop'));
     console.log('auth_shop=true presente:', urlString.includes('auth_shop=true'));
     console.log('URL de redirecionamento incluída:', urlString.includes(encodeURIComponent(this.config.redirectUrl)));
-    
+
     console.log('URL de autorização final:', urlString);
 
     // Verificação robusta da URL gerada usando regex para garantir que o timestamp está correto
@@ -117,7 +116,7 @@ export class ShopeeAuthManager {
       console.error("URL problemática:", urlString);
       throw new Error(`URL inválida: formato do parâmetro timestamp incorreto`);
     }
-    
+
     // Verificar se auth_type=direct está presente e corrigir se necessário
     if (!urlString.includes('auth_type=direct')) {
       console.error("ERRO CRÍTICO: O parâmetro 'auth_type=direct' não está presente na URL!");
@@ -126,7 +125,7 @@ export class ShopeeAuthManager {
       urlString = `${urlString}&auth_type=direct&login_type=seller&region=BR&is_auth_shop=true`;
       console.log("URL corrigida com auth_type=direct:", urlString);
     }
-    
+
     // Verificação extra: garantir que o parâmetro auth_type esteja no formato correto
     if (urlString.includes('auth_type=') && !urlString.includes('auth_type=direct')) {
       console.error("ERRO CRÍTICO: Parâmetro auth_type presente mas com valor incorreto!");
@@ -134,7 +133,7 @@ export class ShopeeAuthManager {
       urlString = urlString.replace(/auth_type=[^&]+/, 'auth_type=direct');
       console.log("URL corrigida com auth_type=direct:", urlString);
     }
-    
+
     // Verificação adicional para caracteres inválidos no timestamp
     const invalidTimestampRegex = /[×xX]tamp=/;
     if (invalidTimestampRegex.test(urlString)) {
@@ -143,14 +142,14 @@ export class ShopeeAuthManager {
       // Correção automática do problema - agora funciona porque urlString é let
       urlString = urlString.replace(/[×xX]tamp=/, 'timestamp=');
       console.log("URL corrigida:", urlString);
-      
+
       // Se o problema persistir, usar a abordagem manual como último recurso
       if (urlString.includes('×tamp=') || urlString.includes('xtamp=')) {
         console.log("Reconstruindo a URL manualmente como último recurso...");
         urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
       }
     }
-    
+
     // Log detalhado dos parâmetros obrigatórios para verificação
     console.log('URL FINAL COMPLETA (conforme documentação oficial):', urlString);
     console.log('Parâmetros obrigatórios presentes:');
@@ -287,7 +286,7 @@ export class ShopeeAuthManager {
           message: data.message,
           requestId: data.request_id
         });
-        
+
         throw {
           error: data.error,
           message: data.message || 'Falha ao obter token de acesso',
@@ -319,7 +318,7 @@ export class ShopeeAuthManager {
       };
     } catch (error: any) {
       console.error('==== ERRO AO OBTER TOKEN DE ACESSO ====');
-      
+
       // Log detalhado do erro
       if (error.response) {
         console.error('Resposta de erro:', {
@@ -333,7 +332,7 @@ export class ShopeeAuthManager {
       } else {
         console.error('Erro:', error.message);
       }
-      
+
       throw parseApiError(error);
     }
   }
