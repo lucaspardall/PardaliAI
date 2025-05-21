@@ -34,8 +34,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       livePartnerId: '2011285',
       livePartnerKey: process.env.SHOPEE_PARTNER_KEY || '477a724873627457486972644a704f756948624776754646544170674a515a64',
       
-      // URL de redirecionamento configurada no console
-      redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback',
+      // URL de redirecionamento EXATAMENTE como configurada no console
+      redirectUrl: 'https://cipshopee.replit.app',
       
       // Ambiente atual - pode ser alterado conforme necessário
       environment: 'live' as 'test' | 'live'
