@@ -292,16 +292,16 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         // Criar notificação de erro
         try {
           await storage.createNotification({
-          userId: (req.user as any).claims.sub,
-          title: 'Erro na autorização - Token não encontrado',
-          message: 'Ocorreu um erro na autenticação com a Shopee. Tente conectar sua loja novamente com as configurações corrigidas.',
-          type: 'error',
-          isRead: false,
-          createdAt: new Date()
-        });
-      } catch (notifError) {
-        console.error('Erro ao criar notificação:', notifError);
-      }
+            userId: (req.user as any).claims.sub,
+            title: 'Erro na autorização - Token não encontrado',
+            message: 'Ocorreu um erro na autenticação com a Shopee. Tente conectar sua loja novamente com as configurações corrigidas.',
+            type: 'error',
+            isRead: false,
+            createdAt: new Date()
+          });
+        } catch (notifError) {
+          console.error('Erro ao criar notificação:', notifError);
+        }
 
       // Redirecionar para a página inicial com instrução para tentar novamente
       return res.redirect('/dashboard?status=error&code=token_not_found&message=' + encodeURIComponent('Token não encontrado. Por favor, tente conectar novamente com as configurações atualizadas.'));
