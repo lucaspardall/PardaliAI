@@ -57,21 +57,30 @@ export class ShopeeAuthManager {
     console.log('Usando domínio oficial da API Shopee:', baseUrl);
     console.log('Usando URL da API Shopee:', baseUrl);
     
-    // 4. Construir os parâmetros da URL seguindo EXATAMENTE a documentação oficial da Shopee
+    // 4. Construir os parâmetros da URL seguindo a documentação oficial da Shopee
     // Host + path + partner id + timestamp + redirect url + sign (conforme documentação)
+    // Adicionar parâmetros adicionais para forçar o login direto do vendedor
     const params = new URLSearchParams();
     params.append('partner_id', this.config.partnerId);
     params.append('timestamp', timestamp.toString());
     params.append('sign', signature);
     params.append('redirect', this.config.redirectUrl);
+    params.append('auth_type', 'direct'); // Forçar login direto, sem Open Platform
+    params.append('login_type', 'seller'); // Forçar login como vendedor
+    params.append('region', 'BR'); // Região específica para Brasil
+    params.append('is_auth_shop', 'true'); // Autorizar uma loja específica
     
-    // Construir URL final exatamente conforme o padrão da documentação (sem parâmetros extras)
+    // Construir URL final com todos os parâmetros necessários
     let urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
     
     // Verificação adicional para garantir que não há problemas com caracteres especiais
     if (urlString.includes('×tamp=') || !urlString.includes('timestamp=')) {
       console.log('ALERTA: Detectado problema de codificação! Reconstruindo URL manualmente');
-      // Construir manualmente como último recurso
+      // Construir manualmente como último recurso, incluindo parâmetros para login direto
+      urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=0`;
+    } else if (!urlString.includes('auth_type=direct')) {
+      console.log('ALERTA: URL não contém parâmetro auth_type=direct. Adicionando parâmetros necessários.');
+      // Garantir que os parâmetros de login direto estejam presentes mesmo sem problemas de codificação
       urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=0`;
     }
     
@@ -90,6 +99,15 @@ export class ShopeeAuthManager {
       console.error("ERRO CRÍTICO: O formato do parâmetro 'timestamp=' não está correto!");
       console.error("URL problemática:", urlString);
       throw new Error(`URL inválida: formato do parâmetro timestamp incorreto`);
+    }
+    
+    // Verificar se auth_type=direct está presente
+    if (!urlString.includes('auth_type=direct')) {
+      console.error("ERRO CRÍTICO: O parâmetro 'auth_type=direct' não está presente na URL!");
+      console.error("URL problemática:", urlString);
+      // Corrigir URL adicionando os parâmetros necessários
+      urlString = `${urlString}&auth_type=direct&login_type=seller&region=BR&is_auth_shop=true`;
+      console.log("URL corrigida com auth_type=direct:", urlString);
     }
     
     // Verificação adicional para caracteres inválidos no timestamp
