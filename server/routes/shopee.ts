@@ -41,21 +41,22 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     hmac.update(baseString);
     const sign = hmac.digest('hex');
 
-    // IMPORTANTE: Para o endpoint de autorização OAuth do Brasil, precisamos usar o domínio específico da região
-    // Para Brasil, vamos usar o domínio partner.shopeemobile.com.br conforme sugerido
-    const baseUrl = 'https://partner.shopeemobile.com.br';
-    console.log('Usando domínio específico para o Brasil:', baseUrl);
+    // IMPORTANTE: Para autorização direta de sellers (vendedores) no Brasil, 
+    // precisamos usar o domínio open.shopee.com.br (domínio da Open Platform BR)
+    const baseUrl = 'https://open.shopee.com.br';
+    console.log('Usando domínio Open Platform Brasil:', baseUrl);
 
-    // Primeiro construir a URL apenas com os parâmetros obrigatórios (documentação oficial)
-    // Os parâmetros obrigatórios são: partner_id, timestamp, sign e redirect
-    let authUrl = `${baseUrl}${path}?` + 
+    // Construir URL de autorização para login direto de vendedor na Open Platform Brasil
+    // Formato diferente do endpoint partner.shopeemobile
+    const random = Math.random().toString(36).substring(2, 15);
+    let authUrl = `${baseUrl}/authorize?` + 
       `partner_id=${partnerId}&` +
       `timestamp=${timestamp}&` +
       `sign=${sign}&` +
       `redirect=${encodeURIComponent(redirectUrl)}`;
 
-    // Adicionar parâmetros adicionais para melhorar o fluxo
-    authUrl += `&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct`;
+    // Parâmetros específicos para login direto no domínio brasileiro
+    authUrl += `&auth_shop=true&auth_type=shop&id=${partnerId}&isRedirect=true&is_agent=false&random=${random}&region=BR&state=${state}`;
 
     // Adicionar log para facilitar depuração
     console.log('URL de autorização (parâmetros separados):', { 

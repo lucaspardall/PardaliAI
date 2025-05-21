@@ -52,30 +52,31 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
     console.log('Assinatura gerada:', signature);
 
-    // 3. Usar o domínio específico para o Brasil
-    const baseUrl = 'https://partner.shopeemobile.com.br';
-    console.log('Usando domínio específico da API Shopee para o Brasil:', baseUrl);
-    console.log('Usando URL da API Shopee:', baseUrl);
+    // 3. Usar o domínio específico do seller center do Brasil para login direto
+    // Para login direto de vendedor, usar o domínio seller.shopee.com.br ou open.shopee.com.br
+    const baseUrl = 'https://open.shopee.com.br';
+    console.log('Usando domínio específico da Open Platform BR:', baseUrl);
+    console.log('Usando URL da API Shopee BR:', baseUrl);
     
-    // 4. Construir a URL manualmente para garantir que todos os parâmetros estão presentes
-    // e sem problemas de codificação
+    // 4. Construir a URL com os parâmetros para login direto de vendedor conforme documentação
+    // Estamos usando a abordagem alternativa mencionada na documentação para o Brasil
     
-    // IMPORTANTE: Sempre seguir a documentação oficial da Shopee para o endpoint de autorização
-    // Parâmetros obrigatórios: partner_id, timestamp, sign, redirect
-    
-    // Primeiro adicionamos apenas os parâmetros OBRIGATÓRIOS conforme documentação oficial
-    let urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
+    // Parâmetros para login direto de vendedor no domínio brasileiro
+    let urlString = `${baseUrl}/authorize?` + 
       `partner_id=${this.config.partnerId}&` +
       `timestamp=${timestamp}&` +
       `sign=${signature}&` +
       `redirect=${encodeURIComponent(this.config.redirectUrl)}`;
       
-    // Em seguida, adicionamos os parâmetros opcionais que melhoram o fluxo
+    // Em seguida, adicionamos os parâmetros específicos para login direto no domínio brasileiro
     urlString += `&state=${encodeURIComponent(stateParam)}` +
+      `&auth_shop=true` +
+      `&auth_type=shop` +
       `&region=BR` +
-      `&is_auth_shop=true` +
-      `&login_type=seller` +
-      `&auth_type=direct`;
+      `&id=${this.config.partnerId}` +
+      `&isRedirect=true` +
+      `&is_agent=false` +
+      `&random=${Math.random().toString(36).substring(2, 15)}`;
     
     // Log para verificar se auth_type=direct está presente
     console.log('Verificando URL construída manualmente:');
