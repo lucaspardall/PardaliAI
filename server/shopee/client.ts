@@ -244,11 +244,17 @@ export class ShopeeClient {
         throw new Error("Código de autorização e ID da loja são obrigatórios");
       }
       
+      // Log detalhado para diagnóstico
+      console.log(`Tentando obter token com código de autorização: ${code.substring(0, 10)}... (parcialmente oculto)`);
+      console.log(`ID da loja: ${shopId}`);
+      console.log(`Timestamp atual: ${Math.floor(Date.now() / 1000)}`);
+      
       // Obter tokens de acesso
       const tokens = await this.authManager.getAccessToken(code, shopId);
       
       // Verificar se recebemos tokens válidos
       if (!tokens.accessToken || !tokens.refreshToken) {
+        console.error("Tokens inválidos recebidos da API Shopee:", tokens);
         throw new Error("Tokens inválidos retornados pela API da Shopee");
       }
       
@@ -256,19 +262,28 @@ export class ShopeeClient {
       this.tokens = tokens;
       
       console.log(`Tokens obtidos com sucesso: ${JSON.stringify({
-        accessToken: tokens.accessToken ? '***' : undefined,
-        refreshToken: tokens.refreshToken ? '***' : undefined,
+        accessToken: tokens.accessToken ? `${tokens.accessToken.substring(0, 5)}...` : undefined,
+        refreshToken: tokens.refreshToken ? `${tokens.refreshToken.substring(0, 5)}...` : undefined,
         expiresAt: tokens.expiresAt,
         shopId: tokens.shopId
       })}`);
       
-      // Salvar os tokens no armazenamento
+      // Salvar os tokens no armazenamento imediatamente
       await this.saveTokensToStorage(tokens);
       
       return tokens;
     } catch (error) {
       console.error(`Erro ao conectar com a Shopee: ${error.message}`, error);
-      throw parseApiError(error);
+      
+      // Tratar especificamente o erro de token não encontrado
+      const apiError = parseApiError(error);
+      if (apiError.error === 'TokenNotFound' || 
+          apiError.message?.includes('token not found') || 
+          (apiError.response && apiError.response.errcode === 2)) {
+        console.error("ERRO CRÍTICO: Token não encontrado. O código de autorização pode ter expirado ou ser inválido.");
+      }
+      
+      throw apiError;
     }
   }
 

@@ -197,19 +197,40 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     console.log(`Parâmetros recebidos:`, req.query);
     
     // Verificar se há erro retornado pela Shopee
-    if (req.query.error || req.query.errcode || req.query.errMsg) {
+    if (req.query.error || req.query.errcode || req.query.errMsg || req.query.message) {
+      const errorCode = req.query.errcode || req.query.error || '';
+      const errorMsg = req.query.errMsg || req.query.message || 'Erro desconhecido';
+      
       console.error('Erro retornado pela Shopee:', {
         error: req.query.error,
-        errcode: req.query.errcode,
-        message: req.query.errMsg || req.query.message
+        errcode: errorCode,
+        message: errorMsg
       });
       
-      // Criar notificação de erro
+      // Tratamento específico para erro de token não encontrado
+      if (errorCode === '2' || errorMsg.includes('token not found')) {
+        console.log('Detectado erro de token não encontrado, tentando reiniciar o fluxo de autorização...');
+        
+        // Criar notificação de erro
+        await storage.createNotification({
+          userId: (req.user as any).claims.sub,
+          title: 'Erro na autorização - Token não encontrado',
+          message: 'Ocorreu um erro de autenticação com a Shopee. Por favor, tente conectar sua loja novamente.',
+          type: 'error',
+          isRead: false,
+          createdAt: new Date()
+        });
+        
+        // Redirecionar para a página inicial com instrução para tentar novamente
+        return res.redirect('/dashboard?status=error&code=token_not_found&message=' + encodeURIComponent('Token não encontrado. Por favor, tente conectar novamente.'));
+      }
+      
+      // Criar notificação de erro para outros tipos de erro
       try {
         await storage.createNotification({
           userId: (req.user as any).claims.sub,
           title: 'Erro na autorização Shopee',
-          message: `A Shopee retornou um erro: ${req.query.errMsg || req.query.message || 'Erro desconhecido'}`,
+          message: `A Shopee retornou um erro: ${errorMsg}`,
           type: 'error',
           isRead: false,
           createdAt: new Date()
@@ -218,7 +239,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         console.error('Erro ao criar notificação:', notifError);
       }
       
-      return res.redirect('/dashboard?status=error&message=' + encodeURIComponent(req.query.errMsg as string || req.query.message as string || 'Erro na autorização'));
+      return res.redirect('/dashboard?status=error&message=' + encodeURIComponent(errorMsg));
     }
     
     const { code, shop_id } = req.query;

@@ -87,8 +87,11 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
           variant: "default",
         });
         
-        // Abrir em nova aba para melhor experiência de login
-        window.open('/api/shopee/authorize', '_blank', 'noopener,noreferrer');
+        // Obter a data atual para evitar problemas de cache
+        const timestamp = new Date().getTime();
+        
+        // Abrir em nova aba para melhor experiência de login com parâmetro anti-cache
+        window.open(`/api/shopee/authorize?_=${timestamp}`, '_blank', 'noopener,noreferrer');
         
         // Mostrar mensagem adicional sobre janela pop-up
         setTimeout(() => {
@@ -98,6 +101,11 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
             variant: "warning",
             duration: 6000,
           });
+          
+          // Resolver o estado de conexão após um tempo
+          setTimeout(() => {
+            setIsConnecting(false);
+          }, 8000);
         }, 3000);
       }, 1000);
     } catch (error) {

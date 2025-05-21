@@ -56,16 +56,20 @@ export class ShopeeAuthManager {
     // 4. Montar a URL usando a API URL para garantir a codificação correta
     // ⚠️ Os parâmetros críticos são: login_type=seller e auth_type=direct para evitar o login na open platform
     const url = new URL(`${baseUrl}${basePathForShopAuthorize}`);
+    
+    // Adicionar os parâmetros na ordem correta (a ordem pode afetar a validação em alguns casos)
     url.searchParams.append('partner_id', this.config.partnerId);
     url.searchParams.append('timestamp', timestamp.toString()); // Converter explicitamente para string
     url.searchParams.append('sign', signature);
     url.searchParams.append('redirect', this.config.redirectUrl);
     url.searchParams.append('state', stateParam);
-    url.searchParams.append('region', 'BR');
-    url.searchParams.append('is_auth_shop', 'true');
-    url.searchParams.append('login_type', 'seller');
-    url.searchParams.append('auth_type', 'direct');
-    url.searchParams.append('shop_id', '');
+    
+    // Parâmetros críticos para garantir o login direto do vendedor, não na Open Platform
+    url.searchParams.append('login_type', 'seller'); // Tipo de login: vendedor
+    url.searchParams.append('auth_type', 'direct'); // Tipo de autenticação: direta
+    url.searchParams.append('region', 'BR'); // Região: Brasil
+    url.searchParams.append('is_auth_shop', 'true'); // Autenticar loja: sim
+    url.searchParams.append('shop_id', ''); // ID da loja: vazio (será preenchido pelo usuário)
     
     // Construir URL final usando o objeto URL (mais robusto que URLSearchParams)
     let urlString = url.toString();
