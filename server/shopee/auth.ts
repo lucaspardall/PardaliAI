@@ -59,7 +59,6 @@ export class ShopeeAuthManager {
     
     // 4. Construir a URL manualmente para garantir que todos os parâmetros estão presentes
     // e sem problemas de codificação
-    const stateParam = `cipshopee_${Date.now()}`;
     
     // Sempre gerar URL manualmente com todos os parâmetros necessários para evitar problemas
     // Isto garante que auth_type=direct e outros parâmetros importantes estarão presentes
