@@ -142,16 +142,19 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
                 document.getElementById('redirectBtn').addEventListener('click', function() {
                   // Usar o domínio específico para vendedores do Brasil
                   const url = new URL('https://partner.shopeemobile.com/api/v2/shop/auth_partner');
+                  
+                  // Adicionar parâmetros obrigatórios primeiro
                   url.searchParams.append('partner_id', '${partnerId}');
                   url.searchParams.append('timestamp', '${timestamp}');
                   url.searchParams.append('sign', '${sign}');
                   url.searchParams.append('redirect', 'https://cipshopee.replit.app/api/shopee/callback');
+                  
+                  // Adicionar parâmetros necessários para login direto do vendedor
                   url.searchParams.append('state', 'cipshopee_${Date.now()}');
                   url.searchParams.append('region', 'BR');
                   url.searchParams.append('is_auth_shop', 'true');
                   url.searchParams.append('login_type', 'seller');
                   url.searchParams.append('auth_type', 'direct');
-                  url.searchParams.append('shop_id', '');
 
                   console.log('Redirecionando para URL construída via JavaScript:', url.toString());
                   window.location.href = url.toString();

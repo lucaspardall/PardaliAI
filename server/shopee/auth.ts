@@ -94,12 +94,20 @@ export class ShopeeAuthManager {
       throw new Error(`URL inválida: formato do parâmetro timestamp incorreto`);
     }
     
-    // Verificar se auth_type=direct está presente
+    // Verificar se auth_type=direct está presente e corrigir se necessário
     if (!urlString.includes('auth_type=direct')) {
       console.error("ERRO CRÍTICO: O parâmetro 'auth_type=direct' não está presente na URL!");
       console.error("URL problemática:", urlString);
       // Corrigir URL adicionando os parâmetros necessários
       urlString = `${urlString}&auth_type=direct&login_type=seller&region=BR&is_auth_shop=true`;
+      console.log("URL corrigida com auth_type=direct:", urlString);
+    }
+    
+    // Verificação extra: garantir que o parâmetro auth_type esteja no formato correto
+    if (urlString.includes('auth_type=') && !urlString.includes('auth_type=direct')) {
+      console.error("ERRO CRÍTICO: Parâmetro auth_type presente mas com valor incorreto!");
+      // Substituir qualquer valor de auth_type por 'direct'
+      urlString = urlString.replace(/auth_type=[^&]+/, 'auth_type=direct');
       console.log("URL corrigida com auth_type=direct:", urlString);
     }
     
