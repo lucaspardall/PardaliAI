@@ -63,35 +63,39 @@ app.use((req, res, next) => {
       console.error(err);
     });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+    // importantly only setup vite in development and after
+    // setting up all the other routes so the catch-all route
+    // doesn't interfere with the other routes
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
 
-  // Tenta a porta 5000 primeiro, mas usa uma alternativa se ocupada
-  const tryPort = (port = 5000) => {
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`serving on port ${port}`);
-    }).on('error', (err: any) => {
-      if (err.code === 'EADDRINUSE') {
-        // Tenta a porta 3000 como alternativa
-        const alternatePort = 3000;
-        log(`Porta ${port} está em uso, tentando porta ${alternatePort}...`);
-        tryPort(alternatePort);
-      } else {
-        log(`Erro no servidor: ${err.message}`);
-        throw err;
-      }
-    });
-  };
-  
-  tryPort();
+    // Tenta a porta 5000 primeiro, mas usa uma alternativa se ocupada
+    const tryPort = (port = 5000) => {
+      server.listen({
+        port,
+        host: "0.0.0.0",
+        reusePort: true,
+      }, () => {
+        log(`serving on port ${port}`);
+      }).on('error', (err: any) => {
+        if (err.code === 'EADDRINUSE') {
+          // Tenta a porta 3000 como alternativa
+          const alternatePort = 3000;
+          log(`Porta ${port} está em uso, tentando porta ${alternatePort}...`);
+          tryPort(alternatePort);
+        } else {
+          log(`Erro no servidor: ${err.message}`);
+          throw err;
+        }
+      });
+    };
+    
+    tryPort();
+  } catch (err) {
+    console.error("Erro na inicialização do servidor:", err);
+    process.exit(1);
+  }
 })();
