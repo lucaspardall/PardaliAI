@@ -29,18 +29,18 @@ export default function Subscription() {
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   // Get current plan
   const currentPlan = user?.plan || 'free';
-  
+
   // Get plan expiration message
   const getPlanExpirationMessage = () => {
     if (!user || !user.planExpiresAt || user.plan === 'free') return null;
-    
+
     const expiresAt = new Date(user.planExpiresAt);
     const today = new Date();
     const daysLeft = Math.ceil((expiresAt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (daysLeft <= 0) {
       return "Expirado";
     } else if (daysLeft <= 7) {
@@ -49,7 +49,7 @@ export default function Subscription() {
       return `Válido até ${formatDate(user.planExpiresAt)}`;
     }
   };
-  
+
   // Plan progress
   const getStoreProgress = () => {
     if (!user) return 0;
@@ -57,27 +57,27 @@ export default function Subscription() {
     const storesUsed = 0; // This would come from the server in a real app
     return Math.min(100, Math.round((storesUsed / storeLimit) * 100));
   };
-  
+
   const getCreditsProgress = () => {
     if (!user) return 0;
-    
+
     // For free plan, show credits used
     if (user.plan === 'free') {
       const totalCredits = 10;
       const usedCredits = 10 - (user.aiCreditsLeft || 0);
       return Math.min(100, Math.round((usedCredits / totalCredits) * 100));
     }
-    
+
     // For paid plans, show unlimited
     return 0;
   };
-  
+
   // Fetch usage data - in a real app, this would come from the server
   const { data: usageData, isLoading: usageLoading } = useQuery({
     queryKey: ["/api/user/usage"],
     enabled: false, // Disable for MVP since this endpoint isn't implemented yet
   });
-  
+
   // Handle plan update
   const updatePlanMutation = useMutation({
     mutationFn: async (plan: string) => {
@@ -97,10 +97,10 @@ export default function Subscription() {
         description: `Seu plano foi atualizado para ${formatPlanName(selectedPlan || 'free')} com sucesso!`,
         variant: "success",
       });
-      
+
       // Invalidate user query to refresh the data
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
+
       // Reset selected plan
       setSelectedPlan(null);
     },
@@ -112,12 +112,12 @@ export default function Subscription() {
       });
     },
   });
-  
+
   // Handle plan selection
   const handlePlanSelect = (plan: string) => {
     setSelectedPlan(plan);
   };
-  
+
   // Handle plan upgrade
   const handlePlanUpgrade = () => {
     if (!selectedPlan) {
@@ -128,7 +128,7 @@ export default function Subscription() {
       });
       return;
     }
-    
+
     updatePlanMutation.mutate(selectedPlan);
   };
 
@@ -148,7 +148,7 @@ export default function Subscription() {
       <Helmet>
         <title>Assinatura | CIP Shopee</title>
       </Helmet>
-      
+
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Current Plan Card */}
         <Card>
@@ -174,14 +174,14 @@ export default function Subscription() {
                     ? 'Plano gratuito'
                     : user?.planStatus}
                 </p>
-                
+
                 {user?.plan !== 'free' && (
                   <Button className="w-full" disabled={isProcessing}>
                     Gerenciar pagamento
                   </Button>
                 )}
               </div>
-              
+
               <div className="w-full md:w-2/3 space-y-6">
                 <div>
                   <div className="flex justify-between mb-2">
@@ -190,7 +190,7 @@ export default function Subscription() {
                   </div>
                   <Progress value={getStoreProgress()} className="h-2" />
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between mb-2">
                     <h4 className="text-sm font-medium">Créditos de IA</h4>
@@ -211,7 +211,7 @@ export default function Subscription() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-muted/30 rounded-lg">
                     <h4 className="text-sm font-medium mb-1">Recursos do plano</h4>
@@ -224,7 +224,7 @@ export default function Subscription() {
                       ))}
                     </ul>
                   </div>
-                  
+
                   <div className="p-4 bg-muted/30 rounded-lg">
                     <h4 className="text-sm font-medium mb-1">Status do plano</h4>
                     <div className="space-y-3">
@@ -236,14 +236,14 @@ export default function Subscription() {
                           </Badge>
                         </p>
                       </div>
-                      
+
                       {user?.planExpiresAt && (
                         <div>
                           <p className="text-xs text-muted-foreground">Expira em</p>
                           <p className="font-medium">{formatDate(user.planExpiresAt)}</p>
                         </div>
                       )}
-                      
+
                       <div>
                         <p className="text-xs text-muted-foreground">Desde</p>
                         <p className="font-medium">{formatDate(user?.createdAt || new Date())}</p>
@@ -255,7 +255,7 @@ export default function Subscription() {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* Upgrade Plan Card */}
         <Card>
           <CardHeader className="pb-3">
@@ -290,7 +290,7 @@ export default function Subscription() {
                         </span>
                       </div>
                     )}
-                    
+
                     <div className="absolute top-3 right-3">
                       <RadioGroupItem 
                         value={key} 
@@ -298,7 +298,7 @@ export default function Subscription() {
                         className={`${currentPlan === key ? 'data-[state=checked]:border-primary data-[state=checked]:border-4' : ''}`}
                       />
                     </div>
-                    
+
                     <div className={`${plan.popular && plan.highlight ? 'pt-3' : ''}`}>
                       <h3 className="font-semibold text-lg">{plan.name}</h3>
                       <div className="mt-2 flex items-baseline">
@@ -323,7 +323,7 @@ export default function Subscription() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {currentPlan === key && (
                     <Badge 
                       variant="secondary" 
@@ -366,7 +366,7 @@ export default function Subscription() {
             </Button>
           </CardFooter>
         </Card>
-        
+
         {/* Billing Information (would be implemented in a real app) */}
         <Card>
           <CardHeader className="pb-3">
