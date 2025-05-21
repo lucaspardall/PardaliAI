@@ -37,8 +37,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       // URL de redirecionamento EXATAMENTE como configurada no console
       redirectUrl: 'https://cipshopee.replit.app',
       
-      // Ambiente atual - pode ser alterado conforme necessário
-      environment: 'live' as 'test' | 'live'
+      // Ambiente atual - usando o ambiente de teste
+      environment: 'test' as 'test' | 'live'
     };
     
     // Gerar a página oficial de conexão da loja
