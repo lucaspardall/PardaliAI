@@ -1,0 +1,127 @@
+1. Arquitetura de Autenticação sem Redirecionamento Externo
+Para evitar que o cliente seja direcionado à Open Platform da Shopee, você pode implementar um fluxo de autenticação embutido usando OAuth 2.0 com token de atualização e armazenamento seguro de credenciais. Veja como:
+
+Passo a Passo:
+Registro do Aplicativo:
+
+Obtenha partner_id e partner_key no Console de Desenvolvedores da Shopee 14.
+
+Configure o redirect_uri para um endpoint em seu SaaS (ex: /shopee-callback).
+
+Autenticação Embutida:
+
+Use um componente iframe ou modal em seu frontend para exibir a página de login da Shopee (se permitido por políticas de segurança).
+
+Após o login, capture o code de autorização via redirecionamento interno.
+
+javascript
+// Exemplo de captura do código de autorização no frontend
+window.addEventListener('message', (event) => {
+  if (event.origin === 'https://partner.shopeemobile.com') {
+    const { code } = event.data;
+    // Envie 'code' para seu backend e troque por access_token
+  }
+});
+Troca de Tokens:
+
+javascript
+// Backend: Troque 'code' por access_token e refresh_token
+const getTokens = async (code) => {
+  const response = await fetch('https://partner.shopeemobile.com/api/v2/auth/token/get', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      partner_id: YOUR_PARTNER_ID,
+      code,
+    }),
+  });
+  return response.json(); // Retorna access_token, refresh_token, expiry
+};
+Armazenamento Seguro:
+
+Use serviços como AWS Secrets Manager ou HashiCorp Vault para guardar refresh_token associado a cada cliente 7.
+
+2. Integração de Dados: Leitura e Escrita
+A API Shopee permite sincronizar produtos, pedidos e estoques. Destaco os principais endpoints:
+
+Exemplo Prático: Sincronização de Produtos
+javascript
+// Obter detalhes do produto
+const getProductDetails = async (productId, accessToken) => {
+  const response = await fetch(`https://partner.shopeemobile.com/api/v2/product/get_item_base_info?product_id=${productId}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  return response.json();
+};
+
+// Atualizar preço
+const updatePrice = async (productId, newPrice, accessToken) => {
+  const response = await fetch('https://partner.shopeemobile.com/api/v2/product/update_price', {
+    method: 'POST',
+    headers: { 
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      item_id: productId,
+      price: newPrice,
+    }),
+  });
+  return response.json();
+};
+Nota: Implemente rate limiting (ex: 10 requisições/segundo) para evitar bloqueios 7.
+
+3. Webhooks para Atualizações em Tempo Real
+Configure webhooks para receber eventos como novos pedidos ou alterações de estoque:
+
+javascript
+// Endpoint no seu backend
+app.post('/shopee-webhook', (req, res) => {
+  const { event_type, data } = req.body;
+  switch (event_type) {
+    case 'ORDER_CREATED':
+      processOrder(data);
+      break;
+    case 'ITEM_UPDATED':
+      updateInventory(data.item_id);
+      break;
+  }
+  res.sendStatus(200);
+});
+Registre o webhook via API usando partner_id e access_token do cliente 7.
+
+4. Configurações de Sincronização no SaaS
+Baseado nas necessidades do cliente, ofereça opções personalizadas:
+
+Sincronização de Estoque: Habilite/desabilite a flag Sincronizar estoque no e-commerce? 14.
+
+Filtros de Produtos: Permita sincronizar apenas produtos ativos ou com EAN específico 14.
+
+Intervalos de Atualização: Defina horários para sincronização de pedidos (ex: a cada 15 minutos).
+
+
+
+5. Estratégias de Otimização
+Cache de Dados: Use Redis para reduzir chamadas à API:
+
+javascript
+const getCachedProduct = async (productId) => {
+  const cached = await redis.get(`product:${productId}`);
+  return cached || fetchAndCache(productId);
+};
+Tratamento de Erros:
+
+Logs detalhados com Winston ou Sentry 7.
+
+Retry automático para erros 429 (Too Many Requests).
+
+6. Testes e Validação
+Implemente testes automatizados para garantir estabilidade:
+
+javascript
+// Teste com Jest
+test('Atualização de preço retorna status 200', async () => {
+  const mockResponse = { status: 200 };
+  fetch.mockResolvedValue(mockResponse);
+  const result = await updatePrice('12345', 99.99, 'fake-token');
+  expect(result.status).toBe(200);
