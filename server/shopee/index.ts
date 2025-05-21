@@ -93,5 +93,6 @@ export * from './types';
 export * from './auth';
 export * from './client';
 export * from './utils';
+export * from './data';
 export * from './endpoints';
 export * from './cache';
