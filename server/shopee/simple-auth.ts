@@ -7,8 +7,8 @@ import { createHmac } from 'crypto';
 
 export function generateShopeeAuthUrl() {
   // Usar IDs de teste conforme as imagens compartilhadas
-  const partnerId = "1279702"; // ID de teste mostrado nas imagens
-  const partnerKey = "71707a74654a47464446574676b5150487171614151785264a53467748494"; 
+  const partnerId = "1279702"; // ID de teste exato compartilhado pelo usuário
+  const partnerKey = "71707a74654a474644465746576b515048717161415178526a7a534677484943"; // Chave exata compartilhada pelo usuário 
   const timestamp = Math.floor(Date.now() / 1000);
   
   // URL de redirecionamento EXATA como mostrada nas imagens

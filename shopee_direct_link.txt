@@ -1,0 +1,11 @@
+URL de autorização Shopee usando o Partner ID e Partner Key compartilhados:
+
+https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=1279702&timestamp=1747847900&sign=9b2d74d5a87de17f9c42ae54a2dc640c65e7881d82ca75f551b07c1ae0a42fa8&redirect=https%3A%2F%2Fcipshopee.replit.app
+
+Este link usa:
+- Partner ID: 1279702 (ID de teste)
+- Partner Key: 71707a74654a474644465746576b515048717161415178526a7a534677484943
+- URL de redirecionamento: https://cipshopee.replit.app (exatamente como configurado)
+- Timestamp: 1747847900 (gerado para este link)
+
+Por favor, copie e cole este link em uma nova aba do navegador para iniciar o processo de autorização.
