@@ -48,7 +48,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       // Verificar se o Partner Key está configurado corretamente (sem mostrar o valor real)
       console.log('- Partner Key configurada:', partnerKey ? 'Sim (valor ocultado)' : 'NÃO CONFIGURADA');
 
-    // Verificar se há o problema do ×tamp na URL
+      // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
       console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
       // Reconstruir manualmente como último recurso (apenas parâmetros obrigatórios)
