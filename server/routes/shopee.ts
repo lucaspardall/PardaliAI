@@ -22,43 +22,17 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Gerar timestamp e parâmetros necessários
-    const timestamp = Math.floor(Date.now() / 1000);
-    const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
-    const partnerKey = process.env.SHOPEE_PARTNER_KEY || '';
-    const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
-    console.log('URL de redirecionamento usada:', redirectUrl);
-    const state = `cipshopee_${Date.now()}`;
-
-    // Criar a string base para assinatura EXATAMENTE conforme documentação Shopee
-    const path = '/api/v2/shop/auth_partner';
-    // Formato correto: [partner_id][path][timestamp]
-    const baseString = `${partnerId}${path}${timestamp}`;
-
-    console.log('String base para assinatura:', baseString);
-
-    // Gerar a assinatura HMAC-SHA256
-    const hmac = crypto.createHmac('sha256', partnerKey);
-    hmac.update(baseString);
-    const sign = hmac.digest('hex');
-
-    // IMPORTANTE: Para autorização direta de sellers (vendedores) no Brasil, 
-    // precisamos usar o domínio open.shopee.com.br (domínio da Open Platform BR)
-    const region = 'BR';
-    const baseUrl = 'https://open.shopee.com.br';
-    console.log('Usando domínio Open Platform Brasil:', baseUrl);
-
-    // Construir URL de autorização para login direto de vendedor na Open Platform Brasil
-    // Formato diferente do endpoint partner.shopeemobile
-    const random = Math.random().toString(36).substring(2, 15);
-    let authUrl = `${baseUrl}/authorize?` + 
-      `partner_id=${partnerId}&` +
-      `timestamp=${timestamp}&` +
-      `sign=${sign}&` +
-      `redirect=${encodeURIComponent(redirectUrl)}`;
-
-    // Parâmetros específicos para login direto no domínio brasileiro
-    authUrl += `&auth_shop=true&auth_type=direct&id=${partnerId}&isRedirect=true&is_agent=false&random=${random}&region=BR&state=${state}`;
+    // Importar o cliente Shopee
+    const shopeeClient = createClient();
+    
+    try {
+      // Obter a URL de autorização usando o método atualizado
+      const authUrl = shopeeClient.getAuthorizationUrl();
+      console.log('URL de autorização gerada:', authUrl);
+      
+      // Registrar informações importantes
+      console.log('Partner ID:', process.env.SHOPEE_PARTNER_ID || '2011285');
+      console.log('URL de redirecionamento configurada:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
 
     // Adicionar log detalhado para facilitar depuração
     console.log('URL de autorização (parâmetros separados):'); 
