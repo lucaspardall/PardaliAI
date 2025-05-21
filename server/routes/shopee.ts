@@ -21,32 +21,31 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Nova implementação baseada na URL descoberta em outro SaaS
-    // Preparar parâmetros necessários
+    // Nova implementação baseada na URL descoberta no outro SaaS com integração Shopee
     const clientId = process.env.SHOPEE_PARTNER_ID || '2011285';
     const clientSecret = process.env.SHOPEE_PARTNER_KEY || '';
     const redirectUri = 'https://cipshopee.replit.app/api/shopee/callback';
     const timestamp = Math.floor(Date.now() / 1000);
     const state = `cipshopee_${Date.now()}`;
     
-    // Criar a string base para assinatura conforme formato observado
+    // String base para assinatura conforme formato descoberto
     const baseString = `${clientId}timestamp${timestamp}redirect_uri${redirectUri}`;
     console.log("String base para assinatura:", baseString);
     
-    // Gerar a assinatura HMAC-SHA256
+    // Gerar assinatura HMAC-SHA256
     const hmac = crypto.createHmac('sha256', clientSecret);
     hmac.update(baseString);
     const signature = hmac.digest('hex');
     console.log("Assinatura gerada:", signature);
     
-    // Construir URL de autorização no formato correto identificado
+    // Construir URL seguindo o formato do outro SaaS bem-sucedido
     const authUrl = `https://account.seller.shopee.com/signin/oauth/accountchooser?` +
                   `client_id=${clientId}&` +
                   `lang=pt-br&` +
                   `login_types=%5B1,4,2%5D&` +
                   `max_auth_age=3600&` +
                   `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-                  `region=SG&` + // Importante: Mantém SG (Singapura) como na URL exemplo
+                  `region=SG&` + // Usar SG (Singapura) conforme identificado
                   `required_passwd=true&` +
                   `respond_code=code&` +
                   `scope=profile&` +
@@ -54,120 +53,86 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
                   `timestamp=${timestamp}&` +
                   `state=${encodeURIComponent(state)}`;
     
-    console.log("✅ URL de autorização gerada (formato novo):", authUrl);
+    console.log("✅ URL de autorização da Shopee:", authUrl);
 
-    // Log da URL apenas para verificação
-    console.log("URL final construída manualmente:", authUrl);
-
-    // Verificar se a URL contém o parâmetro timestamp formatado corretamente
-    if (!authUrl.includes('timestamp=')) {
-      console.error("ERRO: Parâmetro timestamp não encontrado na URL!");
-      console.log("URL problemática:", authUrl);
-    }
-
-    // Verificação e log da URL final
-    console.log("URL final para autorização:", authUrl);
-    
-    // Verificar parâmetros obrigatórios conforme documentação oficial
-    const shopeePartnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
-    console.log("Verificação de parâmetros obrigatórios:");
-    console.log("- partner_id:", authUrl.includes(`partner_id=${shopeePartnerId}`));
-    console.log("- timestamp:", authUrl.includes("timestamp="));
-    console.log("- sign:", authUrl.includes("sign="));
-    console.log("- redirect:", authUrl.includes("redirect="));
-
-    // Salvar URL em arquivo para inspeção quando necessário
+    // Salvar URL em arquivo para inspeção e debug
     try {
       fs.writeFileSync('shopee_auth_url.txt', authUrl);
       console.log("✅ URL salva em arquivo para inspeção: shopee_auth_url.txt");
     } catch (err) {
       console.error("Não foi possível salvar URL em arquivo:", err);
     }
-
-    // Verificação do parâmetro auth_type
-    if (!authUrl.includes('auth_type=direct')) {
-      console.error("⚠️ ALERTA CRÍTICO: O parâmetro auth_type=direct não está presente na URL!");
-    } else {
-      console.log("✅ Parâmetro auth_type=direct presente na URL");
-    }
-
+    
+    // Verificar presença de parâmetros críticos
+    console.log("Verificação de parâmetros importantes:");
+    console.log("- client_id:", authUrl.includes(`client_id=${clientId}`));
+    console.log("- timestamp:", authUrl.includes("timestamp="));
+    console.log("- sign:", authUrl.includes("sign="));
+    console.log("- redirect_uri:", authUrl.includes("redirect_uri="));
+    console.log("- region=SG:", authUrl.includes("region=SG"));
+    
     console.log("================================================");
 
-    // Em desenvolvimento, mostrar opções para o usuário
-    if (process.env.NODE_ENV === 'development') {
-      // Extrair os componentes da URL para construir o formulário
-      const timestamp = Math.floor(Date.now() / 1000);
-
-      return res.send(`
-        <html>
-          <head>
-            <title>Redirecionamento para Shopee</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <style>
-              body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-              .card { border: 1px solid #ccc; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-              .btn { display: inline-block; padding: 10px 16px; border-radius: 4px; text-decoration: none; margin: 10px 5px 10px 0; }
-              .primary { background: #ff5722; color: white; }
-              .secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
-              pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
-              .instructions { background: #fff8e1; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; }
-              .steps { list-style-type: decimal; padding-left: 20px; }
-              .steps li { margin-bottom: 10px; }
-              .important { color: #ff0000; font-weight: bold; }
-            </style>
-          </head>
-          <body>
-            <h1>Redirecionamento para Autenticação Shopee</h1>
-            <div class="card">
-              <h2>URL de Autorização</h2>
+    // Interface amigável para testar a nova URL da Shopee baseada na pesquisa
+    return res.send(`
+      <html>
+        <head>
+          <title>Conectar Loja Shopee</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f8f9fa; }
+            .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            .btn { display: inline-block; padding: 10px 16px; border-radius: 4px; text-decoration: none; margin: 10px 5px 10px 0; cursor: pointer; font-weight: bold; }
+            .primary { background: #ff5722; color: white; border: none; }
+            .primary:hover { background: #e64a19; }
+            .secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
+            .secondary:hover { background: #e0e0e0; }
+            .info { background: #e8f4fd; border-left: 4px solid #2196F3; padding: 15px; margin: 15px 0; }
+            h1, h2 { color: #333; }
+            pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+            code { font-family: monospace; font-size: 12px; }
+            .logs { max-height: 200px; overflow-y: auto; }
+          </style>
+          <script>
+            // Função para redirecionar para a Shopee usando JavaScript
+            function redirectToShopee() {
+              // Registrar URL para debug
+              console.log("Redirecionando para URL construída via JavaScript:", "${authUrl}");
+              
+              // Redirecionar para a URL de autorização
+              window.location.href = "${authUrl}";
+              return false;
+            }
+          </script>
+        </head>
+        <body>
+          <h1>Conectar Loja Shopee</h1>
+          
+          <div class="card info">
+            <h3>⚠️ Nova abordagem de integração</h3>
+            <p>Estamos usando um novo formato de URL baseado em outra integração com a Shopee.</p>
+            <p>Os principais ajustes:</p>
+            <ul>
+              <li>Domínio: <code>account.seller.shopee.com</code></li>
+              <li>Endpoint: <code>/signin/oauth/accountchooser</code></li>
+              <li>Região: <code>SG</code> (Singapura)</li>
+              <li>Parâmetros: <code>client_id</code> em vez de <code>partner_id</code></li>
+            </ul>
+          </div>
+          
+          <div class="card">
+            <h2>URL de Autorização Gerada</h2>
+            <div class="logs">
               <pre>${authUrl}</pre>
-
-              <div class="instructions">
-                <p class="important">Detecção de problema com o parâmetro "timestamp"!</p>
-                <p>Use o botão abaixo que utiliza JavaScript para garantir a URL correta:</p>
-              </div>
-
-              <button id="redirectBtn" class="btn primary">Ir para Autorização da Shopee</button>
-              <a href="/dashboard" class="btn secondary">Voltar para o Dashboard</a>
-
-              <script>
-                // Construir a URL via JavaScript para evitar problemas de codificação
-                document.getElementById('redirectBtn').addEventListener('click', function() {
-                  // Usar o domínio específico para vendedores do Brasil
-                  const url = new URL('https://partner.shopeemobile.com/api/v2/shop/auth_partner');
-                  
-                  // Adicionar parâmetros obrigatórios primeiro
-                  url.searchParams.append('partner_id', '${partnerId}');
-                  url.searchParams.append('timestamp', '${timestamp}');
-                  url.searchParams.append('sign', '${sign}');
-                  url.searchParams.append('redirect', 'https://cipshopee.replit.app/api/shopee/callback');
-                  
-                  // Adicionar parâmetros necessários para login direto do vendedor
-                  url.searchParams.append('state', 'cipshopee_${Date.now()}');
-                  url.searchParams.append('region', 'BR');
-                  url.searchParams.append('is_auth_shop', 'true');
-                  url.searchParams.append('login_type', 'seller');
-                  url.searchParams.append('auth_type', 'direct');
-
-                  console.log('Redirecionando para URL construída via JavaScript:', url.toString());
-                  window.location.href = url.toString();
-                });
-              </script>
             </div>
-          </body>
-        </html>
-      `);
-    }
+            <button onclick="redirectToShopee()" class="btn primary">Conectar com Shopee</button>
+            <a href="/dashboard" class="btn secondary">Voltar para o Dashboard</a>
+          </div>
+        </body>
+      </html>
+    `);
 
-    // Em produção, fazer uma verificação para garantir que a URL está correta
-    if (authUrl.includes('×tamp=')) {
-      // Corrigir a URL se estiver corrompida
-      const fixedUrl = authUrl.replace('×tamp=', 'timestamp=');
-      console.log('URL corrigida antes do redirecionamento:', fixedUrl);
-      return res.redirect(fixedUrl);
-    }
-
-    return res.redirect(authUrl);
+    // Fim da rota - o retorno é feito via interface na linha 77
 
   } catch (error: any) {
     console.error('Error starting Shopee OAuth flow:', error);
@@ -206,7 +171,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
       });
 
       // Tratamento específico para erro de token não encontrado
-      if (errorCode === '2' || errorMsg.includes('token not found')) {
+      if (errorCode === '2' || (typeof errorMsg === 'string' && errorMsg.includes('token not found'))) {
         console.log('Detectado erro de token não encontrado. Isso geralmente ocorre quando a URL da API está incorreta. Verificando configuração...');
 
         // Log detalhado de diagnóstico
