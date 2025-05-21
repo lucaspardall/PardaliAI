@@ -73,8 +73,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     
     console.log("================================================");
 
-    // Interface amigável para testar a nova URL da Shopee baseada na pesquisa
-    return res.send(`
+    // Interface amigável para testar a nova URL da Shopee
+    const htmlContent = `
       <html>
         <head>
           <title>Conectar Loja Shopee</title>
@@ -93,17 +93,6 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
             code { font-family: monospace; font-size: 12px; }
             .logs { max-height: 200px; overflow-y: auto; }
           </style>
-          <script>
-            // Função para redirecionar para a Shopee usando JavaScript
-            function redirectToShopee() {
-              // Registrar URL para debug
-              console.log("Redirecionando para URL construída via JavaScript:", "${authUrl}");
-              
-              // Redirecionar para a URL de autorização
-              window.location.href = "${authUrl}";
-              return false;
-            }
-          </script>
         </head>
         <body>
           <h1>Conectar Loja Shopee</h1>
@@ -125,12 +114,14 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
             <div class="logs">
               <pre>${authUrl}</pre>
             </div>
-            <button onclick="redirectToShopee()" class="btn primary">Conectar com Shopee</button>
+            <a href="${authUrl}" class="btn primary">Conectar com Shopee</a>
             <a href="/dashboard" class="btn secondary">Voltar para o Dashboard</a>
           </div>
         </body>
       </html>
-    `);
+    `;
+    
+    return res.send(htmlContent);
 
     // Fim da rota - o retorno é feito via interface na linha 77
 
