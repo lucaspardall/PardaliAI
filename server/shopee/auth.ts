@@ -50,7 +50,7 @@ export class ShopeeAuthManager {
     // 3. CRUCIAL: Para o endpoint de autorização OAuth direta de vendedores (auth_partner),
     // DEVE-SE usar o domínio específico da região para vendedores (seller.shopee.com.br para Brasil)
     // Esta é a chave para evitar o redirecionamento para a Open Platform
-    const baseUrl = getApiBaseUrl(this.config.region, true); // true = usar URL de autenticação regional
+    const baseUrl = 'https://seller.shopee.com.br'; // URL específica para vendedores do Brasil
     console.log('Usando URL de autenticação regional para login direto:', baseUrl);
     
     // 4. Montar a URL usando a API URL para garantir a codificação correta

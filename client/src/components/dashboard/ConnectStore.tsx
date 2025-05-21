@@ -81,8 +81,14 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
       
       // Atraso pequeno para garantir que o toast seja exibido antes do redirecionamento
       setTimeout(() => {
-        // Redirecionar para o endpoint de autorização da Shopee
-        window.location.href = '/api/shopee/authorize';
+        // Criar novo elemento para abrir em nova janela para evitar problemas de redirecionamento
+        const form = document.createElement('form');
+        form.method = 'GET';
+        form.action = '/api/shopee/authorize';
+        form.target = '_blank';
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
       }, 1000);
     } catch (error) {
       setIsConnecting(false);

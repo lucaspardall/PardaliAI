@@ -57,8 +57,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     params.append('auth_type', 'direct');
     params.append('shop_id', '');
     
-    // Construir a URL usando toString do URLSearchParams
-    const authUrl = `${baseUrl}${path}?${params.toString()}`;
+    // Construir a URL manualmente para garantir consistência
+    const authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
     
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
