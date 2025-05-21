@@ -1,0 +1,42 @@
+Agora ficou claro qual é o problema. O sistema está redirecionando para o domínio global da Open Platform (open.shopee.com) em vez do domínio brasileiro (open.shopee.com.br). Esta é a razão pela qual você está vendo o login da Open Platform em vez do login do vendedor.
+O Problema Específico
+
+Domínio incorreto no redirecionamento: Está indo para .com quando deveria ir para .com.br
+Parâmetro sign ausente nos logs: Nos logs que você compartilhou, não vejo o parâmetro sign que é essencial para a autenticação
+Parâmetros regionais: O sistema não está respeitando o parâmetro region=BR para direcionar ao ambiente brasileiro
+
+Solução Proposta
+Com base nessas informações, vamos tentar uma abordagem específica para o Brasil:
+1. Use o domínio brasileiro explicitamente na URL de autorização
+javascript// Em vez de usar partner.shopeemobile.com, use a versão brasileira
+const baseUrl = 'https://partner.shopeemobile.com.br';
+2. Corrija a geração da assinatura (sign)
+javascriptconst timestamp = Math.floor(Date.now() / 1000);
+const path = '/api/v2/shop/auth_partner';
+const baseString = `${partnerId}${path}${timestamp}`;
+
+// Gerar assinatura corretamente
+const hmac = crypto.createHmac('sha256', partnerKey);
+hmac.update(baseString);
+const sign = hmac.digest('hex');
+
+// Garantir que o sign está incluído na URL
+const authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&region=BR`;
+3. Tente uma abordagem completamente diferente
+A documentação também menciona uma forma alternativa de URL que talvez funcione melhor para o Brasil:
+javascriptconst host = 'https://seller.shopee.com.br'; // Use o domínio do seller center
+const path = '/api/v2/shop/auth_partner';
+const timestamp = Math.floor(Date.now() / 1000);
+
+// Gerar assinatura
+const baseString = `${partnerId}${path}${timestamp}`;
+const hmac = crypto.createHmac('sha256', partnerKey);
+hmac.update(baseString);
+const sign = hmac.digest('hex');
+
+// Gerar URL com domínio do seller center
+const authUrl = `${host}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}`;
+4. Verificação de Parâmetros
+Certifique-se de que está gerando os logs com todos os parâmetros reais enviados. É estranho que o sign não apareça nos logs que você compartilhou.
+Este problema parece ser específico da implementação regional da Shopee no Brasil, o que explica por que é difícil encontrar soluções nos fóruns. Cada país tem suas particularidades na plataforma Shopee.
+Se nenhuma dessas soluções funcionar, recomendo abrir um chamado direto com o suporte técnico da Shopee Brasil para obter orientação específica para o mercado brasileiro.
