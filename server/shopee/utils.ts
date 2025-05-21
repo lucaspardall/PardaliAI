@@ -1,3 +1,4 @@
+
 /**
  * Funções utilitárias para a API da Shopee
  */
@@ -15,21 +16,19 @@ export function getTimestamp(): number {
 /**
  * Obtém a URL base da API de acordo com a região
  * @param region Região da Shopee
- * @param isAuthUrl Se verdadeiro, retorna a URL para interface de vendedores 
+ * @param isAuthUrl Se verdadeiro, retorna a URL para interface de vendedores (não usado)
+ * IMPORTANTE: Para todas as operações, incluindo autenticação OAuth, 
+ * SEMPRE use partner.shopeemobile.com conforme documentação oficial
  * @returns URL base da API
  */
 export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false): string {
-  // Para o Brasil, precisamos usar o domínio específico para todas as operações
-  if (region === 'BR') {
-    const brUrl = 'https://open.shopee.com.br';
-    console.log(`Usando URL específica do Brasil: ${brUrl}`);
-    return brUrl;
-  }
+  // De acordo com a documentação oficial, todas as operações devem usar este domínio
+  const apiUrl = 'https://partner.shopeemobile.com';
   
-  // Para todas as outras regiões, usar o domínio padrão
-  const defaultUrl = 'https://partner.shopeemobile.com';
-  console.log(`Usando URL padrão para região ${region}: ${defaultUrl}`);
-  return defaultUrl;
+  // Log para debugging
+  console.log(`Usando URL de API Shopee: ${apiUrl}`);
+  
+  return apiUrl;
 }
 
 /**
@@ -55,7 +54,7 @@ export function generateSignature(
   useBaseStringDirectly: boolean = false
 ): string {
   let baseString = '';
-
+  
   if (useBaseStringDirectly) {
     // Usar a string base fornecida diretamente (útil para endpoints que precisam de formato específico)
     baseString = path;
@@ -67,63 +66,50 @@ export function generateSignature(
     // Endpoints POST/PUT com corpo JSON 
     // Formato: partnerId + path + timestamp + access_token + shop_id + corpo_json_minificado
     const minifiedBody = JSON.stringify(requestBody);
-
+    
     let components = [partnerId, path, timestamp.toString()];
-
+    
     // Adicionar access_token se disponível
     if (accessToken) {
       components.push(accessToken.access_token);
     }
-
+    
     // Adicionar shop_id se disponível
     if (shopId) {
       components.push(shopId.shop_id);
     }
-
+    
     // Adicionar corpo minificado
     components.push(minifiedBody);
-
+    
     // Concatenar componentes para formar a string base
     baseString = components.join('');
   } else {
     // Endpoints GET autenticados
     // Formato: partnerId + path + timestamp + access_token + shop_id
     let components = [partnerId, path, timestamp.toString()];
-
+    
     // Adicionar access_token se disponível
     if (accessToken) {
       components.push(accessToken.access_token);
     }
-
+    
     // Adicionar shop_id se disponível
     if (shopId) {
       components.push(shopId.shop_id);
     }
-
+    
     // Concatenar componentes para formar a string base
     baseString = components.join('');
   }
 
-  // Log detalhado para verificar a string base e a geração da assinatura
-  console.log('=================== GERAÇÃO DE ASSINATURA ===================');
   console.log('Assinatura - String base:', baseString);
-  console.log('Comprimento da string base:', baseString.length);
-  console.log('Partner Key fornecida:', partnerKey ? 'Sim (valor ocultado)' : 'NÃO');
-  
-  if (!partnerKey) {
-    console.error('ERRO CRÍTICO: Partner Key não configurada! A assinatura não será válida.');
-  }
 
   // Gerar assinatura HMAC-SHA256 usando o partnerKey como segredo
   const hmac = createHmac('sha256', partnerKey);
   hmac.update(baseString);
-  const signature = hmac.digest('hex');
-  
-  console.log('Assinatura gerada:', signature);
-  console.log('Comprimento da assinatura:', signature.length);
-  console.log('===========================================================');
 
-  return signature;
+  return hmac.digest('hex');
 }
 
 /**

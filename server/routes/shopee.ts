@@ -5,7 +5,6 @@ import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { isAuthenticated } from '../replitAuth';
 import fs from 'fs';
-import axios from 'axios';
 
 const router = Router();
 
@@ -26,13 +25,11 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     const timestamp = Math.floor(Date.now() / 1000);
     const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
     const partnerKey = process.env.SHOPEE_PARTNER_KEY || '';
-    const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
-    console.log('URL de redirecionamento usada:', redirectUrl);
+    const redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
     const state = `cipshopee_${Date.now()}`;
 
-    // Criar a string base para assinatura EXATAMENTE conforme documentação Shopee
+    // Criar a string base para assinatura conforme documentação Shopee
     const path = '/api/v2/shop/auth_partner';
-    // Formato correto: [partner_id][path][timestamp]
     const baseString = `${partnerId}${path}${timestamp}`;
 
     console.log('String base para assinatura:', baseString);
@@ -42,37 +39,21 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     hmac.update(baseString);
     const sign = hmac.digest('hex');
 
-    // IMPORTANTE: Para autorização direta de sellers (vendedores) no Brasil, 
-    // precisamos usar o domínio open.shopee.com.br (domínio da Open Platform BR)
-    const region = 'BR';
-    const baseUrl = 'https://open.shopee.com.br';
-    console.log('Usando domínio Open Platform Brasil:', baseUrl);
+    // IMPORTANTE: Para o endpoint de autorização OAuth, precisamos usar o domínio específico da região
+    // Para Brasil, o domínio correto é seller.shopee.com.br para login direto de vendedores
+    const baseUrl = 'https://partner.shopeemobile.com';
 
-    // Construir URL de autorização para login direto de vendedor na Open Platform Brasil
-    // Formato diferente do endpoint partner.shopeemobile
-    const random = Math.random().toString(36).substring(2, 15);
-    let authUrl = `${baseUrl}/authorize?` + 
+    // Construir a URL com todos os parâmetros necessários incluindo auth_type=direct
+    // para forçar o login direto do vendedor sem redirecionamento à Open Platform
+    const authUrl = `${baseUrl}${path}?` + 
       `partner_id=${partnerId}&` +
       `timestamp=${timestamp}&` +
       `sign=${sign}&` +
-      `redirect=${encodeURIComponent(redirectUrl)}`;
-
-    // Parâmetros específicos para login direto no domínio brasileiro
-    authUrl += `&auth_shop=true&auth_type=direct&id=${partnerId}&isRedirect=true&is_agent=false&random=${random}&region=BR&state=${state}`;
-
-    // Adicionar log detalhado para facilitar depuração
-    console.log('URL de autorização (parâmetros separados):'); 
-    console.log('- partner_id:', partnerId);
-    console.log('- timestamp:', timestamp);
-    console.log('- sign:', sign, 'comprimento:', sign.length); // Verificar se há assinatura e seu comprimento
-    console.log('- redirect:', redirectUrl);
-    console.log('- region:', 'BR');
-    console.log('- is_auth_shop:', true);
-    console.log('- login_type:', 'seller');
-    console.log('- auth_type:', 'direct');
-    
-    // Verificar se o Partner Key está configurado corretamente (sem mostrar o valor real)
-    console.log('- Partner Key configurada:', partnerKey ? 'Sim (valor ocultado)' : 'NÃO CONFIGURADA');
+      `redirect=${encodeURIComponent(redirectUrl)}&` +
+      `region=BR&` +
+      `is_auth_shop=true&` +
+      `login_type=seller&` +
+      `auth_type=direct`;
 
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
@@ -94,35 +75,13 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     // Verificação e log da URL final
     console.log("URL final para autorização:", authUrl);
-
-    // Verificação de parâmetros obrigatórios conforme documentação oficial
+    
+    // Verificar parâmetros obrigatórios conforme documentação oficial
     console.log("Verificação de parâmetros obrigatórios:");
-    const hasPartnerId = authUrl.includes(`partner_id=${partnerId}`);
-    const hasTimestamp = authUrl.includes(`timestamp=${timestamp}`);
-    const hasSign = authUrl.includes(`sign=${sign}`);
-    const hasRedirect = authUrl.includes("redirect=");
-
-    console.log("- partner_id:", hasPartnerId);
-    console.log("- timestamp:", hasTimestamp);
-    console.log("- sign:", hasSign);
-    console.log("- redirect:", hasRedirect);
-
-    // Verificar se todos os parâmetros obrigatórios estão presentes
-    if (!hasPartnerId || !hasTimestamp || !hasSign || !hasRedirect) {
-      console.error("⚠️ ALERTA CRÍTICO: Parâmetros obrigatórios ausentes na URL!");
-
-      // Reconstruir a URL garantindo que todos os parâmetros obrigatórios estejam presentes
-      authUrl = `${baseUrl}${path}?` + 
-        `partner_id=${partnerId}&` +
-        `timestamp=${timestamp}&` +
-        `sign=${sign}&` +
-        `redirect=${encodeURIComponent(redirectUrl)}`;
-
-      // Adicionar os parâmetros adicionais
-      authUrl += `&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct`;
-
-      console.log("URL reconstruída com todos os parâmetros obrigatórios:", authUrl);
-    }
+    console.log("- partner_id:", authUrl.includes(`partner_id=${partnerId}`));
+    console.log("- timestamp:", authUrl.includes(`timestamp=${timestamp}`));
+    console.log("- sign:", authUrl.includes(`sign=${sign}`));
+    console.log("- redirect:", authUrl.includes("redirect="));
 
     // Salvar URL em arquivo para inspeção quando necessário
     try {
@@ -183,13 +142,13 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
                 document.getElementById('redirectBtn').addEventListener('click', function() {
                   // Usar o domínio específico para vendedores do Brasil
                   const url = new URL('https://partner.shopeemobile.com/api/v2/shop/auth_partner');
-
+                  
                   // Adicionar parâmetros obrigatórios primeiro
                   url.searchParams.append('partner_id', '${partnerId}');
                   url.searchParams.append('timestamp', '${timestamp}');
                   url.searchParams.append('sign', '${sign}');
                   url.searchParams.append('redirect', 'https://cipshopee.replit.app/api/shopee/callback');
-
+                  
                   // Adicionar parâmetros necessários para login direto do vendedor
                   url.searchParams.append('state', 'cipshopee_${Date.now()}');
                   url.searchParams.append('region', 'BR');
@@ -215,34 +174,6 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       return res.redirect(fixedUrl);
     }
 
-    console.log('=== VERIFICAÇÃO FINAL DOS PARÂMETROS DA URL ===');
-    console.log('- authUrl contém auth_type=direct:', authUrl.includes('auth_type=direct'));
-    console.log('- URL completa para análise:', authUrl);
-
-    // Log detalhado dos parâmetros
-    const urlParams = new URL(authUrl);
-    console.log('Parâmetros parseados da URL:');
-    for (const [key, value] of urlParams.searchParams.entries()) {
-      console.log(`- ${key}: ${value}`);
-    }
-    
-    // Garantir que não haja parâmetros duplicados
-    if (authUrl.includes('auth_type=direct') && authUrl.includes('auth_type=shop')) {
-      console.warn('⚠️ ALERTA: Parâmetros duplicados detectados. Corrigindo...');
-      authUrl = authUrl.replace('auth_type=shop', '');
-    }
-
-    // Registrar URL final em um arquivo para depuração
-    try {
-      fs.writeFileSync('shopee_auth_url_final.txt', authUrl);
-      console.log('✅ URL final salva em arquivo: shopee_auth_url_final.txt');
-    } catch (err) {
-      console.error("Erro ao salvar URL final:", err);
-    }
-
-    // Redirecionamento direto, sem tentar capturar o 302
-    console.log('===== REDIRECIONANDO USUÁRIO PARA SHOPEE =====');
-    console.log('URL final de redirecionamento:', authUrl);
     return res.redirect(authUrl);
 
   } catch (error: any) {
