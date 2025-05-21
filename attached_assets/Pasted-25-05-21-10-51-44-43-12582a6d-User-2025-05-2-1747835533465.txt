@@ -1,0 +1,96 @@
+25-05-21 10:51:44.43
+12582a6d
+User
+===================================================
+2025-05-21 10:51:44.43
+12582a6d
+User
+URL de redirecionamento usada: https://cipshopee.replit.app/api/shopee/callback
+2025-05-21 10:51:44.43
+12582a6d
+User
+String base para assinatura: 2011285/api/v2/shop/auth_partner1747835504
+2025-05-21 10:51:44.43
+12582a6d
+User
+Usando domínio Open Platform Brasil: https://open.shopee.com.br
+2025-05-21 10:51:44.43
+12582a6d
+User
+URL de autorização (parâmetros separados): {
+2025-05-21 10:51:44.43
+12582a6d
+User
+partner_id: '2011285',
+2025-05-21 10:51:44.43
+12582a6d
+User
+timestamp: 1747835504,
+2025-05-21 10:51:44.43
+12582a6d
+User
+sign: 'd365701d382778ba2aaa0654f4bd804f3b07887722e8cd021aca6a68649159bc',
+2025-05-21 10:51:44.43
+12582a6d
+User
+redirect: 'https://cipshopee.replit.app/api/shopee/callback',
+2025-05-21 10:51:44.43
+12582a6d
+User
+region: 'BR',
+2025-05-21 10:51:44.43
+12582a6d
+User
+is_auth_shop: true,
+2025-05-21 10:51:44.43
+12582a6d
+User
+login_type: 'seller',
+2025-05-21 10:51:44.43
+12582a6d
+User
+auth_type: 'direct'
+2025-05-21 10:51:44.43
+12582a6d
+User
+}
+2025-05-21 10:51:44.43
+12582a6d
+User
+URL final construída manualmente: https://open.shopee.com.br/authorize?partner_id=2011285&timestamp=1747835504&sign=d365701d382778ba2aaa0654f4bd804f3b07887722e8cd021aca6a68649159bc&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&auth_shop=true&auth_type=shop&id=2011285&isRedirect=true&is_agent=false&random=12cpktbv159&region=BR&state=cipshopee_1747835504431
+2025-05-21 10:51:44.43
+12582a6d
+User
+URL final para autorização: https://open.shopee.com.br/authorize?partner_id=2011285&timestamp=1747835504&sign=d365701d382778ba2aaa0654f4bd804f3b07887722e8cd021aca6a68649159bc&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&auth_shop=true&auth_type=shop&id=2011285&isRedirect=true&is_agent=false&random=12cpktbv159&region=BR&state=cipshopee_1747835504431
+2025-05-21 10:51:44.43
+12582a6d
+User
+Verificação de parâmetros obrigatórios:
+2025-05-21 10:51:44.43
+12582a6d
+User
+- partner_id: true
+2025-05-21 10:51:44.43
+12582a6d
+User
+- timestamp: true
+2025-05-21 10:51:44.43
+12582a6d
+User
+- sign: true
+2025-05-21 10:51:44.43
+12582a6d
+User
+- redirect: true
+2025-05-21 10:51:44.43
+12582a6d
+User
+⚠️ ALERTA CRÍTICO: O parâmetro auth_type=direct não está presente na URL!
+2025-05-21 10:51:44.43
+12582a6d
+User
+✅ URL salva em arquivo para inspeção: shopee_auth_url.txt
+2025-05-21 10:51:44.43
+12582a6d
+User
+================================================
