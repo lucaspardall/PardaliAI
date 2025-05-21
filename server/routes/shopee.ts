@@ -291,7 +291,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
 
         // Criar notificação de erro
         try {
-        await storage.createNotification({
+          await storage.createNotification({
           userId: (req.user as any).claims.sub,
           title: 'Erro na autorização - Token não encontrado',
           message: 'Ocorreu um erro na autenticação com a Shopee. Tente conectar sua loja novamente com as configurações corrigidas.',
