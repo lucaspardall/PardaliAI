@@ -43,21 +43,19 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Para Brasil, o domínio correto é seller.shopee.com.br para login direto de vendedores
     const baseUrl = 'https://partner.shopeemobile.com';
 
-    // Criar parâmetros usando URLSearchParams para garantir formatação correta
+    // Criar parâmetros usando URLSearchParams conforme a documentação da Shopee
+    // Apenas os parâmetros obrigatórios, exatamente como na documentação
     const params = new URLSearchParams();
     params.append('partner_id', partnerId);
-    params.append('timestamp', timestamp.toString()); // Conversão explícita para string
+    params.append('timestamp', timestamp.toString());
     params.append('sign', sign);
     params.append('redirect', redirectUrl);
+    
+    // Apenas state para segurança CSRF
     params.append('state', state);
-    params.append('region', 'BR');
-    params.append('is_auth_shop', 'true');
-    params.append('login_type', 'seller');
-    params.append('auth_type', 'direct');
-    params.append('shop_id', '');
 
-    // Construir a URL manualmente para garantir consistência
-    const authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
+    // Construir a URL manualmente seguindo estritamente a documentação
+    const authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}`;
 
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {

@@ -57,7 +57,8 @@ export class ShopeeAuthManager {
     console.log('Usando domínio oficial da API Shopee:', baseUrl);
     console.log('Usando URL da API Shopee:', baseUrl);
     
-    // 4. Construir os parâmetros da URL manualmente para evitar problemas de codificação
+    // 4. Construir os parâmetros da URL seguindo exatamente a documentação oficial da Shopee
+    // Apenas os parâmetros obrigatórios são necessários
     const params = new URLSearchParams();
     params.append('partner_id', this.config.partnerId);
     params.append('timestamp', timestamp.toString());
@@ -65,13 +66,7 @@ export class ShopeeAuthManager {
     params.append('redirect', this.config.redirectUrl);
     params.append('state', stateParam);
     
-    // Parâmetros adicionais para direct login conforme documentação
-    params.append('region', 'BR');
-    params.append('is_auth_shop', 'true');
-    params.append('login_type', 'seller');
-    params.append('auth_type', 'direct');
-    
-    // Construir URL final manualmente para evitar problemas de codificação
+    // Construir URL final exatamente conforme o padrão da documentação
     let urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
     
     // Verificação adicional para garantir que não há problemas com caracteres especiais
