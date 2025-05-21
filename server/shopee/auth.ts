@@ -52,8 +52,9 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
     console.log('Assinatura gerada:', signature);
 
-    // 3. Usar o domínio correto da API conforme documentação
+    // 3. Usar o domínio correto da API conforme documentação oficial da Shopee
     const baseUrl = 'https://partner.shopeemobile.com';
+    console.log('Usando domínio oficial da API Shopee:', baseUrl);
     console.log('Usando URL da API Shopee:', baseUrl);
     
     // 4. Construir os parâmetros da URL manualmente para evitar problemas de codificação

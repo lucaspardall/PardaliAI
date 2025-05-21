@@ -1,4 +1,3 @@
-
 /**
  * Rotas para autenticação e integração com a API da Shopee
  */
@@ -42,8 +41,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     // IMPORTANTE: Para o endpoint de autorização OAuth, precisamos usar o domínio específico da região
     // Para Brasil, o domínio correto é seller.shopee.com.br para login direto de vendedores
-    const baseUrl = 'https://seller.shopee.com.br';
-    
+    const baseUrl = 'https://partner.shopeemobile.com';
+
     // Criar parâmetros usando URLSearchParams para garantir formatação correta
     const params = new URLSearchParams();
     params.append('partner_id', partnerId);
@@ -56,10 +55,10 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     params.append('login_type', 'seller');
     params.append('auth_type', 'direct');
     params.append('shop_id', '');
-    
+
     // Construir a URL manualmente para garantir consistência
     const authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
-    
+
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
       console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
@@ -68,10 +67,10 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       console.log("URL reconstruída manualmente:", manualUrl);
       return res.redirect(manualUrl);
     }
-    
+
     // Log da URL apenas para verificação
     console.log("URL final construída manualmente:", authUrl);
-    
+
     // Verificar se a URL contém o parâmetro timestamp formatado corretamente
     if (!authUrl.includes('timestamp=')) {
       console.error("ERRO: Parâmetro timestamp não encontrado na URL!");
@@ -109,7 +108,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     if (process.env.NODE_ENV === 'development') {
       // Extrair os componentes da URL para construir o formulário
       const timestamp = Math.floor(Date.now() / 1000);
-      
+
       return res.send(`
         <html>
           <head>
@@ -133,20 +132,20 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
             <div class="card">
               <h2>URL de Autorização</h2>
               <pre>${authUrl}</pre>
-              
+
               <div class="instructions">
                 <p class="important">Detecção de problema com o parâmetro "timestamp"!</p>
                 <p>Use o botão abaixo que utiliza JavaScript para garantir a URL correta:</p>
               </div>
-              
+
               <button id="redirectBtn" class="btn primary">Ir para Autorização da Shopee</button>
               <a href="/dashboard" class="btn secondary">Voltar para o Dashboard</a>
-              
+
               <script>
                 // Construir a URL via JavaScript para evitar problemas de codificação
                 document.getElementById('redirectBtn').addEventListener('click', function() {
                   // Usar o domínio específico para vendedores do Brasil
-                  const url = new URL('https://seller.shopee.com.br/api/v2/shop/auth_partner');
+                  const url = new URL('https://partner.shopeemobile.com/api/v2/shop/auth_partner');
                   url.searchParams.append('partner_id', '${partnerId}');
                   url.searchParams.append('timestamp', '${timestamp}');
                   url.searchParams.append('sign', '${sign}');
@@ -157,7 +156,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
                   url.searchParams.append('login_type', 'seller');
                   url.searchParams.append('auth_type', 'direct');
                   url.searchParams.append('shop_id', '');
-                  
+
                   console.log('Redirecionando para URL construída via JavaScript:', url.toString());
                   window.location.href = url.toString();
                 });
@@ -175,7 +174,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       console.log('URL corrigida antes do redirecionamento:', fixedUrl);
       return res.redirect(fixedUrl);
     }
-    
+
     return res.redirect(authUrl);
 
   } catch (error: any) {
@@ -195,34 +194,34 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
   try {
     console.log(`==== RECEBENDO CALLBACK DA SHOPEE ====`);
     console.log(`Parâmetros recebidos:`, req.query);
-    
+
     // Validar o state para proteção contra CSRF
     const receivedState = req.query.state as string;
     if (!receivedState || !receivedState.startsWith('cipshopee_')) {
       console.error('State inválido ou ausente na resposta:', receivedState);
       return res.redirect('/dashboard?status=error&message=' + encodeURIComponent('Erro de segurança: State inválido'));
     }
-    
+
     // Verificar se há erro retornado pela Shopee
     if (req.query.error || req.query.errcode || req.query.errMsg || req.query.message) {
       const errorCode = req.query.errcode || req.query.error || '';
       const errorMsg = req.query.errMsg || req.query.message || 'Erro desconhecido';
-      
+
       console.error('Erro retornado pela Shopee:', {
         error: req.query.error,
         errcode: errorCode,
         message: errorMsg
       });
-      
+
       // Tratamento específico para erro de token não encontrado
       if (errorCode === '2' || errorMsg.includes('token not found')) {
         console.log('Detectado erro de token não encontrado. Isso geralmente ocorre quando a URL da API está incorreta. Verificando configuração...');
-        
+
         // Log detalhado de diagnóstico
         console.log('Configuração atual:');
         console.log('- Domínio da API utilizado:', 'https://partner.shopeemobile.com');
         console.log('- URL de redirecionamento:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
-        
+
         // Criar notificação de erro
         await storage.createNotification({
           userId: (req.user as any).claims.sub,
@@ -232,11 +231,11 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
           isRead: false,
           createdAt: new Date()
         });
-        
+
         // Redirecionar para a página inicial com instrução para tentar novamente
         return res.redirect('/dashboard?status=error&code=token_not_found&message=' + encodeURIComponent('Token não encontrado. Por favor, tente conectar novamente com as configurações atualizadas.'));
       }
-      
+
       // Criar notificação de erro para outros tipos de erro
       try {
         await storage.createNotification({
@@ -250,10 +249,10 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
       } catch (notifError) {
         console.error('Erro ao criar notificação:', notifError);
       }
-      
+
       return res.redirect('/dashboard?status=error&message=' + encodeURIComponent(errorMsg));
     }
-    
+
     const { code, shop_id } = req.query;
 
     if (!code || !shop_id) {
@@ -277,10 +276,10 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     shopeeClient.setRequestHeaders(headers);
 
     console.log('Iniciando troca de código por tokens...');
-    
+
     // Trocar o código por tokens de acesso
     const tokens = await shopeeClient.connect(code as string, shop_id as string);
-    
+
     console.log('Tokens obtidos com sucesso!');
 
     // Obter informações da loja (será implementado posteriormente)
