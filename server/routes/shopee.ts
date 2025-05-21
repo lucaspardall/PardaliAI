@@ -21,31 +21,18 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Importar a implementação de diagnóstico para Shopee
-    const { generateAuthUrls, generateDiagnosticPage } = await import('../shopee/fallback');
+    // Importar a implementação avançada de testes para Shopee
+    const { generateAdvancedTestPage } = await import('../shopee/custom');
 
     // Configuração da integração Shopee
     const config = {
       partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
       partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
-      redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback',
-      region: 'SG'
+      redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback'
     };
-
-    // Gerar URLs de autorização com ambos os métodos
-    const urls = generateAuthUrls(config);
     
-    // Salvar URL em arquivo para inspeção e debug
-    try {
-      fs.writeFileSync('shopee_auth_url.txt', 
-        `URL Padrão: ${urls.standardUrl}\n\nURL Alternativa: ${urls.alternativeUrl}`);
-      console.log("✅ URLs salvas em arquivo para inspeção: shopee_auth_url.txt");
-    } catch (err) {
-      console.error("Não foi possível salvar URLs em arquivo:", err);
-    }
-    
-    // Gerar a página de diagnóstico com ambas as opções para teste
-    const htmlContent = generateDiagnosticPage(urls);
+    // Gerar a página avançada de testes com múltiplas soluções
+    const htmlContent = generateAdvancedTestPage(config);
     
     return res.send(htmlContent);
 
