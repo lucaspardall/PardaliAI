@@ -1,0 +1,95 @@
+4eaf
+User
+Verificação da URL completa: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1747838545&sign=f0c769ffac15a8e64a931e4485becdc06409900c22d9ea25620fbcc965b6a3f7&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1747838545666&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+2025-05-21 11:42:25.66
+3f814eaf
+User
+Verificação do parâmetro timestamp (deve conter "timestamp="): true
+2025-05-21 11:42:25.66
+3f814eaf
+User
+🔎 Verificação direta do timestamp: timestamp=1747838545
+2025-05-21 11:42:25.66
+3f814eaf
+User
+======= DETALHES DE GERAÇÃO DA URL =======
+2025-05-21 11:42:25.66
+3f814eaf
+User
+Partner ID: 2011285
+2025-05-21 11:42:25.66
+3f814eaf
+User
+Path para autorização: /api/v2/shop/auth_partner
+2025-05-21 11:42:25.66
+3f814eaf
+User
+String base para assinatura: 2011285/api/v2/shop/auth_partner1747838545
+2025-05-21 11:42:25.66
+3f814eaf
+User
+Assinatura gerada: f0c769ffac15a8e64a931e4485becdc06409900c22d9ea25620fbcc965b6a3f7
+2025-05-21 11:42:25.66
+3f814eaf
+User
+URL de redirecionamento: https://cipshopee.replit.app/api/shopee/callback
+2025-05-21 11:42:25.66
+3f814eaf
+User
+URL de autorização final: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1747838545&sign=f0c769ffac15a8e64a931e4485becdc06409900c22d9ea25620fbcc965b6a3f7&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1747838545666&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+2025-05-21 11:42:25.66
+3f814eaf
+User
+URL final completa: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1747838545&sign=f0c769ffac15a8e64a931e4485becdc06409900c22d9ea25620fbcc965b6a3f7&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1747838545666&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+2025-05-21 11:42:25.66
+3f814eaf
+User
+URL começa com https://partner.shopeemobile.com? true
+2025-05-21 11:42:25.66
+3f814eaf
+User
+Timestamp usado: 1747838545
+2025-05-21 11:42:25.66
+3f814eaf
+User
+Diferença de tempo atual: 0 segundos
+2025-05-21 11:42:25.66
+3f814eaf
+User
+============================================
+2025-05-21 11:42:25.66
+3f814eaf
+User
+URL de autorização gerada: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1747838545&sign=f0c769ffac15a8e64a931e4485becdc06409900c22d9ea25620fbcc965b6a3f7&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1747838545666&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+2025-05-21 11:42:25.66
+3f814eaf
+User
+Client ID: 2011285
+2025-05-21 11:42:25.66
+3f814eaf
+User
+URL de redirecionamento configurada: https://cipshopee.replit.app/api/shopee/callback
+2025-05-21 11:42:25.66
+3f814eaf
+User
+URL final construída manualmente: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1747838545&sign=f0c769ffac15a8e64a931e4485becdc06409900c22d9ea25620fbcc965b6a3f7&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1747838545666&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+2025-05-21 11:42:25.66
+3f814eaf
+User
+URL final para autorização: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1747838545&sign=f0c769ffac15a8e64a931e4485becdc06409900c22d9ea25620fbcc965b6a3f7&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1747838545666&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+2025-05-21 11:42:25.66
+3f814eaf
+User
+Verificação de parâmetros obrigatórios:
+2025-05-21 11:42:25.66
+3f814eaf
+User
+Verificando conexão com banco de dados...
+2025-05-21 11:42:25.72
+3f814eaf
+User
+Conexão com banco de dados estabelecida com sucesso
+2025-05-21 11:42:25.96
+3f814eaf
+User
+2:42:25 PM [express] GET /api/shopee/authorize 500 in 455ms :: {"message":"Failed to start authoriza…
