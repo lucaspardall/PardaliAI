@@ -28,8 +28,9 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     const redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
     const state = `cipshopee_${Date.now()}`;
 
-    // Criar a string base para assinatura conforme documentação Shopee
+    // Criar a string base para assinatura EXATAMENTE conforme documentação Shopee
     const path = '/api/v2/shop/auth_partner';
+    // Formato correto: [partner_id][path][timestamp]
     const baseString = `${partnerId}${path}${timestamp}`;
 
     console.log('String base para assinatura:', baseString);
@@ -42,18 +43,29 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // IMPORTANTE: Para o endpoint de autorização OAuth, precisamos usar o domínio específico da região
     // Para Brasil, o domínio correto é seller.shopee.com.br para login direto de vendedores
     const baseUrl = 'https://partner.shopeemobile.com';
-
-    // Construir a URL com todos os parâmetros necessários incluindo auth_type=direct
-    // para forçar o login direto do vendedor sem redirecionamento à Open Platform
-    const authUrl = `${baseUrl}${path}?` + 
+    
+    // Primeiro construir a URL apenas com os parâmetros obrigatórios (documentação oficial)
+    // Os parâmetros obrigatórios são: partner_id, timestamp, sign e redirect
+    let authUrl = `${baseUrl}${path}?` + 
       `partner_id=${partnerId}&` +
       `timestamp=${timestamp}&` +
       `sign=${sign}&` +
-      `redirect=${encodeURIComponent(redirectUrl)}&` +
-      `region=BR&` +
-      `is_auth_shop=true&` +
-      `login_type=seller&` +
-      `auth_type=direct`;
+      `redirect=${encodeURIComponent(redirectUrl)}`;
+      
+    // Adicionar parâmetros adicionais para melhorar o fluxo
+    authUrl += `&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct`;
+    
+    // Adicionar log para facilitar depuração
+    console.log('URL de autorização (parâmetros separados):', { 
+      partner_id: partnerId,
+      timestamp,
+      sign,
+      redirect: redirectUrl,
+      region: 'BR',
+      is_auth_shop: true,
+      login_type: 'seller',
+      auth_type: 'direct'
+    });
 
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
@@ -172,6 +184,28 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       const fixedUrl = authUrl.replace('×tamp=', 'timestamp=');
       console.log('URL corrigida antes do redirecionamento:', fixedUrl);
       return res.redirect(fixedUrl);
+    }
+
+    // Usar axios para capturar o destino do redirecionamento 302
+    try {
+      const checkRedirect = await axios.get(authUrl, {
+        maxRedirects: 0,
+        validateStatus: status => status >= 200 && status < 400
+      }).catch(error => {
+        if (error.response && error.response.status === 302) {
+          const location = error.response.headers.location;
+          console.log('🔍 DESTINO DO REDIRECIONAMENTO:', location);
+          return error.response;
+        }
+        throw error;
+      });
+      
+      console.log('Resposta da verificação de redirecionamento:', {
+        status: checkRedirect?.status,
+        headers: checkRedirect?.headers,
+      });
+    } catch (error) {
+      console.log('Erro ao verificar redirecionamento (isso é normal):', error.message);
     }
 
     return res.redirect(authUrl);
