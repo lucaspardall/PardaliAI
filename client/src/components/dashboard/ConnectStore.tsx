@@ -91,7 +91,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
         const timestamp = new Date().getTime();
 
         // Abrir em nova aba para melhor experiência de login (sem parâmetros extras)
-        window.open(`/api/shopee/authorize?nocache=${timestamp}`, '_blank', 'noopener,noreferrer');oreferrer');
+        window.open(`/api/shopee/authorize?nocache=${timestamp}`, '_blank', 'noopener,noreferrer');
 
         // Mostrar mensagem adicional sobre janela pop-up
         setTimeout(() => {
