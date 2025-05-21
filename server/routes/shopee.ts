@@ -35,7 +35,21 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
       console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
+      // Extrair informações do cliente Shopee para reconstrução da URL
+      const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
+      const timestamp = Math.floor(Date.now() / 1000);
+      const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
+      
       // Reconstruir manualmente como último recurso (apenas parâmetros obrigatórios)
+      const baseUrl = 'https://partner.shopeemobile.com';
+      const path = '/api/v2/shop/auth_partner';
+      
+      // Gerar assinatura para a URL manual
+      const crypto = require('crypto');
+      const partnerKey = process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661';
+      const baseString = `${partnerId}${path}${timestamp}`;
+      const sign = crypto.createHmac('sha256', partnerKey).update(baseString).digest('hex');
+      
       const manualUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}`;
       console.log("URL reconstruída manualmente:", manualUrl);
       return res.redirect(manualUrl);
