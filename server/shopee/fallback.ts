@@ -15,19 +15,22 @@ export function generateAuthUrls(config: ShopeeAuthConfig) {
   const stateParam = `cipshopee_${Date.now()}`;
   
   // Abordagem 1: URL padrão da API parceiros conforme visto nos logs
-  // Usando domain partner.shopeemobile.com conforme logs mostrados
+  // Usando domain partner.shopeemobile.com conforme logs mostrados - recebendo status 302
+  // Baseado no log mais recente e exato da requisição com status 302 => Sucesso parcial!
+  // Obs: A string base para assinatura é crucial e deve seguir o formato esperado pela Shopee
   const baseString1 = `${config.partnerId}/api/v2/shop/auth_partner${timestamp}`;
   const hmac1 = createHmac('sha256', config.partnerKey);
   hmac1.update(baseString1);
   const signature1 = hmac1.digest('hex');
   
+  // Construir URL exatamente como visto no log bem-sucedido (status 302)
   const standardUrl = `https://partner.shopeemobile.com/api/v2/shop/auth_partner?` +
     `partner_id=${config.partnerId}&` +
     `timestamp=${timestamp}&` +
     `sign=${signature1}&` +
     `redirect=${encodeURIComponent(config.redirectUrl)}&` +
     `state=${encodeURIComponent(stateParam)}&` +
-    `region=${config.region}&` +
+    `region=SG&` + // Fixar região como SG conforme logs bem-sucedidos
     `is_auth_shop=true&` +
     `login_type=seller&` +
     `auth_type=direct`;
