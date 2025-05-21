@@ -5,6 +5,7 @@ import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { isAuthenticated } from '../replitAuth';
 import fs from 'fs';
+import axios from 'axios';
 
 const router = Router();
 
@@ -43,7 +44,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // IMPORTANTE: Para o endpoint de autorização OAuth, precisamos usar o domínio específico da região
     // Para Brasil, o domínio correto é seller.shopee.com.br para login direto de vendedores
     const baseUrl = 'https://partner.shopeemobile.com';
-    
+
     // Primeiro construir a URL apenas com os parâmetros obrigatórios (documentação oficial)
     // Os parâmetros obrigatórios são: partner_id, timestamp, sign e redirect
     let authUrl = `${baseUrl}${path}?` + 
@@ -51,10 +52,10 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       `timestamp=${timestamp}&` +
       `sign=${sign}&` +
       `redirect=${encodeURIComponent(redirectUrl)}`;
-      
+
     // Adicionar parâmetros adicionais para melhorar o fluxo
     authUrl += `&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct`;
-    
+
     // Adicionar log para facilitar depuração
     console.log('URL de autorização (parâmetros separados):', { 
       partner_id: partnerId,
@@ -87,13 +88,35 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     // Verificação e log da URL final
     console.log("URL final para autorização:", authUrl);
-    
-    // Verificar parâmetros obrigatórios conforme documentação oficial
+
+    // Verificação de parâmetros obrigatórios conforme documentação oficial
     console.log("Verificação de parâmetros obrigatórios:");
-    console.log("- partner_id:", authUrl.includes(`partner_id=${partnerId}`));
-    console.log("- timestamp:", authUrl.includes(`timestamp=${timestamp}`));
-    console.log("- sign:", authUrl.includes(`sign=${sign}`));
-    console.log("- redirect:", authUrl.includes("redirect="));
+    const hasPartnerId = authUrl.includes(`partner_id=${partnerId}`);
+    const hasTimestamp = authUrl.includes(`timestamp=${timestamp}`);
+    const hasSign = authUrl.includes(`sign=${sign}`);
+    const hasRedirect = authUrl.includes("redirect=");
+
+    console.log("- partner_id:", hasPartnerId);
+    console.log("- timestamp:", hasTimestamp);
+    console.log("- sign:", hasSign);
+    console.log("- redirect:", hasRedirect);
+
+    // Verificar se todos os parâmetros obrigatórios estão presentes
+    if (!hasPartnerId || !hasTimestamp || !hasSign || !hasRedirect) {
+      console.error("⚠️ ALERTA CRÍTICO: Parâmetros obrigatórios ausentes na URL!");
+
+      // Reconstruir a URL garantindo que todos os parâmetros obrigatórios estejam presentes
+      authUrl = `${baseUrl}${path}?` + 
+        `partner_id=${partnerId}&` +
+        `timestamp=${timestamp}&` +
+        `sign=${sign}&` +
+        `redirect=${encodeURIComponent(redirectUrl)}`;
+
+      // Adicionar os parâmetros adicionais
+      authUrl += `&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct`;
+
+      console.log("URL reconstruída com todos os parâmetros obrigatórios:", authUrl);
+    }
 
     // Salvar URL em arquivo para inspeção quando necessário
     try {
@@ -154,13 +177,13 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
                 document.getElementById('redirectBtn').addEventListener('click', function() {
                   // Usar o domínio específico para vendedores do Brasil
                   const url = new URL('https://partner.shopeemobile.com/api/v2/shop/auth_partner');
-                  
+
                   // Adicionar parâmetros obrigatórios primeiro
                   url.searchParams.append('partner_id', '${partnerId}');
                   url.searchParams.append('timestamp', '${timestamp}');
                   url.searchParams.append('sign', '${sign}');
                   url.searchParams.append('redirect', 'https://cipshopee.replit.app/api/shopee/callback');
-                  
+
                   // Adicionar parâmetros necessários para login direto do vendedor
                   url.searchParams.append('state', 'cipshopee_${Date.now()}');
                   url.searchParams.append('region', 'BR');
@@ -199,7 +222,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
         }
         throw error;
       });
-      
+
       console.log('Resposta da verificação de redirecionamento:', {
         status: checkRedirect?.status,
         headers: checkRedirect?.headers,

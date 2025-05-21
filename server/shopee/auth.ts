@@ -60,18 +60,22 @@ export class ShopeeAuthManager {
     // 4. Construir a URL manualmente para garantir que todos os parâmetros estão presentes
     // e sem problemas de codificação
     
-    // Sempre gerar URL manualmente com todos os parâmetros necessários para evitar problemas
-    // Isto garante que auth_type=direct e outros parâmetros importantes estarão presentes
+    // IMPORTANTE: Sempre seguir a documentação oficial da Shopee para o endpoint de autorização
+    // Parâmetros obrigatórios: partner_id, timestamp, sign, redirect
+    
+    // Primeiro adicionamos apenas os parâmetros OBRIGATÓRIOS conforme documentação oficial
     let urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
       `partner_id=${this.config.partnerId}&` +
       `timestamp=${timestamp}&` +
       `sign=${signature}&` +
-      `redirect=${encodeURIComponent(this.config.redirectUrl)}&` +
-      `state=${encodeURIComponent(stateParam)}&` +
-      `region=BR&` +
-      `is_auth_shop=true&` +
-      `login_type=seller&` +
-      `auth_type=direct`;
+      `redirect=${encodeURIComponent(this.config.redirectUrl)}`;
+      
+    // Em seguida, adicionamos os parâmetros opcionais que melhoram o fluxo
+    urlString += `&state=${encodeURIComponent(stateParam)}` +
+      `&region=BR` +
+      `&is_auth_shop=true` +
+      `&login_type=seller` +
+      `&auth_type=direct`;
     
     // Log para verificar se auth_type=direct está presente
     console.log('Verificando URL construída manualmente:');
