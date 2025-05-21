@@ -21,18 +21,28 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Importar a implementação avançada de testes para Shopee
-    const { generateAdvancedTestPage } = await import('../shopee/custom');
+    // Importar a implementação oficial de produção
+    const { generateConnectionPage } = await import('../shopee/production');
 
-    // Configuração da integração Shopee
+    // Configuração da integração Shopee com os valores reais do app
     const config = {
-      partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
-      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
-      redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback'
+      // IDs do ambiente de teste (Test Partner)
+      testPartnerId: '1279702',
+      testPartnerKey: '71707a74654a47464446574676b5150487171614151785264a53467748494',
+      
+      // IDs do ambiente de produção (Live Partner)
+      livePartnerId: '2011285',
+      livePartnerKey: process.env.SHOPEE_PARTNER_KEY || '477a724873627457486972644a704f756948624776754646544170674a515a64',
+      
+      // URL de redirecionamento configurada no console
+      redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback',
+      
+      // Ambiente atual - pode ser alterado conforme necessário
+      environment: 'live' as 'test' | 'live'
     };
     
-    // Gerar a página avançada de testes com múltiplas soluções
-    const htmlContent = generateAdvancedTestPage(config);
+    // Gerar a página oficial de conexão da loja
+    const htmlContent = generateConnectionPage(config);
     
     return res.send(htmlContent);
 
