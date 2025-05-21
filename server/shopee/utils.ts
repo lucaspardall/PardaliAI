@@ -1,4 +1,3 @@
-
 /**
  * Funções utilitárias para a API da Shopee
  */
@@ -22,13 +21,36 @@ export function getTimestamp(): number {
  * @returns URL base da API
  */
 export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false): string {
-  // Usar o domínio específico para o Brasil
-  const apiUrl = region === 'BR' ? 'https://partner.shopeemobile.com.br' : 'https://partner.shopeemobile.com';
-  
-  // Log para debugging
-  console.log(`Usando URL de API Shopee: ${apiUrl}`);
-  
-  return apiUrl;
+  // URLs específicas para cada região
+  const regionUrls: Record<ShopeeRegion, string> = {
+    BR: 'https://open.shopee.com.br', // Brasil usa domínio específico
+    // Outras regiões usam o domínio padrão
+    SG: 'https://partner.shopeemobile.com',
+    MY: 'https://partner.shopeemobile.com',
+    TH: 'https://partner.shopeemobile.com',
+    TW: 'https://partner.shopeemobile.com',
+    ID: 'https://partner.shopeemobile.com',
+    VN: 'https://partner.shopeemobile.com',
+    PH: 'https://partner.shopeemobile.com',
+    MX: 'https://partner.shopeemobile.com',
+    CO: 'https://partner.shopeemobile.com',
+    CL: 'https://partner.shopeemobile.com',
+    PL: 'https://partner.shopeemobile.com',
+    ES: 'https://partner.shopeemobile.com',
+    FR: 'https://partner.shopeemobile.com'
+  };
+
+  console.log(`Obtendo URL base para região: ${region}`);
+
+  // Se existir uma URL específica para a região, use-a
+  if (region in regionUrls) {
+    console.log(`URL específica encontrada para ${region}: ${regionUrls[region]}`);
+    return regionUrls[region];
+  }
+
+  // Fallback para o domínio padrão
+  console.log('Usando URL padrão: https://partner.shopeemobile.com');
+  return 'https://partner.shopeemobile.com';
 }
 
 /**
@@ -54,7 +76,7 @@ export function generateSignature(
   useBaseStringDirectly: boolean = false
 ): string {
   let baseString = '';
-  
+
   if (useBaseStringDirectly) {
     // Usar a string base fornecida diretamente (útil para endpoints que precisam de formato específico)
     baseString = path;
@@ -66,39 +88,39 @@ export function generateSignature(
     // Endpoints POST/PUT com corpo JSON 
     // Formato: partnerId + path + timestamp + access_token + shop_id + corpo_json_minificado
     const minifiedBody = JSON.stringify(requestBody);
-    
+
     let components = [partnerId, path, timestamp.toString()];
-    
+
     // Adicionar access_token se disponível
     if (accessToken) {
       components.push(accessToken.access_token);
     }
-    
+
     // Adicionar shop_id se disponível
     if (shopId) {
       components.push(shopId.shop_id);
     }
-    
+
     // Adicionar corpo minificado
     components.push(minifiedBody);
-    
+
     // Concatenar componentes para formar a string base
     baseString = components.join('');
   } else {
     // Endpoints GET autenticados
     // Formato: partnerId + path + timestamp + access_token + shop_id
     let components = [partnerId, path, timestamp.toString()];
-    
+
     // Adicionar access_token se disponível
     if (accessToken) {
       components.push(accessToken.access_token);
     }
-    
+
     // Adicionar shop_id se disponível
     if (shopId) {
       components.push(shopId.shop_id);
     }
-    
+
     // Concatenar componentes para formar a string base
     baseString = components.join('');
   }

@@ -212,28 +212,34 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       return res.redirect(fixedUrl);
     }
 
-    // Usar axios para capturar o destino do redirecionamento 302
-    try {
-      const checkRedirect = await axios.get(authUrl, {
-        maxRedirects: 0,
-        validateStatus: status => status >= 200 && status < 400
-      }).catch(error => {
-        if (error.response && error.response.status === 302) {
-          const location = error.response.headers.location;
-          console.log('🔍 DESTINO DO REDIRECIONAMENTO:', location);
-          return error.response;
-        }
-        throw error;
-      });
+    console.log('=== VERIFICAÇÃO FINAL DOS PARÂMETROS DA URL ===');
+    console.log('- authUrl contém auth_type=direct:', authUrl.includes('auth_type=direct'));
+    console.log('- URL completa para análise:', authUrl);
 
-      console.log('Resposta da verificação de redirecionamento:', {
-        status: checkRedirect?.status,
-        headers: checkRedirect?.headers,
-      });
-    } catch (error) {
-      console.log('Erro ao verificar redirecionamento (isso é normal):', error.message);
+    // Log detalhado dos parâmetros
+    const urlParams = new URL(authUrl);
+    console.log('Parâmetros parseados da URL:');
+    for (const [key, value] of urlParams.searchParams.entries()) {
+      console.log(`- ${key}: ${value}`);
+    }
+    
+    // Garantir que não haja parâmetros duplicados
+    if (authUrl.includes('auth_type=direct') && authUrl.includes('auth_type=shop')) {
+      console.warn('⚠️ ALERTA: Parâmetros duplicados detectados. Corrigindo...');
+      authUrl = authUrl.replace('auth_type=shop', '');
     }
 
+    // Registrar URL final em um arquivo para depuração
+    try {
+      fs.writeFileSync('shopee_auth_url_final.txt', authUrl);
+      console.log('✅ URL final salva em arquivo: shopee_auth_url_final.txt');
+    } catch (err) {
+      console.error("Erro ao salvar URL final:", err);
+    }
+
+    // Redirecionamento direto, sem tentar capturar o 302
+    console.log('===== REDIRECIONANDO USUÁRIO PARA SHOPEE =====');
+    console.log('URL final de redirecionamento:', authUrl);
     return res.redirect(authUrl);
 
   } catch (error: any) {

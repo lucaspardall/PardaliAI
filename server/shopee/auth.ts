@@ -53,15 +53,17 @@ export class ShopeeAuthManager {
     console.log('Assinatura gerada:', signature);
 
     // 3. Usar o domínio específico do seller center do Brasil para login direto
-    // Para login direto de vendedor, usar o domínio seller.shopee.com.br ou open.shopee.com.br
+    // Para login direto de vendedor brasileiro, usar o domínio open.shopee.com.br
+    // IMPORTANTE: Para o Brasil, o endpoint correto é /authorize (não /api/v2/shop/auth_partner)
     const baseUrl = 'https://open.shopee.com.br';
     console.log('Usando domínio específico da Open Platform BR:', baseUrl);
     console.log('Usando URL da API Shopee BR:', baseUrl);
     
     // 4. Construir a URL com os parâmetros para login direto de vendedor conforme documentação
-    // Estamos usando a abordagem alternativa mencionada na documentação para o Brasil
+    // Estamos usando a abordagem específica para o Brasil que exige endpoints diferentes
     
     // Parâmetros para login direto de vendedor no domínio brasileiro
+    // ATENÇÃO: Os endpoints são diferentes para cada região. Brasil usa /authorize
     let urlString = `${baseUrl}/authorize?` + 
       `partner_id=${this.config.partnerId}&` +
       `timestamp=${timestamp}&` +
