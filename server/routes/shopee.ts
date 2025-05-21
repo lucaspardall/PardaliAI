@@ -41,9 +41,10 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     hmac.update(baseString);
     const sign = hmac.digest('hex');
 
-    // IMPORTANTE: Para o endpoint de autorização OAuth, precisamos usar o domínio específico da região
-    // Para Brasil, o domínio correto é seller.shopee.com.br para login direto de vendedores
-    const baseUrl = 'https://partner.shopeemobile.com';
+    // IMPORTANTE: Para o endpoint de autorização OAuth do Brasil, precisamos usar o domínio específico da região
+    // Para Brasil, vamos usar o domínio partner.shopeemobile.com.br conforme sugerido
+    const baseUrl = 'https://partner.shopeemobile.com.br';
+    console.log('Usando domínio específico para o Brasil:', baseUrl);
 
     // Primeiro construir a URL apenas com os parâmetros obrigatórios (documentação oficial)
     // Os parâmetros obrigatórios são: partner_id, timestamp, sign e redirect

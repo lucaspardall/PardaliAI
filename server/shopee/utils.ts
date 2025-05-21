@@ -22,8 +22,8 @@ export function getTimestamp(): number {
  * @returns URL base da API
  */
 export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false): string {
-  // De acordo com a documentação oficial, todas as operações devem usar este domínio
-  const apiUrl = 'https://partner.shopeemobile.com';
+  // Usar o domínio específico para o Brasil
+  const apiUrl = region === 'BR' ? 'https://partner.shopeemobile.com.br' : 'https://partner.shopeemobile.com';
   
   // Log para debugging
   console.log(`Usando URL de API Shopee: ${apiUrl}`);
