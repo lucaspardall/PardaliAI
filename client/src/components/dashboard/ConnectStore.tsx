@@ -90,8 +90,8 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
         // Obter a data atual para evitar problemas de cache
         const timestamp = new Date().getTime();
 
-        // Abrir em nova aba para melhor experiência de login com parâmetro anti-cache
-        window.open(`/api/shopee/authorize?_=${timestamp}`, '_blank', 'noopener,noreferrer');
+        // Abrir em nova aba para melhor experiência de login (sem parâmetros extras)
+        window.open(`/api/shopee/authorize?nocache=${timestamp}`, '_blank', 'noopener,noreferrer');oreferrer');
 
         // Mostrar mensagem adicional sobre janela pop-up
         setTimeout(() => {

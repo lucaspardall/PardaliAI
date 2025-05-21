@@ -43,25 +43,22 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Para Brasil, o domínio correto é seller.shopee.com.br para login direto de vendedores
     const baseUrl = 'https://partner.shopeemobile.com';
 
-    // Criar parâmetros usando URLSearchParams conforme a documentação da Shopee
-    // Apenas os parâmetros obrigatórios, exatamente como na documentação
+    // Criar parâmetros usando apenas o que é exigido pela documentação oficial da Shopee
+    // Formato: host + path + partner id + timestamp + redirect url + sign
     const params = new URLSearchParams();
     params.append('partner_id', partnerId);
     params.append('timestamp', timestamp.toString());
     params.append('sign', sign);
     params.append('redirect', redirectUrl);
-    
-    // Apenas state para segurança CSRF
-    params.append('state', state);
 
-    // Construir a URL manualmente seguindo estritamente a documentação
-    const authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}`;
+    // Construir a URL seguindo exatamente a documentação oficial (sem parâmetros adicionais)
+    const authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}`;
 
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
       console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
-      // Reconstruir manualmente como último recurso
-      const manualUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}&state=${encodeURIComponent(state)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
+      // Reconstruir manualmente como último recurso (apenas parâmetros obrigatórios)
+      const manualUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}`;
       console.log("URL reconstruída manualmente:", manualUrl);
       return res.redirect(manualUrl);
     }
@@ -77,13 +74,13 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     // Verificação e log da URL final
     console.log("URL final para autorização:", authUrl);
-
-    // Verificar parâmetros críticos
-    console.log("Verificação de parâmetros críticos:");
-    console.log("- region=BR:", authUrl.includes("region=BR"));
-    console.log("- login_type=seller:", authUrl.includes("login_type=seller"));
-    console.log("- auth_type=direct:", authUrl.includes("auth_type=direct"));
-    console.log("- is_auth_shop=true:", authUrl.includes("is_auth_shop=true"));
+    
+    // Verificar parâmetros obrigatórios conforme documentação oficial
+    console.log("Verificação de parâmetros obrigatórios:");
+    console.log("- partner_id:", authUrl.includes(`partner_id=${partnerId}`));
+    console.log("- timestamp:", authUrl.includes(`timestamp=${timestamp}`));
+    console.log("- sign:", authUrl.includes(`sign=${sign}`));
+    console.log("- redirect:", authUrl.includes("redirect="));
 
     // Salvar URL em arquivo para inspeção quando necessário
     try {

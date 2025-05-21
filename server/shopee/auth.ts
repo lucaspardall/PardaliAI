@@ -57,16 +57,15 @@ export class ShopeeAuthManager {
     console.log('Usando domínio oficial da API Shopee:', baseUrl);
     console.log('Usando URL da API Shopee:', baseUrl);
     
-    // 4. Construir os parâmetros da URL seguindo exatamente a documentação oficial da Shopee
-    // Apenas os parâmetros obrigatórios são necessários
+    // 4. Construir os parâmetros da URL seguindo EXATAMENTE a documentação oficial da Shopee
+    // Host + path + partner id + timestamp + redirect url + sign (conforme documentação)
     const params = new URLSearchParams();
     params.append('partner_id', this.config.partnerId);
     params.append('timestamp', timestamp.toString());
     params.append('sign', signature);
     params.append('redirect', this.config.redirectUrl);
-    params.append('state', stateParam);
     
-    // Construir URL final exatamente conforme o padrão da documentação
+    // Construir URL final exatamente conforme o padrão da documentação (sem parâmetros extras)
     let urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
     
     // Verificação adicional para garantir que não há problemas com caracteres especiais
@@ -109,13 +108,13 @@ export class ShopeeAuthManager {
       }
     }
     
-    // Log detalhado dos parâmetros críticos para verificação
-    console.log('URL FINAL COMPLETA (verifique se contém timestamp=):', urlString);
-    console.log('Parâmetros críticos presentes:');
+    // Log detalhado dos parâmetros obrigatórios para verificação
+    console.log('URL FINAL COMPLETA (conforme documentação oficial):', urlString);
+    console.log('Parâmetros obrigatórios presentes:');
+    console.log('- partner_id=', urlString.includes(`partner_id=${this.config.partnerId}`));
     console.log('- timestamp=', urlString.includes('timestamp='));
-    console.log('- login_type=seller', urlString.includes('login_type=seller'));
-    console.log('- auth_type=direct', urlString.includes('auth_type=direct'));
-    console.log('- is_auth_shop=true', urlString.includes('is_auth_shop=true'));
+    console.log('- sign=', urlString.includes('sign='));
+    console.log('- redirect=', urlString.includes('redirect='));
 
     // Verificações adicionais para garantir que a URL está correta
     console.log('Verificação da URL completa:', urlString);
