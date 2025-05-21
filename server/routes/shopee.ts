@@ -34,19 +34,19 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       console.log('Partner ID:', process.env.SHOPEE_PARTNER_ID || '2011285');
       console.log('URL de redirecionamento configurada:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
 
-    // Adicionar log detalhado para facilitar depuração
-    console.log('URL de autorização (parâmetros separados):'); 
-    console.log('- partner_id:', partnerId);
-    console.log('- timestamp:', timestamp);
-    console.log('- sign:', sign, 'comprimento:', sign.length); // Verificar se há assinatura e seu comprimento
-    console.log('- redirect:', redirectUrl);
-    console.log('- region:', 'BR');
-    console.log('- is_auth_shop:', true);
-    console.log('- login_type:', 'seller');
-    console.log('- auth_type:', 'direct');
-    
-    // Verificar se o Partner Key está configurado corretamente (sem mostrar o valor real)
-    console.log('- Partner Key configurada:', partnerKey ? 'Sim (valor ocultado)' : 'NÃO CONFIGURADA');
+      // Adicionar log detalhado para facilitar depuração
+      console.log('URL de autorização (parâmetros separados):'); 
+      console.log('- partner_id:', partnerId);
+      console.log('- timestamp:', timestamp);
+      console.log('- sign:', sign, 'comprimento:', sign.length); // Verificar se há assinatura e seu comprimento
+      console.log('- redirect:', redirectUrl);
+      console.log('- region:', 'BR');
+      console.log('- is_auth_shop:', true);
+      console.log('- login_type:', 'seller');
+      console.log('- auth_type:', 'direct');
+      
+      // Verificar se o Partner Key está configurado corretamente (sem mostrar o valor real)
+      console.log('- Partner Key configurada:', partnerKey ? 'Sim (valor ocultado)' : 'NÃO CONFIGURADA');
 
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
