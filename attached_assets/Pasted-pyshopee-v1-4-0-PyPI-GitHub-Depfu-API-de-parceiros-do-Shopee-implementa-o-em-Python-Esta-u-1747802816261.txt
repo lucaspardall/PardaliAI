@@ -1,0 +1,167 @@
+pyshopee v1.4.0
+PyPI GitHub Depfu
+
+API de parceiros do Shopee - implementação em Python
+Esta é uma implementação Python para a API REST do parceiro Shopee .
+
+Se você veio aqui procurando o centro de vendedores do Shopee para fazer compras, então vá aqui .
+
+$ pip install pyshopee
+Exemplo de uso do pyshopee2 (mais recente)
+mudar pyshopee.Clientparapyshopee.Client20
+import pyshopee
+
+client = pyshopee.Client20( shopid, partnerid, API_key )
+
+# get_order_by_status (UNPAID/READY_TO_SHIP/SHIPPED/COMPLETED/CANCELLED/ALL)
+resp = client.order.get_order_by_status(order_status="READY_TO_SHIP")
+print(resp)
+
+
+# shop authorize and cancel_authorize url
+authorize_url = client.shop.authorize(redirect_url="https://shopee.tw")
+print(authorize_url)
+
+cancel_authorize_url = client.shop.cancel_authorize(redirect_url="https://shopee.tw")
+print(cancel_authorize_url)
+Exemplo de uso do pyshopee (antigo)
+import pyshopee
+
+client = pyshopee.Client( shopid, partnerid, API_key )
+
+# get_order_by_status (UNPAID/READY_TO_SHIP/SHIPPED/COMPLETED/CANCELLED/ALL)
+resp = client.order.get_order_by_status(order_status="READY_TO_SHIP")
+print(resp)
+
+
+# shop authorize and cancel_authorize url
+authorize_url = client.shop.authorize(redirect_url="https://shopee.tw")
+print(authorize_url)
+
+cancel_authorize_url = client.shop.cancel_authorize(redirect_url="https://shopee.tw")
+print(cancel_authorize_url)
+Características
+Simples, confiável e elegante.
+Não é necessário gerar autenticação e registros de data e hora por conta própria, o wrapper faz isso por você.
+A funcionalidade do formato do módulo é a mesma do documento oficial do Shopee.
+Bom tratamento de exceção de resposta!
+6 partes principais da implementação
+1. Módulo de Gestão de Loja: Loja / ShopCategory
+2. Módulo de Gestão de Pedidos: Pedidos
+3. Módulo de Gestão Logística: Logística
+4. Módulo de Gestão de Produtos: Item / Imagem / Desconto
+5. Módulo de Gestão de RMA: Devoluções
+6. Módulo de Gerenciamento de Coleções: toppicks
+Instalação
+instalação do pip a partir do pypi
+$ pip install pyshopee
+clone o repositório para sua pasta local
+$ cd pyshopee
+$ python setup.py install
+Início rápido
+Importe o pyshopee e obtenha o pedido por status
+import pyshopee
+
+client = pyshopee.Client( shopid, partnerid, API_key )
+
+# get_order_by_status (UNPAID/READY_TO_SHIP/SHIPPED/COMPLETED/CANCELLED/ALL)
+resp = client.order.get_order_by_status(order_status="READY_TO_SHIP")
+print(resp)
+Obter lista de pedidos
+# get_order_list
+resp = client.order.get_order_list(create_time_from = 1512117303, create_time_to=1512635703)
+print(resp)
+Obter detalhes do pedido
+'''
+ordersn_list , type: String[]    
+The set of order IDs. You can specify, at most, 50 OrderIDs in this call.
+'''
+# get_order_detail
+ordersn_list = [ '1712071633982A7','1712071632981JW','171207163097YCJ']
+resp = client.order.get_order_detail(ordersn_list = ordersn_list )
+print(resp)
+Obter detalhes do pedido de custódia
+'''
+ordersn , type:String [] 
+Shopee's unique identifier for an order.
+'''
+# get_order_escrow_detail
+ordersn = '1712071633982A7'
+resp = client.order.get_order_escrow_detail(ordersn = ordersn)
+print(resp)
+Detalhes avançados para outras funções
+# usage
+client.[type].[function name]
+
+[type]
+  - Shop
+  - ShopCategory
+  - Orders
+  - Logistics
+  - Item
+  - Image
+  - Discount
+  - Returns
+Parâmetros avançados que você deve querer saber
+Tempo esgotado
+Você pode encontrar o código-fonte em client.py, e o pyshopee possui parâmetros de tempo limite lá. Portanto, cada função de execução pode adicionar uma configuração de tempo limite extra, dependendo da sua escolha.
+
+def execute(self, uri, method, body=None):
+    ''' defalut timeout value will be 10 seconds
+    '''
+    parameter = self._make_default_parameter()
+
+    if body.get("timeout"):
+        timeout = body.get("timeout")
+        body.pop("timeout")
+    else:
+        timeout = 10 
+
+    if body is not None:
+        parameter.update(body)
+
+    req = self._build_request(uri, method, parameter)
+    prepped = req.prepare()
+    
+    s = Session()
+    resp = s.send(prepped, timeout=timeout)
+    resp = self._build_response(resp)
+    return resp
+Por exemplo, podemos definir o tempo limite como 20 segundos nas solicitações de execução (o valor padrão é 10s).
+
+ordersn = '1712071633982A7'
+resp = client.order.get_order_escrow_detail(ordersn = ordersn, timeout=20)
+print(resp)
+Exemplo de Adicionar Item
+Para mais detalhes sobre como adicionar itens via pyshopee, dê uma olhada na pasta "example/add.py"
+
+Nota do desenvolvedor
+A partir de agosto de 2018, a ShopeePartnerAPI alterará o mecanismo de aplicação original.
+Substitua pelo seu parâmetro válido (shopid, partnerid, token etc.) antes de enviar a chamada.
+
+Para começar, consulte o Guia do Desenvolvedor em Documentação - Visão geral - Guia do Desenvolvedor
+sobre como se tornar um desenvolvedor e utilizar os serviços OpenAPI da Shopee.
+
+Aplicar Rota de Autoridade:
+
+Aplicar Autoridade de Desenvolvedor
+Autenticação do Desenvolvedor
+Construir novo token de aplicativo
+Desenvolvendo e Testando
+Autoridade do Vendedor
+Sobre a plataforma testtools
+Os parâmetros padrão são fictícios, exceto o PartnerID e a Chave de Parceiro dedicada ao seu APP.
+Substitua pelo seu parâmetro válido (shopid etc.) antes de enviar a chamada.
+As ferramentas de teste são baseadas no ambiente de PRODUÇÃO, aplique sua credencial e parâmetros de PRODUÇÃO. As guias "Solicitação" e "Assinatura" têm como objetivo auxiliar o desenvolvedor na verificação da assinatura de autenticação de chamadas de API.
+Observação
+Código-fonte
+https://github.com/JimCurryWang/pyshopee
+
+pypi
+https://pypi.org/project/pyshopee
+
+Documentação da API do Shopee Parter
+https://partner.test.shopeemobile.com/docs/
+
+Registro para uso da API de Parceiros da Shopee
+https://docs.google.com/forms/d/e/1FAIpQLSeCSsRHQSoQvZccOSHIl5DZAPIkSnS4ivN0Z6rp6N7JIoofvQ/viewform?c=0&w=1
