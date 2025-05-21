@@ -44,7 +44,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
         description: "Sua loja Shopee foi conectada e seus produtos serão sincronizados em breve.",
         variant: "success",
       });
-      
+
       // Reset form
       setShopCredentials({
         shopName: "",
@@ -52,10 +52,10 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
         accessToken: "",
         refreshToken: "",
       });
-      
+
       // Invalidate stores query to refresh the list
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
-      
+
       // Call onSuccess callback if provided
       if (onSuccess) onSuccess();
     },
@@ -78,7 +78,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
         description: "Você será redirecionado para autorização da Shopee em instantes...",
         variant: "default",
       });
-      
+
       // Atraso pequeno para garantir que o toast seja exibido antes do redirecionamento
       setTimeout(() => {
         toast({
@@ -86,13 +86,13 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
           description: "Você será redirecionado para a página de login da Shopee. Por favor, faça login com sua conta de vendedor.",
           variant: "default",
         });
-        
+
         // Obter a data atual para evitar problemas de cache
         const timestamp = new Date().getTime();
-        
+
         // Abrir em nova aba para melhor experiência de login com parâmetro anti-cache
         window.open(`/api/shopee/authorize?_=${timestamp}`, '_blank', 'noopener,noreferrer');
-        
+
         // Mostrar mensagem adicional sobre janela pop-up
         setTimeout(() => {
           toast({
@@ -101,7 +101,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
             variant: "warning",
             duration: 6000,
           });
-          
+
           // Resolver o estado de conexão após um tempo
           setTimeout(() => {
             setIsConnecting(false);
@@ -117,16 +117,16 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
       });
     }
   };
-  
+
   // Função para simular conexão OAuth (para ambiente de desenvolvimento)
   const handleSimulateOAuth = () => {
     setIsConnecting(true);
-    
+
     // Simular fluxo OAuth com timeout
     setTimeout(() => {
       // Gerar ID de loja aleatório
       const randomShopId = `shop_${Math.floor(Math.random() * 1000000)}`;
-      
+
       // Criar loja de demonstração
       connectStoreMutation.mutate({
         shopName: "Minha Loja Shopee (Demo)",
@@ -137,7 +137,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
         tokenExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias a partir de agora
         isActive: true
       });
-      
+
       setIsConnecting(false);
     }, 2000);
   };
@@ -145,7 +145,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
   // Handle manual connection form submission
   const handleManualConnect = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate form
     if (!shopCredentials.shopName || !shopCredentials.shopId || !shopCredentials.accessToken || !shopCredentials.refreshToken) {
       toast({
@@ -155,7 +155,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
       });
       return;
     }
-    
+
     // Connect store with form data
     connectStoreMutation.mutate({
       ...shopCredentials,
@@ -192,7 +192,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
             ))}
           </div>
         </div>
-        
+
         {/* Add more stores if limit not reached */}
         {!hasReachedStoreLimit && (
           <div className="mt-6">
@@ -226,7 +226,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
             </Card>
           </div>
         )}
-        
+
         {/* Plan upgrade suggestion if limit reached */}
         {hasReachedStoreLimit && user?.plan !== 'enterprise' && (
           <Card className="bg-muted/50 border-dashed">
@@ -268,7 +268,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
             </p>
           </div>
         </div>
-        
+
         <div className="flex flex-col gap-3">
           <Button 
             onClick={handleConnectOAuth} 
@@ -287,7 +287,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
               </>
             )}
           </Button>
-          
+
           <Button 
             onClick={handleSimulateOAuth} 
             disabled={isConnecting || connectStoreMutation.isPending}
@@ -307,7 +307,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
             )}
           </Button>
         </div>
-        
+
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
@@ -316,7 +316,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
             <span className="bg-background px-2 text-muted-foreground">Ou conecte manualmente</span>
           </div>
         </div>
-        
+
         <form onSubmit={handleManualConnect} className="space-y-4">
           <div className="grid gap-4">
             <div className="grid gap-2">
@@ -328,7 +328,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
                 onChange={(e) => setShopCredentials({ ...shopCredentials, shopName: e.target.value })}
               />
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="shopId">ID da Loja</Label>
               <Input
@@ -338,7 +338,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
                 onChange={(e) => setShopCredentials({ ...shopCredentials, shopId: e.target.value })}
               />
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="accessToken">Token de Acesso</Label>
               <Input
@@ -348,7 +348,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
                 onChange={(e) => setShopCredentials({ ...shopCredentials, accessToken: e.target.value })}
               />
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="refreshToken">Token de Atualização</Label>
               <Input
@@ -359,7 +359,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
               />
             </div>
           </div>
-          
+
           <Button 
             type="submit" 
             className="w-full"

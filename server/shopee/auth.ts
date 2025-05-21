@@ -24,7 +24,7 @@ export class ShopeeAuthManager {
   getAuthorizationUrl(): string {
     const timestamp = getTimestamp();
 
-    // De acordo com a documentação da API v2, o endpoint correto para autorização de vendedores
+    // Endpoint para autorização de lojas
     const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
     console.log('Usando endpoint de autorização:', basePathForShopAuthorize);
 
@@ -33,11 +33,16 @@ export class ShopeeAuthManager {
     console.log(`Região: ${this.config.region}`);
     console.log(`URL de Redirecionamento: ${this.config.redirectUrl}`);
 
+    // Verificar se a URL de redirecionamento está definida
+    if (!this.config.redirectUrl) {
+      throw new Error('URL de redirecionamento não definida na configuração');
+    }
+
     // Criar o estado único para CSRF protection
     const stateParam = `cipshopee_${Date.now()}`;
 
-    // 1. Formar a string base para a assinatura conforme documentação
-    // IMPORTANTE: Somente partnerId + path + timestamp são usados para a assinatura
+    // 1. Formar a string base para a assinatura conforme documentação da Shopee OpenAPI
+    // Formato: partner_id + API_path + timestamp
     const baseString = `${this.config.partnerId}${basePathForShopAuthorize}${timestamp}`;
     console.log('String base para assinatura:', baseString);
 
@@ -47,29 +52,22 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
     console.log('Assinatura gerada:', signature);
 
-    // 3. CRUCIAL: Para o endpoint de autorização OAuth direta de vendedores (auth_partner),
-    // DEVE-SE usar o domínio específico da região para vendedores (seller.shopee.com.br para Brasil)
-    // Esta é a chave para evitar o redirecionamento para a Open Platform
-    const baseUrl = 'https://seller.shopee.com.br'; // URL específica para vendedores do Brasil
-    console.log('Usando URL de autenticação regional para login direto:', baseUrl);
+    // 3. Usar o domínio correto da API para todas as operações incluindo autenticação
+    const baseUrl = 'https://partner.shopeemobile.com';
+    console.log('Usando URL da API Shopee:', baseUrl);
     
-    // 4. Montar a URL usando a API URL para garantir a codificação correta
-    // ⚠️ Os parâmetros críticos são: login_type=seller e auth_type=direct para evitar o login na open platform
+    // 4. Montar a URL usando URLSearchParams para garantir a codificação correta
     const url = new URL(`${baseUrl}${basePathForShopAuthorize}`);
     
-    // Adicionar os parâmetros na ordem correta (a ordem pode afetar a validação em alguns casos)
+    // Parâmetros obrigatórios conforme documentação da API v2
     url.searchParams.append('partner_id', this.config.partnerId);
-    url.searchParams.append('timestamp', timestamp.toString()); // Converter explicitamente para string
+    url.searchParams.append('timestamp', timestamp.toString());
     url.searchParams.append('sign', signature);
     url.searchParams.append('redirect', this.config.redirectUrl);
     url.searchParams.append('state', stateParam);
     
-    // Parâmetros críticos para garantir o login direto do vendedor, não na Open Platform
-    url.searchParams.append('login_type', 'seller'); // Tipo de login: vendedor
-    url.searchParams.append('auth_type', 'direct'); // Tipo de autenticação: direta
-    url.searchParams.append('region', 'BR'); // Região: Brasil
-    url.searchParams.append('is_auth_shop', 'true'); // Autenticar loja: sim
-    url.searchParams.append('shop_id', ''); // ID da loja: vazio (será preenchido pelo usuário)
+    // Parâmetros adicionais para o fluxo OAuth
+    url.searchParams.append('region', 'BR');
     
     // Construir URL final usando o objeto URL (mais robusto que URLSearchParams)
     let urlString = url.toString();

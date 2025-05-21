@@ -196,6 +196,13 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     console.log(`==== RECEBENDO CALLBACK DA SHOPEE ====`);
     console.log(`Parâmetros recebidos:`, req.query);
     
+    // Validar o state para proteção contra CSRF
+    const receivedState = req.query.state as string;
+    if (!receivedState || !receivedState.startsWith('cipshopee_')) {
+      console.error('State inválido ou ausente na resposta:', receivedState);
+      return res.redirect('/dashboard?status=error&message=' + encodeURIComponent('Erro de segurança: State inválido'));
+    }
+    
     // Verificar se há erro retornado pela Shopee
     if (req.query.error || req.query.errcode || req.query.errMsg || req.query.message) {
       const errorCode = req.query.errcode || req.query.error || '';
@@ -209,20 +216,25 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
       
       // Tratamento específico para erro de token não encontrado
       if (errorCode === '2' || errorMsg.includes('token not found')) {
-        console.log('Detectado erro de token não encontrado, tentando reiniciar o fluxo de autorização...');
+        console.log('Detectado erro de token não encontrado. Isso geralmente ocorre quando a URL da API está incorreta. Verificando configuração...');
+        
+        // Log detalhado de diagnóstico
+        console.log('Configuração atual:');
+        console.log('- Domínio da API utilizado:', 'https://partner.shopeemobile.com');
+        console.log('- URL de redirecionamento:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
         
         // Criar notificação de erro
         await storage.createNotification({
           userId: (req.user as any).claims.sub,
           title: 'Erro na autorização - Token não encontrado',
-          message: 'Ocorreu um erro de autenticação com a Shopee. Por favor, tente conectar sua loja novamente.',
+          message: 'Ocorreu um erro na autenticação com a Shopee. Tente conectar sua loja novamente com as configurações corrigidas.',
           type: 'error',
           isRead: false,
           createdAt: new Date()
         });
         
         // Redirecionar para a página inicial com instrução para tentar novamente
-        return res.redirect('/dashboard?status=error&code=token_not_found&message=' + encodeURIComponent('Token não encontrado. Por favor, tente conectar novamente.'));
+        return res.redirect('/dashboard?status=error&code=token_not_found&message=' + encodeURIComponent('Token não encontrado. Por favor, tente conectar novamente com as configurações atualizadas.'));
       }
       
       // Criar notificação de erro para outros tipos de erro

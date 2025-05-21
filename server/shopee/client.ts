@@ -61,9 +61,15 @@ export class ShopeeClient {
     this.authManager = new ShopeeAuthManager(config);
     this.tokens = tokens || null;
     
+    // Verificar se a URL de redirecionamento está definida
+    if (!config.redirectUrl) {
+      console.error('ERRO: URL de redirecionamento não definida na configuração');
+      config.redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
+    }
+    
     // Criar instância do Axios
     this.axiosInstance = axios.create({
-      baseURL: getApiBaseUrl(config.region, false), // false para API normal (não autenticação)
+      baseURL: getApiBaseUrl(config.region, false), // Sempre usa o domínio partner.shopeemobile.com
       timeout: 30000, // 30 segundos
       headers: {
         'Content-Type': 'application/json',

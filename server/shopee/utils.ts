@@ -22,52 +22,14 @@ export function getTimestamp(): number {
  * @returns URL base da API
  */
 export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false): string {
-  // URLs de autenticação específicas para cada região (para interface de vendedor)
-  const authRegionMap: Record<ShopeeRegion, string> = {
-    'SG': 'https://seller.shopee.sg',
-    'MY': 'https://seller.shopee.com.my',
-    'TH': 'https://seller.shopee.co.th',
-    'TW': 'https://seller.shopee.tw',
-    'ID': 'https://seller.shopee.co.id',
-    'VN': 'https://seller.shopee.vn',
-    'PH': 'https://seller.shopee.ph',
-    'BR': 'https://seller.shopee.com.br',
-    'MX': 'https://seller.shopee.com.mx',
-    'CO': 'https://seller.shopee.com.co',
-    'CL': 'https://seller.shopee.cl',
-    'PL': 'https://seller.shopee.pl',
-    'ES': 'https://seller.shopee.es',
-    'FR': 'https://seller.shopee.fr'
-  };
-
-  // URLs da API para cada região
-  const apiRegionMap: Record<ShopeeRegion, string> = {
-    'SG': 'https://partner.shopeemobile.com',
-    'MY': 'https://partner.shopeemobile.com',
-    'TH': 'https://partner.shopeemobile.com',
-    'TW': 'https://partner.shopeemobile.com',
-    'ID': 'https://partner.shopeemobile.com',
-    'VN': 'https://partner.shopeemobile.com',
-    'PH': 'https://partner.shopeemobile.com',
-    'BR': 'https://partner.shopeemobile.com', // Domínio global para APIs da Shopee (mesmo para o Brasil)
-    'MX': 'https://partner.shopeemobile.com',
-    'CO': 'https://partner.shopeemobile.com',
-    'CL': 'https://partner.shopeemobile.com',
-    'PL': 'https://partner.shopeemobile.com', 
-    'ES': 'https://partner.shopeemobile.com',
-    'FR': 'https://partner.shopeemobile.com'
-  };
-
-  // Para autenticação OAuth direta de vendedores SEMPRE use as URLs de seller específicas da região
-  // Para chamadas de API ainda usamos partner.shopeemobile.com
-  // Esta é a principal diferença que faz o login direto funcionar!
-  if (isAuthUrl) {
-    console.log(`Usando URL de autenticação regional: ${authRegionMap[region] || authRegionMap['BR']}`);
-    return authRegionMap[region] || authRegionMap['BR'];
-  } else {
-    console.log(`Usando URL de API global: ${apiRegionMap[region] || apiRegionMap['BR']}`);
-    return apiRegionMap[region] || apiRegionMap['BR'];
-  }
+  // Para todas as operações da API incluindo autenticação OAuth, use o domínio global da API
+  // Este é o domínio padrão da documentação oficial da Shopee OpenAPI
+  const apiUrl = 'https://partner.shopeemobile.com';
+  
+  // Log para debugging
+  console.log(`Usando URL de API global: ${apiUrl}`);
+  
+  return apiUrl;
 }
 
 /**
