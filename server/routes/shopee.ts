@@ -68,10 +68,11 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL final para autorização:", authUrl);
     
     // Verificar parâmetros obrigatórios conforme documentação oficial
+    const shopeePartnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
     console.log("Verificação de parâmetros obrigatórios:");
-    console.log("- partner_id:", authUrl.includes(`partner_id=${partnerId}`));
-    console.log("- timestamp:", authUrl.includes(`timestamp=${timestamp}`));
-    console.log("- sign:", authUrl.includes(`sign=${sign}`));
+    console.log("- partner_id:", authUrl.includes(`partner_id=${shopeePartnerId}`));
+    console.log("- timestamp:", authUrl.includes("timestamp="));
+    console.log("- sign:", authUrl.includes("sign="));
     console.log("- redirect:", authUrl.includes("redirect="));
 
     // Salvar URL em arquivo para inspeção quando necessário
