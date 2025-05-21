@@ -193,16 +193,43 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
  */
 router.get('/callback', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    console.log(`Recebendo callback da Shopee com parâmetros:`, req.query);
+    console.log(`==== RECEBENDO CALLBACK DA SHOPEE ====`);
+    console.log(`Parâmetros recebidos:`, req.query);
+    
+    // Verificar se há erro retornado pela Shopee
+    if (req.query.error || req.query.errcode || req.query.errMsg) {
+      console.error('Erro retornado pela Shopee:', {
+        error: req.query.error,
+        errcode: req.query.errcode,
+        message: req.query.errMsg || req.query.message
+      });
+      
+      // Criar notificação de erro
+      try {
+        await storage.createNotification({
+          userId: (req.user as any).claims.sub,
+          title: 'Erro na autorização Shopee',
+          message: `A Shopee retornou um erro: ${req.query.errMsg || req.query.message || 'Erro desconhecido'}`,
+          type: 'error',
+          isRead: false,
+          createdAt: new Date()
+        });
+      } catch (notifError) {
+        console.error('Erro ao criar notificação:', notifError);
+      }
+      
+      return res.redirect('/dashboard?status=error&message=' + encodeURIComponent(req.query.errMsg as string || req.query.message as string || 'Erro na autorização'));
+    }
+    
     const { code, shop_id } = req.query;
 
     if (!code || !shop_id) {
       console.error('Parâmetros obrigatórios ausentes na callback da Shopee:', req.query);
-      return res.status(400).json({
-        message: 'Missing required parameters',
-        error: 'Missing code or shop_id'
-      });
+      return res.redirect('/dashboard?status=error&message=Parâmetros obrigatórios ausentes na resposta da Shopee');
     }
+
+    console.log(`Código recebido: ${code}`);
+    console.log(`ID da loja: ${shop_id}`);
 
     // Criar cliente da API
     const shopeeClient = createClient();
@@ -216,8 +243,12 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     // Adicionar headers à requisição
     shopeeClient.setRequestHeaders(headers);
 
+    console.log('Iniciando troca de código por tokens...');
+    
     // Trocar o código por tokens de acesso
     const tokens = await shopeeClient.connect(code as string, shop_id as string);
+    
+    console.log('Tokens obtidos com sucesso!');
 
     // Obter informações da loja (será implementado posteriormente)
     // Temporariamente vamos utilizar um nome genérico

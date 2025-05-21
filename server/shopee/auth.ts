@@ -176,6 +176,13 @@ export class ShopeeAuthManager {
       const baseUrl = getApiBaseUrl(this.config.region);
       const path = AUTH.GET_TOKEN;
 
+      console.log(`==== INICIANDO OBTENÇÃO DE TOKEN SHOPEE ====`);
+      console.log(`Código de autorização: ${code.substring(0, 10)}...`);
+      console.log(`ID da loja: ${shopId}`);
+      console.log(`Timestamp: ${timestamp}`);
+      console.log(`Base URL: ${baseUrl}`);
+      console.log(`Endpoint: ${path}`);
+
       // Corpo da requisição (parâmetros específicos do endpoint)
       const requestBody = {
         partner_id: Number(this.config.partnerId),
@@ -206,27 +213,53 @@ export class ShopeeAuthManager {
       console.log('URL completa:', requestUrl);
       console.log('String base para assinatura:', baseString);
       console.log('Corpo da requisição:', minifiedRequestBody);
+      console.log('Assinatura gerada:', signature);
       console.log('=============================================');
 
       // Fazer a requisição com os parâmetros no corpo e assinatura na URL
+      console.log('Enviando requisição para obter token...');
       const response = await axios({
         method: 'post',
         url: requestUrl,
         data: requestBody,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Region': 'BR'
+        },
+        timeout: 15000 // 15 segundos de timeout
       });
 
       const data = response.data;
 
-      console.log('Resposta da API de token:', JSON.stringify(data, null, 2));
+      // Log da resposta (removendo dados sensíveis para o log)
+      console.log('Resposta da API de token:', JSON.stringify({
+        ...data,
+        access_token: data.access_token ? '***' : undefined,
+        refresh_token: data.refresh_token ? '***' : undefined
+      }, null, 2));
 
+      // Verificar erros na resposta
       if (data.error) {
+        console.error('Erro retornado pela API:', {
+          error: data.error,
+          message: data.message,
+          requestId: data.request_id
+        });
+        
         throw {
           error: data.error,
-          message: data.message || 'Failed to get access token',
+          message: data.message || 'Falha ao obter token de acesso',
           requestId: data.request_id,
+        };
+      }
+
+      // Verificar se os tokens necessários estão presentes
+      if (!data.access_token || !data.refresh_token) {
+        console.error('Tokens não encontrados na resposta:', data);
+        throw {
+          error: 'TokenNotFound',
+          message: 'Tokens de acesso não encontrados na resposta',
         };
       }
 
@@ -235,6 +268,8 @@ export class ShopeeAuthManager {
       const expiresAt = new Date();
       expiresAt.setSeconds(expiresAt.getSeconds() + expiresIn);
 
+      console.log(`Token obtido com sucesso! Expira em: ${expiresIn} segundos`);
+
       return {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
@@ -242,7 +277,22 @@ export class ShopeeAuthManager {
         shopId,
       };
     } catch (error: any) {
-      console.error('Erro ao obter token de acesso:', error.response?.data || error.message);
+      console.error('==== ERRO AO OBTER TOKEN DE ACESSO ====');
+      
+      // Log detalhado do erro
+      if (error.response) {
+        console.error('Resposta de erro:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+      } else if (error.request) {
+        console.error('Erro de requisição (sem resposta):', error.request);
+      } else {
+        console.error('Erro:', error.message);
+      }
+      
       throw parseApiError(error);
     }
   }

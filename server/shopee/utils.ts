@@ -165,12 +165,22 @@ export function parseApiError(error: any): ShopeeApiError {
   // Se é um erro do Axios
   if (error.response) {
     const data = error.response.data;
+    console.log('Detalhes do erro da resposta:', JSON.stringify(data, null, 2));
+
+    // Verificar estrutura específica de erro de token não encontrado
+    if (data && data.errcode === 2) {
+      return {
+        error: 'TokenNotFound',
+        message: data.message || 'Token não encontrado ou inválido',
+        response: data
+      };
+    }
 
     // Extrair mensagem de erro da resposta da API Shopee
-    if (data && data.error) {
+    if (data && (data.error || data.errcode || data.error_type)) {
       return {
-        error: data.error,
-        message: data.message || 'Shopee API error',
+        error: data.error || `ErrorCode_${data.errcode}` || data.error_type,
+        message: data.message || data.error_msg || data.error_description || 'Erro na API da Shopee',
         requestId: data.request_id,
         response: data
       };
@@ -178,8 +188,8 @@ export function parseApiError(error: any): ShopeeApiError {
 
     // Erro HTTP genérico
     return {
-      error: `HTTP Error ${error.response.status}`,
-      message: error.response.statusText || 'HTTP Error',
+      error: `HTTP_${error.response.status}`,
+      message: error.response.statusText || `Erro HTTP ${error.response.status}`,
       response: error.response.data
     };
   }
@@ -188,13 +198,24 @@ export function parseApiError(error: any): ShopeeApiError {
   if (error.request) {
     return {
       error: 'NetworkError',
-      message: 'Network Error: The request was made but no response was received'
+      message: 'Erro de rede: A requisição foi feita mas não houve resposta',
+      details: error.message
+    };
+  }
+
+  // Erros de timeout
+  if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+    return {
+      error: 'TimeoutError',
+      message: 'A requisição excedeu o tempo limite',
+      details: error.message
     };
   }
 
   // Outros erros
   return {
     error: 'UnknownError',
-    message: error.message || 'Unknown error occurred'
+    message: error.message || 'Ocorreu um erro desconhecido',
+    details: JSON.stringify(error)
   };
 }

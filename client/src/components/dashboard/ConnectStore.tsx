@@ -81,14 +81,24 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
       
       // Atraso pequeno para garantir que o toast seja exibido antes do redirecionamento
       setTimeout(() => {
-        // Criar novo elemento para abrir em nova janela para evitar problemas de redirecionamento
-        const form = document.createElement('form');
-        form.method = 'GET';
-        form.action = '/api/shopee/authorize';
-        form.target = '_blank';
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
+        toast({
+          title: "Redirecionando para Shopee...",
+          description: "Você será redirecionado para a página de login da Shopee. Por favor, faça login com sua conta de vendedor.",
+          variant: "default",
+        });
+        
+        // Abrir em nova aba para melhor experiência de login
+        window.open('/api/shopee/authorize', '_blank', 'noopener,noreferrer');
+        
+        // Mostrar mensagem adicional sobre janela pop-up
+        setTimeout(() => {
+          toast({
+            title: "Verifique janelas pop-up",
+            description: "Se a janela de login da Shopee não abrir, verifique se o seu navegador está bloqueando pop-ups.",
+            variant: "warning",
+            duration: 6000,
+          });
+        }, 3000);
       }, 1000);
     } catch (error) {
       setIsConnecting(false);
