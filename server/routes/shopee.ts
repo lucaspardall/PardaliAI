@@ -290,6 +290,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         console.log('- URL de redirecionamento:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
 
         // Criar notificação de erro
+        try {
         await storage.createNotification({
           userId: (req.user as any).claims.sub,
           title: 'Erro na autorização - Token não encontrado',
@@ -298,9 +299,12 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
           isRead: false,
           createdAt: new Date()
         });
+      } catch (notifError) {
+        console.error('Erro ao criar notificação:', notifError);
+      }
 
-        // Redirecionar para a página inicial com instrução para tentar novamente
-        return res.redirect('/dashboard?status=error&code=token_not_found&message=' + encodeURIComponent('Token não encontrado. Por favor, tente conectar novamente com as configurações atualizadas.'));
+      // Redirecionar para a página inicial com instrução para tentar novamente
+      return res.redirect('/dashboard?status=error&code=token_not_found&message=' + encodeURIComponent('Token não encontrado. Por favor, tente conectar novamente com as configurações atualizadas.'));
       }
 
       // Criar notificação de erro para outros tipos de erro
