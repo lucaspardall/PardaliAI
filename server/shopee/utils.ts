@@ -19,18 +19,10 @@ export function getTimestamp(): number {
  * @returns URL base da API
  */
 export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false): string {
-  // Para autenticação de vendedor, usar sempre o domínio account.seller.shopee.com
-  if (isAuthUrl) {
-    const authUrl = 'https://account.seller.shopee.com';
-    console.log(`Usando URL específica para autenticação: ${authUrl}`);
-    return authUrl;
-  }
-  
-  // Para APIs após autenticação
+  // Para o Brasil, precisamos usar o domínio específico para todas as operações
   if (region === 'BR') {
-    // API endpoints após autenticação para o Brasil
-    const brUrl = 'https://partner.shopeemobile.com';
-    console.log(`Usando URL de API para o Brasil: ${brUrl}`);
+    const brUrl = 'https://open.shopee.com.br';
+    console.log(`Usando URL específica do Brasil: ${brUrl}`);
     return brUrl;
   }
   

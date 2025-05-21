@@ -22,33 +22,59 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Importar o cliente Shopee
-    const shopeeClient = createClient();
+    // Gerar timestamp e parâmetros necessários
+    const timestamp = Math.floor(Date.now() / 1000);
+    const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
+    const partnerKey = process.env.SHOPEE_PARTNER_KEY || '';
+    const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
+    console.log('URL de redirecionamento usada:', redirectUrl);
+    const state = `cipshopee_${Date.now()}`;
 
-    try {
-      // Obter a URL de autorização usando o método atualizado
-      const authUrl = shopeeClient.getAuthorizationUrl();
-      console.log('URL de autorização gerada:', authUrl);
+    // Criar a string base para assinatura EXATAMENTE conforme documentação Shopee
+    const path = '/api/v2/shop/auth_partner';
+    // Formato correto: [partner_id][path][timestamp]
+    const baseString = `${partnerId}${path}${timestamp}`;
 
-      // Registrar informações importantes
-      console.log('Partner ID:', process.env.SHOPEE_PARTNER_ID || '2011285');
-      console.log('URL de redirecionamento configurada:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
+    console.log('String base para assinatura:', baseString);
 
-      // Adicionar log detalhado para facilitar depuração
-      console.log('URL de autorização (parâmetros separados):'); 
-      console.log('- partner_id:', partnerId);
-      console.log('- timestamp:', timestamp);
-      console.log('- sign:', sign, 'comprimento:', sign.length); // Verificar se há assinatura e seu comprimento
-      console.log('- redirect:', redirectUrl);
-      console.log('- region:', 'BR');
-      console.log('- is_auth_shop:', true);
-      console.log('- login_type:', 'seller');
-      console.log('- auth_type:', 'direct');
+    // Gerar a assinatura HMAC-SHA256
+    const hmac = crypto.createHmac('sha256', partnerKey);
+    hmac.update(baseString);
+    const sign = hmac.digest('hex');
 
-      // Verificar se o Partner Key está configurado corretamente (sem mostrar o valor real)
-      console.log('- Partner Key configurada:', partnerKey ? 'Sim (valor ocultado)' : 'NÃO CONFIGURADA');
+    // IMPORTANTE: Para autorização direta de sellers (vendedores) no Brasil, 
+    // precisamos usar o domínio open.shopee.com.br (domínio da Open Platform BR)
+    const region = 'BR';
+    const baseUrl = 'https://open.shopee.com.br';
+    console.log('Usando domínio Open Platform Brasil:', baseUrl);
 
-      // Verificar se há o problema do ×tamp na URL
+    // Construir URL de autorização para login direto de vendedor na Open Platform Brasil
+    // Formato diferente do endpoint partner.shopeemobile
+    const random = Math.random().toString(36).substring(2, 15);
+    let authUrl = `${baseUrl}/authorize?` + 
+      `partner_id=${partnerId}&` +
+      `timestamp=${timestamp}&` +
+      `sign=${sign}&` +
+      `redirect=${encodeURIComponent(redirectUrl)}`;
+
+    // Parâmetros específicos para login direto no domínio brasileiro
+    authUrl += `&auth_shop=true&auth_type=direct&id=${partnerId}&isRedirect=true&is_agent=false&random=${random}&region=BR&state=${state}`;
+
+    // Adicionar log detalhado para facilitar depuração
+    console.log('URL de autorização (parâmetros separados):'); 
+    console.log('- partner_id:', partnerId);
+    console.log('- timestamp:', timestamp);
+    console.log('- sign:', sign, 'comprimento:', sign.length); // Verificar se há assinatura e seu comprimento
+    console.log('- redirect:', redirectUrl);
+    console.log('- region:', 'BR');
+    console.log('- is_auth_shop:', true);
+    console.log('- login_type:', 'seller');
+    console.log('- auth_type:', 'direct');
+    
+    // Verificar se o Partner Key está configurado corretamente (sem mostrar o valor real)
+    console.log('- Partner Key configurada:', partnerKey ? 'Sim (valor ocultado)' : 'NÃO CONFIGURADA');
+
+    // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
       console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
       // Reconstruir manualmente como último recurso (apenas parâmetros obrigatórios)
@@ -199,7 +225,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     for (const [key, value] of urlParams.searchParams.entries()) {
       console.log(`- ${key}: ${value}`);
     }
-
+    
     // Garantir que não haja parâmetros duplicados
     if (authUrl.includes('auth_type=direct') && authUrl.includes('auth_type=shop')) {
       console.warn('⚠️ ALERTA: Parâmetros duplicados detectados. Corrigindo...');

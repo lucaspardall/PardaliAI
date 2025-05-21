@@ -24,7 +24,10 @@ export class ShopeeAuthManager {
   getAuthorizationUrl(): string {
     const timestamp = getTimestamp();
 
-    // Usar o endpoint correto para login de vendedor na Shopee
+    // Endpoint para autorização de lojas (documentação oficial)
+    const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
+    console.log('Usando endpoint de autorização:', basePathForShopAuthorize);
+
     console.log(`Gerando URL de autorização para a Shopee`);
     console.log(`Partner ID: ${this.config.partnerId}`);
     console.log(`Região: ${this.config.region}`);
@@ -35,8 +38,12 @@ export class ShopeeAuthManager {
       throw new Error('URL de redirecionamento não definida na configuração');
     }
 
-    // 1. Formar a string base para a assinatura conforme documentação da Shopee
-    const baseString = `${this.config.partnerId}${timestamp}`;
+    // Criar o estado único para CSRF protection
+    const stateParam = `cipshopee_${Date.now()}`;
+
+    // 1. Formar a string base para a assinatura EXATAMENTE conforme documentação da Shopee
+    // Formato: partner_id + API_path + timestamp (sem espaços ou outros caracteres)
+    const baseString = `${this.config.partnerId}${basePathForShopAuthorize}${timestamp}`;
     console.log('String base para assinatura:', baseString);
 
     // 2. Gerar assinatura HMAC-SHA256
@@ -45,45 +52,37 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
     console.log('Assinatura gerada:', signature);
 
-    // 3. Obter o domínio para autenticação de vendedor
-    const baseUrl = getApiBaseUrl(this.config.region, true);
-    console.log('Usando domínio para autenticação de vendedor:', baseUrl);
+    // 3. Usar o domínio específico do seller center do Brasil para login direto
+    // Para login direto de vendedor brasileiro, usar o domínio open.shopee.com.br
+    const baseUrl = getApiBaseUrl(this.config.region);
+    console.log('Usando domínio específico da Open Platform BR:', baseUrl);
+    console.log('Usando URL da API Shopee BR:', baseUrl);
 
-    // 4. Criar estado para CSRF protection e informações adicionais de autenticação
-    const stateData = {
-      nonce: Math.random().toString(36).substring(2, 15) + Date.now().toString(36),
-      id: parseInt(this.config.partnerId),
-      auth_shop: 1,
-      next_url: `https://open.shopee.com.br/authorize?isRedirect=true`,
-      is_auth: 0
-    };
-    
-    // Codificar o objeto state para Base64
-    const stateEncoded = Buffer.from(JSON.stringify(stateData)).toString('base64');
-    console.log('Estado codificado:', stateEncoded);
+    // 4. Construir a URL com os parâmetros para login direto de vendedor conforme documentação
+    // Estamos usando a abordagem específica para o Brasil que exige endpoints diferentes
 
-    // 5. Construir a URL com os parâmetros para login direto de vendedor
+    // Construir URL usando URLSearchParams para garantir que todos os parâmetros sejam adicionados corretamente
     const params = new URLSearchParams();
 
-    // Adicionar parâmetros conforme visto na URL que funciona
-    params.append('client_id', this.config.partnerId);
-    params.append('lang', 'pt-br');
-    params.append('login_types', '[1,4,2]');
-    params.append('max_auth_age', '3600');
-    params.append('redirect_uri', 'https://open.shopee.com.br/api/v1/oauth2/callback');
-    params.append('region', this.config.region);
-    params.append('required_passwd', 'true');
-    params.append('respond_code', 'code');
-    params.append('scope', 'profile');
-    params.append('sign', signature);
-    params.append('state', stateEncoded);
+    // Adicionar parâmetros obrigatórios PRIMEIRO (ordem importante)
+    params.append('partner_id', this.config.partnerId);
     params.append('timestamp', timestamp.toString());
-    params.append('title', 'CIP Shopee');
+    params.append('sign', signature); // CRUCIAL: assinatura HMAC-SHA256
+    params.append('redirect', this.config.redirectUrl);
+
+    // Adicionar parâmetros específicos para login direto no domínio brasileiro
+    params.append('state', stateParam);
+    params.append('auth_shop', 'true');
+    params.append('auth_type', 'direct');
+    params.append('region', 'BR');
+    params.append('id', this.config.partnerId);
+    params.append('isRedirect', 'true');
+    params.append('is_agent', 'false');
+    params.append('login_type', 'seller');
+    params.append('random', Math.random().toString(36).substring(2, 15));
 
     // Construir a URL final
-    let urlString = `${baseUrl}/signin/oauth/accountchooser?${params.toString()}`;
-    
-    console.log('URL de autorização final:', urlString);
+    let urlString = `${baseUrl}/authorize?${params.toString()}`;
 
     // Log detalhado dos parâmetros para diagnóstico
     console.log('PARÂMETROS DA URL DE AUTORIZAÇÃO:');
