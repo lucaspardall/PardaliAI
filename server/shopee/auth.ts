@@ -25,162 +25,77 @@ export class ShopeeAuthManager {
     // Gerar timestamp e parâmetros necessários
     const timestamp = getTimestamp();
 
-    // Endpoint para autorização de lojas (documentação oficial)
-    const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
-    console.log('Usando endpoint de autorização:', basePathForShopAuthorize);
-
-    console.log(`Gerando URL de autorização para a Shopee`);
-    console.log(`Partner ID: ${this.config.partnerId}`);
-    console.log(`Região: ${this.config.region}`);
-    console.log(`URL de Redirecionamento: ${this.config.redirectUrl}`);
+    // Criar o estado único para CSRF protection
+    const stateParam = `cipshopee_${Date.now()}`;
 
     // Verificar se a URL de redirecionamento está definida
     if (!this.config.redirectUrl) {
       throw new Error('URL de redirecionamento não definida na configuração');
     }
 
-    // Criar o estado único para CSRF protection
-    const stateParam = `cipshopee_${Date.now()}`;
+    console.log(`===================================================`);
+    console.log(`Ambiente: ${process.env.NODE_ENV}`);
+    console.log(`Informações de configuração da API:`);
+    console.log(`Partner ID: ${this.config.partnerId}`);
+    console.log(`URL de redirecionamento configurada: ${this.config.redirectUrl}`);
+    console.log(`===================================================`);
 
-    // 1. Formar a string base para a assinatura EXATAMENTE conforme documentação da Shopee
-    // Formato: partner_id + API_path + timestamp (sem espaços ou outros caracteres)
-    const baseString = `${this.config.partnerId}${basePathForShopAuthorize}${timestamp}`;
-    console.log('String base para assinatura:', baseString);
+    // Nova abordagem baseada no padrão de URL do Upseller
+    // Gerar uma string base para assinatura específica para o formato da nova URL
+    const baseString = `${this.config.partnerId}timestamp${timestamp}redirect_uri${this.config.redirectUrl}`;
+    console.log(`String base para assinatura: ${baseString}`);
 
-    // 2. Gerar assinatura HMAC-SHA256
+    // Gerar assinatura HMAC-SHA256
     const hmac = createHmac('sha256', this.config.partnerKey);
     hmac.update(baseString);
     const signature = hmac.digest('hex');
-    console.log('Assinatura gerada:', signature);
+    console.log(`Assinatura gerada: ${signature}`);
 
-    // 3. Usar o domínio correto da API conforme documentação oficial da Shopee
-    const baseUrl = 'https://partner.shopeemobile.com';
-    console.log('Usando domínio oficial da API Shopee:', baseUrl);
-    console.log('Usando URL da API Shopee:', baseUrl);
-
-    // 4. Construir a URL manualmente para garantir que todos os parâmetros estão presentes
-    // e sem problemas de codificação
-
-    // Sempre gerar URL manualmente com todos os parâmetros necessários para evitar problemas
-    // Isto garante que auth_type=direct e outros parâmetros importantes estarão presentes
-    let urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
-      `partner_id=${this.config.partnerId}&` +
-      `timestamp=${timestamp}&` +
+    // Usar URL baseada no padrão encontrado no Upseller, com domínio account.seller.shopee.com
+    // Esta abordagem segue o formato para login direto de vendedores
+    const authUrl = `https://account.seller.shopee.com/signin/oauth/accountchooser?` +
+      `client_id=${this.config.partnerId}&` +
+      `lang=pt-br&` +
+      `login_types=%5B1,4,2%5D&` +
+      `max_auth_age=3600&` +
+      `redirect_uri=${encodeURIComponent(this.config.redirectUrl)}&` +
+      `region=SG&` +
+      `required_passwd=true&` +
+      `respond_code=code&` +
+      `scope=profile&` +
       `sign=${signature}&` +
-      `redirect=${encodeURIComponent(this.config.redirectUrl)}&` +
-      `state=${encodeURIComponent(stateParam)}&` +
-      `region=BR&` +
-      `is_auth_shop=true&` +
-      `login_type=seller&` +
-      `auth_type=direct`;
+      `timestamp=${timestamp}&` +
+      `state=${stateParam}`;
 
-    // Log para verificar se auth_type=direct está presente
-    console.log('Verificando URL construída manualmente:');
-    console.log('auth_type=direct presente:', urlString.includes('auth_type=direct'));
+    // Construir a URL final manualmente para garantir consistência
+    const finalUrl = authUrl;
 
-    console.log('URL de autorização final:', urlString);
+    console.log(`✅ URL de autorização da Shopee: ${finalUrl}`);
 
-    // Verificação robusta da URL gerada usando regex para garantir que o timestamp está correto
-    if (!urlString.includes('timestamp=')) {
-      console.error("ERRO CRÍTICO: A URL gerada não contém o parâmetro 'timestamp=' corretamente!");
-      console.error("URL problemática:", urlString);
-      throw new Error(`URL inválida: parâmetro timestamp não encontrado na URL`);
-    }
-
-    // Verificação adicional com regex para garantir integridade completa do parâmetro
-    const timestampRegex = /[?&]timestamp=\d+[&$]/;
-    if (!timestampRegex.test(urlString)) {
-      console.error("ERRO CRÍTICO: O formato do parâmetro 'timestamp=' não está correto!");
-      console.error("URL problemática:", urlString);
-      throw new Error(`URL inválida: formato do parâmetro timestamp incorreto`);
-    }
-
-    // Verificar se auth_type=direct está presente e corrigir se necessário
-    if (!urlString.includes('auth_type=direct')) {
-      console.error("ERRO CRÍTICO: O parâmetro 'auth_type=direct' não está presente na URL!");
-      console.error("URL problemática:", urlString);
-      // Corrigir URL adicionando os parâmetros necessários
-      urlString = `${urlString}&auth_type=direct&login_type=seller&region=BR&is_auth_shop=true`;
-      console.log("URL corrigida com auth_type=direct:", urlString);
-    }
-
-    // Verificação extra: garantir que o parâmetro auth_type esteja no formato correto
-    if (urlString.includes('auth_type=') && !urlString.includes('auth_type=direct')) {
-      console.error("ERRO CRÍTICO: Parâmetro auth_type presente mas com valor incorreto!");
-      // Substituir qualquer valor de auth_type por 'direct'
-      urlString = urlString.replace(/auth_type=[^&]+/, 'auth_type=direct');
-      console.log("URL corrigida com auth_type=direct:", urlString);
-    }
-
-    // Verificação adicional para caracteres inválidos no timestamp
-    const invalidTimestampRegex = /[×xX]tamp=/;
-    if (invalidTimestampRegex.test(urlString)) {
-      console.error("ERRO CRÍTICO: Caractere inválido no parâmetro timestamp!");
-      console.error("URL problemática:", urlString);
-      // Correção automática do problema - agora funciona porque urlString é let
-      urlString = urlString.replace(/[×xX]tamp=/, 'timestamp=');
-      console.log("URL corrigida:", urlString);
-
-      // Se o problema persistir, usar a abordagem manual como último recurso
-      if (urlString.includes('×tamp=') || urlString.includes('xtamp=')) {
-        console.log("Reconstruindo a URL manualmente como último recurso...");
-        urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
-      }
-    }
-
-    // Log detalhado dos parâmetros obrigatórios para verificação
-    console.log('URL FINAL COMPLETA (conforme documentação oficial):', urlString);
-    console.log('Parâmetros obrigatórios presentes:');
-    console.log('- partner_id=', urlString.includes(`partner_id=${this.config.partnerId}`));
-    console.log('- timestamp=', urlString.includes('timestamp='));
-    console.log('- sign=', urlString.includes('sign='));
-    console.log('- redirect=', urlString.includes('redirect='));
-
-    // Verificações adicionais para garantir que a URL está correta
-    console.log('Verificação da URL completa:', urlString);
-    console.log('Verificação do parâmetro timestamp (deve conter "timestamp="):', urlString.includes('timestamp='));
-
-    // Verificação visual direta do timestamp para diagnóstico do problema
-    console.log("🔎 Verificação direta do timestamp:", `timestamp=${timestamp}`);
-
-    // Salvar URL em um arquivo para inspeção direta (solução definitiva para copiar a URL)
+    // Salvar URL em um arquivo para inspeção direta
     if (process.env.NODE_ENV === 'development') {
       try {
-        // Usar dynamic import para fs em vez de require para compatibilidade ESM
         import('fs').then(fs => {
-          fs.writeFileSync('shopee_auth_url.txt', urlString, { encoding: 'utf-8' });
+          fs.writeFileSync('shopee_auth_url.txt', finalUrl, { encoding: 'utf-8' });
           console.log('✅ URL salva em arquivo para inspeção: shopee_auth_url.txt');
         }).catch(err => {
           console.error('Erro ao importar fs:', err);
         });
-
-        // Tentativa de abrir a URL diretamente em uma nova aba, se disponível
-        try {
-          // Implementaremos isso mais tarde se necessário com dynamic import
-          console.log('📝 Para abrir a URL diretamente, você pode adicionar a dependência "open"');
-        } catch (openErr) {
-          console.error('Não foi possível abrir a URL em uma nova aba:', openErr);
-        }
       } catch (e) {
         console.error('Não foi possível salvar a URL em arquivo:', e);
       }
     }
 
-    // Log detalhado para debugging
-    console.log(`======= DETALHES DE GERAÇÃO DA URL =======`);
-    console.log(`Partner ID: ${this.config.partnerId}`);
-    console.log(`Path para autorização: ${basePathForShopAuthorize}`);
-    console.log(`String base para assinatura: ${baseString}`);
-    console.log(`Assinatura gerada: ${signature}`);
-    console.log(`URL de redirecionamento: ${this.config.redirectUrl}`);
-    console.log(`URL de autorização final: ${urlString}`);
-    console.log(`URL final completa: ${urlString}`);
-    console.log(`URL começa com https://partner.shopeemobile.com? ${urlString.startsWith('https://partner.shopeemobile.com')}`);
-    console.log(`Timestamp usado: ${timestamp}`);
-    console.log(`Diferença de tempo atual: ${Math.floor(Date.now() / 1000) - timestamp} segundos`);
-    console.log(`============================================`);
+    // Verificação de parâmetros importantes
+    console.log('Verificação de parâmetros importantes:');
+    console.log('- client_id:', finalUrl.includes(`client_id=${this.config.partnerId}`));
+    console.log('- timestamp:', finalUrl.includes(`timestamp=${timestamp}`));
+    console.log('- sign:', finalUrl.includes(`sign=${signature}`));
+    console.log('- redirect_uri:', finalUrl.includes('redirect_uri='));
+    console.log('- region=SG:', finalUrl.includes('region=SG'));
+    console.log('================================================');
 
-    return urlString;
+    return finalUrl;
   }
 
   /**
