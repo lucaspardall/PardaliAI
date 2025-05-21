@@ -37,15 +37,31 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    // Importa o db para verificar a conexão antes de iniciar o servidor
+    const { sql } = await import('./db');
+    
+    // Verificar conexão com o banco
+    try {
+      await sql("SELECT 1");
+      log("Conexão com o banco de dados estabelecida com sucesso");
+    } catch (dbErr) {
+      log("Aviso: não foi possível conectar ao banco de dados. Algumas funcionalidades podem não estar disponíveis.");
+      console.error("Erro de conexão com o banco:", dbErr);
+    }
+    
+    const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      
+      log(`Erro ${status}: ${message}`);
+      res.status(status).json({ message });
+      
+      // Não lançar o erro, apenas logar
+      console.error(err);
+    });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
