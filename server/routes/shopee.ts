@@ -21,105 +21,31 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Nova implementação baseada na URL descoberta no outro SaaS com integração Shopee
-    const clientId = process.env.SHOPEE_PARTNER_ID || '2011285';
-    const clientSecret = process.env.SHOPEE_PARTNER_KEY || '';
-    const redirectUri = 'https://cipshopee.replit.app/api/shopee/callback';
-    const timestamp = Math.floor(Date.now() / 1000);
-    const state = `cipshopee_${Date.now()}`;
-    
-    // String base para assinatura conforme formato descoberto
-    const baseString = `${clientId}timestamp${timestamp}redirect_uri${redirectUri}`;
-    console.log("String base para assinatura:", baseString);
-    
-    // Gerar assinatura HMAC-SHA256
-    const hmac = crypto.createHmac('sha256', clientSecret);
-    hmac.update(baseString);
-    const signature = hmac.digest('hex');
-    console.log("Assinatura gerada:", signature);
-    
-    // Construir URL seguindo o formato do outro SaaS bem-sucedido
-    const authUrl = `https://account.seller.shopee.com/signin/oauth/accountchooser?` +
-                  `client_id=${clientId}&` +
-                  `lang=pt-br&` +
-                  `login_types=%5B1,4,2%5D&` +
-                  `max_auth_age=3600&` +
-                  `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-                  `region=SG&` + // Usar SG (Singapura) conforme identificado
-                  `required_passwd=true&` +
-                  `respond_code=code&` +
-                  `scope=profile&` +
-                  `sign=${signature}&` +
-                  `timestamp=${timestamp}&` +
-                  `state=${encodeURIComponent(state)}`;
-    
-    console.log("✅ URL de autorização da Shopee:", authUrl);
+    // Importar a implementação de diagnóstico para Shopee
+    const { generateAuthUrls, generateDiagnosticPage } = await import('../shopee/fallback');
 
+    // Configuração da integração Shopee
+    const config = {
+      partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
+      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
+      redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback',
+      region: 'SG'
+    };
+
+    // Gerar URLs de autorização com ambos os métodos
+    const urls = generateAuthUrls(config);
+    
     // Salvar URL em arquivo para inspeção e debug
     try {
-      fs.writeFileSync('shopee_auth_url.txt', authUrl);
-      console.log("✅ URL salva em arquivo para inspeção: shopee_auth_url.txt");
+      fs.writeFileSync('shopee_auth_url.txt', 
+        `URL Padrão: ${urls.standardUrl}\n\nURL Alternativa: ${urls.alternativeUrl}`);
+      console.log("✅ URLs salvas em arquivo para inspeção: shopee_auth_url.txt");
     } catch (err) {
-      console.error("Não foi possível salvar URL em arquivo:", err);
+      console.error("Não foi possível salvar URLs em arquivo:", err);
     }
     
-    // Verificar presença de parâmetros críticos
-    console.log("Verificação de parâmetros importantes:");
-    console.log("- client_id:", authUrl.includes(`client_id=${clientId}`));
-    console.log("- timestamp:", authUrl.includes("timestamp="));
-    console.log("- sign:", authUrl.includes("sign="));
-    console.log("- redirect_uri:", authUrl.includes("redirect_uri="));
-    console.log("- region=SG:", authUrl.includes("region=SG"));
-    
-    console.log("================================================");
-
-    // Interface amigável para testar a nova URL da Shopee
-    const htmlContent = `
-      <html>
-        <head>
-          <title>Conectar Loja Shopee</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f8f9fa; }
-            .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-            .btn { display: inline-block; padding: 10px 16px; border-radius: 4px; text-decoration: none; margin: 10px 5px 10px 0; cursor: pointer; font-weight: bold; }
-            .primary { background: #ff5722; color: white; border: none; }
-            .primary:hover { background: #e64a19; }
-            .secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
-            .secondary:hover { background: #e0e0e0; }
-            .info { background: #e8f4fd; border-left: 4px solid #2196F3; padding: 15px; margin: 15px 0; }
-            h1, h2 { color: #333; }
-            pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
-            code { font-family: monospace; font-size: 12px; }
-            .logs { max-height: 200px; overflow-y: auto; }
-          </style>
-        </head>
-        <body>
-          <h1>Conectar Loja Shopee</h1>
-          
-          <div class="card info">
-            <h3>⚠️ Nova abordagem de integração</h3>
-            <p>Estamos usando um novo formato de URL baseado em outra integração com a Shopee.</p>
-            <p>Os principais ajustes:</p>
-            <ul>
-              <li>Domínio: <code>account.seller.shopee.com</code></li>
-              <li>Endpoint: <code>/signin/oauth/accountchooser</code></li>
-              <li>Região: <code>SG</code> (Singapura)</li>
-              <li>Parâmetros: <code>client_id</code> em vez de <code>partner_id</code></li>
-            </ul>
-          </div>
-          
-          <div class="card">
-            <h2>URL de Autorização Gerada</h2>
-            <div class="logs">
-              <pre>${authUrl}</pre>
-            </div>
-            <a href="${authUrl}" class="btn primary">Conectar com Shopee</a>
-            <a href="/dashboard" class="btn secondary">Voltar para o Dashboard</a>
-          </div>
-        </body>
-      </html>
-    `;
+    // Gerar a página de diagnóstico com ambas as opções para teste
+    const htmlContent = generateDiagnosticPage(urls);
     
     return res.send(htmlContent);
 
