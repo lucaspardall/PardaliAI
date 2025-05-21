@@ -75,7 +75,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     // Verificação e log da URL final
     console.log("URL final para autorização:", authUrl);
-
+    
     // Verificar parâmetros obrigatórios conforme documentação oficial
     console.log("Verificação de parâmetros obrigatórios:");
     console.log("- partner_id:", authUrl.includes(`partner_id=${partnerId}`));
@@ -96,30 +96,6 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       console.error("⚠️ ALERTA CRÍTICO: O parâmetro auth_type=direct não está presente na URL!");
     } else {
       console.log("✅ Parâmetro auth_type=direct presente na URL");
-    }
-
-    // Verificar se há tentativa de redirecionamento para qualquer página da Shopee diferente da API direta
-    if (authUrl.includes('open.shopee') || 
-        authUrl.includes('account.seller.shopee') || 
-        authUrl.includes('accounts.shopee') ||
-        !authUrl.includes('partner.shopeemobile.com')) {
-
-      console.error('BLOQUEADO: Tentativa de redirecionamento para URL não autorizada detectada!');
-      console.error('URL bloqueada:', authUrl);
-
-      // Reconstruir a URL forçando o domínio correto e parâmetros para login direto
-      const forceDirectLoginUrl = `https://partner.shopeemobile.com/api/v2/shop/auth_partner?` + 
-        `partner_id=${partnerId}&` +
-        `timestamp=${timestamp}&` +
-        `sign=${sign}&` +
-        `redirect=${encodeURIComponent(redirectUrl)}&` +
-        `region=BR&` +
-        `is_auth_shop=true&` +
-        `login_type=seller&` +
-        `auth_type=direct`;
-
-      console.log('URL forçada para login direto:', forceDirectLoginUrl);
-      return res.redirect(forceDirectLoginUrl);
     }
 
     console.log("================================================");
@@ -166,13 +142,13 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
                 document.getElementById('redirectBtn').addEventListener('click', function() {
                   // Usar o domínio específico para vendedores do Brasil
                   const url = new URL('https://partner.shopeemobile.com/api/v2/shop/auth_partner');
-
+                  
                   // Adicionar parâmetros obrigatórios primeiro
                   url.searchParams.append('partner_id', '${partnerId}');
                   url.searchParams.append('timestamp', '${timestamp}');
                   url.searchParams.append('sign', '${sign}');
                   url.searchParams.append('redirect', 'https://cipshopee.replit.app/api/shopee/callback');
-
+                  
                   // Adicionar parâmetros necessários para login direto do vendedor
                   url.searchParams.append('state', 'cipshopee_${Date.now()}');
                   url.searchParams.append('region', 'BR');
@@ -180,52 +156,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
                   url.searchParams.append('login_type', 'seller');
                   url.searchParams.append('auth_type', 'direct');
 
-                  // Verificar a URL final para garantir que estamos usando apenas partner.shopeemobile.com
-                  const finalUrl = url.toString();
-                  console.log('Redirecionando para URL construída via JavaScript:', finalUrl);
-
-                  const isInvalidUrl = finalUrl.includes('open.shopee') || 
-                                    finalUrl.includes('account.seller.shopee') || 
-                                    finalUrl.includes('accounts.shopee') ||
-                                    !finalUrl.includes('partner.shopeemobile.com');
-
-                  if (isInvalidUrl) {
-                    console.error('ERRO: URL inválida ou contém redirecionamento não autorizado');
-                    console.error('URL bloqueada:', finalUrl);
-
-                    // SEMPRE usar URL direta para API oficial partner.shopeemobile.com
-                    const correctUrl = `https://partner.shopeemobile.com/api/v2/shop/auth_partner?` + 
-                      `partner_id=${partnerId}&` +
-                      `timestamp=${timestamp}&` +
-                      `sign=${sign}&` +
-                      `redirect=${encodeURIComponent('https://cipshopee.replit.app/api/shopee/callback')}&` +
-                      `region=BR&` +
-                      `is_auth_shop=true&` +
-                      `login_type=seller&` +
-                      `auth_type=direct`;
-
-                    console.log('Redirecionando para URL corrigida:', correctUrl);
-                    window.location.href = correctUrl;
-                  } else {
-                    // Verificar se todos os parâmetros necessários estão presentes
-                    if (!finalUrl.includes('login_type=seller') || !finalUrl.includes('auth_type=direct')) {
-                      console.error('ERRO: Parâmetros obrigatórios ausentes na URL');
-
-                      // Adicionar parâmetros necessários
-                      const urlObj = new URL(finalUrl);
-                      if (!urlObj.searchParams.has('login_type')) {
-                        urlObj.searchParams.append('login_type', 'seller');
-                      }
-                      if (!urlObj.searchParams.has('auth_type')) {
-                        urlObj.searchParams.append('auth_type', 'direct');
-                      }
-
-                      console.log('Redirecionando para URL com parâmetros corrigidos:', urlObj.toString());
-                      window.location.href = urlObj.toString();
-                    } else {
-                      window.location.href = finalUrl;
-                    }
-                  }
+                  console.log('Redirecionando para URL construída via JavaScript:', url.toString());
+                  window.location.href = url.toString();
                 });
               </script>
             </div>
@@ -290,21 +222,17 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         console.log('- URL de redirecionamento:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
 
         // Criar notificação de erro
-        try {
-          await storage.createNotification({
-            userId: (req.user as any).claims.sub,
-            title: 'Erro na autorização - Token não encontrado',
-            message: 'Ocorreu um erro na autenticação com a Shopee. Tente conectar sua loja novamente com as configurações corrigidas.',
-            type: 'error',
-            isRead: false,
-            createdAt: new Date()
-          });
-        } catch (notifError) {
-          console.error('Erro ao criar notificação:', notifError);
-        }
+        await storage.createNotification({
+          userId: (req.user as any).claims.sub,
+          title: 'Erro na autorização - Token não encontrado',
+          message: 'Ocorreu um erro na autenticação com a Shopee. Tente conectar sua loja novamente com as configurações corrigidas.',
+          type: 'error',
+          isRead: false,
+          createdAt: new Date()
+        });
 
-      // Redirecionar para a página inicial com instrução para tentar novamente
-      return res.redirect('/dashboard?status=error&code=token_not_found&message=' + encodeURIComponent('Token não encontrado. Por favor, tente conectar novamente com as configurações atualizadas.'));
+        // Redirecionar para a página inicial com instrução para tentar novamente
+        return res.redirect('/dashboard?status=error&code=token_not_found&message=' + encodeURIComponent('Token não encontrado. Por favor, tente conectar novamente com as configurações atualizadas.'));
       }
 
       // Criar notificação de erro para outros tipos de erro

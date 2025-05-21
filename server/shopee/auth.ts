@@ -56,10 +56,10 @@ export class ShopeeAuthManager {
     const baseUrl = 'https://partner.shopeemobile.com';
     console.log('Usando domínio oficial da API Shopee:', baseUrl);
     console.log('Usando URL da API Shopee:', baseUrl);
-
+    
     // 4. Construir a URL manualmente para garantir que todos os parâmetros estão presentes
     // e sem problemas de codificação
-
+    
     // Sempre gerar URL manualmente com todos os parâmetros necessários para evitar problemas
     // Isto garante que auth_type=direct e outros parâmetros importantes estarão presentes
     let urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
@@ -72,11 +72,11 @@ export class ShopeeAuthManager {
       `is_auth_shop=true&` +
       `login_type=seller&` +
       `auth_type=direct`;
-
+    
     // Log para verificar se auth_type=direct está presente
     console.log('Verificando URL construída manualmente:');
     console.log('auth_type=direct presente:', urlString.includes('auth_type=direct'));
-
+    
     console.log('URL de autorização final:', urlString);
 
     // Verificação robusta da URL gerada usando regex para garantir que o timestamp está correto
@@ -93,7 +93,7 @@ export class ShopeeAuthManager {
       console.error("URL problemática:", urlString);
       throw new Error(`URL inválida: formato do parâmetro timestamp incorreto`);
     }
-
+    
     // Verificar se auth_type=direct está presente e corrigir se necessário
     if (!urlString.includes('auth_type=direct')) {
       console.error("ERRO CRÍTICO: O parâmetro 'auth_type=direct' não está presente na URL!");
@@ -102,7 +102,7 @@ export class ShopeeAuthManager {
       urlString = `${urlString}&auth_type=direct&login_type=seller&region=BR&is_auth_shop=true`;
       console.log("URL corrigida com auth_type=direct:", urlString);
     }
-
+    
     // Verificação extra: garantir que o parâmetro auth_type esteja no formato correto
     if (urlString.includes('auth_type=') && !urlString.includes('auth_type=direct')) {
       console.error("ERRO CRÍTICO: Parâmetro auth_type presente mas com valor incorreto!");
@@ -110,7 +110,7 @@ export class ShopeeAuthManager {
       urlString = urlString.replace(/auth_type=[^&]+/, 'auth_type=direct');
       console.log("URL corrigida com auth_type=direct:", urlString);
     }
-
+    
     // Verificação adicional para caracteres inválidos no timestamp
     const invalidTimestampRegex = /[×xX]tamp=/;
     if (invalidTimestampRegex.test(urlString)) {
@@ -119,46 +119,14 @@ export class ShopeeAuthManager {
       // Correção automática do problema - agora funciona porque urlString é let
       urlString = urlString.replace(/[×xX]tamp=/, 'timestamp=');
       console.log("URL corrigida:", urlString);
-
+      
       // Se o problema persistir, usar a abordagem manual como último recurso
       if (urlString.includes('×tamp=') || urlString.includes('xtamp=')) {
         console.log("Reconstruindo a URL manualmente como último recurso...");
         urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
       }
     }
-
-    // Verificação adicional para bloquear qualquer URL que contenha open.shopee em qualquer domínio
-    if (urlString.includes('open.shopee')) {
-      console.error("BLOQUEADO: Tentativa de redirecionamento para open.shopee detectada!");
-      // Forçar a URL para o endpoint partner.shopeemobile.com com autenticação direta
-      urlString = `https://partner.shopeemobile.com/api/v2/shop/auth_partner?` + 
-        `partner_id=${this.config.partnerId}&` +
-        `timestamp=${timestamp}&` +
-        `sign=${signature}&` +
-        `redirect=${encodeURIComponent(this.config.redirectUrl)}&` +
-        `region=BR&` +
-        `is_auth_shop=true&` +
-        `login_type=seller&` +
-        `auth_type=direct`;
-      console.log("URL forçada para login direto:", urlString);
-    }
-
-    // Verificação adicional para bloquear redirecionamento para account.seller.shopee.com
-    if (urlString.includes('account.seller.shopee.com') || urlString.includes('accounts.shopee')) {
-      console.error("BLOQUEADO: Tentativa de redirecionamento para account.seller.shopee.com detectada!");
-      // Forçar a URL para o endpoint partner.shopeemobile.com com autenticação direta
-      urlString = `https://partner.shopeemobile.com/api/v2/shop/auth_partner?` + 
-        `partner_id=${this.config.partnerId}&` +
-        `timestamp=${timestamp}&` +
-        `sign=${signature}&` +
-        `redirect=${encodeURIComponent(this.config.redirectUrl)}&` +
-        `region=BR&` +
-        `is_auth_shop=true&` +
-        `login_type=seller&` +
-        `auth_type=direct`;
-      console.log("URL forçada para login direto:", urlString);
-    }
-
+    
     // Log detalhado dos parâmetros obrigatórios para verificação
     console.log('URL FINAL COMPLETA (conforme documentação oficial):', urlString);
     console.log('Parâmetros obrigatórios presentes:');
@@ -295,7 +263,7 @@ export class ShopeeAuthManager {
           message: data.message,
           requestId: data.request_id
         });
-
+        
         throw {
           error: data.error,
           message: data.message || 'Falha ao obter token de acesso',
@@ -327,7 +295,7 @@ export class ShopeeAuthManager {
       };
     } catch (error: any) {
       console.error('==== ERRO AO OBTER TOKEN DE ACESSO ====');
-
+      
       // Log detalhado do erro
       if (error.response) {
         console.error('Resposta de erro:', {
@@ -341,7 +309,7 @@ export class ShopeeAuthManager {
       } else {
         console.error('Erro:', error.message);
       }
-
+      
       throw parseApiError(error);
     }
   }

@@ -1,0 +1,54 @@
+Method:GET|Status:302|Path:/api/v2/shop/auth_partner
+Request:{"auth_type":"direct","is_auth_shop":"true","login_type":"seller","partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","region":"BR","state":"cipshopee_1747802875404","timestamp":"1747802875"}
+Response:{"error":"status_code=302","message":"status_code=302"}
+
+Editar
+
+Analyzing HTTP 302 redirect during Shopee API authentication
+
+17 s
+
+
+
+
+
+Este log de redirecionamento HTTP 302 é importante para entender o problema. O status 302 é esperado neste endpoint, pois /api/v2/shop/auth_partner deve redirecionar o usuário para a página de login da Shopee. No entanto, há alguns pontos que precisam de atenção:
+
+Análise do Log
+Assinatura ausente: O parâmetro sign não aparece na lista de parâmetros da request, mas é obrigatório segundo a documentação.
+Parâmetros adicionais: Você está enviando parâmetros como auth_type, is_auth_shop e login_type que, embora possam ser úteis, não estão na lista de parâmetros obrigatórios da documentação oficial.
+Response com status 302: Isso é normal e esperado, pois é um redirecionamento, mas não sabemos para onde está redirecionando.
+O que está faltando
+Segundo a documentação que você compartilhou, a URL de autorização deve incluir especificamente:
+
+partner_id
+timestamp
+sign (assinatura HMAC-SHA256)
+redirect (URL de redirecionamento)
+Solução Proposta
+Gere novamente a URL seguindo estritamente o formato da documentação:
+javascript
+// Obter timestamp
+const timestamp = Math.floor(Date.now() / 1000);
+
+// Gerar string base para assinatura (exatamente como na documentação)
+const baseString = `${partnerId}/api/v2/shop/auth_partner${timestamp}`;
+
+// Gerar assinatura HMAC-SHA256
+const hmac = crypto.createHmac('sha256', partnerKey);
+hmac.update(baseString);
+const signature = hmac.digest('hex');
+
+// Construir URL apenas com os parâmetros obrigatórios
+const authUrl = `https://partner.shopeemobile.com/api/v2/shop/auth_partner?` +
+                `partner_id=${partnerId}&` +
+                `timestamp=${timestamp}&` +
+                `sign=${signature}&` +
+                `redirect=${encodeURIComponent(redirectUrl)}`;
+Verifique o destino do redirecionamento:
+Adicione um log para capturar o cabeçalho Location da resposta 302
+Isso mostrará para onde o redirecionamento está indo
+Registre corretamente o fluxo do redirecionamento:
+Implemente logs para acompanhar todo o fluxo de redirecionamento
+Verifique se você está sendo redirecionado para o login de vendedor ou para a Open Platform
+É possível que o Shopee esteja ignorando os parâmetros extras e redirecionando para a Open Platform devido à falta do parâmetro sign ou à formação incorreta do mesmo. Seguir estritamente a documentação oficial deve resolver esse problema.
