@@ -78,9 +78,11 @@ export class ShopeeAuthManager {
       `&is_agent=false` +
       `&random=${Math.random().toString(36).substring(2, 15)}`;
     
-    // Log para verificar se auth_type=direct está presente
+    // Log para verificar parâmetros na URL
     console.log('Verificando URL construída manualmente:');
-    console.log('auth_type=direct presente:', urlString.includes('auth_type=direct'));
+    console.log('auth_type=shop presente:', urlString.includes('auth_type=shop'));
+    console.log('auth_shop=true presente:', urlString.includes('auth_shop=true'));
+    console.log('URL de redirecionamento incluída:', urlString.includes(encodeURIComponent(this.config.redirectUrl)));
     
     console.log('URL de autorização final:', urlString);
 

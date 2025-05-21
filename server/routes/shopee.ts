@@ -26,7 +26,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     const timestamp = Math.floor(Date.now() / 1000);
     const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
     const partnerKey = process.env.SHOPEE_PARTNER_KEY || '';
-    const redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
+    const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
+    console.log('URL de redirecionamento usada:', redirectUrl);
     const state = `cipshopee_${Date.now()}`;
 
     // Criar a string base para assinatura EXATAMENTE conforme documentação Shopee
