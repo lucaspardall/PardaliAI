@@ -21,28 +21,31 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Importar a implementação oficial de produção
-    const { generateConnectionPage } = await import('../shopee/production');
+    // Importar a implementação de diagnóstico para Shopee
+    const { generateAuthUrls, generateDiagnosticPage } = await import('../shopee/fallback');
 
-    // Configuração da integração Shopee com os valores reais do app
+    // Configuração da integração Shopee
     const config = {
-      // IDs do ambiente de teste (Test Partner)
-      testPartnerId: '1279702',
-      testPartnerKey: '71707a74654a47464446574676b5150487171614151785264a53467748494',
-      
-      // IDs do ambiente de produção (Live Partner)
-      livePartnerId: '2011285',
-      livePartnerKey: process.env.SHOPEE_PARTNER_KEY || '477a724873627457486972644a704f756948624776754646544170674a515a64',
-      
-      // URL de redirecionamento EXATAMENTE como configurada no console
-      redirectUrl: 'https://cipshopee.replit.app',
-      
-      // Ambiente atual - usando o ambiente de teste
-      environment: 'test' as 'test' | 'live'
+      partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
+      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
+      redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback',
+      region: 'SG'
     };
+
+    // Gerar URLs de autorização com ambos os métodos
+    const urls = generateAuthUrls(config);
     
-    // Gerar a página oficial de conexão da loja
-    const htmlContent = generateConnectionPage(config);
+    // Salvar URL em arquivo para inspeção e debug
+    try {
+      fs.writeFileSync('shopee_auth_url.txt', 
+        `URL Padrão: ${urls.standardUrl}\n\nURL Alternativa: ${urls.alternativeUrl}`);
+      console.log("✅ URLs salvas em arquivo para inspeção: shopee_auth_url.txt");
+    } catch (err) {
+      console.error("Não foi possível salvar URLs em arquivo:", err);
+    }
+    
+    // Gerar a página de diagnóstico com ambas as opções para teste
+    const htmlContent = generateDiagnosticPage(urls);
     
     return res.send(htmlContent);
 

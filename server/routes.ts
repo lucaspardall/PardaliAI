@@ -13,61 +13,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Shopee routes
   app.use('/api/shopee', shopeeRoutes);
-  
-  // Rota para callback da Shopee na raiz do domínio
-  // IMPORTANTE: Esta rota precisa corresponder à URL configurada na Shopee Open Platform
-  app.get('/', async (req, res) => {
-    // Verifica se é um callback da Shopee (contém parâmetros específicos)
-    if (req.query.code && req.query.shop_id) {
-      console.log('===== CALLBACK DA SHOPEE RECEBIDO NA RAIZ =====');
-      console.log('Query params:', req.query);
-      
-      const shopCode = req.query.code;
-      const shopId = req.query.shop_id;
-      
-      // Se não estiver autenticado, redirecionar para login
-      if (!req.isAuthenticated()) {
-        // Salvar os parâmetros de callback em sessão para processar após login
-        if (req.session) {
-          req.session.shopeeCallback = {
-            code: shopCode,
-            shopId: shopId,
-            timestamp: Date.now()
-          };
-        }
-        return res.redirect('/login?callbackPending=true');
-      }
-      
-      // Armazena temporariamente as informações da loja
-      try {
-        const userId = req.user?.claims?.sub;
-        if (!userId) {
-          return res.redirect('/login');
-        }
-        
-        const storeName = `Loja Shopee ${shopId}`;
-        await storage.createStore({
-          userId,
-          name: storeName,
-          platform: 'shopee',
-          externalId: shopId ? String(shopId) : undefined,
-          authCode: String(shopCode),
-          status: 'connected',
-          metadata: {
-            connectedAt: new Date().toISOString()
-          }
-        });
-        
-        return res.redirect('/dashboard?connected=true');
-      } catch (error) {
-        console.error('Erro ao processar callback da Shopee:', error);
-        return res.redirect('/dashboard?error=callback_processing_failed');
-      }
-    }
-    
-    // Se não for um callback da Shopee, redirecionar para a página inicial
-    res.redirect('/dashboard');
-  });
 
   // Auth endpoints
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
