@@ -12,8 +12,8 @@ const DEFAULT_CONFIG: ShopeeAuthConfig = {
   partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
   partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
   // Sempre usar o domínio de produção cipshopee.replit.app como URL de redirecionamento
-  redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback',
-  region: 'BR'
+  redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
+  region: process.env.SHOPEE_REGION || 'SG'  // Alterado para SG (Singapura) como no Upseller
 };
 
 /**
@@ -21,15 +21,15 @@ const DEFAULT_CONFIG: ShopeeAuthConfig = {
  * @param config Configuração opcional (usa valores padrão se não fornecida)
  */
 export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
-  // Definir região explicitamente como BR para garantir autenticação correta
-  const region = 'BR'; 
+  // Usar região SG (Singapura) conforme exemplos encontrados no Upseller
+  const region = process.env.SHOPEE_REGION || 'SG'; 
   
   // Usar sempre o domínio de produção para integrações Shopee
   const currentUrl = 'https://cipshopee.replit.app';
   
   // Configurar URL de redirecionamento garantindo formato correto e absoluto
   // A URL de redirecionamento deve ser URL completa e absoluta conforme documentação
-  const redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
+  const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
   
   console.log(`[Shopee Client] Configurando cliente com redirectUrl: ${redirectUrl} e região: ${region}`);
   
@@ -38,7 +38,7 @@ export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
     ...DEFAULT_CONFIG,
     ...config,
     redirectUrl,  // Usar sempre URL absoluta
-    region        // Garantir que região é sempre BR
+    region        // Usar a região configurada
   };
   
   console.log(`[Shopee Client] Configuração final:`, {
