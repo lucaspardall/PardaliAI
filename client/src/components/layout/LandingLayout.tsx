@@ -32,24 +32,24 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             <i className="ri-bird-fill text-primary text-3xl mr-2"></i>
             <h1 className="text-2xl font-bold text-foreground font-heading">CIP Shopee</h1>
           </div>
-          
+
           <div className="hidden md:flex items-center space-x-6">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Recursos</a>
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Planos</a>
-            
+
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="mr-2"
+              className="mr-2 border-primary hover:bg-primary/10"
             >
               {theme === "dark" ? (
-                <i className="ri-sun-line text-xl"></i>
+                <i className="ri-sun-line text-xl text-primary"></i>
               ) : (
-                <i className="ri-moon-line text-xl"></i>
+                <i className="ri-moon-line text-xl text-primary"></i>
               )}
             </Button>
-            
+
             {isLoading ? (
               <div className="h-10 w-24 bg-muted animate-pulse rounded-lg"></div>
             ) : isAuthenticated ? (
@@ -62,7 +62,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               </Button>
             )}
           </div>
-          
+
           {/* Mobile menu button */}
           <div className="flex items-center md:hidden">
             <Button
@@ -77,7 +77,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
                 <i className="ri-moon-line text-xl"></i>
               )}
             </Button>
-            
+
             <Button 
               variant="ghost" 
               size="icon"
@@ -91,7 +91,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             </Button>
           </div>
         </div>
-        
+
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-background border-t border-border mt-4 py-4">
@@ -110,7 +110,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               >
                 Planos
               </a>
-              
+
               {isLoading ? (
                 <div className="h-10 bg-muted animate-pulse rounded-lg"></div>
               ) : isAuthenticated ? (
