@@ -57,32 +57,26 @@ export class ShopeeAuthManager {
     console.log('Usando domínio oficial da API Shopee:', baseUrl);
     console.log('Usando URL da API Shopee:', baseUrl);
     
-    // 4. Construir os parâmetros da URL seguindo a documentação oficial da Shopee
-    // Host + path + partner id + timestamp + redirect url + sign (conforme documentação)
-    // Adicionar parâmetros adicionais para forçar o login direto do vendedor
-    const params = new URLSearchParams();
-    params.append('partner_id', this.config.partnerId);
-    params.append('timestamp', timestamp.toString());
-    params.append('sign', signature);
-    params.append('redirect', this.config.redirectUrl);
-    params.append('auth_type', 'direct'); // Forçar login direto, sem Open Platform
-    params.append('login_type', 'seller'); // Forçar login como vendedor
-    params.append('region', 'BR'); // Região específica para Brasil
-    params.append('is_auth_shop', 'true'); // Autorizar uma loja específica
+    // 4. Construir a URL manualmente para garantir que todos os parâmetros estão presentes
+    // e sem problemas de codificação
+    const stateParam = `cipshopee_${Date.now()}`;
     
-    // Construir URL final com todos os parâmetros necessários
-    let urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
+    // Sempre gerar URL manualmente com todos os parâmetros necessários para evitar problemas
+    // Isto garante que auth_type=direct e outros parâmetros importantes estarão presentes
+    let urlString = `${baseUrl}${basePathForShopAuthorize}?` + 
+      `partner_id=${this.config.partnerId}&` +
+      `timestamp=${timestamp}&` +
+      `sign=${signature}&` +
+      `redirect=${encodeURIComponent(this.config.redirectUrl)}&` +
+      `state=${encodeURIComponent(stateParam)}&` +
+      `region=BR&` +
+      `is_auth_shop=true&` +
+      `login_type=seller&` +
+      `auth_type=direct`;
     
-    // Verificação adicional para garantir que não há problemas com caracteres especiais
-    if (urlString.includes('×tamp=') || !urlString.includes('timestamp=')) {
-      console.log('ALERTA: Detectado problema de codificação! Reconstruindo URL manualmente');
-      // Construir manualmente como último recurso, incluindo parâmetros para login direto
-      urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=0`;
-    } else if (!urlString.includes('auth_type=direct')) {
-      console.log('ALERTA: URL não contém parâmetro auth_type=direct. Adicionando parâmetros necessários.');
-      // Garantir que os parâmetros de login direto estejam presentes mesmo sem problemas de codificação
-      urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=0`;
-    }
+    // Log para verificar se auth_type=direct está presente
+    console.log('Verificando URL construída manualmente:');
+    console.log('auth_type=direct presente:', urlString.includes('auth_type=direct'));
     
     console.log('URL de autorização final:', urlString);
 

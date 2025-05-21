@@ -43,16 +43,17 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Para Brasil, o domínio correto é seller.shopee.com.br para login direto de vendedores
     const baseUrl = 'https://partner.shopeemobile.com';
 
-    // Criar parâmetros usando apenas o que é exigido pela documentação oficial da Shopee
-    // Formato: host + path + partner id + timestamp + redirect url + sign
-    const params = new URLSearchParams();
-    params.append('partner_id', partnerId);
-    params.append('timestamp', timestamp.toString());
-    params.append('sign', sign);
-    params.append('redirect', redirectUrl);
-
-    // Construir a URL seguindo exatamente a documentação oficial (sem parâmetros adicionais)
-    const authUrl = `${baseUrl}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${encodeURIComponent(redirectUrl)}`;
+    // Construir a URL com todos os parâmetros necessários incluindo auth_type=direct
+    // para forçar o login direto do vendedor sem redirecionamento à Open Platform
+    const authUrl = `${baseUrl}${path}?` + 
+      `partner_id=${partnerId}&` +
+      `timestamp=${timestamp}&` +
+      `sign=${sign}&` +
+      `redirect=${encodeURIComponent(redirectUrl)}&` +
+      `region=BR&` +
+      `is_auth_shop=true&` +
+      `login_type=seller&` +
+      `auth_type=direct`;
 
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {
