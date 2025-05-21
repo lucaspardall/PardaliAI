@@ -69,12 +69,12 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="mr-2"
+              className="mr-2 border-primary hover:bg-primary/10"
             >
               {theme === "dark" ? (
-                <i className="ri-sun-line text-xl"></i>
+                <i className="ri-sun-line text-xl text-primary"></i>
               ) : (
-                <i className="ri-moon-line text-xl"></i>
+                <i className="ri-moon-line text-xl text-primary"></i>
               )}
             </Button>
 

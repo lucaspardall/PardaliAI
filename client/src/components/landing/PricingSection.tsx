@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 export default function PricingSection() {
   const { isAuthenticated, user } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
-  
+
   // Get current user plan if authenticated
   const currentPlan = user?.plan || null;
 
@@ -61,11 +61,11 @@ export default function PricingSection() {
             const price = billingPeriod === 'yearly' && key !== 'free'
               ? `R$${Math.floor(parseInt(plan.price.replace('R$', '')) * 0.8 * 12)}`
               : plan.price;
-            
+
             const period = billingPeriod === 'yearly' && key !== 'free'
               ? '/ano'
               : plan.period;
-            
+
             return (
               <motion.div 
                 key={key}
@@ -98,7 +98,7 @@ export default function PricingSection() {
                     <ul className="space-y-3">
                       {plan.features.map((feature, i) => (
                         <li key={i} className="flex items-start">
-                          <i className="ri-check-line text-green-500 mt-1 mr-2"></i>
+                          <i className={`ri-check-line mr-2 text-primary text-lg`}></i>
                           <span className="text-foreground/80">{feature}</span>
                         </li>
                       ))}
