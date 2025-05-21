@@ -24,7 +24,7 @@ export class ShopeeAuthManager {
   getAuthorizationUrl(): string {
     const timestamp = getTimestamp();
 
-    // Endpoint para autorização de lojas
+    // Endpoint para autorização de lojas (documentação oficial)
     const basePathForShopAuthorize = '/api/v2/shop/auth_partner';
     console.log('Usando endpoint de autorização:', basePathForShopAuthorize);
 
@@ -41,8 +41,8 @@ export class ShopeeAuthManager {
     // Criar o estado único para CSRF protection
     const stateParam = `cipshopee_${Date.now()}`;
 
-    // 1. Formar a string base para a assinatura conforme documentação da Shopee OpenAPI
-    // Formato: partner_id + API_path + timestamp
+    // 1. Formar a string base para a assinatura EXATAMENTE conforme documentação da Shopee
+    // Formato: partner_id + API_path + timestamp (sem espaços ou outros caracteres)
     const baseString = `${this.config.partnerId}${basePathForShopAuthorize}${timestamp}`;
     console.log('String base para assinatura:', baseString);
 
@@ -52,31 +52,32 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
     console.log('Assinatura gerada:', signature);
 
-    // 3. Usar o domínio correto da API para todas as operações incluindo autenticação
+    // 3. Usar o domínio correto da API conforme documentação
     const baseUrl = 'https://partner.shopeemobile.com';
     console.log('Usando URL da API Shopee:', baseUrl);
     
-    // 4. Montar a URL usando URLSearchParams para garantir a codificação correta
-    const url = new URL(`${baseUrl}${basePathForShopAuthorize}`);
+    // 4. Construir os parâmetros da URL manualmente para evitar problemas de codificação
+    const params = new URLSearchParams();
+    params.append('partner_id', this.config.partnerId);
+    params.append('timestamp', timestamp.toString());
+    params.append('sign', signature);
+    params.append('redirect', this.config.redirectUrl);
+    params.append('state', stateParam);
     
-    // Parâmetros obrigatórios conforme documentação da API v2
-    url.searchParams.append('partner_id', this.config.partnerId);
-    url.searchParams.append('timestamp', timestamp.toString());
-    url.searchParams.append('sign', signature);
-    url.searchParams.append('redirect', this.config.redirectUrl);
-    url.searchParams.append('state', stateParam);
+    // Parâmetros adicionais para direct login conforme documentação
+    params.append('region', 'BR');
+    params.append('is_auth_shop', 'true');
+    params.append('login_type', 'seller');
+    params.append('auth_type', 'direct');
     
-    // Parâmetros adicionais para o fluxo OAuth
-    url.searchParams.append('region', 'BR');
+    // Construir URL final manualmente para evitar problemas de codificação
+    let urlString = `${baseUrl}${basePathForShopAuthorize}?${params.toString()}`;
     
-    // Construir URL final usando o objeto URL (mais robusto que URLSearchParams)
-    let urlString = url.toString();
-    
-    // Verificação adicional específica para o problema do ×tamp
-    if (urlString.includes('×tamp=')) {
-      console.log('ALERTA: Detectado problema de codificação com o parâmetro timestamp!');
+    // Verificação adicional para garantir que não há problemas com caracteres especiais
+    if (urlString.includes('×tamp=') || !urlString.includes('timestamp=')) {
+      console.log('ALERTA: Detectado problema de codificação! Reconstruindo URL manualmente');
       // Construir manualmente como último recurso
-      urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=`;
+      urlString = `${baseUrl}${basePathForShopAuthorize}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${encodeURIComponent(this.config.redirectUrl)}&state=${encodeURIComponent(stateParam)}&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=0`;
     }
     
     console.log('URL de autorização final:', urlString);

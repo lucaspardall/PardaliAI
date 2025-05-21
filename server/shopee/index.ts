@@ -27,8 +27,9 @@ export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
   // Usar sempre o domínio de produção para integrações Shopee
   const currentUrl = 'https://cipshopee.replit.app';
   
-  // Configurar URL de redirecionamento garantindo formato correto
-  const redirectUrl = process.env.SHOPEE_REDIRECT_URL || `${currentUrl}/api/shopee/callback`;
+  // Configurar URL de redirecionamento garantindo formato correto e absoluto
+  // A URL de redirecionamento deve ser URL completa e absoluta conforme documentação
+  const redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
   
   console.log(`[Shopee Client] Configurando cliente com redirectUrl: ${redirectUrl} e região: ${region}`);
   
@@ -36,8 +37,8 @@ export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
   const fullConfig: ShopeeAuthConfig = {
     ...DEFAULT_CONFIG,
     ...config,
-    redirectUrl,
-    region // Garantir que região é sempre BR
+    redirectUrl,  // Usar sempre URL absoluta
+    region        // Garantir que região é sempre BR
   };
   
   console.log(`[Shopee Client] Configuração final:`, {

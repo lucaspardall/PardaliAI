@@ -16,18 +16,17 @@ export function getTimestamp(): number {
 /**
  * Obtém a URL base da API de acordo com a região
  * @param region Região da Shopee
- * @param isAuthUrl Se verdadeiro, retorna a URL para interface de vendedores
- * IMPORTANTE: Para endpoints de autenticação OAuth como /api/v2/shop/auth_partner, 
- * SEMPRE use partner.shopeemobile.com, não as URLs de seller
+ * @param isAuthUrl Se verdadeiro, retorna a URL para interface de vendedores (não usado)
+ * IMPORTANTE: Para todas as operações, incluindo autenticação OAuth, 
+ * SEMPRE use partner.shopeemobile.com conforme documentação oficial
  * @returns URL base da API
  */
 export function getApiBaseUrl(region: ShopeeRegion, isAuthUrl: boolean = false): string {
-  // Para todas as operações da API incluindo autenticação OAuth, use o domínio global da API
-  // Este é o domínio padrão da documentação oficial da Shopee OpenAPI
+  // De acordo com a documentação oficial, todas as operações devem usar este domínio
   const apiUrl = 'https://partner.shopeemobile.com';
   
   // Log para debugging
-  console.log(`Usando URL de API global: ${apiUrl}`);
+  console.log(`Usando URL de API Shopee: ${apiUrl}`);
   
   return apiUrl;
 }

@@ -251,9 +251,21 @@ export class ShopeeClient {
       }
       
       // Log detalhado para diagnóstico
-      console.log(`Tentando obter token com código de autorização: ${code.substring(0, 10)}... (parcialmente oculto)`);
+      console.log(`Tentando obter token com código: ${code.substring(0, 5)}... (parcialmente oculto)`);
       console.log(`ID da loja: ${shopId}`);
       console.log(`Timestamp atual: ${Math.floor(Date.now() / 1000)}`);
+      
+      // Verificar se o código está no formato esperado (alfanumérico)
+      if (!/^[a-zA-Z0-9]+$/.test(code)) {
+        console.error("ERRO: Código de autorização em formato inválido:", code);
+        throw new Error("Formato de código de autorização inválido");
+      }
+      
+      // Verificar se o shopId é numérico (como esperado pela API Shopee)
+      if (!/^\d+$/.test(shopId)) {
+        console.error("ERRO: ID da loja deve ser numérico:", shopId);
+        throw new Error("ID da loja deve ser um número");
+      }
       
       // Obter tokens de acesso
       const tokens = await this.authManager.getAccessToken(code, shopId);
@@ -281,12 +293,19 @@ export class ShopeeClient {
     } catch (error) {
       console.error(`Erro ao conectar com a Shopee: ${error.message}`, error);
       
-      // Tratar especificamente o erro de token não encontrado
+      // Tratar erros conforme documentação
       const apiError = parseApiError(error);
+      
+      // Erros comuns mencionados na documentação
       if (apiError.error === 'TokenNotFound' || 
           apiError.message?.includes('token not found') || 
+          apiError.message?.includes('Invalid code') ||
           (apiError.response && apiError.response.errcode === 2)) {
-        console.error("ERRO CRÍTICO: Token não encontrado. O código de autorização pode ter expirado ou ser inválido.");
+        console.error("ERRO CRÍTICO: Token/código não encontrado ou inválido. O código de autorização pode ter expirado.");
+        console.error("De acordo com a documentação, o código é válido por apenas 10 minutos.");
+        console.error("Solução: O usuário precisa iniciar o fluxo de autorização novamente.");
+      } else if (apiError.message?.includes('Invalid timestamp') || apiError.message?.includes('Wrong sign')) {
+        console.error("ERRO DE ASSINATURA/TIMESTAMP: Verifique se o timestamp está dentro da validade (5 minutos) e se a assinatura está correta.");
       }
       
       throw apiError;
