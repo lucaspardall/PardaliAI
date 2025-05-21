@@ -1,0 +1,46 @@
+3:37:53 AM [express] GET /api/stores 304 in 182ms :: []
+3:37:53 AM [express] GET /api/notifications 304 in 135ms :: []
+Verificando conexão com banco de dados...
+Conexão com banco de dados estabelecida com sucesso
+======= INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE =======
+Usuário autenticado: {
+  claims: {
+    aud: '73ee031f-24e8-4b77-96e8-2cd2724cf5f2',
+    exp: 1747793052,
+    iat: 1747789452,
+    iss: 'https://replit.com/oidc',
+    sub: '41750934',
+    email: 'llouback4@gmail.com',
+    at_hash: 'y8WKydrYgxzrfRUpCEYy6g',
+    username: 'llouback4',
+    auth_time: 1747789451,
+    last_name: 'Louback',
+    first_name: 'Lucas'
+  },
+  expires_at: 1747793052,
+  access_token: 'OvuD4tbMDOqNARYjtG3WibD104Tp_ekqcFkZEwmM9eD',
+  refresh_token: '0cCFlrPgelOEJdYqERk9duJ9ib5pV5n8-EaTFT6ToWa'
+}
+Ambiente: development
+Informações de configuração da API:
+Partner ID: 2011285
+URL de redirecionamento configurada: undefined
+===================================================
+String base para assinatura: 2011285/api/v2/shop/auth_partner1747798675
+URL final construída manualmente: https://seller.shopee.com.br/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1747798675&sign=5770d420b03ab3fbba2055fe90f9e445fbd3b412ad0764d9d753b3b6374a87f8&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1747798675618&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=
+URL final para autorização: https://seller.shopee.com.br/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1747798675&sign=5770d420b03ab3fbba2055fe90f9e445fbd3b412ad0764d9d753b3b6374a87f8&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1747798675618&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&shop_id=
+Verificação de parâmetros críticos:
+- region=BR: true
+- login_type=seller: true
+- auth_type=direct: true
+- is_auth_shop=true: true
+✅ URL salva em arquivo para inspeção: shopee_auth_url.txt
+✅ Parâmetro auth_type=direct presente na URL
+================================================
+Verificando conexão com banco de dados...
+Conexão com banco de dados estabelecida com sucesso
+3:37:55 AM [express] GET /api/shopee/authorize 200 in 85ms
+Verificando conexão com banco de dados...
+Conexão com banco de dados estabelecida com sucesso
+Verificando conexão com banco de dados...
+Conexão com banco de dados estabelecida com sucesso
