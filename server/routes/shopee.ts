@@ -57,7 +57,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       `redirect=${encodeURIComponent(redirectUrl)}`;
 
     // Parâmetros específicos para login direto no domínio brasileiro
-    authUrl += `&auth_shop=true&auth_type=shop&id=${partnerId}&isRedirect=true&is_agent=false&random=${random}&region=BR&state=${state}`;
+    authUrl += `&auth_shop=true&auth_type=direct&id=${partnerId}&isRedirect=true&is_agent=false&random=${random}&region=BR&state=${state}`;
 
     // Adicionar log para facilitar depuração
     console.log('URL de autorização (parâmetros separados):', { 

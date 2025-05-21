@@ -71,7 +71,7 @@ export class ShopeeAuthManager {
     // Em seguida, adicionamos os parâmetros específicos para login direto no domínio brasileiro
     urlString += `&state=${encodeURIComponent(stateParam)}` +
       `&auth_shop=true` +
-      `&auth_type=shop` +
+      `&auth_type=direct` +
       `&region=BR` +
       `&id=${this.config.partnerId}` +
       `&isRedirect=true` +
