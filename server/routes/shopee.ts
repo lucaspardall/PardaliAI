@@ -21,39 +21,16 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Gerar timestamp e parâmetros necessários
-    const timestamp = Math.floor(Date.now() / 1000);
-    const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
-    const partnerKey = process.env.SHOPEE_PARTNER_KEY || '';
-    const redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
-    const state = `cipshopee_${Date.now()}`;
-
-    // Criar a string base para assinatura conforme documentação Shopee
-    const path = '/api/v2/shop/auth_partner';
-    const baseString = `${partnerId}${path}${timestamp}`;
-
-    console.log('String base para assinatura:', baseString);
-
-    // Gerar a assinatura HMAC-SHA256
-    const hmac = crypto.createHmac('sha256', partnerKey);
-    hmac.update(baseString);
-    const sign = hmac.digest('hex');
-
-    // IMPORTANTE: Para o endpoint de autorização OAuth, precisamos usar o domínio específico da região
-    // Para Brasil, o domínio correto é seller.shopee.com.br para login direto de vendedores
-    const baseUrl = 'https://partner.shopeemobile.com';
-
-    // Construir a URL com todos os parâmetros necessários incluindo auth_type=direct
-    // para forçar o login direto do vendedor sem redirecionamento à Open Platform
-    const authUrl = `${baseUrl}${path}?` + 
-      `partner_id=${partnerId}&` +
-      `timestamp=${timestamp}&` +
-      `sign=${sign}&` +
-      `redirect=${encodeURIComponent(redirectUrl)}&` +
-      `region=BR&` +
-      `is_auth_shop=true&` +
-      `login_type=seller&` +
-      `auth_type=direct`;
+    // Importar o cliente Shopee
+    const shopeeClient = createClient();
+    
+    // Obter a URL de autorização usando o método atualizado
+    const authUrl = shopeeClient.getAuthorizationUrl();
+    console.log('URL de autorização gerada:', authUrl);
+      
+    // Registrar informações importantes
+    console.log('Client ID:', process.env.SHOPEE_PARTNER_ID || '2011285');
+    console.log('URL de redirecionamento configurada:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
 
     // Verificar se há o problema do ×tamp na URL
     if (authUrl.includes('×tamp=') || authUrl.includes('xtamp=')) {

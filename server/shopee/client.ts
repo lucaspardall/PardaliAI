@@ -60,13 +60,13 @@ export class ShopeeClient {
     this.config = config;
     this.authManager = new ShopeeAuthManager(config);
     this.tokens = tokens || null;
-    
+
     // Verificar se a URL de redirecionamento está definida
     if (!config.redirectUrl) {
       console.error('ERRO: URL de redirecionamento não definida na configuração');
       config.redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
     }
-    
+
     // Criar instância do Axios
     this.axiosInstance = axios.create({
       baseURL: getApiBaseUrl(config.region, false), // Sempre usa o domínio partner.shopeemobile.com
@@ -76,10 +76,10 @@ export class ShopeeClient {
         'X-Region': config.region, // Adicionar região como header padrão
       },
     });
-    
+
     // Configurar limitador de taxa
     this.limiter = new Bottleneck(DEFAULT_RATE_LIMIT);
-    
+
     // Adicionar interceptadores para autenticação e renovação automática de token
     this.setupInterceptors();
   }
@@ -94,12 +94,12 @@ export class ShopeeClient {
       if (config.url?.includes('/auth/')) {
         return config;
       }
-      
+
       // Se não tivermos tokens, não podemos fazer requisições
       if (!this.tokens) {
         throw new Error('Authentication required. Call connect() first.');
       }
-      
+
       // Verificar se o token está expirado e renovar se necessário
       if (this.authManager.isTokenExpired(this.tokens.expiresAt)) {
         try {
@@ -108,24 +108,24 @@ export class ShopeeClient {
           throw new Error('Failed to refresh access token');
         }
       }
-      
+
       const timestamp = getTimestamp();
       const path = config.url || '';
-      
+
       // Adicionar parâmetros comuns
       if (!config.params) {
         config.params = {};
       }
-      
+
       config.params.partner_id = Number(this.config.partnerId);
       config.params.timestamp = timestamp;
       config.params.access_token = this.tokens.accessToken;
       config.params.shop_id = Number(this.tokens.shopId);
-      
+
       // Gerar assinatura com base no método
       // Se for POST, PUT, PATCH, incluir o corpo na geração da assinatura
       const requestBody = ['POST', 'PUT', 'PATCH'].includes(config.method?.toUpperCase() || '') ? config.data : undefined;
-      
+
       const signature = generateSignature(
         this.config.partnerId,
         this.config.partnerKey,
@@ -139,12 +139,12 @@ export class ShopeeClient {
         },
         requestBody
       );
-      
+
       config.params.sign = signature;
-      
+
       return config;
     });
-    
+
     // Interceptador de resposta para tratamento de erros
     this.axiosInstance.interceptors.response.use(
       (response) => response,
@@ -162,7 +162,7 @@ export class ShopeeClient {
             throw parseApiError(refreshError);
           }
         }
-        
+
         throw parseApiError(error);
       }
     );
@@ -177,34 +177,34 @@ export class ShopeeClient {
     if (!this.tokens) {
       throw new Error('No refresh token available');
     }
-    
+
     try {
       // Obter novos tokens
       const newTokens = await this.authManager.refreshAccessToken(
         this.tokens.refreshToken,
         this.tokens.shopId
       );
-      
+
       // Verificar se obtivemos novos tokens válidos
       if (!newTokens.accessToken || !newTokens.refreshToken) {
         throw new Error('Invalid tokens received during refresh');
       }
-      
+
       // Atualizar tokens em memória imediatamente
       this.tokens = newTokens;
-      
+
       // Persistir novos tokens
       await this.saveTokensToStorage(newTokens);
-      
+
       console.log(`Tokens refreshed successfully for shop ${newTokens.shopId}`);
-      
+
       return newTokens;
     } catch (error) {
       console.error('Failed to refresh access token:', error);
-      
+
       // Em caso de falha, podemos precisar forçar nova autenticação
       this.tokens = null;
-      
+
       throw new Error(`Token refresh failed: ${error.message || 'Unknown error'}`);
     }
   }
@@ -215,7 +215,7 @@ export class ShopeeClient {
   private async saveTokensToStorage(tokens: ShopeeAuthTokens): Promise<void> {
     try {
       const store = await storage.getStoreByShopId(tokens.shopId);
-      
+
       if (store) {
         await storage.updateStore(store.id, {
           accessToken: tokens.accessToken,
@@ -230,7 +230,8 @@ export class ShopeeClient {
   }
 
   /**
-   * Gera uma URL de autorização para iniciar o fluxo OAuth
+   * Obtém a URL para iniciar o processo de autorização OAuth
+   * Utilizando o método atualizado que usa o domínio account.seller.shopee.com
    */
   getAuthorizationUrl(): string {
     return this.authManager.getAuthorizationUrl();
@@ -244,58 +245,58 @@ export class ShopeeClient {
   async connect(code: string, shopId: string): Promise<ShopeeAuthTokens> {
     try {
       console.log(`Iniciando conexão com a Shopee para código: ${code} e shopId: ${shopId}`);
-      
+
       // Validar parâmetros
       if (!code || !shopId) {
         throw new Error("Código de autorização e ID da loja são obrigatórios");
       }
-      
+
       // Log detalhado para diagnóstico
       console.log(`Tentando obter token com código: ${code.substring(0, 5)}... (parcialmente oculto)`);
       console.log(`ID da loja: ${shopId}`);
       console.log(`Timestamp atual: ${Math.floor(Date.now() / 1000)}`);
-      
+
       // Verificar se o código está no formato esperado (alfanumérico)
       if (!/^[a-zA-Z0-9]+$/.test(code)) {
         console.error("ERRO: Código de autorização em formato inválido:", code);
         throw new Error("Formato de código de autorização inválido");
       }
-      
+
       // Verificar se o shopId é numérico (como esperado pela API Shopee)
       if (!/^\d+$/.test(shopId)) {
         console.error("ERRO: ID da loja deve ser numérico:", shopId);
         throw new Error("ID da loja deve ser um número");
       }
-      
+
       // Obter tokens de acesso
       const tokens = await this.authManager.getAccessToken(code, shopId);
-      
+
       // Verificar se recebemos tokens válidos
       if (!tokens.accessToken || !tokens.refreshToken) {
         console.error("Tokens inválidos recebidos da API Shopee:", tokens);
         throw new Error("Tokens inválidos retornados pela API da Shopee");
       }
-      
+
       // Atualizar tokens na instância
       this.tokens = tokens;
-      
+
       console.log(`Tokens obtidos com sucesso: ${JSON.stringify({
         accessToken: tokens.accessToken ? `${tokens.accessToken.substring(0, 5)}...` : undefined,
         refreshToken: tokens.refreshToken ? `${tokens.refreshToken.substring(0, 5)}...` : undefined,
         expiresAt: tokens.expiresAt,
         shopId: tokens.shopId
       })}`);
-      
+
       // Salvar os tokens no armazenamento imediatamente
       await this.saveTokensToStorage(tokens);
-      
+
       return tokens;
     } catch (error) {
       console.error(`Erro ao conectar com a Shopee: ${error.message}`, error);
-      
+
       // Tratar erros conforme documentação
       const apiError = parseApiError(error);
-      
+
       // Erros comuns mencionados na documentação
       if (apiError.error === 'TokenNotFound' || 
           apiError.message?.includes('token not found') || 
@@ -307,7 +308,7 @@ export class ShopeeClient {
       } else if (apiError.message?.includes('Invalid timestamp') || apiError.message?.includes('Wrong sign')) {
         console.error("ERRO DE ASSINATURA/TIMESTAMP: Verifique se o timestamp está dentro da validade (5 minutos) e se a assinatura está correta.");
       }
-      
+
       throw apiError;
     }
   }
@@ -322,12 +323,12 @@ export class ShopeeClient {
     if (endpoint.includes('/media_space/')) {
       return LIMITERS.MEDIA;
     }
-    
+
     // Operações POST, PUT, DELETE são consideradas escrita
     if (method !== 'GET') {
       return LIMITERS.WRITE;
     }
-    
+
     // Por padrão, usa o limitador de leitura
     return LIMITERS.READ;
   }
@@ -344,23 +345,23 @@ export class ShopeeClient {
       if (useCache && ShopeeCache) {
         const cacheKey = `${endpoint}:${JSON.stringify(params)}`;
         const cachedData = ShopeeCache.get<T>(cacheKey);
-        
+
         if (cachedData) {
           console.log(`[Shopee API] Cache hit for ${endpoint}`);
           return cachedData;
         }
       }
-      
+
       // Selecionar o limitador apropriado
       const limiter = this.getLimiter(endpoint, 'GET');
-      
+
       // Fazer a requisição com controle de taxa
       const response = await limiter.schedule(() => 
         this.axiosInstance.get<ShopeeApiResponse<T>>(endpoint, { params })
       );
-      
+
       const data = response.data;
-      
+
       if (data.error) {
         throw {
           error: data.error,
@@ -368,38 +369,38 @@ export class ShopeeClient {
           requestId: data.request_id,
         };
       }
-      
+
       // Armazenar em cache se habilitado
       if (useCache && ShopeeCache) {
         const cacheKey = `${endpoint}:${JSON.stringify(params)}`;
-        
+
         // Determinar TTL apropriado com base no endpoint
         let ttl = ShopeeCache.TTL.PRODUCT_DETAIL;
         if (endpoint.includes('/category/')) ttl = ShopeeCache.TTL.CATEGORIES;
         else if (endpoint.includes('/attributes/')) ttl = ShopeeCache.TTL.ATTRIBUTES;
         else if (endpoint.includes('/shop/')) ttl = ShopeeCache.TTL.SHOP_INFO;
         else if (endpoint.includes('/order/')) ttl = ShopeeCache.TTL.ORDER_LIST;
-        
+
         ShopeeCache.set(cacheKey, data.response, ttl);
       }
-      
+
       return data.response;
     } catch (error) {
       // Tratamento especial para erro de limite de taxa
       const apiError = parseApiError(error);
-      
+
       if (apiError.error === 'TooManyRequests' || 
           (error.response?.status === 429) || 
           apiError.message?.includes('rate limit')) {
         console.warn(`[Shopee API] Rate limit hit for ${endpoint}. Retrying after delay.`);
-        
+
         // Esperar antes de tentar novamente
         await new Promise(resolve => setTimeout(resolve, 5000));
-        
+
         // Tentar novamente com cache desabilitado para garantir resposta fresca
         return this.get(endpoint, params, false);
       }
-      
+
       throw apiError;
     }
   }
@@ -414,14 +415,14 @@ export class ShopeeClient {
     try {
       // Selecionar o limitador apropriado
       const limiter = this.getLimiter(endpoint, 'POST');
-      
+
       // Fazer a requisição com controle de taxa
       const response = await limiter.schedule(() => 
         this.axiosInstance.post<ShopeeApiResponse<T>>(endpoint, data, { params })
       );
-      
+
       const responseData = response.data;
-      
+
       if (responseData.error) {
         throw {
           error: responseData.error,
@@ -429,31 +430,31 @@ export class ShopeeClient {
           requestId: responseData.request_id,
         };
       }
-      
+
       // Para operações de modificação, invalidar caches relacionados
       if (endpoint.includes('/product/') && data.item_id) {
         if (this.tokens?.shopId) {
           ShopeeCache?.invalidateProductCache(this.tokens.shopId, data.item_id);
         }
       }
-      
+
       return responseData.response;
     } catch (error) {
       // Tratamento especial para erro de limite de taxa
       const apiError = parseApiError(error);
-      
+
       if (apiError.error === 'TooManyRequests' || 
           (error.response?.status === 429) || 
           apiError.message?.includes('rate limit')) {
         console.warn(`[Shopee API] Rate limit hit for ${endpoint}. Retrying after delay.`);
-        
+
         // Esperar antes de tentar novamente
         await new Promise(resolve => setTimeout(resolve, 10000));
-        
+
         // Tentar novamente
         return this.post(endpoint, data, params);
       }
-      
+
       throw apiError;
     }
   }
@@ -478,7 +479,7 @@ export class ShopeeClient {
   getTokens(): ShopeeAuthTokens | null {
     return this.tokens;
   }
-  
+
   /**
    * Define headers personalizados para requisições
    * Útil para adicionar headers específicos do Brasil
