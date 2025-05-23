@@ -18,7 +18,11 @@ import { getInitials } from "@/lib/utils/formatters";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
-  title: string;
+  title?: string;
+  user?: any;
+  stores?: any[];
+  notifications?: any[];
+  isDemoMode?: boolean;
 }
 
 // Componente de navegação para evitar aninhamento de <a>
@@ -33,11 +37,21 @@ const NavItem = ({ href, icon, label, isActive }: { href: string; icon: string; 
   );
 };
 
-export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
+export default function SidebarLayout({ 
+  children, 
+  title = "Dashboard", 
+  user: propUser, 
+  stores: propStores,
+  notifications: propNotifications,
+  isDemoMode = false
+}: SidebarLayoutProps) {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
+  
+  // Use dados da prop se for modo de demonstração, senão use os do auth
+  const user = isDemoMode ? propUser : authUser;
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   // Fetch notifications
