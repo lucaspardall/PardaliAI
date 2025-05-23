@@ -15,6 +15,9 @@ import ShopeeConnect from "@/pages/shopee-connect";
 import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import DemoDashboard from "@/pages/demo/dashboard";
+import DemoProducts from "@/pages/demo/products";
+import DemoProductDetail from "@/pages/demo/product/[id]";
+import DemoOptimizeProduct from "@/pages/demo/optimize/[id]";
 import { useAuth } from "./hooks/useAuth";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -43,14 +46,12 @@ function Router() {
       {/* Public routes */}
       <Route path="/" component={Landing} />
       <Route path="/demo/dashboard" component={DemoDashboard} />
-      <Route path="/demo/products">
-        {() => <dynamic import="@/pages/demo/products" />}
-      </Route>
+      <Route path="/demo/products" component={DemoProducts} />
       <Route path="/demo/product/:id">
-        {(params) => <dynamic import="@/pages/demo/product/[id]" params={params} />}
+        {(params) => <DemoProductDetail params={params} />}
       </Route>
       <Route path="/demo/optimize/:id">
-        {(params) => <dynamic import="@/pages/demo/optimize/[id]" params={params} />}
+        {(params) => <DemoOptimizeProduct params={params} />}
       </Route>
       
       {/* Protected dashboard routes */}

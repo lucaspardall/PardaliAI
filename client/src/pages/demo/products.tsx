@@ -8,7 +8,7 @@ import { Link } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle2, Filter, Search, Sliders, XCircle } from 'lucide-react';
-import { generateDemoData } from '../../../lib/demo-data';
+import { generateDemoData } from '@/lib/demo-data';
 
 export default function DemoProducts() {
   // Gerar dados de demonstração

@@ -6,7 +6,7 @@ import { Link } from 'wouter';
 import { ArrowLeft, CheckCircle2, LightbulbIcon, Loader2, Rocket } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { generateDemoData } from '../../../../lib/demo-data';
+import { generateDemoData } from '@/lib/demo-data';
 
 export default function DemoOptimizeProduct({ params }: { params: { id: string } }) {
   // Estados para controle da otimização
