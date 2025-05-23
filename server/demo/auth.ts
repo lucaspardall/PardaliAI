@@ -96,7 +96,14 @@ export function handleDemoLogout(req: Request, res: Response): void {
       res.status(500).json({ success: false, message: 'Erro ao fazer logout' });
     } else {
       res.clearCookie('demo.sid');
-      res.status(200).json({ success: true });
+      
+      // Verificar se é uma solicitação AJAX
+      if (req.xhr || req.headers.accept?.includes('application/json')) {
+        res.status(200).json({ success: true, redirectTo: '/' });
+      } else {
+        // Redirecionar para a página inicial
+        res.redirect('/');
+      }
     }
   });
 }

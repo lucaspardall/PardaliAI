@@ -33,7 +33,17 @@ demoRouter.get('/auth-redirect', (req, res) => {
 
 // Rotas de logout para demo (POST e GET)
 demoRouter.post('/logout', handleDemoLogout);
-demoRouter.get('/logout', handleDemoLogout);
+demoRouter.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Erro ao destruir sessão de demonstração:', err);
+      res.status(500).json({ success: false, message: 'Erro ao fazer logout' });
+    } else {
+      res.clearCookie('demo.sid');
+      res.redirect('/');
+    }
+  });
+});
 
 // Pegar informações do usuário logado em modo demo
 demoRouter.get('/user', isDemoAuthenticated, (req, res) => {
