@@ -40,10 +40,14 @@ export class ShopeeAuthManager {
     console.log(`URL de redirecionamento configurada: ${this.config.redirectUrl}`);
     console.log(`===================================================`);
 
-    // Nova abordagem baseada no padrão de URL do Upseller
-    // Gerar uma string base para assinatura específica para o formato da nova URL
-    const baseString = `${this.config.partnerId}timestamp${timestamp}redirect_uri${this.config.redirectUrl}`;
-    console.log(`String base para assinatura: ${baseString}`);
+    // MÉTODO PADRÃO: URL oficial de API para autorização de loja
+    // URL BASE para o fluxo de autorização de loja
+    const baseUrl = 'https://partner.shopeemobile.com';
+    const apiPath = '/api/v2/shop/auth_partner';
+    
+    // String base para gerar assinatura (seguindo documentação oficial)
+    const baseString = `${this.config.partnerId}${apiPath}${timestamp}`;
+    console.log(`String base para assinatura (método padrão): ${baseString}`);
 
     // Gerar assinatura HMAC-SHA256
     const hmac = createHmac('sha256', this.config.partnerKey);
@@ -51,23 +55,15 @@ export class ShopeeAuthManager {
     const signature = hmac.digest('hex');
     console.log(`Assinatura gerada: ${signature}`);
 
-    // Usar URL baseada no padrão encontrado no Upseller, com domínio account.seller.shopee.com
-    // Esta abordagem segue o formato para login direto de vendedores
-    const authUrl = `https://account.seller.shopee.com/signin/oauth/accountchooser?` +
-      `client_id=${this.config.partnerId}&` +
-      `lang=pt-br&` +
-      `login_types=%5B1,4,2%5D&` +
-      `max_auth_age=3600&` +
-      `redirect_uri=${encodeURIComponent(this.config.redirectUrl)}&` +
-      `region=SG&` +
-      `required_passwd=true&` +
-      `respond_code=code&` +
-      `scope=profile&` +
-      `sign=${signature}&` +
+    // Construir URL de autorização conforme documentação oficial
+    const authUrl = `${baseUrl}${apiPath}?` +
+      `partner_id=${this.config.partnerId}&` +
       `timestamp=${timestamp}&` +
+      `sign=${signature}&` +
+      `redirect=${encodeURIComponent(this.config.redirectUrl)}&` +
       `state=${stateParam}`;
 
-    // Construir a URL final manualmente para garantir consistência
+    // URL final
     const finalUrl = authUrl;
 
     console.log(`✅ URL de autorização da Shopee: ${finalUrl}`);
@@ -88,11 +84,10 @@ export class ShopeeAuthManager {
 
     // Verificação de parâmetros importantes
     console.log('Verificação de parâmetros importantes:');
-    console.log('- client_id:', finalUrl.includes(`client_id=${this.config.partnerId}`));
+    console.log('- partner_id:', finalUrl.includes(`partner_id=${this.config.partnerId}`));
     console.log('- timestamp:', finalUrl.includes(`timestamp=${timestamp}`));
     console.log('- sign:', finalUrl.includes(`sign=${signature}`));
-    console.log('- redirect_uri:', finalUrl.includes('redirect_uri='));
-    console.log('- region=SG:', finalUrl.includes('region=SG'));
+    console.log('- redirect:', finalUrl.includes('redirect='));
     console.log('================================================');
 
     return finalUrl;

@@ -69,7 +69,7 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
   });
 
   // Handle real OAuth connection with Shopee
-  const handleConnectOAuth = () => {
+  const handleConnectOAuth = (method = 'direct') => {
     try {
       setIsConnecting(true);
       // Exibir indicador de carregamento antes do redirecionamento
@@ -90,8 +90,8 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
         // Obter a data atual para evitar problemas de cache
         const timestamp = new Date().getTime();
 
-        // Abrir em nova aba para melhor experiência de login (sem parâmetros extras)
-        window.open(`/api/shopee/authorize?nocache=${timestamp}`, '_blank', 'noopener,noreferrer');
+        // Redirecionar diretamente para a página de login do vendedor (método mais confiável)
+        window.open(`/api/shopee/authorize?direct=true&method=${method}&nocache=${timestamp}`, '_blank', 'noopener,noreferrer');
 
         // Mostrar mensagem adicional sobre janela pop-up
         setTimeout(() => {

@@ -24,32 +24,55 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Importar a implementação de diagnóstico para Shopee
     const { generateAuthUrls, generateDiagnosticPage } = await import('../shopee/fallback');
 
+    // Verificar se está em modo direto (sem página de diagnóstico)
+    const directMode = req.query.direct === 'true';
+    const method = req.query.method as string || 'standard';
+
     // Configuração da integração Shopee
     const config = {
       partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
       partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
-      redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback',
+      redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
       region: 'SG'
     };
 
-    // Gerar URLs de autorização com ambos os métodos
+    // Gerar URLs de autorização com todos os métodos disponíveis
     const urls = generateAuthUrls(config);
     
-    // Salvar URL em arquivo para inspeção e debug
+    // Salvar URLs em arquivo para inspeção e debug
     try {
       fs.writeFileSync('shopee_auth_url.txt', 
-        `URL Padrão: ${urls.standardUrl}\n\nURL Alternativa: ${urls.alternativeUrl}`);
+        `URL Padrão: ${urls.standardUrl}\n\nURL Alternativa: ${urls.alternativeUrl}\n\nURL Login Direto: ${urls.directSellerLoginUrl}`);
       console.log("✅ URLs salvas em arquivo para inspeção: shopee_auth_url.txt");
     } catch (err) {
       console.error("Não foi possível salvar URLs em arquivo:", err);
     }
     
-    // Gerar a página de diagnóstico com ambas as opções para teste
+    // Se mode direto, redirecionar para o método solicitado
+    if (directMode) {
+      let redirectUrl;
+      
+      switch (method) {
+        case 'alternative':
+          redirectUrl = urls.alternativeUrl;
+          break;
+        case 'direct':
+          redirectUrl = urls.directSellerLoginUrl;
+          break;
+        case 'standard':
+        default:
+          redirectUrl = urls.standardUrl;
+          break;
+      }
+      
+      console.log(`Redirecionando diretamente para método ${method}: ${redirectUrl.substring(0, 100)}...`);
+      return res.redirect(redirectUrl);
+    }
+    
+    // Gerar a página de diagnóstico com todas as opções para teste
     const htmlContent = generateDiagnosticPage(urls);
     
     return res.send(htmlContent);
-
-    // Fim da rota - o retorno é feito via interface na linha 77
 
   } catch (error: any) {
     console.error('Error starting Shopee OAuth flow:', error);
