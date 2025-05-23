@@ -464,7 +464,7 @@ interface ShopeeAuthConfig {
   region: string;
 }
 
-// Função para gerar a URL minimalista
+// Função para gerar a URL minimalista, seguindo exatamente o formato da documentação Shopee
 function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
   const timestamp = Math.floor(Date.now() / 1000);
   const baseUrl = 'https://partner.shopeemobile.com';
@@ -476,17 +476,11 @@ function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
   const signature = hmac.digest('hex');
 
   const stateParam = `cipshopee_${Date.now()}`;
-
-  // Use URLSearchParams para garantir uma codificação correta dos parâmetros
-  const params = new URLSearchParams({
-    partner_id: config.partnerId.toString(),
-    timestamp: timestamp.toString(),
-    sign: signature,
-    redirect: config.redirectUrl,
-    state: stateParam,
-  });
-
-  return `${baseUrl}${apiPath}?${params.toString()}`;
+  
+  // Usar formato direto de string com encodeURIComponent para redirect
+  // Isso evita qualquer diferença de formatação que URLSearchParams possa introduzir
+  const redirectParam = encodeURIComponent(config.redirectUrl);
+  return `${baseUrl}${apiPath}?partner_id=${config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${redirectParam}&state=${stateParam}`;
 }
 
 // Endpoint para autorização Shopee
