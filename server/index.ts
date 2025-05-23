@@ -72,28 +72,19 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // Tenta a porta 5000 primeiro, mas usa uma alternativa se ocupada
-    const tryPort = (port = 5000) => {
-      server.listen({
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      }, () => {
-        log(`serving on port ${port}`);
-      }).on('error', (err: any) => {
-        if (err.code === 'EADDRINUSE') {
-          // Tenta a porta 3000 como alternativa
-          const alternatePort = 3000;
-          log(`Porta ${port} está em uso, tentando porta ${alternatePort}...`);
-          tryPort(alternatePort);
-        } else {
-          log(`Erro no servidor: ${err.message}`);
-          throw err;
-        }
-      });
-    };
+    // Configuração de porta adaptada para funcionar tanto em desenvolvimento quanto em deploy
+    const port = process.env.PORT || 3000;
     
-    tryPort();
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${port}`);
+    }).on('error', (err: any) => {
+      log(`Erro no servidor: ${err.message}`);
+      throw err;
+    });
   } catch (err) {
     console.error("Erro na inicialização do servidor:", err);
     process.exit(1);

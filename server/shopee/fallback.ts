@@ -138,13 +138,14 @@ export function generateAuthUrls(config: ShopeeAuthConfig) {
     `timestamp=${timestamp}&` +
     `sign=${accountSignature}`;
 
-    const signature = createHmac('sha256', config.partnerKey)
+  // Criar nova assinatura específica para URL account.seller
+  const accountUrlSignature = createHmac('sha256', config.partnerKey)
     .update(`${config.partnerId}/api/v2/shop/auth_partner${timestamp}`)
     .digest('hex');
 
   // URL para forçar o login no account.seller.shopee.com.br
   // Redireciona para a página de login e, em seguida, para a autorização
-  const accountSellerUrl = `${accountSellerBaseUrl}/login?next=https://seller.shopee.com.br/api/v2/shop/auth_partner?partner_id=${config.partnerId}%26timestamp=${timestamp}%26sign=${signature}%26redirect=${encodeURIComponent(config.redirectUrl)}%26state=${stateParam}`;
+  const accountSellerUrl = `${accountSellerBaseUrl}/login?next=https://seller.shopee.com.br/api/v2/shop/auth_partner?partner_id=${config.partnerId}%26timestamp=${timestamp}%26sign=${accountUrlSignature}%26redirect=${encodeURIComponent(config.redirectUrl)}%26state=${stateParam}`;
 
   // ===== URL alternativa para o domínio do Brasil usando auth_partner em vez de shop/auth_partner =====
   const brUrl = `https://partner.shopee.com.br/api/v2/auth_partner?` +
