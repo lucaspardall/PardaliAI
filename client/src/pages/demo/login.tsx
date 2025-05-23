@@ -37,38 +37,47 @@ export default function DemoLogin() {
     },
   });
 
-  // Enviar formulário
+  // Enviar formulário - versão cliente para demonstração
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const response = await fetch('/api/demo/login', {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
+    // Credenciais fixas para demonstração
+    if (data.username === 'testeshopee' && data.password === 'ShopeeTest2025!') {
+      // Simular tempo de processamento para feedback visual
+      setTimeout(() => {
+        // Salvar no localStorage para manter usuário "logado"
+        localStorage.setItem('demo_user', JSON.stringify({
+          id: 'demo-user-123',
+          email: 'demo@cipshopee.com',
+          firstName: 'Demo',
+          lastName: 'Usuário',
+          profileImageUrl: 'https://ui-avatars.com/api/?name=Demo+User&background=FF5722&color=fff',
+          plan: 'premium',
+          planStatus: 'active',
+          aiCreditsLeft: 500,
+          storeLimit: 3,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }));
+        localStorage.setItem('demo_logged_in', 'true');
+        
+        // Notificação de sucesso
         toast({
           title: 'Login realizado com sucesso',
           description: 'Bem-vindo ao modo de demonstração do CIP Shopee!',
         });
         
-        // Redirecionar diretamente para o dashboard
-        window.location.href = '/demo/dashboard';
-      } else {
-        setError(result.message || 'Credenciais inválidas');
-      }
-    } catch (err) {
-      setError('Erro ao processar login. Tente novamente.');
-      console.error('Erro de login demo:', err);
-    } finally {
-      setIsLoading(false);
+        // Redirecionar para o dashboard
+        setTimeout(() => {
+          window.location.href = '/demo/dashboard';
+        }, 1000);
+      }, 800);
+    } else {
+      setTimeout(() => {
+        setError('Credenciais de demonstração inválidas');
+        setIsLoading(false);
+      }, 800);
     }
   };
 
