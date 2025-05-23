@@ -1,0 +1,64 @@
+Olá novamente! Os logs que você enviou são consistentes com os anteriores: a URL de autorização continua sendo gerada de forma que parece tecnicamente correta para o endpoint /api/v2/shop/auth_partner, incluindo a assinatura e os parâmetros.
+
+URL Gerada Mais Recentemente:
+https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748004068&sign=644fc2a1fdfe7a5459355eada5b706e26317e58d9eb6546106ef56c64ab68a9c&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748004068709&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+
+O timestamp 1748004068 (Sexta-feira, 23 de Maio de 2025, 09:41:08 GMT-03:00) está correto e atualizado em relação ao horário do log.
+
+Como a geração desta URL específica (com todos os parâmetros extras) parece não estar resolvendo o redirecionamento para o login da Open Platform, é essencial que você realize os seguintes testes para isolar a causa raiz:
+
+AÇÃO IMEDIATA: Teste a URL Minimalista
+Este é o passo mais importante agora. Vamos remover os parâmetros extras (region, is_auth_shop, login_type, auth_type) para ver se algum deles está causando o problema.
+
+Modifique seu código para gerar a URL SEM os parâmetros extras.
+No seu arquivo ShopeeAuthManager.ts (ou em shopee/fallback.ts na função generateAuthUrls), na parte onde você constrói a authUrl ou standardUrl, não adicione a seguinte parte no final:
+&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+
+A URL resultante que você deve testar será assim (usando o timestamp e sign do seu último log como exemplo, mas você vai gerar com novos):
+https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748004068&sign=644fc2a1fdfe7a5459355eada5b706e26317e58d9eb6546106ef56c64ab68a9c&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748004068709
+
+Exemplo de como modificar (na classe ShopeeAuthManager, método getAuthorizationUrl):
+
+TypeScript
+
+// DENTRO DE ShopeeAuthManager.ts -> getAuthorizationUrl()
+
+// ... (cálculo do signature igual)
+
+// Construir URL de autorização conforme documentação oficial
+// REMOVA TEMPORARIAMENTE OS PARÂMETROS EXTRAS DA LINHA ABAIXO
+const authUrl = `<span class="math-inline">\{baseUrl\}</span>{apiPath}?` +
+  `partner_id=${this.config.partnerId}&` +
+  `timestamp=${timestamp}&` +
+  `sign=${signature}&` +
+  `redirect=${encodeURIComponent(this.config.redirectUrl)}&` +
+  `state=${stateParam}`; // Termina aqui para o teste minimalista
+  // `&region=BR&` +  // COMENTE OU REMOVA ESTAS LINHAS
+  // `is_auth_shop=true&` +
+  // `login_type=seller&` +
+  // `auth_type=direct`;
+
+const finalUrl = authUrl;
+// ... (resto do código)
+Ou se estiver usando a minimalUrl da sua função generateAuthUrls em fallback.ts, certifique-se de que essa minimalUrl é a que está sendo efetivamente usada para o redirecionamento no seu teste.
+
+Execute o fluxo de autorização com esta URL minimalista.
+
+Observe o resultado:
+
+Se funcionar e você for redirecionado para a página de login do VENDEDOR: Ótimo! Isso significa que um ou mais dos parâmetros extras (region, is_auth_shop, login_type, auth_type) estava causando o problema. O próximo passo seria adicioná-los de volta, um por um, para identificar qual deles é o culpado.
+Se ainda assim falhar e você for redirecionado para a Open Platform: O problema não está nesses parâmetros extras. Prossiga para os próximos passos de verificação abaixo.
+Outros Passos de Verificação (Se a URL Minimalista NÃO Funcionar):
+INSPECIONE O CABEÇALHO Location NO NAVEGADOR:
+
+Use as Ferramentas de Desenvolvedor (F12) -> Aba Rede/Network (com "Preservar log").
+Ao ser redirecionado para a Shopee, clique na requisição para partner.shopeemobile.com e veja o cabeçalho Location na resposta 302 da Shopee. Confirme o destino exato do redirecionamento.
+REVISÃO COMPLETA DA CONFIGURAÇÃO DO SEU APP NA SHOPEE OPEN PLATFORM:
+
+Tipo de App: Tem que ser "Third-Party Platform app" (ou equivalente para SaaS/ISV).
+Status: App ativo e aprovado?
+URL de Redirecionamento (Whitelist): https://cipshopee.replit.app/api/shopee/callback deve estar exatamente igual. Verifique espaços, barras no final, HTTP vs HTTPS.
+Credenciais: partner_id (2011285) e partner_key são as corretas para o ambiente (Sandbox/Produção)?
+CACHE E SESSÕES: Tente o fluxo em uma janela anônima do navegador.
+
+Por favor, priorize o teste com a URL minimalista. Isso é fundamental para o diagnóstico neste momento. Se você já fez esse teste e o resultado foi o mesmo, por favor, me informe, juntamente com o que você observou no cabeçalho Location e uma confirmação da revisão das configurações no portal da Shopee.
