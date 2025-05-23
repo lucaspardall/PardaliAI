@@ -14,40 +14,108 @@ export default function DemoDashboard() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Verificar se o usuário está autenticado no modo demo
-  const { data: demoUser, isLoading: isLoadingUser, error: userError } = useQuery({
-    queryKey: ['/demo/user'],
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
-
-  // Obter lojas do modo demo
-  const { data: stores, isLoading: isLoadingStores } = useQuery({
-    queryKey: ['/demo/stores'],
-    enabled: !!demoUser,
-    refetchOnWindowFocus: false,
-  });
-
-  // Obter notificações do modo demo
-  const { data: notifications, isLoading: isLoadingNotifications } = useQuery({
-    queryKey: ['/demo/notifications'],
-    enabled: !!demoUser,
-    refetchOnWindowFocus: false,
-  });
-
-  // Obter estatísticas da primeira loja para os últimos 7 dias
-  const { data: storeStats, isLoading: isLoadingStats } = useQuery({
-    queryKey: ['/demo/store-stats', stores && stores.length > 0 ? stores[0].id : null, 7],
-    enabled: !!demoUser && !!stores && stores.length > 0,
-    refetchOnWindowFocus: false,
-  });
-
-  // Redirecionar para login se não estiver autenticado
+  // Estado local para armazenar os dados
+  const [demoUser, setDemoUser] = useState<any>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [stores, setStores] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [storeStats, setStoreStats] = useState<any[]>([]);
+  
+  // Verificar autenticação e carregar dados do localStorage
   useEffect(() => {
-    if (userError) {
-      navigate('/demo/login');
-    }
-  }, [userError, navigate]);
+    const checkAuth = () => {
+      const isLoggedIn = localStorage.getItem('demo_logged_in');
+      const userData = localStorage.getItem('demo_user');
+      
+      if (isLoggedIn === 'true' && userData) {
+        try {
+          // Carregar usuário do localStorage
+          const user = JSON.parse(userData);
+          setDemoUser(user);
+          
+          // Dados de demonstração para lojas
+          setStores([
+            {
+              id: 1,
+              shopId: 'S12345678',
+              shopName: 'Tech Store Demo',
+              shopLogo: 'https://ui-avatars.com/api/?name=Tech+Store&background=0D8ABC&color=fff',
+              shopRegion: 'BR',
+              totalProducts: 145,
+              totalOrders: 532,
+              monthlyRevenue: 24567.89,
+              isActive: true,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            },
+            {
+              id: 2,
+              shopId: 'S87654321',
+              shopName: 'Fashion Demo',
+              shopLogo: 'https://ui-avatars.com/api/?name=Fashion+Demo&background=FF5722&color=fff',
+              shopRegion: 'BR',
+              totalProducts: 87,
+              totalOrders: 213,
+              monthlyRevenue: 17890.45,
+              isActive: true,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          ]);
+          
+          // Dados de demonstração para notificações
+          setNotifications([
+            {
+              id: 1,
+              title: 'Bem-vindo ao modo demo',
+              message: 'Este é um ambiente de demonstração com dados simulados',
+              type: 'info',
+              isRead: false,
+              createdAt: new Date(),
+              userId: user.id
+            },
+            {
+              id: 2,
+              title: 'Otimização disponível',
+              message: 'Há novas sugestões de otimização para seus produtos',
+              type: 'success',
+              isRead: false,
+              createdAt: new Date(Date.now() - 3600000),
+              userId: user.id
+            }
+          ]);
+          
+          // Dados de demonstração para estatísticas
+          const today = new Date();
+          const stats = Array.from({ length: 7 }, (_, i) => {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            return {
+              id: i + 1,
+              date: date,
+              storeId: 1,
+              totalViews: Math.floor(Math.random() * 500) + 100,
+              totalSales: Math.floor(Math.random() * 30) + 5,
+              totalRevenue: (Math.random() * 2000) + 500,
+              averageCtr: (Math.random() * 5) + 1,
+              productCount: Math.floor(Math.random() * 10) + 140,
+              createdAt: new Date()
+            };
+          });
+          setStoreStats(stats);
+        } catch (error) {
+          console.error('Erro ao carregar dados demo:', error);
+          navigate('/demo/login');
+        }
+      } else {
+        navigate('/demo/login');
+      }
+      
+      setIsLoadingUser(false);
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   if (isLoadingUser) {
     return (
