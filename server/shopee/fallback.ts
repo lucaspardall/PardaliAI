@@ -222,6 +222,10 @@ export function generateDiagnosticPage(urls: Record<string, string>): string {
           display: flex;
           flex-direction: column;
         }
+        .url-card.highlighted {
+          border: 2px solid #ee4d2d;
+          background: #fff8f0;
+        }
         .url-card h3 {
           margin-top: 0;
           color: #ee4d2d;
@@ -262,6 +266,12 @@ export function generateDiagnosticPage(urls: Record<string, string>): string {
           padding: 15px;
           margin: 20px 0;
         }
+        .recommendation {
+          background: #e3f2fd;
+          border-left: 4px solid #2196F3;
+          padding: 15px;
+          margin: 20px 0;
+        }
         table {
           width: 100%;
           border-collapse: collapse;
@@ -277,6 +287,28 @@ export function generateDiagnosticPage(urls: Record<string, string>): string {
         th {
           background-color: #f2f2f2;
         }
+        .section {
+          margin-bottom: 30px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid #eee;
+        }
+        .badge {
+          display: inline-block;
+          padding: 3px 8px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: bold;
+          margin-left: 8px;
+          vertical-align: middle;
+        }
+        .badge.recommended {
+          background-color: #4caf50;
+          color: white;
+        }
+        .badge.experimental {
+          background-color: #ff9800;
+          color: white;
+        }
       </style>
     </head>
     <body>
@@ -287,24 +319,51 @@ export function generateDiagnosticPage(urls: Record<string, string>): string {
         <p><strong>Importante:</strong> Registre qual opção funciona corretamente para que possamos melhorar o processo de integração.</p>
       </div>
 
+      <div class="recommendation">
+        <p><strong>Recomendação para Testes:</strong> Comece pela opção <strong>"Abordagem Minimalista"</strong> para estabelecer uma linha de base. Em seguida, teste as variantes com um parâmetro adicional (Minimal+Region, Minimal+AuthShop, etc.) para identificar qual parâmetro específico pode estar causando problemas.</p>
+      </div>
+
       <div class="warning">
         <p><strong>Atenção:</strong> Ao usar estas opções, você será redirecionado para o processo de autorização da Shopee. Este é um passo necessário para conectar sua conta. Após autorização, você retornará automaticamente a esta aplicação.</p>
       </div>
 
-      <h2>Opções de Conexão</h2>
-
-      <div class="urls">
-        ${Object.entries(urls).map(([key, url]) => `
-          <div class="url-card">
-            <h3>Opção: ${getReadableName(key)}</h3>
-            <p>${getDescription(key)}</p>
-            <a href="${url}" class="url-link">Testar Esta Conexão</a>
-            <div class="url-details" title="${url}">URL: ${url.substring(0, 50)}...</div>
-          </div>
-        `).join('')}
+      <div class="section">
+        <h2>Opções Minimalistas <span class="badge recommended">RECOMENDADO</span></h2>
+        <p>Estas opções usam apenas os parâmetros essenciais e adicionam um por um para identificar problemas específicos.</p>
+        
+        <div class="urls">
+          ${Object.entries(urls)
+            .filter(([key]) => ['minimal', 'withRegion', 'withAuthShop', 'withLoginType', 'withAuthType', 'withRegionAndAuthShop', 'withLoginAndAuthType'].includes(key))
+            .map(([key, url]) => `
+              <div class="url-card ${key === 'minimal' ? 'highlighted' : ''}">
+                <h3>Teste: ${getReadableName(key)}</h3>
+                <p>${getDescription(key)}</p>
+                <a href="${url}" class="url-link">Testar Esta Opção</a>
+                <div class="url-details" title="${url}">URL: ${url.substring(0, 50)}...</div>
+              </div>
+            `).join('')}
+        </div>
       </div>
 
-      <h2>Comparação das Abordagens</h2>
+      <div class="section">
+        <h2>Opções Alternativas <span class="badge experimental">FALLBACK</span></h2>
+        <p>Estas são abordagens alternativas que tentam diferentes domínios, padrões de URL e combinações de parâmetros.</p>
+        
+        <div class="urls">
+          ${Object.entries(urls)
+            .filter(([key]) => !['minimal', 'withRegion', 'withAuthShop', 'withLoginType', 'withAuthType', 'withRegionAndAuthShop', 'withLoginAndAuthType'].includes(key))
+            .map(([key, url]) => `
+              <div class="url-card">
+                <h3>Alternativa: ${getReadableName(key)}</h3>
+                <p>${getDescription(key)}</p>
+                <a href="${url}" class="url-link">Testar Esta Conexão</a>
+                <div class="url-details" title="${url}">URL: ${url.substring(0, 50)}...</div>
+              </div>
+            `).join('')}
+        </div>
+      </div>
+
+      <h2>Guia para Troubleshooting</h2>
 
       <table>
         <tr>
@@ -313,56 +372,61 @@ export function generateDiagnosticPage(urls: Record<string, string>): string {
           <th>Quando Usar</th>
         </tr>
         <tr>
-          <td>Mínima</td>
+          <td>Minimalista</td>
           <td>partner_id, timestamp, sign, redirect, state</td>
-          <td>Para isolar problemas com parâmetros extras</td>
+          <td><strong>TESTE PRIMEIRO</strong> - Para determinar se os parâmetros extras são a causa do problema</td>
+        </tr>
+        <tr>
+          <td>Minimalista + Region</td>
+          <td>Minimal + region=BR</td>
+          <td>Para verificar se o parâmetro region está causando problemas</td>
+        </tr>
+        <tr>
+          <td>Minimalista + AuthShop</td>
+          <td>Minimal + is_auth_shop=true</td>
+          <td>Para verificar se o parâmetro is_auth_shop está causando problemas</td>
+        </tr>
+        <tr>
+          <td>Minimalista + LoginType</td>
+          <td>Minimal + login_type=seller</td>
+          <td>Para verificar se o parâmetro login_type está causando problemas</td>
+        </tr>
+        <tr>
+          <td>Minimalista + AuthType</td>
+          <td>Minimal + auth_type=direct</td>
+          <td>Para verificar se o parâmetro auth_type está causando problemas</td>
         </tr>
         <tr>
           <td>Padrão</td>
           <td>Mínima + region</td>
-          <td>Para compatibilidade básica</td>
+          <td>Para compatibilidade básica com região</td>
         </tr>
         <tr>
           <td>Completa</td>
           <td>Padrão + is_auth_shop, login_type, auth_type</td>
-          <td>Para direcionar ao login do vendedor</td>
-        </tr>
-        <tr>
-          <td>Login Type Primeiro</td>
-          <td>Mesmos parâmetros, ordem diferente</td>
-          <td>Para sistemas sensíveis à ordem dos parâmetros</td>
-        </tr>
-        <tr>
-          <td>Auth Type Primeiro</td>
-          <td>Mesmos parâmetros, ordem diferente</td>
-          <td>Para sistemas sensíveis à ordem dos parâmetros</td>
-        </tr>
-        <tr>
-          <td>Sem Auth Type</td>
-          <td>Sem o parâmetro auth_type</td>
-          <td>Se auth_type causar problemas</td>
-        </tr>
-        <tr>
-          <td>Sem Login Type</td>
-          <td>Sem o parâmetro login_type</td>
-          <td>Se login_type causar problemas</td>
+          <td>Para direcionar ao login do vendedor (conjunto completo)</td>
         </tr>
         <tr>
           <td>Alternativa</td>
           <td>Domínio seller.shopee.com.br</td>
-          <td>Se a URL padrão falhar</td>
+          <td>Se a URL padrão falhar, tenta domínio alternativo</td>
         </tr>
         <tr>
-          <td>Login Direto</td>
-          <td>Redirecionamento via página de login</td>
-          <td>Para força o login antes da autorização</td>
-        </tr>
-        <tr>
-          <td>Domínio BR</td>
-          <td>Domínio específico para o Brasil</td>
-          <td>Para resolver problemas com o domínio internacional</td>
+          <td>Account Seller</td>
+          <td>Redirecionamento via account.seller.shopee.com.br</td>
+          <td>Para forçar o login através do portal de vendedores</td>
         </tr>
       </table>
+
+      <div class="recommendation" style="margin-top: 30px;">
+        <p><strong>Próximos passos após encontrar a URL que funciona:</strong></p>
+        <ol>
+          <li>Anote qual variante funcionou corretamente</li>
+          <li>Verifique os parâmetros específicos que foram usados</li>
+          <li>Modifique a implementação principal para usar a abordagem que funcionou</li>
+          <li>Certifique-se de que a autenticação está sendo feita no contexto certo (seller vs open platform)</li>
+        </ol>
+      </div>
     </body>
     </html>
   `;
@@ -373,15 +437,24 @@ export function generateDiagnosticPage(urls: Record<string, string>): string {
  */
 function getReadableName(key: string): string {
   const names: Record<string, string> = {
-    minimal: "Mínima",
+    // Opções minimalistas
+    minimal: "Abordagem Minimalista",
+    withRegion: "Minimal + Region",
+    withAuthShop: "Minimal + AuthShop",
+    withLoginType: "Minimal + LoginType",
+    withAuthType: "Minimal + AuthType",
+    withRegionAndAuthShop: "Minimal + Region + AuthShop",
+    withLoginAndAuthType: "Minimal + LoginType + AuthType",
+    
+    // Opções antigas
     standard: "Padrão",
     enhanced: "Completa",
     loginTypeFirst: "Login Type Primeiro",
     authTypeFirst: "Auth Type Primeiro",
     noAuthType: "Sem Auth Type",
     noLoginType: "Sem Login Type",
-    alternative: "Alternativa",
-    accountSeller: "Login Direto",
+    alternative: "Alternativa (seller.shopee)",
+    accountSeller: "Account Seller Login",
     brDomain: "Domínio BR"
   };
   return names[key] || key;
@@ -392,7 +465,16 @@ function getReadableName(key: string): string {
  */
 function getDescription(key: string): string {
   const descriptions: Record<string, string> = {
-    minimal: "Apenas parâmetros essenciais sem extras. Teste esta opção primeiro para isolar o problema.",
+    // Opções minimalistas com descrições detalhadas
+    minimal: "Apenas os parâmetros essenciais sem extras: partner_id, timestamp, sign, redirect, state. Teste esta opção primeiro para estabelecer uma base funcional.",
+    withRegion: "Adiciona apenas o parâmetro region=BR aos parâmetros essenciais, para isolar se este parâmetro está causando problemas.",
+    withAuthShop: "Adiciona apenas o parâmetro is_auth_shop=true aos parâmetros essenciais, para isolar se este parâmetro está causando problemas.",
+    withLoginType: "Adiciona apenas o parâmetro login_type=seller aos parâmetros essenciais, para isolar se este parâmetro está causando problemas.",
+    withAuthType: "Adiciona apenas o parâmetro auth_type=direct aos parâmetros essenciais, para isolar se este parâmetro está causando problemas.",
+    withRegionAndAuthShop: "Adiciona os parâmetros region=BR e is_auth_shop=true aos parâmetros essenciais, para testar esta combinação específica.",
+    withLoginAndAuthType: "Adiciona os parâmetros login_type=seller e auth_type=direct aos parâmetros essenciais, para testar esta combinação específica.",
+    
+    // Opções antigas
     standard: "URL padrão com parâmetro de região adicionado (BR).",
     enhanced: "URL completa com todos os parâmetros de direcionamento para o Seller Center.",
     loginTypeFirst: "Prioriza o parâmetro login_type=seller como primeiro parâmetro adicional.",

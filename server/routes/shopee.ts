@@ -60,13 +60,85 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       console.error("Não foi possível salvar URLs em arquivo:", err);
     }
     
+    // Se o parâmetro "minimal" for fornecido, usar a implementação minimalista
+    if (req.query.minimal === 'true') {
+      console.log('🔍 MODO MINIMALISTA: Usando implementação com parâmetros mínimos');
+      
+      // Importar implementação minimalista
+      const { generateMinimalAuthUrl } = await import('../shopee/minimal');
+      
+      // Gerar URL minimalista
+      const minimalUrl = generateMinimalAuthUrl(config);
+      
+      // Salvar URL para inspeção
+      try {
+        fs.writeFileSync('shopee_auth_minimal_url.txt', 
+          `Timestamp: ${Math.floor(Date.now() / 1000)}\n\n` +
+          `URL Minimalista: ${minimalUrl}`
+        );
+        console.log("✅ URL minimalista salva em arquivo: shopee_auth_minimal_url.txt");
+      } catch (err) {
+        console.error("Não foi possível salvar URL em arquivo:", err);
+      }
+      
+      // Redirecionar diretamente
+      console.log(`Redirecionando para URL minimalista: ${minimalUrl.substring(0, 100)}...`);
+      return res.redirect(minimalUrl);
+    }
+    
+    // Se o parâmetro variant for fornecido, teste variantes específicas
+    if (req.query.variant) {
+      console.log(`🔍 TESTANDO VARIANTE: ${req.query.variant}`);
+      
+      // Importar implementação de variantes
+      const { generateTestVariants } = await import('../shopee/minimal');
+      
+      // Gerar variantes de teste
+      const variants = generateTestVariants(config);
+      
+      // Obter a variante solicitada
+      const variantName = req.query.variant as string;
+      const variantUrl = variants[variantName];
+      
+      if (!variantUrl) {
+        return res.status(400).json({
+          error: 'Variante não encontrada',
+          availableVariants: Object.keys(variants)
+        });
+      }
+      
+      // Salvar URL para inspeção
+      try {
+        fs.writeFileSync(`shopee_auth_variant_${variantName}.txt`, 
+          `Timestamp: ${Math.floor(Date.now() / 1000)}\n\n` +
+          `Variante [${variantName}]: ${variantUrl}`
+        );
+        console.log(`✅ URL variante [${variantName}] salva em arquivo`);
+      } catch (err) {
+        console.error("Não foi possível salvar URL em arquivo:", err);
+      }
+      
+      // Redirecionar para a variante
+      console.log(`Redirecionando para variante [${variantName}]: ${variantUrl.substring(0, 100)}...`);
+      return res.redirect(variantUrl);
+    }
+    
     // Se estiver no modo de diagnóstico, mostrar mais opções
     if (showDiagnosticPage || req.query.diagnose === 'advanced') {
       // Importar a implementação de diagnóstico para Shopee
       const { generateAuthUrls, generateDiagnosticPage } = await import('../shopee/fallback');
+      // Importar também as variantes minimalistas
+      const { generateTestVariants } = await import('../shopee/minimal');
       
       // Gerar URLs alternativas para diagnóstico
-      const urls = generateAuthUrls(config);
+      const fallbackUrls = generateAuthUrls(config);
+      const minimalVariants = generateTestVariants(config);
+      
+      // Combinar todas as URLs
+      const urls = {
+        ...minimalVariants,
+        ...fallbackUrls
+      };
       
       console.log('Modo diagnóstico: Gerando página com múltiplas opções de autorização');
       
