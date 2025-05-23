@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
@@ -34,13 +33,13 @@ export default function DirectLogin() {
 
       window.removeEventListener("message", authComplete);
       authWindow?.close();
-      
+
       toast({
         title: "Login realizado com sucesso",
         description: "Você está conectado e pode usar o sistema agora.",
         variant: "default",
       });
-      
+
       // Recarregar a página após login bem-sucedido
       location.reload();
     }

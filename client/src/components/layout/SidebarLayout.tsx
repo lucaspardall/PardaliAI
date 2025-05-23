@@ -24,12 +24,10 @@ interface SidebarLayoutProps {
 // Componente de navegação para evitar aninhamento de <a>
 const NavItem = ({ href, icon, label, isActive }: { href: string; icon: string; label: string; isActive: boolean }) => {
   return (
-    <div className="nav-item">
-      <Link href={href} className={`sidebar-link ${isActive ? 'active' : ''}`}>
-        <i className={`${icon} mr-3 text-lg`}></i>
-        {label}
-      </Link>
-    </div>
+    <Link href={href} className={`sidebar-link ${isActive ? 'active' : ''}`}>
+      <i className={`${icon} mr-3 text-lg`}></i>
+      {label}
+    </Link>
   );
 };
 
@@ -39,7 +37,7 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  
+
   // Fetch notifications
   const { data: notifications } = useQuery({
     queryKey: ["/api/notifications"],
@@ -75,7 +73,7 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
           <i className="ri-bird-fill text-primary text-2xl mr-2"></i>
           <h1 className="text-xl font-bold text-white font-heading">CIP Shopee</h1>
         </div>
-        
+
         <div className="px-3 py-4 flex-1 overflow-auto">
           <div className="space-y-1">
             {navItems.map((item) => (
@@ -88,7 +86,7 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
               />
             ))}
           </div>
-          
+
           <div className="mt-8">
             <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Configurações
@@ -106,7 +104,7 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
             </div>
           </div>
         </div>
-        
+
         <div className="border-t border-sidebar-border p-4">
           <div className="flex items-center">
             <Avatar className="h-10 w-10 mr-3">
@@ -158,7 +156,7 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
             <i className="ri-close-line text-xl"></i>
           </button>
         </div>
-        
+
         <div className="px-3 py-4 h-[calc(100%-64px-72px)] overflow-y-auto">
           <div className="space-y-1">
             {navItems.map((item) => (
@@ -171,7 +169,7 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
               />
             ))}
           </div>
-          
+
           <div className="mt-8">
             <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Configurações
@@ -189,7 +187,7 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
             </div>
           </div>
         </div>
-        
+
         <div className="absolute bottom-0 w-full border-t border-sidebar-border p-4">
           <div className="flex items-center">
             <Avatar className="h-10 w-10 mr-3">
@@ -234,7 +232,7 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
             </button>
             <h1 className="text-lg font-semibold text-foreground">{title}</h1>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -279,7 +277,7 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
