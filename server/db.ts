@@ -95,8 +95,7 @@ export async function verificarConexaoDB() {
   } catch (error) {
     console.error("Erro ao verificar conexão com banco:", error);
     return false;
-  }rror);
-  throw lastError;
+  }
 };
 
 // Adiciona compatibilidade para métodos que o connect-pg-simple espera
