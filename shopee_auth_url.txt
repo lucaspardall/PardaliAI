@@ -1,5 +1,9 @@
-URL Padrão: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748001515&sign=1ea4a865e73918c3134d84ddcd8a37f01f504fff82d67a2e4f667e19b5424801&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct&state=cipshopee_1748001515765
+Timestamp: 1748002048
 
-URL Alternativa: https://seller.shopee.com.br/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748001515&sign=1ea4a865e73918c3134d84ddcd8a37f01f504fff82d67a2e4f667e19b5424801&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748001515765
+URL Padrão: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002048&sign=d71ed4f8429369a332dfc3df2bc28f9136622e907aeaad7db99c460a0ff06e21&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002048298&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
 
-URL Login Direto: https://account.seller.shopee.com/seller/login?client_id=2011285&redirect_uri=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748001515765&scope=profile&lang=pt-br&timestamp=1748001515&sign=e0d71da91322666859b74b09d20a5d9e62bc050155344773351e53cc3ec2308c
+URL Minimalista: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002048&sign=d71ed4f8429369a332dfc3df2bc28f9136622e907aeaad7db99c460a0ff06e21&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002048298
+
+URL Regional: https://seller.shopee.com.br/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002048&sign=d71ed4f8429369a332dfc3df2bc28f9136622e907aeaad7db99c460a0ff06e21&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002048298
+
+URL Login Direto: https://account.seller.shopee.com.br/seller/login?partner_id=2011285&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002048298&timestamp=1748002048&sign=9b492a33763e0f451a4f609ef8d32d3a9754b99bc39b128af6890c9ddcf6ffd2
