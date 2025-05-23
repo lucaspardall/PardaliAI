@@ -20,18 +20,28 @@ export default function CTASection() {
           <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
             Junte-se a centenas de vendedores que estão aumentando seus resultados com CIP Shopee.
           </p>
-          <Button 
-            size="lg" 
-            variant="secondary" 
-            className="bg-white text-primary hover:bg-primary-50 px-8"
-            asChild
-          >
-            {isAuthenticated ? (
-              <a href="/dashboard">Acessar Dashboard</a>
-            ) : (
-              <a href="/api/login">Começar agora</a>
-            )}
-          </Button>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Button 
+              size="lg" 
+              variant="secondary" 
+              className="bg-white text-primary hover:bg-primary-50 px-8"
+              asChild
+            >
+              {isAuthenticated ? (
+                <a href="/dashboard">Acessar Dashboard</a>
+              ) : (
+                <a href="/api/login">Começar agora</a>
+              )}
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white text-white hover:bg-white/20 px-8"
+              asChild
+            >
+              <a href="/demo/login">Experimentar demonstração</a>
+            </Button>
+          </div>
         </motion.div>
       </div>
     </section>

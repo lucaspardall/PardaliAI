@@ -40,8 +40,13 @@ export default function HeroSection() {
               )}
               <Button asChild variant="outline" size="lg" className="bg-white/10 border-white/20 hover:bg-white/20">
                 <a href="#features">
-                  Ver demonstração
+                  Ver recursos
                 </a>
+              </Button>
+              <Button asChild variant="secondary" size="lg" className="shadow-lg">
+                <Link href="/demo/login">
+                  Acessar modo demo
+                </Link>
               </Button>
             </div>
           </motion.div>
