@@ -43,9 +43,15 @@ function Router() {
       {/* Public routes */}
       <Route path="/" component={Landing} />
       <Route path="/demo/dashboard" component={DemoDashboard} />
-      <Route path="/demo/products" component={DemoDashboard} />
-      <Route path="/demo/optimize/:id" component={DemoDashboard} />
-      <Route path="/demo/product/:id" component={DemoDashboard} />
+      <Route path="/demo/products">
+        {() => <dynamic import="@/pages/demo/products" />}
+      </Route>
+      <Route path="/demo/product/:id">
+        {(params) => <dynamic import="@/pages/demo/product/[id]" params={params} />}
+      </Route>
+      <Route path="/demo/optimize/:id">
+        {(params) => <dynamic import="@/pages/demo/optimize/[id]" params={params} />}
+      </Route>
       
       {/* Protected dashboard routes */}
       <Route path="/dashboard">
