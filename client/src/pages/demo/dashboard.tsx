@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import SidebarLayout from '@/components/layout/SidebarLayout';
+import DemoSidebarLayout from '@/components/layout/DemoSidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { faker } from '@faker-js/faker/locale/pt_BR';
 import { Button } from '@/components/ui/button';
@@ -160,7 +160,7 @@ export default function DemoDashboard() {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
   return (
-    <SidebarLayout user={user} stores={stores} notifications={notifications} isDemoMode={true}>
+    <DemoSidebarLayout demoData={{ user, stores, notifications }}>
       <div className="px-4 md:px-6 py-4 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -461,6 +461,6 @@ export default function DemoDashboard() {
           </div>
         </div>
       </div>
-    </SidebarLayout>
+    </DemoSidebarLayout>
   );
 }
