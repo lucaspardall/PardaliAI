@@ -8,7 +8,7 @@
 import { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import crypto from 'crypto';
-import { createClient } from '@neondatabase/serverless';
+import { db, sql } from '../db';
 import connectPg from 'connect-pg-simple';
 
 // Credenciais de demonstração fixas
@@ -38,17 +38,12 @@ export function setupDemoSession(app: any): void {
   const pgSession = connectPg(session);
   
   // Usar a mesma conexão de banco de dados, mas uma tabela diferente
-  const sql = process.env.DATABASE_URL 
-    ? createClient({ connectionString: process.env.DATABASE_URL })
-    : undefined;
-    
-  const sessionStore = sql 
-    ? new pgSession({
-        conObject: { query: (text: string, params: any[]) => sql.query(text, params) },
-        tableName: 'demo_sessions', // Tabela separada para sessões demo
-        createTableIfMissing: true,
-      })
-    : undefined;
+  // Usar o cliente de DB já configurado no aplicativo principal
+  const sessionStore = new pgSession({
+    conObject: { pool: sql },
+    tableName: 'demo_sessions', // Tabela separada para sessões demo
+    createTableIfMissing: true,
+  });
 
   // Configuração de sessão específica para o modo de demonstração
   app.use('/demo', session({
