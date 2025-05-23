@@ -40,7 +40,24 @@ demoRouter.get('/logout', (req, res) => {
       res.status(500).json({ success: false, message: 'Erro ao fazer logout' });
     } else {
       res.clearCookie('demo.sid');
-      res.redirect('/');
+      // Remover localStorage no cliente antes de redirecionar
+      res.set('Content-Type', 'text/html');
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Redirecionando...</title>
+            <script>
+              localStorage.removeItem('demo_logged_in');
+              localStorage.removeItem('demo_user');
+              window.location.href = '/';
+            </script>
+          </head>
+          <body>
+            <p>Desconectando e redirecionando para a página inicial...</p>
+          </body>
+        </html>
+      `);
     }
   });
 });
