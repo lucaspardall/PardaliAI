@@ -57,17 +57,24 @@ export class ShopeeAuthManager {
     console.log(`Assinatura gerada: ${signature}`);
 
     // Construir URL de autorização conforme documentação oficial
-    // Adicionados parâmetros específicos para o login do vendedor (login_type=seller, auth_type=direct)
-    const authUrl = `${baseUrl}${apiPath}?` +
-      `partner_id=${this.config.partnerId}&` +
-      `timestamp=${timestamp}&` +
-      `sign=${signature}&` +
-      `redirect=${encodeURIComponent(this.config.redirectUrl)}&` +
-      `state=${stateParam}&` +
-      `region=BR&` +
-      `is_auth_shop=true&` +
-      `login_type=seller&` +
-      `auth_type=direct`;
+    // Parâmetros principais que fazem parte da assinatura
+    const urlParams = new URLSearchParams({
+      partner_id: this.config.partnerId,
+      timestamp: timestamp.toString(),
+      sign: signature,
+      redirect: this.config.redirectUrl,
+      state: stateParam
+    });
+    
+    // Adicionar parâmetros específicos para forçar o login direto do vendedor
+    // Estes parâmetros não fazem parte da string base da assinatura
+    urlParams.append('region', 'BR');
+    urlParams.append('is_auth_shop', 'true');
+    urlParams.append('login_type', 'seller');
+    urlParams.append('auth_type', 'direct');
+    
+    // Montar a URL final usando URLSearchParams para garantir codificação correta
+    const authUrl = `${baseUrl}${apiPath}?${urlParams.toString()}`;
 
     // URL final
     const finalUrl = authUrl;
