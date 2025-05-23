@@ -1,10 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { faker } from '@faker-js/faker/locale/pt_BR';
-import { db } from '../db';
 import { storage } from '../storage';
-import { eq } from 'drizzle-orm';
-import { users, shopeeStores, products, notifications } from '@shared/schema';
-import { SQL } from 'drizzle-orm';
+import { users } from '@shared/schema';
 
 const router = Router();
 
@@ -97,19 +94,25 @@ router.post('/create-demo-account', async (req: Request, res: Response) => {
 
 // Limpar dados existentes para uma conta de demonstração
 async function cleanExistingDemoData(userId: string) {
-  // Remover notificações
-  await db.delete(notifications).where(eq(notifications.userId, userId));
-  
-  // Obter IDs de lojas para limpar produtos
-  const userStores = await db.select().from(shopeeStores).where(eq(shopeeStores.userId, userId));
-  const storeIds = userStores.map(store => store.id);
-  
-  if (storeIds.length > 0) {
-    // Remover produtos
-    await db.delete(products).where(eq(products.storeId, storeIds[0]));
+  try {
+    // Obter lojas do usuário
+    const userStores = await storage.getStoresByUserId(userId);
     
-    // Remover lojas
-    await db.delete(shopeeStores).where(eq(shopeeStores.userId, userId));
+    // Limpar produtos e lojas
+    for (const store of userStores) {
+      // Obter produtos da loja
+      const storeProducts = await storage.getProductsByStoreId(store.id);
+      
+      // Remover cada produto
+      for (const product of storeProducts) {
+        await storage.deleteProduct(product.id);
+      }
+      
+      // Remover a loja
+      await storage.deleteStore(store.id);
+    }
+  } catch (error) {
+    console.error("Erro ao limpar dados de demonstração:", error);
   }
 }
 
