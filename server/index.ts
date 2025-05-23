@@ -73,18 +73,32 @@ app.use((req, res, next) => {
     }
 
     // Configuração de porta adaptada para funcionar tanto em desenvolvimento quanto em deploy
-    const port = process.env.PORT || 3000;
+    const port = process.env.PORT || 5000;
     
-    server.listen({
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`serving on port ${port}`);
-    }).on('error', (err: any) => {
-      log(`Erro no servidor: ${err.message}`);
-      throw err;
-    });
+    // Tentar portas alternativas se a primeira estiver ocupada
+    function tryConnect(currentPort: number) {
+      server.listen({
+        port: currentPort,
+        host: "0.0.0.0",
+      }, () => {
+        log(`serving on port ${currentPort}`);
+      }).on('error', (err: any) => {
+        log(`Erro na porta ${currentPort}: ${err.message}`);
+        
+        if (err.code === 'EADDRINUSE' && currentPort < 5010) {
+          // Tentar próxima porta
+          const nextPort = currentPort + 1;
+          log(`Porta ${currentPort} está em uso, tentando porta ${nextPort}...`);
+          tryConnect(nextPort);
+        } else {
+          log(`Erro não recuperável no servidor: ${err.message}`);
+          throw err;
+        }
+      });
+    }
+    
+    // Iniciar com a porta configurada
+    tryConnect(port);
   } catch (err) {
     console.error("Erro na inicialização do servidor:", err);
     process.exit(1);
