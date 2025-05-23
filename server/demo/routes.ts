@@ -31,8 +31,9 @@ demoRouter.get('/auth-redirect', (req, res) => {
   `);
 });
 
-// Rota de logout para demo
+// Rotas de logout para demo (POST e GET)
 demoRouter.post('/logout', handleDemoLogout);
+demoRouter.get('/logout', handleDemoLogout);
 
 // Pegar informações do usuário logado em modo demo
 demoRouter.get('/user', isDemoAuthenticated, (req, res) => {

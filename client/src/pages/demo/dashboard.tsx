@@ -174,11 +174,11 @@ export default function DemoDashboard() {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" onClick={() => navigate('/demo/products')}>
+            <Button onClick={() => navigate('/demo/products')}>
               <ShoppingBag className="mr-2 h-4 w-4" />
               Produtos
             </Button>
-            <Button variant="ghost" onClick={() => navigate('/demo/optimizations')}>
+            <Button variant="outline" onClick={() => navigate('/demo/optimizations')}>
               <TrendingUp className="mr-2 h-4 w-4" />
               Otimizações
             </Button>

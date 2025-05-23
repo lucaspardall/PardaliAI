@@ -36,7 +36,7 @@ const DEMO_CREDENTIALS = {
  */
 export function setupDemoSession(app: any): void {
   const pgSession = connectPg(session);
-  
+
   // Usar a mesma conexão de banco de dados, mas uma tabela diferente
   // Usar o cliente de DB já configurado no aplicativo principal
   const sessionStore = new pgSession({
@@ -65,14 +65,14 @@ export function setupDemoSession(app: any): void {
  */
 export function handleDemoLogin(req: Request, res: Response): void {
   const { username, password } = req.body;
-  
+
   // Verificar credenciais
   if (username === DEMO_CREDENTIALS.username && password === DEMO_CREDENTIALS.password) {
     // Armazenar informações do usuário na sessão
     const demoSession = req.session as any;
     demoSession.demoUser = DEMO_CREDENTIALS.user;
     demoSession.isDemoMode = true;
-    
+
     res.status(200).json({
       success: true,
       user: DEMO_CREDENTIALS.user,
@@ -106,7 +106,7 @@ export function handleDemoLogout(req: Request, res: Response): void {
  */
 export function isDemoAuthenticated(req: Request, res: Response, next: NextFunction): void {
   const demoSession = req.session as any;
-  
+
   if (demoSession && demoSession.demoUser && demoSession.isDemoMode) {
     next();
   } else {
@@ -123,10 +123,10 @@ export function isDemoAuthenticated(req: Request, res: Response, next: NextFunct
  */
 export function addDemoUser(req: Request, res: Response, next: NextFunction): void {
   const demoSession = req.session as any;
-  
+
   if (demoSession && demoSession.demoUser) {
     (req as any).demoUser = demoSession.demoUser;
   }
-  
+
   next();
 }

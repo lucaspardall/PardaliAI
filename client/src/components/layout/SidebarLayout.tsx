@@ -18,7 +18,11 @@ import { getInitials } from "@/lib/utils/formatters";
 
 interface SidebarLayoutProps {
   children: React.ReactNode;
-  title: string;
+  title?: string;
+  user?: any;
+  stores?: any[];
+  notifications?: any[];
+  demoMode?: boolean;
 }
 
 // Componente de navegação para evitar aninhamento de <a>
@@ -33,33 +37,43 @@ const NavItem = ({ href, icon, label, isActive }: { href: string; icon: string; 
   );
 };
 
-export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
+export default function SidebarLayout({ children, title = "Dashboard", user, stores, notifications, demoMode = false }: SidebarLayoutProps) {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const authContext = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
-  // Fetch notifications
-  const { data: notifications } = useQuery({
+  // Use user from props if provided (demo mode), otherwise from auth context
+  const authUser = demoMode ? user : authContext?.user;
+  
+  // Fetch notifications if not provided via props (non-demo mode)
+  const { data: fetchedNotifications } = useQuery({
     queryKey: ["/api/notifications"],
     retry: false,
+    enabled: !demoMode
   });
 
+  // Use notifications from props if provided (demo mode), otherwise from API
+  const userNotifications = demoMode ? notifications : fetchedNotifications;
+
   // Get unread notifications count
-  const unreadCount = notifications?.filter((n: any) => !n.isRead).length || 0;
+  const unreadCount = userNotifications?.filter((n: any) => !n.isRead).length || 0;
+
+  // Base paths for links based on mode
+  const basePath = demoMode ? "/demo" : "/dashboard";
 
   const navItems = [
-    { href: "/dashboard", icon: "ri-dashboard-line", label: "Dashboard" },
-    { href: "/dashboard/products", icon: "ri-shopping-bag-3-line", label: "Produtos" },
-    { href: "/dashboard/store/connect", icon: "ri-store-2-line", label: "Minha Loja" },
-    { href: "/dashboard/optimizations", icon: "ri-ai-generate", label: "Otimizações" },
-    { href: "/dashboard/reports", icon: "ri-line-chart-line", label: "Relatórios" },
+    { href: `${basePath}`, icon: "ri-dashboard-line", label: "Dashboard" },
+    { href: `${basePath}/products`, icon: "ri-shopping-bag-3-line", label: "Produtos" },
+    { href: demoMode ? `${basePath}/dashboard` : "/dashboard/store/connect", icon: "ri-store-2-line", label: "Minha Loja" },
+    { href: `${basePath}/optimizations`, icon: "ri-ai-generate", label: "Otimizações" },
+    { href: `${basePath}/reports`, icon: "ri-line-chart-line", label: "Relatórios" },
   ];
 
   const settingsItems = [
-    { href: "/dashboard/profile", icon: "ri-user-settings-line", label: "Perfil" },
-    { href: "/dashboard/subscription", icon: "ri-vip-crown-line", label: "Assinatura" },
+    { href: demoMode ? `${basePath}/dashboard` : "/dashboard/profile", icon: "ri-user-settings-line", label: "Perfil" },
+    { href: demoMode ? `${basePath}/dashboard` : "/dashboard/subscription", icon: "ri-vip-crown-line", label: "Assinatura" },
   ];
 
   // Close mobile sidebar on route change
@@ -110,27 +124,27 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
         <div className="border-t border-sidebar-border p-4">
           <div className="flex items-center">
             <Avatar className="h-10 w-10 mr-3">
-              {user?.profileImageUrl ? (
-                <AvatarImage src={user.profileImageUrl} alt={user.firstName || "User"} />
+              {authUser?.profileImageUrl ? (
+                <AvatarImage src={authUser.profileImageUrl} alt={authUser.firstName || "User"} />
               ) : (
                 <AvatarFallback className="bg-primary/20 text-primary">
-                  {getInitials(user?.firstName, user?.lastName)}
+                  {getInitials(authUser?.firstName, authUser?.lastName)}
                 </AvatarFallback>
               )}
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
-                {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email || 'Usuário'}
+                {authUser?.firstName ? `${authUser.firstName} ${authUser.lastName || ''}` : authUser?.email || 'Usuário'}
               </p>
               <p className="text-xs text-gray-400 truncate">
-                Plano {user?.plan === 'free' ? 'Gratuito' : user?.plan === 'starter' ? 'Starter' : user?.plan === 'pro' ? 'Pro' : 'Enterprise'}
+                Plano {authUser?.plan === 'free' ? 'Gratuito' : authUser?.plan === 'starter' ? 'Starter' : authUser?.plan === 'pro' ? 'Pro' : 'Enterprise'}
               </p>
             </div>
             <Button 
               variant="ghost" 
               size="icon"
               className="ml-auto text-gray-400 hover:text-white"
-              onClick={() => window.location.href = '/api/logout'} 
+              onClick={() => window.location.href = demoMode ? '/demo/logout' : '/api/logout'} 
             >
               <i className="ri-logout-box-r-line"></i>
             </Button>
@@ -193,27 +207,27 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
         <div className="absolute bottom-0 w-full border-t border-sidebar-border p-4">
           <div className="flex items-center">
             <Avatar className="h-10 w-10 mr-3">
-              {user?.profileImageUrl ? (
-                <AvatarImage src={user.profileImageUrl} alt={user.firstName || "User"} />
+              {authUser?.profileImageUrl ? (
+                <AvatarImage src={authUser.profileImageUrl} alt={authUser.firstName || "User"} />
               ) : (
                 <AvatarFallback className="bg-primary/20 text-primary">
-                  {getInitials(user?.firstName, user?.lastName)}
+                  {getInitials(authUser?.firstName, authUser?.lastName)}
                 </AvatarFallback>
               )}
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
-                {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email || 'Usuário'}
+                {authUser?.firstName ? `${authUser.firstName} ${authUser.lastName || ''}` : authUser?.email || 'Usuário'}
               </p>
               <p className="text-xs text-gray-400 truncate">
-                Plano {user?.plan === 'free' ? 'Gratuito' : user?.plan === 'starter' ? 'Starter' : user?.plan === 'pro' ? 'Pro' : 'Enterprise'}
+                Plano {authUser?.plan === 'free' ? 'Gratuito' : authUser?.plan === 'starter' ? 'Starter' : authUser?.plan === 'pro' ? 'Pro' : 'Enterprise'}
               </p>
             </div>
             <Button 
               variant="ghost" 
               size="icon"
               className="ml-auto text-gray-400 hover:text-white"
-              onClick={() => window.location.href = '/api/logout'} 
+              onClick={() => window.location.href = demoMode ? '/demo/logout' : '/api/logout'} 
             >
               <i className="ri-logout-box-r-line"></i>
             </Button>
