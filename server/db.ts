@@ -84,18 +84,7 @@ const executeWithRetry = async (fn: Function, maxRetries = 5): Promise<any> => {
   }
   
   console.error("Todas as tentativas falharam. Último erro:", lastError);
-  throw new Error("Falha ao conectar ao banco de dados após várias tentativas");
-}
-
-// Função que verifica a conexão com o banco, com menos logging
-export async function verificarConexaoDB() {
-  try {
-    await sql`SELECT 1`;
-    return true;
-  } catch (error) {
-    console.error("Erro ao verificar conexão com banco:", error);
-    return false;
-  }
+  throw lastError;
 };
 
 // Adiciona compatibilidade para métodos que o connect-pg-simple espera
