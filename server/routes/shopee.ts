@@ -61,12 +61,26 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     }
     
     // Se estiver no modo de diagnóstico, mostrar mais opções
-    if (showDiagnosticPage) {
+    if (showDiagnosticPage || req.query.diagnose === 'advanced') {
       // Importar a implementação de diagnóstico para Shopee
       const { generateAuthUrls, generateDiagnosticPage } = await import('../shopee/fallback');
       
       // Gerar URLs alternativas para diagnóstico
       const urls = generateAuthUrls(config);
+      
+      console.log('Modo diagnóstico: Gerando página com múltiplas opções de autorização');
+      
+      // Salvar as URLs em um arquivo para referência futura
+      try {
+        fs.writeFileSync('shopee_auth_urls_diagnostico.txt', 
+          Object.entries(urls).map(([key, url]) => 
+            `${key}:\n${url}\n\n`
+          ).join('---\n')
+        );
+        console.log('✅ URLs de diagnóstico salvas em arquivo: shopee_auth_urls_diagnostico.txt');
+      } catch (err) {
+        console.error('Não foi possível salvar URLs em arquivo:', err);
+      }
       
       // Gerar a página de diagnóstico com todas as opções para teste
       const htmlContent = generateDiagnosticPage(urls);
