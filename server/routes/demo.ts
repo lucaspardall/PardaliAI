@@ -4,6 +4,14 @@ import { storage } from '../storage';
 import { users } from '@shared/schema';
 import { isAuthenticated } from '../replitAuth';
 
+// Colocar tipo para sessão demo para evitar erros de TypeScript
+declare module "express-session" {
+  interface SessionData {
+    demoMode?: boolean;
+    demoUserId?: string;
+  }
+}
+
 const router = Router();
 
 // Credenciais fixas para demonstração
@@ -52,58 +60,82 @@ router.get('/access-demo', async (req: Request, res: Response) => {
   try {
     console.log("Iniciando acesso à demonstração completa");
     
-    // Verifica se a conta demo existe
-    let demoUser = await storage.getUserByEmail(DEMO_USER.username);
+    // Gerar ID fixo para facilitar a identificação da conta demo
+    const DEMO_USER_ID = "99999999";
     
-    // Se não existir, cria
-    if (!demoUser) {
-      console.log("Criando nova conta de demonstração");
-      const userId = faker.string.numeric(8);
-      demoUser = await storage.upsertUser({
-        id: userId,
-        email: DEMO_USER.username,
-        firstName: "Teste",
-        lastName: "Shopee",
-        profileImageUrl: `https://api.dicebear.com/7.x/initials/svg?seed=TS&backgroundColor=FF5722`,
-        plan: "pro", // Demonstração sempre tem plano pro
-        planStatus: "active",
-        planExpiresAt: null,
-        aiCreditsLeft: 100,
-        storeLimit: 10
-      });
-      
-      // Criar dados de demonstração para o novo usuário
-      await createDemoDataForUser(demoUser.id);
-    } else {
-      console.log("Atualizando conta de demonstração existente:", demoUser.id);
-      
-      // Sempre atualiza para PRO com 100 créditos de IA
-      await storage.upsertUser({
-        ...demoUser,
-        plan: "pro",
-        planStatus: "active",
-        aiCreditsLeft: 100,
-        storeLimit: 10
-      });
-      
-      // Limpa e recria os dados demo para garantir consistência
-      await cleanExistingDemoData(demoUser.id);
-      await createDemoDataForUser(demoUser.id);
-    }
+    // Sempre recria a conta demo ao acessar, para garantir dados atualizados
+    const demoUser = await storage.upsertUser({
+      id: DEMO_USER_ID,
+      email: DEMO_USER.username,
+      firstName: "Teste",
+      lastName: "Shopee",
+      profileImageUrl: `https://api.dicebear.com/7.x/initials/svg?seed=TS&backgroundColor=FF5722`,
+      plan: "pro", // Demonstração sempre tem plano pro
+      planStatus: "active",
+      planExpiresAt: null,
+      aiCreditsLeft: 100,
+      storeLimit: 10,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+    
+    console.log("Conta de demonstração preparada:", DEMO_USER_ID);
+    
+    // Limpar e recriar todos os dados de demonstração
+    await cleanExistingDemoData(DEMO_USER_ID);
+    await createDemoDataForUser(DEMO_USER_ID);
+    console.log("Dados de demonstração gerados com sucesso");
     
     // Configurar sessão de demonstração
     if (req.session) {
       req.session.demoMode = true;
-      req.session.demoUserId = demoUser.id;
-      await new Promise<void>((resolve) => req.session.save(() => resolve()));
-      console.log("Sessão de demonstração configurada com sucesso");
-    } else {
-      console.error("Erro: req.session não está definido");
+      req.session.demoUserId = DEMO_USER_ID;
+      
+      // Força salvamento da sessão antes de redirecionar
+      try {
+        await new Promise<void>((resolve, reject) => {
+          req.session.save((err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+        console.log("Sessão de demonstração configurada com sucesso");
+      } catch (err) {
+        console.error("Erro ao salvar sessão:", err);
+      }
     }
     
-    // Redirecionar para o dashboard
+    // Usar página de redirecionamento intermediária que configurará o usuário no frontend
     console.log("Redirecionando para dashboard de demonstração");
-    res.redirect('/dashboard');
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Redirecionando para demonstração</title>
+          <meta http-equiv="refresh" content="1;url=/dashboard" />
+          <style>
+            body { font-family: Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; }
+            .loader { border: 5px solid #f3f3f3; border-radius: 50%; border-top: 5px solid #FF5722; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          </style>
+        </head>
+        <body>
+          <div class="loader"></div>
+          <h2>Preparando ambiente de demonstração...</h2>
+          <p>Você será redirecionado automaticamente para o dashboard.</p>
+          <script>
+            // Armazenar informações de demonstração
+            localStorage.setItem('demoMode', 'true');
+            localStorage.setItem('demoUserId', '${DEMO_USER_ID}');
+            
+            // Redirecionar após 1 segundo
+            setTimeout(function() {
+              window.location.href = '/dashboard';
+            }, 1000);
+          </script>
+        </body>
+      </html>
+    `);
   } catch (error) {
     console.error("Erro ao acessar demonstração:", error);
     res.status(500).json({ message: "Erro ao acessar demonstração" });
