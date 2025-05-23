@@ -6,6 +6,8 @@ import { aiService } from "./ai";
 import { z } from "zod";
 import { insertShopeeStoreSchema, insertProductSchema } from "@shared/schema";
 import shopeeRoutes from "./routes/shopee";
+import demoRoutes from "./routes/demo";
+import { createDemoAccount } from "./demo-setup";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -13,6 +15,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Shopee routes
   app.use('/api/shopee', shopeeRoutes);
+  
+  // Register Demo routes
+  app.use('/api/demo', demoRoutes);
+  
+  // API endpoint for creating a demo account for Shopee
+  app.get('/api/create-demo-account', async (req, res) => {
+    try {
+      console.log('Iniciando criação da conta de demonstração via API...');
+      const result = await createDemoAccount();
+      return res.json({
+        success: true,
+        message: 'Conta de demonstração criada com sucesso',
+        demoAccount: {
+          username: result.username,
+          password: result.password,
+          loginUrl: '/api/login'
+        }
+      });
+    } catch (error: any) {
+      console.error('Erro ao criar conta de demonstração:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro ao criar conta de demonstração',
+        error: error.message
+      });
+    }
+  });
 
   // Auth endpoints
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

@@ -28,6 +28,7 @@ import { isAuthenticated } from "./replitAuth";
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserPlan(userId: string, plan: string, expiresAt?: Date): Promise<User | undefined>;
   updateUserAiCredits(userId: string, credits: number): Promise<User | undefined>;
@@ -73,6 +74,11 @@ export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 
@@ -378,6 +384,10 @@ export class MemStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
