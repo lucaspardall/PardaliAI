@@ -59,12 +59,8 @@ export default function DemoLogin() {
           description: 'Bem-vindo ao modo de demonstração do CIP Shopee!',
         });
         
-        // Usar redirecionamento direto via window.location em vez de navigate
-        // para garantir um refresh completo da página e carregamento da sessão
-        setTimeout(() => {
-          const redirectPath = result.redirectTo || '/demo/dashboard';
-          window.location.href = redirectPath;
-        }, 1000); // Pequeno atraso para permitir que o toast seja exibido
+        // Usar a página de redirecionamento do servidor como intermediária
+        window.location.href = '/api/demo/auth-redirect';
       } else {
         setError(result.message || 'Credenciais inválidas');
       }

@@ -12,6 +12,25 @@ export const demoRouter = Router();
 // Rota de login para demo
 demoRouter.post('/login', handleDemoLogin);
 
+// Rota de redirecionamento após login
+demoRouter.get('/auth-redirect', (req, res) => {
+  res.set('Content-Type', 'text/html');
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Redirecionando...</title>
+        <script>
+          window.location.href = '/demo/dashboard';
+        </script>
+      </head>
+      <body>
+        <p>Redirecionando para o dashboard...</p>
+      </body>
+    </html>
+  `);
+});
+
 // Rota de logout para demo
 demoRouter.post('/logout', handleDemoLogout);
 
