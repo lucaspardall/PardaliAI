@@ -1,0 +1,65 @@
+Pontos Positivos e Corretos:
+Geração da Assinatura (sign) para Autorização:
+
+No ShopeeAuthManager.getAuthorizationUrl() e na geração da standardUrl / enhancedStandardUrl dentro de shopee/fallback.ts -> generateAuthUrls():
+O apiPath usado é /api/v2/shop/auth_partner. ✅ Correto.
+A baseString para a assinatura é config.partnerId + apiPath + timestamp. ✅ Correto.
+A assinatura é gerada usando createHmac('sha256', config.partnerKey).update(baseString).digest('hex'). ✅ Correto.
+A URL de autorização construída inclui partner_id, timestamp, sign, redirect (codificado) e state. ✅ Correto.
+Parâmetros Extras: Os parâmetros adicionais como region=BR, is_auth_shop=true, login_type=seller, auth_type=direct são anexados à URL de autorização após os parâmetros assinados. Esta é a abordagem correta se esses parâmetros não fazem parte da baseString da assinatura para o endpoint /api/v2/shop/auth_partner. ✅ Parece correto.
+Geração da Assinatura para Obtenção de Token (getAccessToken):
+
+No ShopeeAuthManager.getAccessToken():
+O path é /api/v2/auth/token/get. ✅ Correto.
+A baseString para a assinatura é config.partnerId + path + timestamp + minifiedRequestBody. ✅ Correto para APIs que exigem assinatura do corpo.
+A requisição POST inclui o sign e outros parâmetros comuns na URL, e o corpo JSON. ✅ Padrão comum para Shopee API V2.
+Uso de Variáveis de Ambiente: Você está usando process.env para carregar SHOPEE_PARTNER_ID, SHOPEE_PARTNER_KEY, e SHOPEE_REDIRECT_URL. ✅ Ótima prática.
+
+Tratamento no Callback (/api/shopee/callback):
+
+Verifica o state para proteção CSRF. ✅ Bom.
+Extrai code e shop_id. ✅ Correto.
+Tenta a troca do código por tokens usando o shopeeClient.connect(). ✅ Correto.
+Ferramentas de Diagnóstico:
+
+A função generateAuthUrls que cria múltiplas URLs (standardUrl, minimalUrl, alternativeUrl, directSellerLoginUrl) e a generateDiagnosticPage são excelentes para depuração. Isso mostra que você está investigando a fundo! 👍
+Pontos de Atenção e Sugestões:
+Qual URL Está Sendo Efetivamente Usada?
+
+O problema original de ser redirecionado para a Open Platform pode ocorrer se uma das URLs "experimentais" de generateAuthUrls estiver sendo usada por padrão e não for a correta para o fluxo OAuth de terceiros.
+Recomendação: Certifique-se de que a URL que está sendo usada para o redirecionamento principal seja a enhancedStandardUrl (ou a standardUrl se quiser testar sem os parâmetros extras), que é gerada usando https://partner.shopeemobile.com/api/v2/shop/auth_partner. Esta é a que parece mais alinhada com a documentação.
+Evite (para o fluxo OAuth padrão):
+alternativeUrl (com seller.shopee.com.br): Embora possa funcionar em alguns cenários, o endpoint oficial para parceiros é partner.shopeemobile.com. Usar o domínio do Seller Centre diretamente para a chamada de API /api/v2/shop/auth_partner pode ter um comportamento diferente.
+directSellerLoginUrl (com account.seller.shopee.com.br): Esta URL aponta para um caminho de login diferente (/seller/login) e provavelmente não é o endpoint OAuth correto para autorização de apps de terceiros com sign.
+Consistência da Configuração de Região:
+
+No createClient (arquivo shopee/index.ts), a DEFAULT_CONFIG tem region: process.env.SHOPEE_REGION || 'SG'.
+No entanto, na rota /authorize e no ShopeeAuthManager, você está corretamente focando em 'BR'.
+Recomendação: Se o seu SaaS é focado no Brasil, seria bom alinhar o DEFAULT_CONFIG para usar 'BR' como padrão para SHOPEE_REGION para evitar confusões, ou garantir que process.env.SHOPEE_REGION esteja sempre definido como 'BR' no seu ambiente de produção/teste para o Brasil.
+Partner Key Hardcoded (Padrão):
+
+No generateAuthUrls e no ShopeeAuthManager, você tem um partnerKey padrão se process.env.SHOPEE_PARTNER_KEY não estiver definido: '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661'.
+Recomendação: Em produção, certifique-se de que este valor padrão NUNCA seja usado. Idealmente, lance um erro se a partnerKey não estiver definida no ambiente, em vez de usar um valor padrão fixo, especialmente se esse valor for apenas um placeholder.
+Lógica de "Nova Tentativa" no Callback:
+
+No seu endpoint /callback, se um erro específico ocorre, você constrói uma correctAuthUrl e tenta redirecionar o usuário novamente.
+A construção desta correctAuthUrl parece seguir a lógica correta para /api/v2/shop/auth_partner (assinatura correta e parâmetros extras anexados).
+Consideração: Se a URL inicial gerada em /authorize estiver 100% correta, esta nova tentativa no callback não deveria ser necessária. Se ela está sendo acionada e funciona, isso pode indicar que a URL original enviada de /authorize tinha algum problema sutil, ou que a Shopee às vezes retorna um erro espúrio que uma nova tentativa idêntica (ou ligeiramente melhorada) resolve. Vale investigar por que a primeira tentativa falha se esta "corrigida" funciona.
+Teste com a URL Minimalista:
+
+A minimalUrl (que inclui apenas partner_id, timestamp, sign, redirect, state) é uma excelente ferramenta de depuração.
+Ação: Se a enhancedStandardUrl (com os parâmetros extras) ainda te redirecionar para a Open Platform, teste a minimalUrl.
+Se a minimalUrl funcionar e te levar ao login do vendedor, então um (ou a combinação) dos parâmetros extras (region, is_auth_shop, login_type, auth_type) na enhancedStandardUrl, mesmo não sendo parte da assinatura, pode estar causando o comportamento inesperado. A Shopee pode ser sensível a parâmetros não reconhecidos ou combinações específicas.
+Conclusão Sobre o Código:
+O núcleo da sua lógica de geração de URL de autorização, especialmente no ShopeeAuthManager.getAuthorizationUrl() e na enhancedStandardUrl de generateAuthUrls, parece tecnicamente correto em relação à documentação da Shopee para o endpoint /api/v2/shop/auth_partner (uso de partner.shopeemobile.com, api_path, baseString da assinatura e como os parâmetros extras são anexados).
+
+Se o problema de redirecionamento para a Open Platform persiste ao usar essas URLs "corretas":
+
+Verifique meticulously suas variáveis de ambiente: SHOPEE_PARTNER_ID, SHOPEE_PARTNER_KEY e SHOPEE_REDIRECT_URL devem estar 100% corretas e corresponder ao seu app configurado na Shopee Open Platform. A SHOPEE_REDIRECT_URL deve ser HTTPS e estar na lista de permissões do seu app Shopee.
+Status do App na Shopee: Confirme se seu aplicativo na Shopee Open Platform está configurado como "Third-party Platform app" (ou o equivalente para parceiros SaaS) e se tem as permissões necessárias.
+Timestamp: Verifique se o horário do seu servidor está sincronizado corretamente (NTP). A Shopee geralmente tem uma janela de tolerância de alguns minutos para o timestamp.
+Inspeção do Navegador (Crucial): Use as ferramentas de desenvolvedor do navegador (aba Rede/Network, com "Preserve log" ativado) para:
+Ver a URL exata que seu backend está enviando ao navegador para o redirecionamento.
+Ver a resposta da Shopee a essa URL. Especificamente, o cabeçalho Location da resposta 302 da Shopee. Ele dirá exatamente para onde a Shopee está mandando o navegador.
+Simplicidade Primeiro: Se tudo mais falhar, reverta para a URL mais simples possível que ainda seja válida: a minimalUrl (apenas partner_id, redirect, timestamp, sign, state) direcionada para https://partner.shopeemobile.com/api/v2/shop/auth_partner. Se nem isso funcionar, o problema é quase certamente relacionado a credenciais, configuração do app na Shopee, ou um problema fundamental com o partner_id/partner_key.
+Seu código de backend para a lógica de autenticação e para as chamadas subsequentes à API parece bem estruturado. O desafio é garantir que a primeira "saudação" (a URL de autorização inicial) esteja perfeita para que a Shopee entenda que é um vendedor tentando autorizar um app parceiro.
