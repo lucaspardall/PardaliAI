@@ -13,6 +13,7 @@ const router = Router();
  */
 router.get('/authorize', isAuthenticated, async (req: Request, res: Response) => {
   try {
+    console.log('=== SHOPEE AUTH START ===');
     console.log("======= INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE =======");
     console.log("Usuário autenticado:", req.user);
     console.log("Ambiente:", process.env.NODE_ENV);
@@ -187,6 +188,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     // Modo normal: redirecionar diretamente para a URL de autorização
     console.log(`Redirecionando para autorização oficial Shopee: ${authUrl.substring(0, 100)}...`);
+    console.log('Auth URL:', authUrl);
+    console.log('Redirecting to Shopee...');
     return res.redirect(authUrl);
 
   } catch (error: any) {
@@ -204,8 +207,11 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
  */
 router.get('/callback', isAuthenticated, async (req: Request, res: Response) => {
   try {
+    console.log('=== CALLBACK RECEIVED ===');
     console.log(`==== RECEBENDO CALLBACK DA SHOPEE ====`);
     console.log(`Parâmetros recebidos:`, req.query);
+    console.log('Code:', req.query.code);
+    console.log('Shop ID:', req.query.shop_id);
 
     // Validar o state para proteção contra CSRF
     const receivedState = req.query.state as string;
@@ -332,10 +338,12 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         createdAt: new Date()
       });
 
+      console.log('Token saved successfully');
       res.redirect('/dashboard');
     }
   } catch (error: any) {
     console.error('Error in Shopee OAuth callback:', error);
+    console.error('Callback error:', error);
 
     // Criar notificação de erro
     try {
