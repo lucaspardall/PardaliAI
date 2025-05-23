@@ -154,7 +154,7 @@ export async function setupAuth(app: Express) {
     passport.authenticate(`replitauth:${req.hostname}`, {
       successRedirect: "/dashboard",
       failureRedirect: "/api/login",
-    })(req, res, next);
+    })(req, res, next);ext);
   });
 
   app.get("/api/logout", (req, res) => {

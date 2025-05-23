@@ -6,6 +6,24 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Variável para controlar frequência de logs de banco de dados
+let lastDbLogTime = 0;
+const DB_LOG_INTERVAL = 60000; // 1 minuto entre logs de DB
+
+// Sobrescrever console.log para filtrar mensagens repetitivas de DB
+const originalConsoleLog = console.log;
+console.log = function(...args) {
+  // Se for um log de verificação de DB, limitar frequência
+  if (typeof args[0] === 'string' && args[0].includes('Verificando conexão com banco de dados')) {
+    const now = Date.now();
+    if (now - lastDbLogTime < DB_LOG_INTERVAL) {
+      return; // Ignorar logs muito frequentes
+    }
+    lastDbLogTime = now;
+  }
+  originalConsoleLog.apply(console, args);
+};
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
