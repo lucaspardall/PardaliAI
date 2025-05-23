@@ -213,9 +213,28 @@ export async function setupAuth(app: Express) {
 }
 
 /**
- * Middleware para verificar autenticação Replit Auth
+ * Middleware para verificar autenticação Replit Auth com suporte para modo de demonstração
  */
-export const isAuthenticated: RequestHandler = async (req, res, next) => {
+export const isAuthenticated: RequestHandler = async (req: any, res, next) => {
+  // Verificar se está no modo demo
+  if (req.session.demoMode && req.session.demoUserId) {
+    // Criar um objeto user simulado para o modo demo
+    if (!req.user) {
+      req.user = {
+        claims: {
+          sub: req.session.demoUserId,
+          email: "testeshopee",
+          first_name: "Teste",
+          last_name: "Shopee",
+          profile_image_url: "https://api.dicebear.com/7.x/initials/svg?seed=TS&backgroundColor=FF5722"
+        },
+        access_token: "demo-access-token",
+        expires_at: Math.floor(Date.now() / 1000) + 3600 // Expira em 1 hora
+      };
+    }
+    return next();
+  }
+  
   // Em ambiente de desenvolvimento, podemos ignorar autenticação
   if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
     req.user = {

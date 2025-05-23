@@ -50,11 +50,14 @@ router.get('/demo-account-info', async (req: Request, res: Response) => {
 // Rota para acessar diretamente a demo (login automatizado)
 router.get('/access-demo', async (req: Request, res: Response) => {
   try {
+    console.log("Iniciando acesso à demonstração completa");
+    
     // Verifica se a conta demo existe
     let demoUser = await storage.getUserByEmail(DEMO_USER.username);
     
     // Se não existir, cria
     if (!demoUser) {
+      console.log("Criando nova conta de demonstração");
       const userId = faker.string.numeric(8);
       demoUser = await storage.upsertUser({
         id: userId,
@@ -62,22 +65,44 @@ router.get('/access-demo', async (req: Request, res: Response) => {
         firstName: "Teste",
         lastName: "Shopee",
         profileImageUrl: `https://api.dicebear.com/7.x/initials/svg?seed=TS&backgroundColor=FF5722`,
+        plan: "pro", // Demonstração sempre tem plano pro
+        planStatus: "active",
+        planExpiresAt: null,
+        aiCreditsLeft: 100,
+        storeLimit: 10
       });
       
       // Criar dados de demonstração para o novo usuário
       await createDemoDataForUser(demoUser.id);
     } else {
+      console.log("Atualizando conta de demonstração existente:", demoUser.id);
+      
+      // Sempre atualiza para PRO com 100 créditos de IA
+      await storage.upsertUser({
+        ...demoUser,
+        plan: "pro",
+        planStatus: "active",
+        aiCreditsLeft: 100,
+        storeLimit: 10
+      });
+      
       // Limpa e recria os dados demo para garantir consistência
       await cleanExistingDemoData(demoUser.id);
       await createDemoDataForUser(demoUser.id);
     }
     
-    // Autenticar o usuário e redirecionar para o dashboard
-    // Simular login do usuário - note que em produção isso seria feito via autenticação Replit
-    req.session.demoMode = true;
-    req.session.demoUserId = demoUser.id;
+    // Configurar sessão de demonstração
+    if (req.session) {
+      req.session.demoMode = true;
+      req.session.demoUserId = demoUser.id;
+      await new Promise<void>((resolve) => req.session.save(() => resolve()));
+      console.log("Sessão de demonstração configurada com sucesso");
+    } else {
+      console.error("Erro: req.session não está definido");
+    }
     
     // Redirecionar para o dashboard
+    console.log("Redirecionando para dashboard de demonstração");
     res.redirect('/dashboard');
   } catch (error) {
     console.error("Erro ao acessar demonstração:", error);
