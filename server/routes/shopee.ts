@@ -110,27 +110,64 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         message: errorMsg
       });
 
-      // Tratamento específico para erro de token não encontrado
-      if (errorCode === '2' || (typeof errorMsg === 'string' && errorMsg.includes('token not found'))) {
-        console.log('Detectado erro de token não encontrado. Isso geralmente ocorre quando a URL da API está incorreta. Verificando configuração...');
+      // Log adicional para depuração de redirecionamento
+      console.log('Detalhes completos da requisição:', {
+        method: req.method,
+        url: req.url,
+        headers: req.headers,
+        query: req.query
+      });
+
+      // Tratamento específico para erro de token não encontrado ou autorização
+      if (errorCode === '2' || 
+          (typeof errorMsg === 'string' && (
+            errorMsg.includes('token not found') || 
+            errorMsg.includes('status_code=302') || 
+            errorMsg.includes('authentication')
+          ))) {
+        console.log('Detectado erro de autenticação ou redirecionamento. Verificando configuração...');
 
         // Log detalhado de diagnóstico
         console.log('Configuração atual:');
         console.log('- Domínio da API utilizado:', 'https://partner.shopeemobile.com');
         console.log('- URL de redirecionamento:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
+        console.log('- Partner ID:', process.env.SHOPEE_PARTNER_ID || '2011285');
+        
+        // Tentar nova tentativa de autorização com parâmetros mais explícitos
+        const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
+        const partnerKey = process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661';
+        const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
+        const timestamp = Math.floor(Date.now() / 1000);
+        const path = '/api/v2/shop/auth_partner';
+        const baseString = `${partnerId}${path}${timestamp}`;
+        const sign = require('crypto').createHmac('sha256', partnerKey).update(baseString).digest('hex');
+        
+        // Construir URL corrigida com todos os parâmetros necessários
+        const correctAuthUrl = `https://partner.shopeemobile.com${path}?` +
+          `partner_id=${partnerId}&` +
+          `timestamp=${timestamp}&` +
+          `sign=${sign}&` +
+          `redirect=${encodeURIComponent(redirectUrl)}&` +
+          `state=cipshopee_retry_${Date.now()}&` +
+          `region=BR&` +
+          `is_auth_shop=true&` +
+          `login_type=seller&` +
+          `auth_type=direct`;
+        
+        console.log('Tentando nova URL de autorização corrigida:', correctAuthUrl);
 
         // Criar notificação de erro
         await storage.createNotification({
           userId: (req.user as any).claims.sub,
-          title: 'Erro na autorização - Token não encontrado',
-          message: 'Ocorreu um erro na autenticação com a Shopee. Tente conectar sua loja novamente com as configurações corrigidas.',
-          type: 'error',
+          title: 'Erro na autorização - Tentando corrigir automaticamente',
+          message: 'Estamos redirecionando você para uma URL de autenticação corrigida. Por favor, siga as instruções na tela.',
+          type: 'warning',
           isRead: false,
           createdAt: new Date()
         });
 
-        // Redirecionar para a página inicial com instrução para tentar novamente
-        return res.redirect('/dashboard?status=error&code=token_not_found&message=' + encodeURIComponent('Token não encontrado. Por favor, tente conectar novamente com as configurações atualizadas.'));
+        // Redirecionar para a URL corrigida
+        return res.redirect(correctAuthUrl);
       }
 
       // Criar notificação de erro para outros tipos de erro

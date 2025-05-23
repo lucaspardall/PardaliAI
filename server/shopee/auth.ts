@@ -56,12 +56,17 @@ export class ShopeeAuthManager {
     console.log(`Assinatura gerada: ${signature}`);
 
     // Construir URL de autorização conforme documentação oficial
+    // Adicionados parâmetros específicos para o login do vendedor (login_type=seller, auth_type=direct)
     const authUrl = `${baseUrl}${apiPath}?` +
       `partner_id=${this.config.partnerId}&` +
       `timestamp=${timestamp}&` +
       `sign=${signature}&` +
       `redirect=${encodeURIComponent(this.config.redirectUrl)}&` +
-      `state=${stateParam}`;
+      `state=${stateParam}&` +
+      `region=BR&` +
+      `is_auth_shop=true&` +
+      `login_type=seller&` +
+      `auth_type=direct`;
 
     // URL final
     const finalUrl = authUrl;
@@ -88,6 +93,11 @@ export class ShopeeAuthManager {
     console.log('- timestamp:', finalUrl.includes(`timestamp=${timestamp}`));
     console.log('- sign:', finalUrl.includes(`sign=${signature}`));
     console.log('- redirect:', finalUrl.includes('redirect='));
+    console.log('- auth_type=direct:', finalUrl.includes('auth_type=direct'));
+    console.log('- login_type=seller:', finalUrl.includes('login_type=seller'));
+    
+    // Verificação detalhada do timestamp na URL
+    console.log('🔎 Verificação direta do timestamp:', `timestamp=${timestamp}`);
     console.log('================================================');
 
     return finalUrl;

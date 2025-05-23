@@ -40,6 +40,10 @@ export function generateAuthUrls(config: ShopeeAuthConfig) {
     `timestamp=${timestamp}&` +
     `sign=${signature}&` +
     `redirect=${encodeURIComponent(config.redirectUrl)}&` +
+    `region=BR&` +
+    `is_auth_shop=true&` +
+    `login_type=seller&` +
+    `auth_type=direct&` +
     `state=${stateParam}`;
 
   // ===== Método alternativo para login direto pelo Seller Centre =====
