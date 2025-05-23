@@ -1,7 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import session from "express-session";
 
 const app = express();
 app.use(express.json());
@@ -73,8 +72,8 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // Configuração de porta adaptada para funcionar no Replit
-    const port = process.env.PORT || 5000; // Usando porta 5000 para compatibilidade com Replit
+    // Configuração de porta adaptada para funcionar tanto em desenvolvimento quanto em deploy
+    const port = process.env.PORT || 3000;
     
     server.listen({
       port,

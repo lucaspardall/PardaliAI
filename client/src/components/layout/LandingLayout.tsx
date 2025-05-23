@@ -36,7 +36,6 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
           <div className="hidden md:flex items-center space-x-6">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Recursos</a>
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Planos</a>
-            <a href="/demo/dashboard" className="font-medium text-orange-500 hover:text-orange-600 transition-colors border-b border-dashed border-orange-500">Acessar Demonstração</a>
 
             <Button
               variant="outline"
@@ -110,13 +109,6 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Planos
-              </a>
-              <a 
-                href="/demo/dashboard" 
-                className="text-orange-500 font-medium py-2 px-4 rounded-md hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors border border-orange-200 dark:border-orange-800"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Acessar Demonstração
               </a>
 
               {isLoading ? (

@@ -1,29 +1,27 @@
 
 /**
  * Implementação minimalista para autenticação Shopee
- * Esta versão segue exatamente a documentação oficial da Shopee API v2.0
- * Referência: Chamadas de API, seção "Calculando o sinal do parâmetro"
+ * Esta versão usa apenas os parâmetros obrigatórios, sem parâmetros extras
  */
 import { createHmac } from 'crypto';
 import { ShopeeAuthConfig } from './types';
 
 /**
  * Gera URL de autorização minimalista com apenas os parâmetros essenciais
- * Conforme exemplo de código da documentação Shopee: partner_id, timestamp, sign, redirect, state
+ * Os únicos parâmetros usados são: partner_id, timestamp, sign, redirect, state
  */
 export function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
-  // Gerar timestamp em segundos (Unix timestamp)
+  // Gerar timestamp em segundos
   const timestamp = Math.floor(Date.now() / 1000);
 
   // Estado para proteção CSRF
   const stateParam = `cipshopee_${Date.now()}`;
 
-  // URL base para o fluxo de autorização de loja (fixa conforme documentação)
+  // URL base para o fluxo de autorização de loja
   const baseUrl = 'https://partner.shopeemobile.com';
   const apiPath = '/api/v2/shop/auth_partner';
 
-  // String base para gerar assinatura exatamente conforme documentação:
-  // "Para APIs públicas : partner_id, caminho da API, registro de data e hora"
+  // String base para gerar assinatura - Formato exato: partner_id + api_path + timestamp
   const baseString = `${config.partnerId}${apiPath}${timestamp}`;
 
   console.log(`[Minimal Auth] String base para assinatura: ${baseString}`);
@@ -35,20 +33,29 @@ export function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
 
   console.log(`[Minimal Auth] Assinatura gerada: ${signature}`);
 
-  // Montar URL exatamente como no exemplo Python da documentação
-  // Observe que não usamos URLSearchParams para evitar alterações na ordem ou codificação
-  const redirectParam = encodeURIComponent(config.redirectUrl);
-  const finalUrl = `${baseUrl}${apiPath}?partner_id=${config.partnerId}&timestamp=${timestamp}&sign=${signature}&redirect=${redirectParam}&state=${stateParam}`;
+  // Montar URL com apenas os parâmetros essenciais, na ordem documentada
+  const url = new URL(`${baseUrl}${apiPath}`);
+  const params = new URLSearchParams();
+
+  // Adicionar apenas os parâmetros essenciais, conforme documentação oficial
+  params.append('partner_id', config.partnerId.toString());
+  params.append('timestamp', timestamp.toString());
+  params.append('sign', signature);
+  params.append('redirect', config.redirectUrl);
+  params.append('state', stateParam);
+
+  url.search = params.toString();
+  const finalUrl = url.toString();
 
   console.log(`[Minimal Auth] URL final: ${finalUrl}`);
   
   // Registrar no console para fácil verificação dos parâmetros
   console.log('[Minimal Auth] Verificação rápida dos parâmetros:');
-  console.log(`- partner_id presente: ${finalUrl.includes('partner_id=')}`);
-  console.log(`- timestamp presente: ${finalUrl.includes('timestamp=')}`);
-  console.log(`- sign presente: ${finalUrl.includes('sign=')}`);
-  console.log(`- redirect presente: ${finalUrl.includes('redirect=')}`);
-  console.log(`- state presente: ${finalUrl.includes('state=')}`);
+  console.log(`- partner_id presente: ${finalUrl.includes('partner_id=')})`);
+  console.log(`- timestamp presente: ${finalUrl.includes('timestamp=')})`);
+  console.log(`- sign presente: ${finalUrl.includes('sign=')})`);
+  console.log(`- redirect presente: ${finalUrl.includes('redirect=')})`);
+  console.log(`- state presente: ${finalUrl.includes('state=')})`);
 
   return finalUrl;
 }

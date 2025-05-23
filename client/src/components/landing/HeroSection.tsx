@@ -39,8 +39,8 @@ export default function HeroSection() {
                 </Button>
               )}
               <Button asChild variant="outline" size="lg" className="bg-white/10 border-white/20 hover:bg-white/20">
-                <a href="/demo/dashboard">
-                  Acessar Demonstração Completa
+                <a href="#features">
+                  Ver demonstração
                 </a>
               </Button>
             </div>

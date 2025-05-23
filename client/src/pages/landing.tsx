@@ -4,7 +4,6 @@ import FeaturesSection from "@/components/landing/FeaturesSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import PricingSection from "@/components/landing/PricingSection";
 import CTASection from "@/components/landing/CTASection";
-import { ShopeeTestPanel } from "@/components/landing/ShopeeTestPanel";
 import { Helmet } from "react-helmet";
 
 export default function Landing() {
@@ -25,7 +24,6 @@ export default function Landing() {
         <FeaturesSection />
         <TestimonialsSection />
         <PricingSection />
-        <ShopeeTestPanel />
         <CTASection />
       </LandingLayout>
     </>
