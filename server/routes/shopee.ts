@@ -60,12 +60,9 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       console.error("Não foi possível salvar URLs em arquivo:", err);
     }
 
-    // Por padrão, usar a implementação minimalista (apenas parâmetros obrigatórios)
-    // A menos que seja explicitamente solicitado para usar a versão completa
-    const useCompleteUrl = req.query.complete === 'true';
-
-    if (!useCompleteUrl) {
-      console.log('🔍 MODO MINIMALISTA: Usando implementação com parâmetros mínimos (padrão)');
+    // Se o parâmetro "minimal" for fornecido, usar a implementação minimalista
+    if (req.query.minimal === 'true') {
+      console.log('🔍 MODO MINIMALISTA: Usando implementação com parâmetros mínimos');
 
       // Importar implementação minimalista
       const { generateMinimalAuthUrl } = await import('../shopee/minimal');
