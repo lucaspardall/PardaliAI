@@ -94,7 +94,7 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
           <div className="space-y-1">
             {navItems.map((item) => (
               <NavItem 
-                key={item.href}
+                key={item.id || item.href}
                 href={item.href}
                 icon={item.icon}
                 label={item.label}
@@ -179,7 +179,7 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
           <div className="space-y-1">
             {navItems.map((item) => (
               <NavItem 
-                key={item.href}
+                key={item.id || item.href}
                 href={item.href}
                 icon={item.icon}
                 label={item.label}
