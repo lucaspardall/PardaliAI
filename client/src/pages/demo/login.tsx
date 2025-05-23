@@ -43,7 +43,7 @@ export default function DemoLogin() {
     setError(null);
 
     try {
-      const response = await apiRequest('/demo/login', {
+      const response = await fetch('/api/demo/login', {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
@@ -51,14 +51,16 @@ export default function DemoLogin() {
         },
       });
 
-      if (response.success) {
+      const result = await response.json();
+
+      if (response.ok && result.success) {
         toast({
           title: 'Login realizado com sucesso',
           description: 'Bem-vindo ao modo de demonstração do CIP Shopee!',
         });
         navigate('/demo/dashboard');
       } else {
-        setError(response.message || 'Credenciais inválidas');
+        setError(result.message || 'Credenciais inválidas');
       }
     } catch (err) {
       setError('Erro ao processar login. Tente novamente.');

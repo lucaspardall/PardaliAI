@@ -16,6 +16,10 @@ import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import { useAuth } from "./hooks/useAuth";
 
+// Importar páginas do modo de demonstração
+import DemoLogin from "@/pages/demo/login";
+import DemoDashboard from "@/pages/demo/dashboard";
+
 function ProtectedRoute({ component: Component, ...rest }: any) {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -41,6 +45,19 @@ function Router() {
     <Switch>
       {/* Public route */}
       <Route path="/" component={Landing} />
+      
+      {/* Demo mode routes */}
+      <Route path="/demo/login" component={DemoLogin} />
+      <Route path="/demo/dashboard" component={DemoDashboard} />
+      <Route path="/demo/products">
+        {() => <DemoDashboard />}
+      </Route>
+      <Route path="/demo/stores/:id">
+        {() => <DemoDashboard />}
+      </Route>
+      <Route path="/demo/optimizations">
+        {() => <DemoDashboard />}
+      </Route>
       
       {/* Protected dashboard routes */}
       <Route path="/dashboard">

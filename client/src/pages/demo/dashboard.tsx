@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 // Componentes UI
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { SidebarLayout } from '@/components/layout/SidebarLayout';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShoppingBag, Users, TrendingUp, Store, ArrowUp, ArrowDown } from 'lucide-react';
 
