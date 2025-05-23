@@ -24,9 +24,9 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Configuração da integração Shopee - sempre usar região 'BR' para o Brasil
     // Garantir que a URL de redirecionamento NUNCA fique indefinida
     const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
-    
+
     console.log("URL de redirecionamento que será usada:", redirectUrl);
-    
+
     const config = {
       partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
       partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
@@ -42,13 +42,13 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Verificar se quer mostrar a página de diagnóstico ou usar redirecionamento direto 
     const showDiagnosticPage = req.query.diagnose === 'true';
     const debugMode = req.query.debug === 'true';
-    
+
     // Importar o ShopeeAuthManager
     const { ShopeeAuthManager, getAuthorizationUrl } = await import('../shopee/auth');
-    
+
     // Gerar a URL de autorização direta usando o gerenciador de autenticação renovado
     const authUrl = getAuthorizationUrl(config);
-    
+
     // Salvar URL em arquivo para inspeção
     try {
       fs.writeFileSync('shopee_auth_url.txt', 
@@ -59,17 +59,17 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     } catch (err) {
       console.error("Não foi possível salvar URLs em arquivo:", err);
     }
-    
+
     // Se o parâmetro "minimal" for fornecido, usar a implementação minimalista
     if (req.query.minimal === 'true') {
       console.log('🔍 MODO MINIMALISTA: Usando implementação com parâmetros mínimos');
-      
+
       // Importar implementação minimalista
       const { generateMinimalAuthUrl } = await import('../shopee/minimal');
-      
+
       // Gerar URL minimalista
       const minimalUrl = generateMinimalAuthUrl(config);
-      
+
       // Salvar URL para inspeção
       try {
         fs.writeFileSync('shopee_auth_minimal_url.txt', 
@@ -80,33 +80,33 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       } catch (err) {
         console.error("Não foi possível salvar URL em arquivo:", err);
       }
-      
+
       // Redirecionar diretamente
       console.log(`Redirecionando para URL minimalista: ${minimalUrl.substring(0, 100)}...`);
       return res.redirect(minimalUrl);
     }
-    
+
     // Se o parâmetro variant for fornecido, teste variantes específicas
     if (req.query.variant) {
       console.log(`🔍 TESTANDO VARIANTE: ${req.query.variant}`);
-      
+
       // Importar implementação de variantes
       const { generateTestVariants } = await import('../shopee/minimal');
-      
+
       // Gerar variantes de teste
       const variants = generateTestVariants(config);
-      
+
       // Obter a variante solicitada
       const variantName = req.query.variant as string;
       const variantUrl = variants[variantName];
-      
+
       if (!variantUrl) {
         return res.status(400).json({
           error: 'Variante não encontrada',
           availableVariants: Object.keys(variants)
         });
       }
-      
+
       // Salvar URL para inspeção
       try {
         fs.writeFileSync(`shopee_auth_variant_${variantName}.txt`, 
@@ -117,31 +117,31 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       } catch (err) {
         console.error("Não foi possível salvar URL em arquivo:", err);
       }
-      
+
       // Redirecionar para a variante
       console.log(`Redirecionando para variante [${variantName}]: ${variantUrl.substring(0, 100)}...`);
       return res.redirect(variantUrl);
     }
-    
+
     // Se estiver no modo de diagnóstico, mostrar mais opções
     if (showDiagnosticPage || req.query.diagnose === 'advanced') {
       // Importar a implementação de diagnóstico para Shopee
       const { generateAuthUrls, generateDiagnosticPage } = await import('../shopee/fallback');
       // Importar também as variantes minimalistas
       const { generateTestVariants } = await import('../shopee/minimal');
-      
+
       // Gerar URLs alternativas para diagnóstico
       const fallbackUrls = generateAuthUrls(config);
       const minimalVariants = generateTestVariants(config);
-      
+
       // Combinar todas as URLs
       const urls = {
         ...minimalVariants,
         ...fallbackUrls
       };
-      
+
       console.log('Modo diagnóstico: Gerando página com múltiplas opções de autorização');
-      
+
       // Salvar as URLs em um arquivo para referência futura
       try {
         fs.writeFileSync('shopee_auth_urls_diagnostico.txt', 
@@ -153,13 +153,13 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       } catch (err) {
         console.error('Não foi possível salvar URLs em arquivo:', err);
       }
-      
+
       // Gerar a página de diagnóstico com todas as opções para teste
       const htmlContent = generateDiagnosticPage(urls);
-      
+
       return res.send(htmlContent);
     }
-    
+
     // Se estiver no modo debug, mostrar detalhes antes de redirecionar
     if (debugMode) {
       return res.send(`
@@ -184,7 +184,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
         </html>
       `);
     }
-    
+
     // Modo normal: redirecionar diretamente para a URL de autorização
     console.log(`Redirecionando para autorização oficial Shopee: ${authUrl.substring(0, 100)}...`);
     return res.redirect(authUrl);
@@ -442,4 +442,284 @@ router.post('/disconnect/:storeId', isAuthenticated, async (req: Request, res: R
 
 import { createClient } from '../shopee';
 import { storage } from '../storage';
+
+// Defina as variáveis de ambiente
+const SHOPEE_PARTNER_ID = process.env.SHOPEE_PARTNER_ID || '2011285';
+const SHOPEE_PARTNER_KEY = process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661';
+const SHOPEE_REDIRECT_URL = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
+const SHOPEE_REGION = process.env.SHOPEE_REGION || 'BR';
+
+// Função de log simplificada
+function log(message: string) {
+  console.log(`[Shopee Route]: ${message}`);
+}
+
+interface ShopeeAuthConfig {
+  partnerId: number;
+  partnerKey: string;
+  redirectUrl: string;
+  region: string;
+}
+
+// Função para gerar a URL minimalista
+function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const baseUrl = 'https://partner.shopeemobile.com';
+  const apiPath = '/api/v2/shop/auth_partner';
+  const baseString = `${config.partnerId}${apiPath}${timestamp}`;
+
+  const hmac = crypto.createHmac('sha256', config.partnerKey);
+  hmac.update(baseString);
+  const signature = hmac.digest('hex');
+
+  const stateParam = `cipshopee_${Date.now()}`;
+
+  // Use URLSearchParams para garantir uma codificação correta dos parâmetros
+  const params = new URLSearchParams({
+    partner_id: config.partnerId.toString(),
+    timestamp: timestamp.toString(),
+    sign: signature,
+    redirect: config.redirectUrl,
+    state: stateParam,
+  });
+
+  return `${baseUrl}${apiPath}?${params.toString()}`;
+}
+
+// Endpoint para autorização Shopee
+  router.get('/authorize', isAuthenticated, (req: any, res) => {
+    try {
+      log('===================================================');
+      log('[Shopee Auth] INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE');
+
+      const userId = req.user.claims.sub;
+      log(`Usuário autenticado claims: ${JSON.stringify(req.user.claims)}`);
+
+      log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
+      log('Informações de configuração da API:');
+      log(`Partner ID: ${SHOPEE_PARTNER_ID}`);
+      log(`URL de redirecionamento configurada: ${SHOPEE_REDIRECT_URL}`);
+
+      // Se a URL de redirecionamento não estiver definida, use a URL padrão
+      let redirectUrl = SHOPEE_REDIRECT_URL;
+      if (!redirectUrl || redirectUrl === 'undefined') {
+        log('===================================================');
+        log('URL de redirecionamento não configurada! Gerando URL padrão.');
+        redirectUrl = `${req.protocol}://${req.get('host')}/api/shopee/callback`;
+        log(`URL de redirecionamento que será usada: ${redirectUrl}`);
+        log('===================================================');
+      }
+
+      // Configuração da autenticação Shopee
+      const config: ShopeeAuthConfig = {
+        partnerId: parseInt(SHOPEE_PARTNER_ID),
+        partnerKey: SHOPEE_PARTNER_KEY,
+        redirectUrl,
+        region: SHOPEE_REGION || 'BR'
+      };
+
+      log('===================================================');
+      log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
+      log('Informações de configuração da API:');
+      log(`Partner ID: ${config.partnerId}`);
+      log(`URL de redirecionamento configurada: ${config.redirectUrl}`);
+      log('===================================================');
+
+      // Verificar se estamos usando a versão minimalista para debug
+      const useMinimal = req.query.minimal === 'true';
+
+      let authUrl;
+
+      if (useMinimal) {
+        // Usar a versão minimalista (apenas parâmetros obrigatórios)
+        log('Usando URL minimalista (apenas parâmetros obrigatórios)');
+        authUrl = generateMinimalAuthUrl(config);
+      } else {
+        // Gerar string base
+        const timestamp = Math.floor(Date.now() / 1000);
+        const baseUrl = 'https://partner.shopeemobile.com';
+        const apiPath = '/api/v2/shop/auth_partner';
+        const baseString = `${config.partnerId}${apiPath}${timestamp}`;
+
+        log(`String base para assinatura (método padrão): ${baseString}`);
+
+        // Gerar assinatura usando URLSearchParams para garantir codificação correta
+        const hmac = crypto.createHmac('sha256', config.partnerKey);
+        hmac.update(baseString);
+        const signature = hmac.digest('hex');
+
+        log(`Assinatura gerada: ${signature}`);
+
+        // Construir URL usando URLSearchParams
+        const stateParam = `cipshopee_${Date.now()}`;
+        const url = new URL(`${baseUrl}${apiPath}`);
+        const params = new URLSearchParams();
+
+        // Adicionar parâmetros obrigatórios
+        params.append('partner_id', config.partnerId.toString());
+        params.append('timestamp', timestamp.toString());
+        params.append('sign', signature);
+        params.append('redirect', config.redirectUrl);
+        params.append('state', stateParam);
+
+        // Adicionar parâmetros opcionais
+        params.append('region', config.region);
+        params.append('is_auth_shop', 'true');
+        params.append('login_type', 'seller');
+        params.append('auth_type', 'direct');
+
+        url.search = params.toString();
+        authUrl = url.toString();
+      }
+
+      log(`✅ URL de autorização da Shopee: ${authUrl}`);
+
+      // Verificar parâmetros importantes
+      log('Verificação de parâmetros importantes:');
+      log(`- partner_id: ${authUrl.includes('partner_id=')}`);
+      log(`- timestamp: ${authUrl.includes('timestamp=')}`);
+      log(`- sign: ${authUrl.includes('sign=')}`);
+      log(`- redirect: ${authUrl.includes('redirect=')}`);
+      log('================================================');
+
+      // Redirecionar para a URL de autorização
+      return res.redirect(authUrl);
+    } catch (error) {
+      console.error('Erro ao gerar URL de autorização Shopee:', error);
+      return res.status(500).json({ 
+        error: 'Falha ao gerar URL de autorização', 
+        details: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
+  // Endpoint para debugging com múltiplas opções de autorização
+  router.get('/debug', isAuthenticated, (req: any, res) => {
+    try {
+      log('[Shopee Debug] Gerando página de diagnóstico para conexão Shopee');
+
+      // Se a URL de redirecionamento não estiver definida, use a URL padrão
+      let redirectUrl = SHOPEE_REDIRECT_URL;
+      if (!redirectUrl || redirectUrl === 'undefined') {
+        redirectUrl = `${req.protocol}://${req.get('host')}/api/shopee/callback`;
+      }
+
+      // Configuração da autenticação Shopee
+      const config: ShopeeAuthConfig = {
+        partnerId: parseInt(SHOPEE_PARTNER_ID),
+        partnerKey: SHOPEE_PARTNER_KEY,
+        redirectUrl,
+        region: SHOPEE_REGION || 'BR'
+      };
+
+      // Gerar as diferentes URLs para teste
+      const minimalAuth = generateMinimalAuthUrl(config);
+
+      // Criar uma página HTML com as URLs para teste
+      const html = `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Debug de Conexão Shopee</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          h1 { color: #ee4d2d; }
+          .option {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+          }
+          .option h2 {
+            margin-top: 0;
+            color: #333;
+          }
+          .url {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+          }
+          .btn {
+            display: inline-block;
+            background: #ee4d2d;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+          }
+          .info {
+            background: #f0f8ff;
+            border-left: 4px solid #1e90ff;
+            padding: 10px;
+            margin-bottom: 20px;
+          }
+          .warning {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 20px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Diagnóstico de Conexão Shopee</h1>
+
+        <div class="info">
+          <p><strong>Importante:</strong> Esta página oferece opções para testar diferentes abordagens de conexão com a Shopee.</p>
+          <p>Se você encontrar problemas, verifique os logs do servidor e as ferramentas de desenvolvedor do navegador para mais detalhes.</p>
+        </div>
+
+        <div class="option">
+          <h2>Opção 1: URL Minimalista (Recomendada para Testes)</h2>
+          <p>Contém apenas os parâmetros obrigatórios: partner_id, timestamp, sign, redirect, state.</p>
+          <div class="url">${minimalAuth}</div>
+          <a href="${minimalAuth}" class="btn" target="_blank">Testar URL Minimalista</a>
+        </div>
+
+        <div class="option">
+          <h2>Opção 2: API Padrão com URLSearchParams</h2>
+          <p>Use a API padrão de autorização, mas com parâmetros codificados corretamente via URLSearchParams.</p>
+          <a href="/api/shopee/authorize" class="btn" target="_blank">Testar API Padrão</a>
+        </div>
+
+        <div class="option">
+          <h2>Opção 3: API Minimalista</h2>
+          <p>Use a API padrão de autorização com apenas parâmetros obrigatórios.</p>
+          <a href="/api/shopee/authorize?minimal=true" class="btn" target="_blank">Testar API Minimalista</a>
+        </div>
+
+        <div class="warning">
+          <p><strong>Dica para Troubleshooting:</strong></p>
+          <ol>
+            <li>Abra as "Ferramentas do Desenvolvedor" do navegador (F12)</li>
+            <li>Vá para a aba "Rede/Network"</li>
+            <li>Marque "Preservar log/Preserve log"</li>
+            <li>Clique em uma das opções acima</li>
+            <li>Observe a URL exata que está sendo chamada e a resposta 302 da Shopee</li>
+          </ol>
+        </div>
+      </body>
+      </html>
+      `;
+
+      res.send(html);
+    } catch (error) {
+      console.error('Erro ao gerar página de debug:', error);
+      res.status(500).json({ 
+        error: 'Falha ao gerar página de debug', 
+        details: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
 export default router;

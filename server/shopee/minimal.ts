@@ -1,4 +1,3 @@
-
 /**
  * Implementação minimalista para autenticação Shopee
  * Esta versão usa apenas os parâmetros obrigatórios, sem parâmetros extras
@@ -13,42 +12,44 @@ import { getTimestamp } from './utils';
  */
 export function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
   // Gerar timestamp em segundos
-  const timestamp = getTimestamp();
+  const timestamp = Math.floor(Date.now() / 1000);
 
-  // Criar o estado único para CSRF protection
+  // Estado para proteção CSRF
   const stateParam = `cipshopee_${Date.now()}`;
 
-  // Verificar se a URL de redirecionamento está definida
-  if (!config.redirectUrl) {
-    throw new Error('URL de redirecionamento não definida na configuração');
-  }
-
-  // URL BASE para o fluxo de autorização de loja
+  // URL base para o fluxo de autorização de loja
   const baseUrl = 'https://partner.shopeemobile.com';
   const apiPath = '/api/v2/shop/auth_partner';
-  
-  // String base para gerar assinatura (seguindo documentação oficial)
+
+  // String base para gerar assinatura - Formato: partner_id + api_path + timestamp
   const baseString = `${config.partnerId}${apiPath}${timestamp}`;
-  console.log(`String base para assinatura (minimalista): ${baseString}`);
+
+  console.log(`String base para assinatura (método minimalista): ${baseString}`);
 
   // Gerar assinatura HMAC-SHA256
   const hmac = createHmac('sha256', config.partnerKey);
   hmac.update(baseString);
   const signature = hmac.digest('hex');
-  console.log(`Assinatura gerada: ${signature}`);
 
-  // Construir URL de autorização apenas com parâmetros obrigatórios
-  // Esta é a versão minimalista sem nenhum parâmetro extra
-  const minimalAuthUrl = `${baseUrl}${apiPath}?` +
-    `partner_id=${config.partnerId}&` +
-    `timestamp=${timestamp}&` +
-    `sign=${signature}&` +
-    `redirect=${encodeURIComponent(config.redirectUrl)}&` +
-    `state=${stateParam}`;
+  console.log(`Assinatura gerada (método minimalista): ${signature}`);
 
-  console.log(`✅ URL minimalista gerada: ${minimalAuthUrl}`);
-  
-  return minimalAuthUrl;
+  // Construir URL usando URLSearchParams para garantir codificação correta
+  const url = new URL(`${baseUrl}${apiPath}`);
+  const params = new URLSearchParams();
+
+  // Adicionar parâmetros na ordem recomendada pela documentação
+  params.append('partner_id', config.partnerId.toString());
+  params.append('timestamp', timestamp.toString());
+  params.append('sign', signature);
+  params.append('redirect', config.redirectUrl);
+  params.append('state', stateParam);
+
+  // Garantir que a URL não tenha caracteres problemáticos
+  url.search = params.toString();
+
+  console.log(`URL minimalista gerada: ${url.toString()}`);
+
+  return url.toString();
 }
 
 /**
@@ -58,7 +59,7 @@ export function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
 export function generateTestVariants(config: ShopeeAuthConfig): Record<string, string> {
   // Gerar URL base minimalista
   const minimalUrl = generateMinimalAuthUrl(config);
-  
+
   // Adicionar parâmetros um a um para testar
   return {
     minimal: minimalUrl,
