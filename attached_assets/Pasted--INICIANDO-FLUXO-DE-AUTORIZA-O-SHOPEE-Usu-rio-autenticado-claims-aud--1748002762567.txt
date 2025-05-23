@@ -1,0 +1,138 @@
+======= INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE =======
+
+Usuário autenticado: {
+
+  claims: {
+
+    aud: '73ee031f-24e8-4b77-96e8-2cd2724cf5f2',
+
+    exp: 1748005109,
+
+    iat: 1748001509,
+
+    iss: 'https://replit.com/oidc',
+
+    sub: '42894239',
+
+    email: 'delicatomodasoficial@gmail.com',
+
+    at_hash: 'tmwVOUY2kp_-lALOW10hKg',
+
+    username: 'delicatomodasof',
+
+    auth_time: 1748001508,
+
+    last_name: null,
+
+    first_name: null
+
+  },
+
+  expires_at: 1748005109,
+
+  access_token: 'i8ww4E9Y50H8sukCxhb_67by1f7opy5Pb6YR49iEYTk',
+
+  refresh_token: 'KieNbvFC_wtg15hhLdHdK0qfAifQBqIYpJsawLX5uPg'
+
+}
+
+Ambiente: development
+
+Informações de configuração da API:
+
+Partner ID: 2011285
+
+URL de redirecionamento configurada: undefined
+
+===================================================
+
+===================================================
+
+Ambiente: development
+
+Informações de configuração da API:
+
+Partner ID: 2011285
+
+URL de redirecionamento configurada: https://cipshopee.replit.app/api/shopee/callback
+
+===================================================
+
+String base para assinatura (método padrão): 2011285/api/v2/shop/auth_partner1748002640
+
+Assinatura gerada: 456252b159025f248523ffe10abd30377f35fae173e08f10ba866d488d56501e
+
+✅ URL de autorização da Shopee: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002640&sign=456252b159025f248523ffe10abd30377f35fae173e08f10ba866d488d56501e&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002640447&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+
+Verificação de parâmetros importantes:
+
+- partner_id: true
+
+- timestamp: true
+
+- sign: true
+
+- redirect: true
+
+- auth_type=direct: true
+
+- login_type=seller: true
+
+🔎 Verificação direta do timestamp: timestamp=1748002640
+
+================================================
+
+✅ URL salva em arquivo para inspeção: shopee_auth_url.txt
+
+Redirecionando para autorização oficial Shopee: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002640&si...
+
+Verificando conexão com banco de dados...
+
+✅ URL salva em arquivo para inspeção: shopee_auth_url.txt
+
+Conexão com banco de dados estabelecida com sucesso
+
+12:17:20 PM [express] GET /api/shopee/authorize 302 in 169ms
+
+
+
+
+Mostrar raciocínio
+Seus logs mais recentes mostram um progresso significativo! A URL de autorização que está sendo gerada agora parece correta e completa, incluindo a assinatura (sign) e os demais parâmetros necessários. 🎉
+
+URL Gerada (correta):
+https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002640&sign=456252b159025f248523ffe10abd30377f35fae173e08f10ba866d488d56501e&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002640447&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+
+Análise e Próximos Passos:
+
+Geração da URL: A baseString (2011285/api/v2/shop/auth_partner1748002640) está correta, o sign é gerado, e todos os parâmetros essenciais (partner_id, timestamp, sign, redirect, state) estão presentes. Os parâmetros extras (region, is_auth_shop, etc.) estão anexados, o que é a abordagem discutida. Seu backend está emitindo um 302 redirect para essa URL, o que também é o esperado.
+
+URL de redirecionamento configurada: undefined (Alerta Inicial):
+No início do log, aparece URL de redirecionamento configurada: undefined. No entanto, mais abaixo, na parte onde a ShopeeAuthManager.getAuthorizationUrl() (ou a lógica equivalente em fallback.ts) é executada, a URL de redirecionamento https://cipshopee.replit.app/api/shopee/callback é usada corretamente.
+
+Ação: Verifique a ordem de inicialização das suas variáveis de ambiente e como elas são passadas para as funções. Garanta que process.env.SHOPEE_REDIRECT_URL esteja disponível e carregado no momento em que a configuração (config) é montada para ser usada pela função que gera a URL final. Apesar disso, a URL final no log parece estar usando o valor correto.
+Se o Problema Persistir com Esta URL Correta:
+Se ao ser redirecionado para a URL acima você ainda for levado para a página de login da Open Platform, o problema provavelmente não está mais na formação da URL em si, mas sim em um dos seguintes:
+
+Configuração da Aplicação na Shopee Open Platform:
+
+Tipo de App: Seu partner_id (2011285) precisa estar associado a um aplicativo do tipo "Third-Party Platform" (Parceiro de Plataforma/ISV/SaaS) e não um app de "Seller In-house".
+Permissões: Verifique se as permissões corretas para acesso a dados de loja estão habilitadas para seu app.
+Status do App: Confirme se o app está ativo e aprovado para o ambiente que você está testando (Sandbox ou Produção).
+URL de Redirecionamento (Whitelist): A URL https://cipshopee.replit.app/api/shopee/callback deve estar exatamente igual cadastrada na lista de URLs de redirecionamento permitidas no seu app dentro do console da Shopee Open Platform. Qualquer diferença (HTTP vs HTTPS, barra no final, case-sensitive) pode causar falha.
+Validade das Credenciais (partner_id / partner_key):
+
+Confirme se o partner_id e a partner_key que você está usando no .env são os corretos e válidos para o ambiente (Sandbox/Produção) e para o tipo de app.
+Interferência dos Parâmetros Extras:
+
+Embora a forma como você adicionou (&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct) seja geralmente segura, a Shopee pode ter alguma sensibilidade.
+Teste Crucial: Use a minimalUrl gerada pela sua função generateAuthUrls (ou modifique a standardUrl para remover temporariamente esses parâmetros extras, deixando apenas partner_id, timestamp, sign, redirect, state). https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002640&sign=456252b159025f248523ffe10abd30377f35fae173e08f10ba866d488d56501e&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002640447
+Se esta URL minimalista funcionar e te levar ao login do vendedor, então um dos parâmetros extras está causando o problema. Você precisaria testar adicionando-os um a um para ver qual deles causa o desvio.
+Cache do Navegador ou Sessões Antigas:
+
+Tente o fluxo em uma janela anônima do navegador para descartar problemas de cache ou cookies de sessões anteriores na Shopee.
+Próxima Ação Recomendada:
+
+Teste a URL Minimalista: Modifique seu código para usar a versão da URL de autorização sem os parâmetros extras (region, is_auth_shop, etc.), mantendo apenas os essenciais assinados.
+Inspecione o Redirecionamento no Navegador: Com a aba "Rede" (Network) das ferramentas de desenvolvedor aberta (e "Preserve log" marcado), acesse a URL de autorização. Observe o cabeçalho Location na resposta 302 da Shopee. Isso é fundamental para ver para onde exatamente a Shopee está te enviando.
+Revise as Configurações no Portal Shopee: Se a URL minimalista e correta ainda falhar, revise minuciosamente todas as configurações do seu aplicativo diretamente no Shopee Open Platform.

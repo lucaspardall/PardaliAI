@@ -1,9 +1,1 @@
-Timestamp: 1748002048
-
-URL Padrão: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002048&sign=d71ed4f8429369a332dfc3df2bc28f9136622e907aeaad7db99c460a0ff06e21&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002048298&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
-
-URL Minimalista: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002048&sign=d71ed4f8429369a332dfc3df2bc28f9136622e907aeaad7db99c460a0ff06e21&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002048298
-
-URL Regional: https://seller.shopee.com.br/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002048&sign=d71ed4f8429369a332dfc3df2bc28f9136622e907aeaad7db99c460a0ff06e21&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002048298
-
-URL Login Direto: https://account.seller.shopee.com.br/seller/login?partner_id=2011285&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002048298&timestamp=1748002048&sign=9b492a33763e0f451a4f609ef8d32d3a9754b99bc39b128af6890c9ddcf6ffd2
+https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748002640&sign=456252b159025f248523ffe10abd30377f35fae173e08f10ba866d488d56501e&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748002640447&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
