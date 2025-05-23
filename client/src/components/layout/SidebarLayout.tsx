@@ -53,7 +53,7 @@ export default function SidebarLayout({ children, title }: SidebarLayoutProps) {
     { href: "/dashboard", icon: "ri-dashboard-line", label: "Dashboard" },
     { href: "/dashboard/products", icon: "ri-shopping-bag-3-line", label: "Produtos" },
     { href: "/dashboard/store/connect", icon: "ri-store-2-line", label: "Minha Loja" },
-    { href: "/dashboard/optimization", icon: "ri-ai-generate", label: "Otimizações" },
+    { href: "/dashboard/optimizations", icon: "ri-ai-generate", label: "Otimizações" },
     { href: "/dashboard/reports", icon: "ri-line-chart-line", label: "Relatórios" },
   ];
 
