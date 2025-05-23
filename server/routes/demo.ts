@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { faker } from '@faker-js/faker/locale/pt_BR';
 import { storage } from '../storage';
 import { users } from '@shared/schema';
+import { isAuthenticated } from '../replitAuth';
 
 const router = Router();
 
@@ -46,6 +47,44 @@ router.get('/demo-account-info', async (req: Request, res: Response) => {
 });
 
 // Criar conta de demonstração
+// Rota para acessar diretamente a demo (login automatizado)
+router.get('/access-demo', async (req: Request, res: Response) => {
+  try {
+    // Verifica se a conta demo existe
+    let demoUser = await storage.getUserByEmail(DEMO_USER.username);
+    
+    // Se não existir, cria
+    if (!demoUser) {
+      const userId = faker.string.numeric(8);
+      demoUser = await storage.upsertUser({
+        id: userId,
+        email: DEMO_USER.username,
+        firstName: "Teste",
+        lastName: "Shopee",
+        profileImageUrl: `https://api.dicebear.com/7.x/initials/svg?seed=TS&backgroundColor=FF5722`,
+      });
+      
+      // Criar dados de demonstração para o novo usuário
+      await createDemoDataForUser(demoUser.id);
+    } else {
+      // Limpa e recria os dados demo para garantir consistência
+      await cleanExistingDemoData(demoUser.id);
+      await createDemoDataForUser(demoUser.id);
+    }
+    
+    // Autenticar o usuário e redirecionar para o dashboard
+    // Simular login do usuário - note que em produção isso seria feito via autenticação Replit
+    req.session.demoMode = true;
+    req.session.demoUserId = demoUser.id;
+    
+    // Redirecionar para o dashboard
+    res.redirect('/dashboard');
+  } catch (error) {
+    console.error("Erro ao acessar demonstração:", error);
+    res.status(500).json({ message: "Erro ao acessar demonstração" });
+  }
+});
+
 router.post('/create-demo-account', async (req: Request, res: Response) => {
   try {
     // Verificar se já existe
