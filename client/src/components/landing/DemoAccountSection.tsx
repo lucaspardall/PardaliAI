@@ -173,7 +173,7 @@ export function DemoAccountSection() {
                     </div>
                     
                     <Button asChild className="w-full mt-4">
-                      <a href="/api/login">Acessar Demonstração</a>
+                      <a href="/">Acessar Demonstração</a>
                     </Button>
                   </TabsContent>
                 </Tabs>
