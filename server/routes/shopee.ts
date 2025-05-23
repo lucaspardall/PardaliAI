@@ -27,14 +27,20 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Verificar se está em modo direto (sem página de diagnóstico)
     const directMode = req.query.direct === 'true';
     const method = req.query.method as string || 'standard';
+    const debug = req.query.debug === 'true';
 
-    // Configuração da integração Shopee
+    // Configuração da integração Shopee - sempre usar região 'BR' para o Brasil
     const config = {
       partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
       partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
       redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
-      region: 'SG'
+      region: 'BR'  // Configurado explicitamente para Brasil
     };
+
+    // Validar redirectUrl
+    if (!config.redirectUrl.startsWith('https://')) {
+      console.warn("⚠️ AVISO: URL de redirecionamento não usa HTTPS. A Shopee pode exigir HTTPS para redirectUrl em produção.");
+    }
 
     // Gerar URLs de autorização com todos os métodos disponíveis
     const urls = generateAuthUrls(config);
@@ -42,10 +48,32 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     // Salvar URLs em arquivo para inspeção e debug
     try {
       fs.writeFileSync('shopee_auth_url.txt', 
-        `URL Padrão: ${urls.standardUrl}\n\nURL Alternativa: ${urls.alternativeUrl}\n\nURL Login Direto: ${urls.directSellerLoginUrl}`);
+        `Timestamp: ${Math.floor(Date.now() / 1000)}\n\n` +
+        `URL Padrão: ${urls.standardUrl}\n\n` +
+        `URL Minimalista: ${urls.minimalUrl}\n\n` +
+        `URL Regional: ${urls.alternativeUrl}\n\n` +
+        `URL Login Direto: ${urls.directSellerLoginUrl}`
+      );
       console.log("✅ URLs salvas em arquivo para inspeção: shopee_auth_url.txt");
     } catch (err) {
       console.error("Não foi possível salvar URLs em arquivo:", err);
+    }
+    
+    // Registrar componentes críticos das URLs para diagnóstico
+    try {
+      // Extrair parâmetros importantes
+      const standardUrlParams = new URL(urls.standardUrl);
+      const directUrlParams = new URL(urls.directSellerLoginUrl);
+      
+      console.log("=== INFORMAÇÕES DE DIAGNÓSTICO DE URLS ===");
+      console.log("URL Padrão - Componentes:");
+      console.log("- Partner ID:", standardUrlParams.searchParams.get('partner_id'));
+      console.log("- Timestamp:", standardUrlParams.searchParams.get('timestamp'));
+      console.log("- Sign:", standardUrlParams.searchParams.get('sign'));
+      console.log("- Redirect:", standardUrlParams.searchParams.get('redirect'));
+      console.log("===========================================");
+    } catch (err) {
+      console.error("Erro ao analisar URLs para diagnóstico:", err);
     }
     
     // Se mode direto, redirecionar para o método solicitado
@@ -53,6 +81,9 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       let redirectUrl;
       
       switch (method) {
+        case 'minimal':
+          redirectUrl = urls.minimalUrl;
+          break;
         case 'alternative':
           redirectUrl = urls.alternativeUrl;
           break;
@@ -66,6 +97,32 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       }
       
       console.log(`Redirecionando diretamente para método ${method}: ${redirectUrl.substring(0, 100)}...`);
+      
+      // Se estiver no modo debug, mostrar detalhes antes de redirecionar
+      if (debug) {
+        return res.send(`
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <title>Debug da URL de Autorização</title>
+              <style>
+                body { font-family: monospace; line-height: 1.5; padding: 20px; }
+                .url { word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 4px; }
+                .btn { display: inline-block; background: #ee4d2d; color: white; padding: 10px 15px; 
+                       text-decoration: none; border-radius: 4px; margin-top: 20px; }
+              </style>
+            </head>
+            <body>
+              <h1>Modo Debug - Redirecionamento para Shopee</h1>
+              <p>A seguir está a URL de redirecionamento gerada (método: ${method}):</p>
+              <div class="url">${redirectUrl}</div>
+              <p>Para continuar o processo de autorização, clique no botão abaixo:</p>
+              <a href="${redirectUrl}" class="btn">Continuar para Shopee</a>
+            </body>
+          </html>
+        `);
+      }
+      
       return res.redirect(redirectUrl);
     }
     
