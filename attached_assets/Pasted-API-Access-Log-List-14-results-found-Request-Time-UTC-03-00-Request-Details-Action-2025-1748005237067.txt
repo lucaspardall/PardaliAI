@@ -1,0 +1,429 @@
+API Access Log List
+
+
+
+14 results found
+
+
+
+Request Time (UTC-03:00)
+
+Request Details
+
+Action
+
+
+
+2025/05/23 09:49:47
+
+Method:GET|Status:302|Path:/api/v2/shop/auth_partner
+
+Request:{"auth_type":"direct","is_auth_shop":"true","login_type":"seller","partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","region":"BR","state":"cipshopee_1748004587100","timestamp":"1748004587"}
+
+Response:{"error":"status_code=302","message":"status_code=302"}
+
+View API Details
+
+Raise a Ticket
+
+2025/05/23 09:42:02
+
+Method:GET|Status:302|Path:/api/v2/shop/auth_partner
+
+Request:{"auth_type":"direct","is_auth_shop":"true","login_type":"seller","partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","region":"BR","state":"cipshopee_1748004121426","timestamp":"1748004121"}
+
+Response:{"error":"status_code=302","message":"status_code=302"}
+
+View API Details
+
+Raise a Ticket
+
+2025/05/23 09:41:09
+
+Method:GET|Status:302|Path:/api/v2/shop/auth_partner
+
+Request:{"auth_type":"direct","is_auth_shop":"true","login_type":"seller","partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","region":"BR","state":"cipshopee_1748004068709","timestamp":"1748004068"}
+
+Response:{"error":"status_code=302","message":"status_code=302"}
+
+View API Details
+
+Raise a Ticket
+
+2025/05/23 09:22:49
+
+Method:GET|Status:302|Path:/api/v2/shop/auth_partner
+
+Request:{"auth_type":"direct","is_auth_shop":"true","login_type":"seller","partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","region":"BR","state":"cipshopee_1748002968885","timestamp":"1748002968"}
+
+Response:{"error":"status_code=302","message":"status_code=302"}
+
+View API Details
+
+Raise a Ticket
+
+2025/05/23 09:20:36
+
+Method:GET|Status:302|Path:/api/v2/shop/auth_partner
+
+Request:{"auth_type":"direct","is_auth_shop":"true","login_type":"seller","partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","region":"BR","state":"cipshopee_1748002835522","timestamp":"1748002835"}
+
+Response:{"error":"status_code=302","message":"status_code=302"}
+
+
+
+
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+sub: '42614523',
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+email: 'lalingerieoficial04@gmail.com',
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+at_hash: 'xO-ukX3dU_i5ZFaqzgLm8A',
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+username: 'lalingerieofici',
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+auth_time: 1748005084,
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+last_name: 'Lingerie',
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+first_name: 'La'
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+},
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+expires_at: 1748008684,
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+access_token: 'Vfqs1VWo1C6D4ey_MFw71EC2cIn1_Fe0nqImBN3WnfZ',
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+refresh_token: 'egkZZbzAqqUqEzmnMqVTM8kIyndUT5dNlVl4TRpQ_vY'
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+}
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+Ambiente: production
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+Informações de configuração da API:
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+Partner ID: 2011285
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+URL de redirecionamento configurada: undefined
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+===================================================
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+URL de redirecionamento que será usada: https://cipshopee.replit.app/api/shopee/callback
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+===================================================
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+Ambiente: production
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+Informações de configuração da API:
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+Partner ID: 2011285
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+URL de redirecionamento configurada: https://cipshopee.replit.app/api/shopee/callback
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+===================================================
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+String base para assinatura (método padrão): 2011285/api/v2/shop/auth_partner1748005088
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+Assinatura gerada: 239863a16ddb40ca0156fbf930b71e5598d9db433b17df88d107e618fc6a8449
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+✅ URL de autorização da Shopee: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748005088&sign=239863a16ddb40ca0156fbf930b71e5598d9db433b17df88d107e618fc6a8449&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748005088827&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+Verificação de parâmetros importantes:
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+- partner_id: true
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+- timestamp: true
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+- sign: true
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+- redirect: true
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+================================================
+
+2025-05-23 09:58:08.82
+
+e58299ad
+
+User
+
+Verificando conexão com banco de dados...
+
+2025-05-23 09:58:08.87
+
+e58299ad
+
+User
+
+Conexão com banco de dados estabelecida com sucesso
+
+
+
+2025-05-23 09:58:08.93
+
+e58299ad
+
+User
+
+12:58:08 PM [express] GET /api/shopee/authorize 302 in 201ms
+
+2025-05-23 09:58:18.99
+
+e58299ad
+
+User
+
+12:58:18 PM [express] POST /api/shopee/webhook 200 in 1ms
+
+
+
+
+Mostrar raciocínio
+Os novos logs que você forneceu, especialmente o "API Access Log List" da Shopee, nos dão uma pista crucial!
+
+Vamos comparar:
+
+1. Log da Sua Aplicação (exemplo de 2025-05-23 09:58:08):
+Mostra que você está gerando uma URL que INCLUI o parâmetro sign:
+✅ URL de autorização da Shopee: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748005088&sign=239863a16ddb40ca0156fbf930b71e5598d9db433b17df88d107e618fc6a8449&redirect=...&state=...&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+
+2. "API Access Log List" da Shopee (exemplo de 2025/05/23 09:49:47):
+Mostra a requisição que a Shopee diz ter recebido para o endpoint /api/v2/shop/auth_partner. O campo Request é:
+Request:{"auth_type":"direct","is_auth_shop":"true","login_type":"seller","partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","region":"BR","state":"cipshopee_1748004587100","timestamp":"1748004587"}
+
+A GRANDE DIFERENÇA: O log da Shopee (o que eles dizem ter recebido) NÃO MOSTRA o parâmetro sign na requisição. Ele mostra todos os outros parâmetros (auth_type, is_auth_shop, etc.), mas o sign está ausente no log deles.
+
+Por que isso é Importante?
+
+Se a Shopee não recebe ou não processa o parâmetro sign na chamada para /api/v2/shop/auth_partner, a autenticação da sua aplicação parceira falha. Sem o sign válido, a Shopee não sabe se a requisição é legítima e pode, por padrão, redirecionar para um fluxo genérico, como o login da Open Platform.
+
+Próximos Passos Urgentes para Investigar essa Discrepância:
+
+Você precisa descobrir se o sign está realmente se perdendo no caminho ou se o log da Shopee não o exibe por algum motivo.
+
+VERIFIQUE A URL EXATA NO NAVEGADOR (Ferramentas do Desenvolvedor):
+
+No seu navegador, abra as "Ferramentas do Desenvolvedor" (F12) e vá para a aba "Rede" (Network).
+Marque a opção "Preservar log" (Preserve log).
+Inicie o fluxo de autorização no seu SaaS. Seu servidor Express fará o res.redirect(SUA_URL_GERADA_COM_O_SIGN).
+O navegador fará uma requisição GET para essa URL da Shopee.
+Ação Crítica: Encontre essa requisição na lista da aba "Rede". Clique nela.
+Nos "Cabeçalhos da Requisição" (Request Headers), verifique se a "URL da Requisição" (Request URL) CONTÉM o parâmetro &sign=SEU_SIGN_AQUI. Ela deve ser idêntica à URL que seus logs da aplicação mostram.
+Se o sign estiver lá, ótimo. Agora, olhe os "Cabeçalhos da Resposta" (Response Headers) da Shopee para essa requisição. Qual é o valor do cabeçalho Location? É ele que indica para onde você está realmente sendo redirecionado.
+TESTE A URL MINIMALISTA (E VERIFIQUE NO NAVEGADOR):
+
+Modifique seu código para gerar a URL de autorização SEM os parâmetros extras: &region=BR&is_auth_shop=true&login_type=seller&auth_type=direct.
+A URL minimalista (apenas com partner_id, timestamp, sign, redirect, state) é fundamental para o teste.
+Ação Crítica: Após gerar e ser redirecionado para esta URL minimalista, use as Ferramentas do Desenvolvedor do Navegador (como no passo 1) para confirmar que a URL requisitada pelo navegador à Shopee contém o sign e é a URL minimalista que você gerou. Observe o Location da resposta 302 da Shopee.
+Por quê? Para eliminar a possibilidade de que os parâmetros extras, mesmo não fazendo parte da assinatura, estejam causando algum problema de parsing no lado da Shopee que faz o sign ser ignorado.
+SE O sign ESTIVER NA URL DO NAVEGADOR, MAS AUSENTE NO LOG DA SHOPEE:
+
+Se você confirmar (via Ferramentas do Desenvolvedor) que seu navegador está enviando o sign para https://partner.shopeemobile.com/api/v2/shop/auth_partner, mas o "API Access Log" da Shopee não o registra, isso é uma evidência importante.
+Ação: Entre em contato com o Suporte Técnico da Shopee Open Platform. Envie:
+A URL completa que seu navegador está enviando (com o sign).
+O "API Access Log" da Shopee que mostra a requisição sem o sign.
+Pergunte por que o log deles não mostra o sign e se ele está sendo recebido e processado corretamente para seu partner_id (2011285) no endpoint /api/v2/shop/auth_partner.
+Ambiente production vs development:
+Seu último log da aplicação menciona Ambiente: production. Se você mudou para produção, certifique-se de que:
+
+As credenciais (partner_id, partner_key) são as de produção.
+A URL de callback (https://cipshopee.replit.app/api/shopee/callback) está corretamente cadastrada no seu app de produção na Shopee.
+Seu app de produção está ativo e aprovado.
+O fato de o "API Access Log" da Shopee não mostrar o sign é a pista mais forte que temos agora. Precisamos confirmar se ele está realmente chegando à Shopee ou não. Os passos 1 e 2 acima são cruciais para isso.
