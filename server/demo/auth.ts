@@ -75,7 +75,8 @@ export function handleDemoLogin(req: Request, res: Response): void {
     
     res.status(200).json({
       success: true,
-      user: DEMO_CREDENTIALS.user
+      user: DEMO_CREDENTIALS.user,
+      redirectTo: '/demo/dashboard' // Adicionar redireção explícita
     });
   } else {
     res.status(401).json({

@@ -58,7 +58,12 @@ export default function DemoLogin() {
           title: 'Login realizado com sucesso',
           description: 'Bem-vindo ao modo de demonstração do CIP Shopee!',
         });
-        navigate('/demo/dashboard');
+        // Usar campo redirectTo da resposta se disponível
+        if (result.redirectTo) {
+          navigate(result.redirectTo);
+        } else {
+          navigate('/demo/dashboard');
+        }
       } else {
         setError(result.message || 'Credenciais inválidas');
       }
