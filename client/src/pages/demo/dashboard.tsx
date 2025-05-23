@@ -324,9 +324,7 @@ export default function DemoDashboard() {
           
           <TabsContent value="stores" className="mt-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {isLoadingStores ? (
-                <p>Carregando lojas...</p>
-              ) : stores && stores.length > 0 ? (
+              {stores && stores.length > 0 ? (
                 stores.map((store) => (
                   <Card key={store.id} className="overflow-hidden">
                     <CardHeader className="bg-muted/10 pb-2">
