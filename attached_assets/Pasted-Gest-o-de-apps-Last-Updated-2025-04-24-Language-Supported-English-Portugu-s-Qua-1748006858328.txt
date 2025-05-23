@@ -1,0 +1,215 @@
+Gestão de apps
+Last Updated: 2025-04-24
+Language Supported: English / 简体中文 / 繁體中文 / Português
+Quando sua conta de desenvolvedor for aprovada, você vai poder criar aplicativos na Open Platform da Shopee, na página de criação de apps
+
+
+
+Tipos de apps
+
+
+
+
+Existem diversos tipos de apps na Open Platform da Shopee, cada um feito para um objetivo diferente.
+
+
+
+ERP System: apps usados para gerir os principais processos de negócios. Esse tipo de app é útil se você precisa fornecer serviços de software para vendedores.
+Product Management: apps usados para gerir processos relacionados a produtos.
+Order Management: apps feitos para gerir processos de pedidos.
+Accounting and Finance: apps feitos para gerir processos relacionados ao financeiro dos vendedores.
+Marketing: apps feitos para gerir processos de marketing
+Seller In-House System: use esse tipo de app se você for um vendedor gerindo seus próprios aplicativos.
+Customer Service: aplicativos para gestão de processos relacionados a atendimento ao cliente.
+
+
+Diferentes tipos de contas de desenvolvedor podem criar tipos de apps diferentes.
+
+
+Developer account types
+App Types
+Third-party Partner Platform (ISV)	Registered Business Seller	Individual Seller	Individual Third Party*
+ERP System	✓	
+
+
+Product Management	✓	
+
+✓
+Order Management	✓	
+✓
+Accounting and Finance	✓	
+
+✓
+Marketing	✓	
+
+
+Customer Service		
+
+
+Seller In House System	
+✓	✓	
+
+
+Desenvolvedores do tipo Third Party não são mais aceitos e foram substituídos pelos outros tipos de conta.
+
+
+
+Se você fez seu cadastro como Individual Seller ou Registered Business Seller, mas seu time cresceu e começou a atender outros vendedores, você pode trocar o tipo de conta para Third-party Partner Platform (ISV). Quando for aprovado, seu tipo de app vai mudar automaticamente de sistema In-house para ERP System. Para maiores detalhes, verifique as FAQs.
+
+
+
+Diferentes tipos de apps tem diferentes tipos de permissões de API e push. Você pode criar os tipos de app de acordo com suas necessidades.
+
+App type	API permissions
+Original	All v1.0 API only. All v2.0 API cannot be used.
+ERP System	All API except Chat API and Ads API
+Seller In-house System	All API including Chat API
+Product Management	View API permission list
+Order Management	View API permission list
+Accounting and Finance	View API permission list
+Marketing	View API permission list
+Customer Service	View API permission list
+Ads Service	View API Permission list
+
+
+Saiba mais sobre as notificações em push disponíveis para cada app na seção sobre Push Mechanism.
+
+
+
+⚠️ LembreteApps criados após Março de 2022 só terão permissões v2.0, e não podem fazer chamadas para APIS v1.0.Você pode verificar suas permissões na seção de permissões da página de detalhes do app.
+
+Criando um app
+
+
+1. Fazer login na Open Platform da Shopee > Console > selecione “Create App” (Criar App). Na página de criação você pode editar o tipo (App Type), nome (App Name), descrição (App Description) e logo do seu app (App logo) na seção de informações básicas.
+
+
+
+
+
+2. Depois de criar seu app, você pode obter uma Test Partner ID e uma Test key. Elas só podem ser usadas para testar no ambiente sandbox.
+
+Ativando seu app (Go Live)
+
+
+Quando terminar de testar seu app, selecione o aplicativo na lista (App List) e selecione Ativar (Go Live).
+
+
+
+2. Na página de ativação (Go Live), preencha as informações relevantes.
+
+
+
+
+3. Seu app será revisado em 24h após o envio. Quando for aprovado, você vai poder ver a  Live Partner_id e a  Live Key correspondentes ao app na seção de chaves do app (App Key). Essas poderão ser usadas no ambiente de produção.
+
+
+Mudando para o ambiente de produção
+
+
+Quando estiver pronto você pode trocar o app para o ambiente de produção.
+
+1. Troque para a Live Partner_id e a Live Key para concluir a autorização.
+
+2. Troque para o endereço HTTP do ambiente de produção. Você pode encontrar o endereço HTTP nos documentos da API. Aqui temos um exemplo:
+
+
+⚠️ Lembrete
+https://openplatform.shopee.cn/ está disponível apenas para desenvolvedores na China.
+https://partner.shopeemobile.com/ está disponível para todos os desenvolvedores.
+
+Selecione o endereço que corresponda aos servidores locais em quem você quer usar a API.
+
+
+3. (Opcional) Se precisar se inscrever em algum Push Notification, você pode ativar as configurações no ambiente de produção.
+
+
+
+4. (Opcional) Se precisar adicionar endereços Shopee aprovados no seu sistema, por favor, faça uma chamada para a API v2.public.get_shopee_ip_ranges no ambiente de produção para obter o endereço IP do ambiente.
+
+Vendo o status do seu app
+Quando tiver criado seu app, você vai poder ver seu status. Cada status tem um conjunto de restrições  que limitam o uso do app.
+
+Status	Descrição	Restrições no ambiente de produção
+Developing	App em desenvolvimento	1. Apps não podem ser autorizadas para acesso de dados no ambiente de produção.2. Impossível fazer chamadas para APIs em Live
+Online	App está online	1. Apps podem receber autorização para acessar dados de lojas no ambiente.2. Chamadas de APIS em Live permitidas.
+New App authorizations restricted	Novas autorização para o app foram restritas	1.  Apps não podem receber autorização para acessar dados de lojas no ambiente.2. As autorizações existentes não são afetadas.3. Chamadas de APIS em Live permitidas.
+API calls restricted	App está restrito de receber chamadas de todas as APIs	1. Apps não podem receber autorização para acessar dados de lojas no ambiente.2. As autorizações existentes não são afetadas. 3. Impossível fazer chamadas para APIs.
+Suspended	App está offline	1. Apps não podem receber autorização para acessar dados de lojas no ambiente.2. Autorizações de acesso existentes vão ser removidas.3. Impossível fazer chamadas para APIs em Live.
+
+
+⚠️ LembreteSe um desenvolvedor violar as políticas da Open Platform, o status dos seus apps pode ser alterado para:
+New App authorizations restricted
+API calls restricted
+Suspended
+Se o status do seu app for atualizado, você receberá uma notificação explicando o motivo no email cadastrado para sua conta de desenvolvedor. Você também pode ver o motivo no console da Shopee Open Platform.Independente do status, você ainda vai poder usar a Test Partner ID no ambiente sandbox para autorizar lojas e testar APIs.
+Redefinindo keys de apps
+
+
+Se as keys do seu app forem divulgadas, ou se você quiser trocar por outros motivos de segurança, você pode redefinir suas keys.
+
+
+
+1. Para redefinir, selecione o App e Editar (Edit).
+
+
+
+
+2. Nas informações básicas (Basic Information), selecione Redefinir (Reset)  a Test key ou Live Key. Selecione Submit no fim da página para concluir a redefinição.
+
+
+Deletando um app
+Se você não precisar mais de um app, selecione o App e selecione Deletar (Delete)
+
+
+⚠️ LembreteDepois de deletar o app, os seguintes itens vão se tornar inválidos:
+Partner ID e Key obtidas
+Todas as autorizações existentes.
+
+FAQs
+
+
+Q1: Qual o número máximo de apps que eu posso criar?
+
+A: Você pode criar até 10 aplicativos.
+
+
+
+Q2: Um app pode receber autorizações de lojas de diferentes mercados?
+
+A: Sim.
+
+
+
+Q3: Existe um máximo de lojas que um app pode autorizar?
+
+A: Atualmente não existe um limite.
+
+
+
+Q4: O processo de revisão para ativação de um app pode ser acelerado?
+
+A: Não. Você precisa enviar seu app para avaliação pelo menos 24h antes do horário em que espera fazer a ativação para garantir que esteja pronto.
+
+
+
+Q5: Se meu sistema usa um IP dinâmico, como preencher a declaração de ativos de TI?
+
+A: Você pode selecionar a opção Endereço de IP indisponível e adicionar o motivo abaixo.
+
+
+⚠️ Lembrete: Recomendamos que você use um IP estático. Se você usa um IP dinâmico, vamos solicitar declarações periódicas dos seus ativos de TI para realizar testes de segurança.
+
+
+
+Q6: Quando preciso atualizar meus ativos de TI?
+
+A: Quando seu IP mudar, por favor, atualize seus ativos de TI no console da Open Platform.
+
+
+
+Q7: Meus ativos de TI excedem o limite de caracteres na caixa de texto.
+
+A: Você pode selecionar a opção de endereço de IP indisponível e adicionar o motivo abaixo.
+
+
