@@ -172,8 +172,11 @@ export function DemoAccountSection() {
                       ))}
                     </div>
                     
-                    <Button asChild className="w-full mt-4">
-                      <a href="/api/demo/access-demo">Acessar Demonstração Completa</a>
+                    <Button className="w-full mt-4" onClick={() => {
+                      // Redirecionar diretamente para a página de dashboard demo
+                      window.location.href = "/demo/dashboard";
+                    }}>
+                      Acessar Demonstração Completa
                     </Button>
                   </TabsContent>
                 </Tabs>

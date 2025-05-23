@@ -14,6 +14,7 @@ import ConnectStore from "@/pages/dashboard/store/connect";
 import ShopeeConnect from "@/pages/shopee-connect";
 import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
+import DemoDashboard from "@/pages/demo/dashboard";
 import { useAuth } from "./hooks/useAuth";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
@@ -39,8 +40,9 @@ function ProtectedRoute({ component: Component, ...rest }: any) {
 function Router() {
   return (
     <Switch>
-      {/* Public route */}
+      {/* Public routes */}
       <Route path="/" component={Landing} />
+      <Route path="/demo/dashboard" component={DemoDashboard} />
       
       {/* Protected dashboard routes */}
       <Route path="/dashboard">
