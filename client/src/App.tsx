@@ -43,6 +43,9 @@ function Router() {
       {/* Public routes */}
       <Route path="/" component={Landing} />
       <Route path="/demo/dashboard" component={DemoDashboard} />
+      <Route path="/demo/products" component={DemoDashboard} />
+      <Route path="/demo/optimize/:id" component={DemoDashboard} />
+      <Route path="/demo/product/:id" component={DemoDashboard} />
       
       {/* Protected dashboard routes */}
       <Route path="/dashboard">
