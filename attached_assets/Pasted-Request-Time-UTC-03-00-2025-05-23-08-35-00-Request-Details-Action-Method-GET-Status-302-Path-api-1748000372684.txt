@@ -1,0 +1,65 @@
+Request Time (UTC-03:00)
+2025/05/23 08:35:00
+
+Request Details
+Action
+Method:GET|Status:302|Path:/api/v2/shop/auth_partner
+Request:{"partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","state":"cipshopee_1748000099883","timestamp":"1748000099"}
+Response:{"error":"status_code=302","message":"status_code=302"}
+Vamos detalhar alguns pontos importantes aqui:
+
+Path:/api/v2/shop/auth_partner: Este é o caminho correto para iniciar a autorização da loja de um vendedor. Isso é bom.
+
+Method:GET|Status:302:
+
+Um Status: 302 Found é uma resposta de redirecionamento. Isso significa que o servidor da Shopee está instruindo o cliente (o navegador do seu vendedor, idealmente) a ir para outra URL.
+Este é o comportamento esperado nesta etapa. O objetivo de chamar este endpoint é justamente ser redirecionado para a página de login/autorização da Shopee.
+Request:{"partner_id":"2011285", "redirect":"https://cipshopee.replit.app/api/shopee/callback", "state":"cipshopee_1748000099883", "timestamp":"1748000099"}:
+
+partner_id: 2011285 (Seu ID de parceiro).
+redirect: https://cipshopee.replit.app/api/shopee/callback (Sua URL de callback, que deve estar registrada na Shopee e ser HTTPS).
+state: cipshopee_1748000099883 (Um valor para previnir CSRF, boa prática).
+timestamp: 1748000099 (Corresponde a 23 de Maio de 2025, 08:34:59 GMT-03:00). O "Request Time" é 08:35:00 GMT-03:00. A proximidade é boa e o timestamp parece correto.
+Response:{"error":"status_code=302","message":"status_code=302"}:
+
+Este corpo de resposta JSON é um pouco incomum para uma resposta 302. Geralmente, o mais importante em uma resposta 302 é o cabeçalho Location, que contém a URL para a qual o navegador deve ser redirecionado.
+É possível que esta seja a forma como seu sistema de logging ou a biblioteca HTTP que você está usando interpreta/registra a resposta.
+O Problema Principal e a Causa Mais Provável:
+
+A informação mais crucial que está faltando nos detalhes da Request é o parâmetro sign (a assinatura da requisição).
+
+Conforme a documentação da Shopee e o guia que detalhei anteriormente, o endpoint /api/v2/shop/auth_partner requer um parâmetro sign para autenticar que a requisição está vindo de um parceiro válido.
+Sem o parâmetro sign (ou com um sign inválido), a Shopee não consegue verificar a autenticidade da sua aplicação. Isso pode levar a comportamentos inesperados, incluindo o redirecionamento para uma página de login padrão ou de erro, que poderia ser a da Open Platform em vez da página de login do vendedor.
+O que o Status 302 significa no contexto do seu problema original:
+
+O seu problema original era: "tá levando ele pra logar no open plataforma da shopee".
+O Status 302 confirma que um redirecionamento está acontecendo. A questão é: para onde ele está redirecionando?
+
+Se o sign estiver faltando ou incorreto, é altamente provável que o Location (URL de destino) desse redirecionamento 302 seja a URL da Open Platform.
+Se o sign estivesse correto e todos os outros parâmetros também, o Location deveria ser a URL do Shopee Seller Centre (a página de login da loja).
+Ações Corretivas e Próximos Passos:
+
+Adicione o Parâmetro sign:
+
+Você obrigatoriamente precisa calcular e incluir o parâmetro sign na URL de autorização.
+A string base para gerar o sign é: partner_id + api_path + timestamp.
+partner_id: 2011285
+api_path: /api/v2/shop/auth_partner
+timestamp: 1748000099
+Use seu partner_key (Client Secret) para gerar o HMAC SHA256 dessa string base.
+A URL final que seu sistema deve gerar e para a qual o navegador do cliente deve ser direcionado será algo como:
+https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748000099883&timestamp=1748000099&sign=SUA_ASSINATURA_AQUI
+(Note que a redirect URL deve ser URL-encoded se contiver caracteres especiais, embora no seu caso pareça não precisar).
+Verifique o Cabeçalho Location:
+
+Quando essa requisição GET é feita (idealmente pelo navegador do usuário sendo redirecionado pelo seu sistema), a resposta 302 da Shopee terá um cabeçalho HTTP chamado Location.
+Use as ferramentas de desenvolvedor do seu navegador (aba "Network" ou "Rede") para inspecionar essa requisição para a Shopee. Você precisa ver para qual URL o cabeçalho Location da resposta 302 está apontando. É isso que vai determinar para onde o navegador será efetivamente levado.
+Se você estiver fazendo essa chamada GET do seu backend (o que não é o fluxo correto para esta etapa de autorização, que deve ser via navegador do usuário), sua biblioteca HTTP deve permitir que você acesse os cabeçalhos da resposta.
+Como o Fluxo Deve Funcionar:
+
+Seu SaaS gera a URL completa (incluindo o sign correto).
+Seu SaaS redireciona o navegador do seu cliente para essa URL da Shopee.
+O navegador do cliente faz a requisição GET para a Shopee.
+A Shopee, se tudo estiver correto (especialmente o sign), retorna uma resposta 302 com o Location header apontando para a página de login/autorização do Seller Centre.
+O navegador do cliente segue automaticamente esse redirecionamento.
+Em resumo: a ausência do parâmetro sign na sua requisição é quase certamente a causa do problema de redirecionamento incorreto. Adicione a assinatura correta e verifique o cabeçalho Location da resposta 302 para confirmar que está sendo redirecionado para o local certo (a página de login da loja).
