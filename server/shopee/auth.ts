@@ -1,14 +1,15 @@
-/**
- * Gerenciamento de autenticação OAuth para Shopee API
- */
-import axios from 'axios';
-import { createHmac } from 'crypto';
-import { AUTH } from './endpoints';
-import { ShopeeAuthConfig, ShopeeAuthTokens, ShopeeApiError } from './types';
-import { generateSignature, getTimestamp, getApiBaseUrl, parseApiError } from './utils';
 
 /**
- * Classe para gerenciar autenticação com a API da Shopee
+ * Gerenciador de autenticação para a API da Shopee
+ */
+import { createHmac } from 'crypto';
+import axios from 'axios';
+import { ShopeeAuthConfig, ShopeeAuthTokens } from './types';
+import { getApiBaseUrl, getTimestamp, parseApiError } from './utils';
+import { AUTH } from './endpoints';
+
+/**
+ * Gerencia o processo de autenticação com a API da Shopee
  */
 export class ShopeeAuthManager {
   private config: ShopeeAuthConfig;
@@ -329,4 +330,28 @@ export class ShopeeAuthManager {
 
     return now >= expirationWithBuffer;
   }
+}
+
+/**
+ * Método auxiliar para gerar URL de autorização diretamente
+ * @param config Configuração da autenticação Shopee
+ */
+export function getAuthorizationUrl(config: ShopeeAuthConfig): string {
+  const authManager = new ShopeeAuthManager(config);
+  return authManager.getAuthorizationUrl();
+}
+
+/**
+ * Método auxiliar para trocar o código por tokens
+ * @param config Configuração da autenticação Shopee
+ * @param code Código de autorização
+ * @param shopId ID da loja
+ */
+export async function getAccessToken(
+  config: ShopeeAuthConfig,
+  code: string,
+  shopId: string
+): Promise<ShopeeAuthTokens> {
+  const authManager = new ShopeeAuthManager(config);
+  return authManager.getAccessToken(code, shopId);
 }

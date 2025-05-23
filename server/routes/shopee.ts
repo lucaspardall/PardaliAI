@@ -21,14 +21,6 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Importar a implementação de diagnóstico para Shopee
-    const { generateAuthUrls, generateDiagnosticPage } = await import('../shopee/fallback');
-
-    // Verificar se está em modo direto (sem página de diagnóstico)
-    const directMode = req.query.direct === 'true';
-    const method = req.query.method as string || 'standard';
-    const debug = req.query.debug === 'true';
-
     // Configuração da integração Shopee - sempre usar região 'BR' para o Brasil
     const config = {
       partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
@@ -42,94 +34,69 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
       console.warn("⚠️ AVISO: URL de redirecionamento não usa HTTPS. A Shopee pode exigir HTTPS para redirectUrl em produção.");
     }
 
-    // Gerar URLs de autorização com todos os métodos disponíveis
-    const urls = generateAuthUrls(config);
+    // Verificar se quer mostrar a página de diagnóstico ou usar redirecionamento direto 
+    const showDiagnosticPage = req.query.diagnose === 'true';
+    const debugMode = req.query.debug === 'true';
     
-    // Salvar URLs em arquivo para inspeção e debug
+    // Importar o ShopeeAuthManager
+    const { ShopeeAuthManager, getAuthorizationUrl } = await import('../shopee/auth');
+    
+    // Gerar a URL de autorização direta usando o gerenciador de autenticação renovado
+    const authUrl = getAuthorizationUrl(config);
+    
+    // Salvar URL em arquivo para inspeção
     try {
       fs.writeFileSync('shopee_auth_url.txt', 
         `Timestamp: ${Math.floor(Date.now() / 1000)}\n\n` +
-        `URL Padrão: ${urls.standardUrl}\n\n` +
-        `URL Minimalista: ${urls.minimalUrl}\n\n` +
-        `URL Regional: ${urls.alternativeUrl}\n\n` +
-        `URL Login Direto: ${urls.directSellerLoginUrl}`
+        `URL de Autorização: ${authUrl}`
       );
-      console.log("✅ URLs salvas em arquivo para inspeção: shopee_auth_url.txt");
+      console.log("✅ URL salva em arquivo para inspeção: shopee_auth_url.txt");
     } catch (err) {
       console.error("Não foi possível salvar URLs em arquivo:", err);
     }
     
-    // Registrar componentes críticos das URLs para diagnóstico
-    try {
-      // Extrair parâmetros importantes
-      const standardUrlParams = new URL(urls.standardUrl);
-      const directUrlParams = new URL(urls.directSellerLoginUrl);
+    // Se estiver no modo de diagnóstico, mostrar mais opções
+    if (showDiagnosticPage) {
+      // Importar a implementação de diagnóstico para Shopee
+      const { generateAuthUrls, generateDiagnosticPage } = await import('../shopee/fallback');
       
-      console.log("=== INFORMAÇÕES DE DIAGNÓSTICO DE URLS ===");
-      console.log("URL Padrão - Componentes:");
-      console.log("- Partner ID:", standardUrlParams.searchParams.get('partner_id'));
-      console.log("- Timestamp:", standardUrlParams.searchParams.get('timestamp'));
-      console.log("- Sign:", standardUrlParams.searchParams.get('sign'));
-      console.log("- Redirect:", standardUrlParams.searchParams.get('redirect'));
-      console.log("===========================================");
-    } catch (err) {
-      console.error("Erro ao analisar URLs para diagnóstico:", err);
+      // Gerar URLs alternativas para diagnóstico
+      const urls = generateAuthUrls(config);
+      
+      // Gerar a página de diagnóstico com todas as opções para teste
+      const htmlContent = generateDiagnosticPage(urls);
+      
+      return res.send(htmlContent);
     }
     
-    // Se mode direto, redirecionar para o método solicitado
-    if (directMode) {
-      let redirectUrl;
-      
-      switch (method) {
-        case 'minimal':
-          redirectUrl = urls.minimalUrl;
-          break;
-        case 'alternative':
-          redirectUrl = urls.alternativeUrl;
-          break;
-        case 'direct':
-          redirectUrl = urls.directSellerLoginUrl;
-          break;
-        case 'standard':
-        default:
-          redirectUrl = urls.standardUrl;
-          break;
-      }
-      
-      console.log(`Redirecionando diretamente para método ${method}: ${redirectUrl.substring(0, 100)}...`);
-      
-      // Se estiver no modo debug, mostrar detalhes antes de redirecionar
-      if (debug) {
-        return res.send(`
-          <html>
-            <head>
-              <meta charset="UTF-8">
-              <title>Debug da URL de Autorização</title>
-              <style>
-                body { font-family: monospace; line-height: 1.5; padding: 20px; }
-                .url { word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 4px; }
-                .btn { display: inline-block; background: #ee4d2d; color: white; padding: 10px 15px; 
-                       text-decoration: none; border-radius: 4px; margin-top: 20px; }
-              </style>
-            </head>
-            <body>
-              <h1>Modo Debug - Redirecionamento para Shopee</h1>
-              <p>A seguir está a URL de redirecionamento gerada (método: ${method}):</p>
-              <div class="url">${redirectUrl}</div>
-              <p>Para continuar o processo de autorização, clique no botão abaixo:</p>
-              <a href="${redirectUrl}" class="btn">Continuar para Shopee</a>
-            </body>
-          </html>
-        `);
-      }
-      
-      return res.redirect(redirectUrl);
+    // Se estiver no modo debug, mostrar detalhes antes de redirecionar
+    if (debugMode) {
+      return res.send(`
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Debug da URL de Autorização</title>
+            <style>
+              body { font-family: monospace; line-height: 1.5; padding: 20px; }
+              .url { word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 4px; }
+              .btn { display: inline-block; background: #ee4d2d; color: white; padding: 10px 15px; 
+                     text-decoration: none; border-radius: 4px; margin-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <h1>Modo Debug - Redirecionamento para Shopee</h1>
+            <p>A seguir está a URL de redirecionamento gerada:</p>
+            <div class="url">${authUrl}</div>
+            <p>Para continuar o processo de autorização, clique no botão abaixo:</p>
+            <a href="${authUrl}" class="btn">Continuar para Shopee</a>
+          </body>
+        </html>
+      `);
     }
     
-    // Gerar a página de diagnóstico com todas as opções para teste
-    const htmlContent = generateDiagnosticPage(urls);
-    
-    return res.send(htmlContent);
+    // Modo normal: redirecionar diretamente para a URL de autorização
+    console.log(`Redirecionando para autorização oficial Shopee: ${authUrl.substring(0, 100)}...`);
+    return res.redirect(authUrl);
 
   } catch (error: any) {
     console.error('Error starting Shopee OAuth flow:', error);
@@ -175,59 +142,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         query: req.query
       });
 
-      // Tratamento específico para erro de token não encontrado ou autorização
-      if (errorCode === '2' || 
-          (typeof errorMsg === 'string' && (
-            errorMsg.includes('token not found') || 
-            errorMsg.includes('status_code=302') || 
-            errorMsg.includes('authentication')
-          ))) {
-        console.log('Detectado erro de autenticação ou redirecionamento. Verificando configuração...');
-
-        // Log detalhado de diagnóstico
-        console.log('Configuração atual:');
-        console.log('- Domínio da API utilizado:', 'https://partner.shopeemobile.com');
-        console.log('- URL de redirecionamento:', process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback');
-        console.log('- Partner ID:', process.env.SHOPEE_PARTNER_ID || '2011285');
-        
-        // Tentar nova tentativa de autorização com parâmetros mais explícitos
-        const partnerId = process.env.SHOPEE_PARTNER_ID || '2011285';
-        const partnerKey = process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661';
-        const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
-        const timestamp = Math.floor(Date.now() / 1000);
-        const path = '/api/v2/shop/auth_partner';
-        const baseString = `${partnerId}${path}${timestamp}`;
-        const sign = require('crypto').createHmac('sha256', partnerKey).update(baseString).digest('hex');
-        
-        // Construir URL corrigida com todos os parâmetros necessários
-        const correctAuthUrl = `https://partner.shopeemobile.com${path}?` +
-          `partner_id=${partnerId}&` +
-          `timestamp=${timestamp}&` +
-          `sign=${sign}&` +
-          `redirect=${encodeURIComponent(redirectUrl)}&` +
-          `state=cipshopee_retry_${Date.now()}&` +
-          `region=BR&` +
-          `is_auth_shop=true&` +
-          `login_type=seller&` +
-          `auth_type=direct`;
-        
-        console.log('Tentando nova URL de autorização corrigida:', correctAuthUrl);
-
-        // Criar notificação de erro
-        await storage.createNotification({
-          userId: (req.user as any).claims.sub,
-          title: 'Erro na autorização - Tentando corrigir automaticamente',
-          message: 'Estamos redirecionando você para uma URL de autenticação corrigida. Por favor, siga as instruções na tela.',
-          type: 'warning',
-          isRead: false,
-          createdAt: new Date()
-        });
-
-        // Redirecionar para a URL corrigida
-        return res.redirect(correctAuthUrl);
-      }
-
-      // Criar notificação de erro para outros tipos de erro
+      // Criar notificação de erro
       try {
         await storage.createNotification({
           userId: (req.user as any).claims.sub,
@@ -254,22 +169,21 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     console.log(`Código recebido: ${code}`);
     console.log(`ID da loja: ${shop_id}`);
 
-    // Criar cliente da API
-    const shopeeClient = createClient();
-
-    // Configurar headers específicos para BR
-    const headers = {
-      'X-Region': 'BR',
-      'X-Request-ID': crypto.randomUUID()
+    // Configuração da integração Shopee
+    const config = {
+      partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
+      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
+      redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
+      region: 'BR'  // Configurado explicitamente para Brasil
     };
 
-    // Adicionar headers à requisição
-    shopeeClient.setRequestHeaders(headers);
+    // Importar o método de obtenção de tokens
+    const { getAccessToken } = await import('../shopee/auth');
 
     console.log('Iniciando troca de código por tokens...');
 
-    // Trocar o código por tokens de acesso
-    const tokens = await shopeeClient.connect(code as string, shop_id as string);
+    // Obter tokens diretamente usando o método de autenticação renovado
+    const tokens = await getAccessToken(config, code as string, shop_id as string);
 
     console.log('Tokens obtidos com sucesso!');
 
