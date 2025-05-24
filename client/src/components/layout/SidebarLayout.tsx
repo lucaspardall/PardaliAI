@@ -98,7 +98,12 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
                 href={item.href}
                 icon={item.icon}
                 label={item.label}
-                isActive={location === item.href}
+                isActive={demoMode 
+                  ? location === item.href 
+                  : (location === item.href || 
+                     (item.id === "dashboard" && location === "/dashboard") ||
+                     location.startsWith(`/${item.id}`) || 
+                     location.startsWith(`/dashboard/${item.id}`))}
               />
             ))}
           </div>
@@ -191,7 +196,12 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
                 href={item.href}
                 icon={item.icon}
                 label={item.label}
-                isActive={location === item.href}
+                isActive={demoMode 
+                  ? location === item.href 
+                  : (location === item.href || 
+                     (item.id === "dashboard" && location === "/dashboard") ||
+                     location.startsWith(`/${item.id}`) || 
+                     location.startsWith(`/dashboard/${item.id}`))}
               />
             ))}
           </div>
