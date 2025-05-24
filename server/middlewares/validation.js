@@ -1,73 +1,76 @@
 
-// Validações de segurança para inputs
-const validateInput = {
-  // Validar ID do MongoDB
-  mongoId: (value) => {
-    const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
-    return mongoIdRegex.test(value);
-  },
+// Funções de validação para requisições HTTP
 
-  // Validar email
+// Validador de entrada para valores
+export const validateInput = {
+  string: (value) => typeof value === 'string',
+  number: (value) => !isNaN(parseFloat(value)) && isFinite(value),
+  boolean: (value) => typeof value === 'boolean',
+  array: (value) => Array.isArray(value),
+  object: (value) => typeof value === 'object' && value !== null && !Array.isArray(value),
+  date: (value) => value instanceof Date || (typeof value === 'string' && !isNaN(Date.parse(value))),
   email: (value) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(value) && value.length < 255;
-  },
-
-  // Validar string segura (sem scripts)
-  safeString: (value, maxLength = 1000) => {
-    if (typeof value !== 'string') return false;
-    if (value.length > maxLength) return false;
-    
-    // Bloquear tags HTML e scripts
-    const dangerous = /<script|<\/script|javascript:|on\w+=/gi;
-    return !dangerous.test(value);
-  },
-
-  // Validar número
-  number: (value, min = 0, max = Number.MAX_SAFE_INTEGER) => {
-    const num = Number(value);
-    return !isNaN(num) && num >= min && num <= max;
-  },
-
-  // Validar URL
-  url: (value) => {
-    try {
-      const url = new URL(value);
-      return ['http:', 'https:'].includes(url.protocol);
-    } catch {
-      return false;
-    }
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return typeof value === 'string' && re.test(value);
   }
 };
 
-// Middleware para validar body da requisição
-const validateRequest = (rules) => {
+// Middleware de validação de requisições
+export const validateRequest = (schema) => {
   return (req, res, next) => {
     const errors = [];
 
-    for (const [field, rule] of Object.entries(rules)) {
+    // Validar cada campo definido no schema
+    for (const [field, rules] of Object.entries(schema)) {
       const value = req.body[field];
-      
-      // Verificar campo obrigatório
-      if (rule.required && !value) {
-        errors.push(`Campo ${field} é obrigatório`);
+
+      // Verificar se o campo é obrigatório
+      if (rules.required && (value === undefined || value === null || value === '')) {
+        errors.push(`O campo '${field}' é obrigatório`);
         continue;
       }
 
-      // Se não é obrigatório e está vazio, pular validação
-      if (!rule.required && !value) continue;
+      // Se o campo não está presente e não é obrigatório, pular validação
+      if ((value === undefined || value === null || value === '') && !rules.required) {
+        continue;
+      }
 
-      // Aplicar validação específica
-      if (rule.type === 'email' && !validateInput.email(value)) {
-        errors.push(`${field} deve ser um email válido`);
-      } else if (rule.type === 'mongoId' && !validateInput.mongoId(value)) {
-        errors.push(`${field} deve ser um ID válido`);
-      } else if (rule.type === 'string' && !validateInput.safeString(value, rule.maxLength)) {
-        errors.push(`${field} contém caracteres inválidos ou é muito longo`);
-      } else if (rule.type === 'number' && !validateInput.number(value, rule.min, rule.max)) {
-        errors.push(`${field} deve ser um número válido`);
-      } else if (rule.type === 'url' && !validateInput.url(value)) {
-        errors.push(`${field} deve ser uma URL válida`);
+      // Validar tipo do campo
+      if (rules.type) {
+        const typeValidator = validateInput[rules.type];
+        if (typeValidator && !typeValidator(value)) {
+          errors.push(`O campo '${field}' deve ser do tipo '${rules.type}'`);
+        }
+      }
+
+      // Validar comprimento máximo para strings
+      if (rules.type === 'string' && rules.maxLength !== undefined && value.length > rules.maxLength) {
+        errors.push(`O campo '${field}' deve ter no máximo ${rules.maxLength} caracteres`);
+      }
+
+      // Validar comprimento mínimo para strings
+      if (rules.type === 'string' && rules.minLength !== undefined && value.length < rules.minLength) {
+        errors.push(`O campo '${field}' deve ter no mínimo ${rules.minLength} caracteres`);
+      }
+
+      // Validar valor mínimo para números
+      if (rules.type === 'number' && rules.min !== undefined && value < rules.min) {
+        errors.push(`O campo '${field}' deve ser maior ou igual a ${rules.min}`);
+      }
+
+      // Validar valor máximo para números
+      if (rules.type === 'number' && rules.max !== undefined && value > rules.max) {
+        errors.push(`O campo '${field}' deve ser menor ou igual a ${rules.max}`);
+      }
+
+      // Validar enumerações (valores permitidos)
+      if (rules.enum && !rules.enum.includes(value)) {
+        errors.push(`O campo '${field}' deve ser um dos seguintes valores: ${rules.enum.join(', ')}`);
+      }
+
+      // Validar padrão regex
+      if (rules.pattern && !new RegExp(rules.pattern).test(value)) {
+        errors.push(`O campo '${field}' não atende ao padrão requerido`);
       }
     }
 
@@ -79,4 +82,5 @@ const validateRequest = (rules) => {
   };
 };
 
-module.exports = { validateInput, validateRequest };
+// Exportar middleware de validação
+export default { validateRequest, validateInput };

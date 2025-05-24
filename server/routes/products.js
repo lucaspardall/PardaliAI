@@ -1,8 +1,10 @@
 
-const express = require('express');
+import express from 'express';
+import { validateRequest, validateInput } from '../middlewares/validation.js';
+import { isAuthenticated } from '../replitAuth.js';
+import { storage } from '../storage.js';
+
 const router = express.Router();
-const { validateRequest, validateInput } = require('../middlewares/validation');
-const { isAuthenticated } = require('../replitAuth');
 
 // Validação para criação de produto
 const createProductValidation = validateRequest({
@@ -25,9 +27,6 @@ router.post('/', isAuthenticated, createProductValidation, async (req, res) => {
     
     // Obter dados do produto do corpo da requisição
     const { name, description, price, stock, category, images } = req.body;
-    
-    // Importar storage para interagir com o banco de dados
-    const storage = require('../storage');
     
     // Verificar se o usuário tem acesso à loja
     const store = await storage.getStoreById(parseInt(storeId));
@@ -76,9 +75,6 @@ router.put('/:id', isAuthenticated, updateProductValidation, async (req, res) =>
       return res.status(400).json({ error: 'ID do produto inválido' });
     }
     
-    // Obter storage para interagir com banco de dados
-    const storage = require('../storage');
-    
     // Buscar produto existente
     const existingProduct = await storage.getProductById(productId);
     if (!existingProduct) {
@@ -121,9 +117,6 @@ router.get('/:id', isAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'ID do produto inválido' });
     }
     
-    // Obter storage para interagir com banco de dados
-    const storage = require('../storage');
-    
     // Buscar produto
     const product = await storage.getProductById(productId);
     if (!product) {
@@ -151,9 +144,6 @@ router.get('/', isAuthenticated, async (req, res) => {
     if (!storeId || !validateInput.number(storeId)) {
       return res.status(400).json({ error: 'ID da loja inválido ou não fornecido' });
     }
-    
-    // Obter storage para interagir com banco de dados
-    const storage = require('../storage');
     
     // Verificar se o usuário tem acesso à loja
     const store = await storage.getStoreById(parseInt(storeId));
@@ -183,9 +173,6 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'ID do produto inválido' });
     }
     
-    // Obter storage para interagir com banco de dados
-    const storage = require('../storage');
-    
     // Buscar produto existente
     const existingProduct = await storage.getProductById(productId);
     if (!existingProduct) {
@@ -207,4 +194,4 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
