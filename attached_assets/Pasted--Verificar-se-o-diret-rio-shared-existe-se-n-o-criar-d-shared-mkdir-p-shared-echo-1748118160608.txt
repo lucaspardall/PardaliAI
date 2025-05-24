@@ -1,0 +1,162 @@
+# Verificar se o diretório shared existe, se não criar
+[ ! -d "shared" ] && mkdir -p shared && echo "📁 Diretório shared criado"
+
+# Criar schema.ts apenas se não existir
+if [ ! -f "shared/schema.ts" ]; then
+  cat > shared/schema.ts << 'EOF'
+import { pgTable, serial, text, timestamp, boolean, integer, real, json, unique, index, pgEnum } from "drizzle-orm/pg-core";
+
+// Enums
+export const planEnum = pgEnum('plan', ['free', 'starter', 'pro', 'enterprise']);
+export const planStatusEnum = pgEnum('plan_status', ['active', 'canceled', 'past_due']);
+export const productStatusEnum = pgEnum('product_status', ['active', 'inactive', 'deleted']);
+export const optimizationStatusEnum = pgEnum('optimization_status', ['pending', 'applied', 'ignored']);
+export const aiRequestStatusEnum = pgEnum('ai_request_status', ['pending', 'processing', 'completed', 'failed']);
+export const notificationTypeEnum = pgEnum('notification_type', ['info', 'success', 'warning', 'error']);
+
+// Users table
+export const users = pgTable('users', {
+  id: text('id').primaryKey(),
+  email: text('email').unique(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  profileImageUrl: text('profile_image_url'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  plan: planEnum('plan').default('free').notNull(),
+  planStatus: planStatusEnum('plan_status').default('active').notNull(),
+  planExpiresAt: timestamp('plan_expires_at'),
+  aiCreditsLeft: integer('ai_credits_left').default(10).notNull(),
+  storeLimit: integer('store_limit').default(1).notNull(),
+});
+
+// Shopee Stores table
+export const shopeeStores = pgTable('shopee_stores', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  shopId: text('shop_id').unique().notNull(),
+  shopName: text('shop_name').notNull(),
+  shopLogo: text('shop_logo'),
+  shopRegion: text('shop_region').default('BR').notNull(),
+  accessToken: text('access_token').notNull(),
+  refreshToken: text('refresh_token').notNull(),
+  tokenExpiresAt: timestamp('token_expires_at').notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  lastSyncAt: timestamp('last_sync_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  totalProducts: integer('total_products').default(0),
+  averageCtr: real('average_ctr'),
+  monthlyRevenue: real('monthly_revenue'),
+});
+
+// Products table
+export const products = pgTable('products', {
+  id: serial('id').primaryKey(),
+  storeId: integer('store_id').references(() => shopeeStores.id, { onDelete: 'cascade' }).notNull(),
+  productId: text('product_id').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  price: real('price').notNull(),
+  stock: integer('stock').notNull(),
+  images: json('images').$type<string[]>().default([]).notNull(),
+  category: text('category'),
+  status: productStatusEnum('status').default('active').notNull(),
+  ctr: real('ctr'),
+  views: integer('views'),
+  sales: integer('sales'),
+  revenue: real('revenue'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  lastSyncAt: timestamp('last_sync_at'),
+}, (table) => ({
+  uniqueStoreProduct: unique().on(table.storeId, table.productId),
+}));
+
+// Product Optimizations table
+export const productOptimizations = pgTable('product_optimizations', {
+  id: serial('id').primaryKey(),
+  productId: integer('product_id').references(() => products.id, { onDelete: 'cascade' }).notNull(),
+  originalTitle: text('original_title'),
+  originalDesc: text('original_desc'),
+  originalKeywords: text('original_keywords'),
+  suggestedTitle: text('suggested_title'),
+  suggestedDesc: text('suggested_desc'),
+  suggestedKeywords: text('suggested_keywords'),
+  reasoningNotes: text('reasoning_notes'),
+  status: optimizationStatusEnum('status').default('pending').notNull(),
+  appliedAt: timestamp('applied_at'),
+  feedbackRating: integer('feedback_rating'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  aiRequestId: integer('ai_request_id'),
+});
+
+// Store Metrics table
+export const storeMetrics = pgTable('store_metrics', {
+  id: serial('id').primaryKey(),
+  storeId: integer('store_id').references(() => shopeeStores.id, { onDelete: 'cascade' }).notNull(),
+  date: timestamp('date').notNull(),
+  totalViews: integer('total_views'),
+  totalSales: integer('total_sales'),
+  totalRevenue: real('total_revenue'),
+  averageCtr: real('average_ctr'),
+  productCount: integer('product_count'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  uniqueStoreDate: unique().on(table.storeId, table.date),
+}));
+
+// AI Requests table
+export const aiRequests = pgTable('ai_requests', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  type: text('type').notNull(),
+  input: json('input').notNull(),
+  output: json('output'),
+  status: aiRequestStatusEnum('status').default('pending').notNull(),
+  processingTime: integer('processing_time'),
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
+});
+
+// Notifications table
+export const notifications = pgTable('notifications', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  type: notificationTypeEnum('type').notNull(),
+  isRead: boolean('is_read').default(false).notNull(),
+  actionUrl: text('action_url'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Export types
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
+export type UpsertUser = InsertUser;
+
+export type ShopeeStore = typeof shopeeStores.$inferSelect;
+export type InsertShopeeStore = typeof shopeeStores.$inferInsert;
+
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = typeof products.$inferInsert;
+
+export type ProductOptimization = typeof productOptimizations.$inferSelect;
+export type InsertProductOptimization = typeof productOptimizations.$inferInsert;
+
+export type StoreMetric = typeof storeMetrics.$inferSelect;
+export type InsertStoreMetric = typeof storeMetrics.$inferInsert;
+
+export type AiRequest = typeof aiRequests.$inferSelect;
+export type InsertAiRequest = typeof aiRequests.$inferInsert;
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+
+// Validation schemas
+export { insertShopeeStoreSchema, insertProductSchema } from './validation';
+EOF
+  echo "✅ Arquivo shared/schema.ts criado"
+else
