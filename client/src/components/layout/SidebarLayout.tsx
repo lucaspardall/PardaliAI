@@ -67,14 +67,13 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
     { href: `${basePath}`, icon: "ri-dashboard-line", label: "Dashboard" },
     { href: `${basePath}/store`, icon: "ri-store-2-line", label: "Minha Loja" },
     { href: `${basePath}/products`, icon: "ri-shopping-bag-3-line", label: "Produtos" },
-    { href: demoMode ? `${basePath}/stores` : "/dashboard/store/connect", icon: "ri-store-2-line", label: "Minha Loja" },
-    { href: demoMode ? `${basePath}/optimizations` : `${basePath}/ai-optimize`, icon: "ri-ai-generate", label: "Otimizações" },
+    { href: `${basePath}/optimizations`, icon: "ri-ai-generate", label: "Otimizações" },
     { href: `${basePath}/reports`, icon: "ri-line-chart-line", label: "Relatórios" },
   ];
 
   const settingsItems = [
-    { href: demoMode ? `${basePath}/profile` : "/dashboard/profile", icon: "ri-user-settings-line", label: "Perfil" },
-    { href: demoMode ? `${basePath}/subscription` : "/dashboard/subscription", icon: "ri-vip-crown-line", label: "Assinatura" },
+    { href: `${basePath}/profile`, icon: "ri-user-settings-line", label: "Perfil" },
+    { href: `${basePath}/subscription`, icon: "ri-vip-crown-line", label: "Assinatura" },
   ];
 
   // Close mobile sidebar on route change
