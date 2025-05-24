@@ -31,7 +31,7 @@ export default function FeaturesSection() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <div className="bg-primary/10 dark:bg-primary/20 p-3 rounded-lg w-12 h-12 flex items-center justify-center mb-4">
-                <i className={`${feature.icon} text-primary text-2xl`} style={{ color: 'var(--primary)' }}></i>
+                <i className={`${feature.icon} text-2xl`} style={{ color: '#FF4500' }}></i>
               </div>
               <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
               <p className="text-muted-foreground">{feature.description}</p>
