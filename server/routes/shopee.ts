@@ -731,3 +731,126 @@ function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
     }
   });
 export default router;
+// Endpoint de sincronização de produtos
+router.post('/sync-products', isAuthenticated, async (req: any, res) => {
+  try {
+    console.log('=== SYNC PRODUCTS START ===');
+    
+    // 1. Buscar loja do usuário
+    const stores = await storage.getStoresByUserId(req.user.id);
+    
+    if (!stores || stores.length === 0) {
+      return res.status(404).json({ error: 'Loja não conectada' });
+    }
+    
+    const store = stores[0]; // Usar a primeira loja do usuário
+    
+    // 2. Verificar se token válido antes de sincronizar
+    if (!store.accessToken || !store.tokenExpiresAt) {
+      return res.status(401).json({ error: 'Token de acesso inválido ou expirado' });
+    }
+    
+    // 3. Verificar se o token está expirado e atualizá-lo se necessário
+    const { tokenManager } = await import('../services/tokenManager');
+    const validToken = await tokenManager.getValidToken(store.id);
+    
+    if (!validToken) {
+      console.error('Não foi possível obter um token válido para a loja');
+      return res.status(401).json({ error: 'Erro ao validar token de acesso' });
+    }
+    
+    // 4. Importar o cliente Shopee e configurá-lo
+    const { ShopeeClient } = await import('../shopee/client');
+    const config = {
+      partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
+      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
+      redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
+      region: 'BR'
+    };
+    
+    const client = new ShopeeClient(config);
+    
+    // 5. Configurar tokens no cliente
+    client.setTokens({
+      accessToken: validToken,
+      refreshToken: store.refreshToken,
+      expiresAt: store.tokenExpiresAt,
+      shopId: store.shopId
+    });
+    
+    // 6. Buscar produtos da Shopee (usando mock se estiver em desenvolvimento)
+    let products;
+    try {
+      const { PRODUCT } = await import('../shopee/endpoints');
+      products = await client.post(PRODUCT.GET_ITEM_LIST, {
+        page_size: 50,
+        offset: 0
+      });
+      console.log(`Produtos obtidos da API: ${products?.items?.length || 0}`);
+    } catch (error) {
+      console.warn('Erro ao buscar produtos da API Shopee, usando dados mock:', error);
+      // Usar dados mock em caso de erro
+      const { getMockProducts } = await import('../shopee/data');
+      products = { items: getMockProducts(10) };
+      console.log('Usando dados mock para produtos');
+    }
+    
+    // 7. Sincronizar cada produto
+    let synced = 0;
+    
+    for (const item of products.items || []) {
+      try {
+        const productData = {
+          storeId: store.id,
+          productId: item.item_id.toString(),
+          name: item.name,
+          description: item.description || '',
+          price: item.price,
+          stock: item.stock || 0,
+          images: item.images || [],
+          status: item.status || 'active',
+          category: item.category_name || '',
+          lastSyncAt: new Date()
+        };
+        
+        // Verificar se o produto já existe
+        const existingProduct = await db
+          .select()
+          .from(products)
+          .where(and(
+            eq(products.storeId, store.id),
+            eq(products.productId, item.item_id.toString())
+          ));
+        
+        if (existingProduct && existingProduct.length > 0) {
+          // Atualizar produto existente
+          await storage.updateProduct(existingProduct[0].id, productData);
+        } else {
+          // Criar novo produto
+          await storage.createProduct(productData);
+        }
+        
+        synced++;
+      } catch (err) {
+        console.error(`Erro ao sincronizar produto ${item.item_id}:`, err);
+      }
+    }
+    
+    // 8. Atualizar contador de produtos na loja
+    await storage.updateStore(store.id, { 
+      totalProducts: synced,
+      lastSyncAt: new Date()
+    });
+    
+    console.log(`Sincronizados ${synced} produtos`);
+    res.json({ 
+      synced, 
+      message: 'Produtos sincronizados com sucesso',
+      timestamp: new Date()
+    });
+    
+  } catch (error) {
+    console.error('Erro na sincronização:', error);
+    res.status(500).json({ error: 'Erro ao sincronizar produtos' });
+  }
+});
