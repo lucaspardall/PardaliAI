@@ -214,7 +214,7 @@ export class ShopeeClient {
    */
   private async saveTokensToStorage(tokens: ShopeeAuthTokens): Promise<void> {
     try {
-      const const store = await storage.getStoreByShopId(tokens.shopId);
+      const store = await storage.getStoreByShopId(tokens.shopId);
 
       if (store) {
         await storage.updateStore(store.id, {

@@ -1,6 +1,6 @@
 
 // Configurações específicas de produção
-module.exports = {
+export default {
   // Segurança
   security: {
     // Forçar HTTPS
