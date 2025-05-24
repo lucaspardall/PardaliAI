@@ -50,7 +50,9 @@ router.get('/authorize', isAuthenticated, (req: any, res) => {
     console.log('[Shopee Auth] INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE');
 
     const userId = req.user.claims.sub;
-    console.log(`Usuário autenticado claims: ${JSON.stringify(req.user.claims)}`);
+    // Log only non-sensitive user information
+    console.log(`Usuário autenticado: ID=${userId}, email=${req.user.claims.email || 'N/A'}`);
+    // Do not log tokens or complete authentication objects
 
     console.log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
 
