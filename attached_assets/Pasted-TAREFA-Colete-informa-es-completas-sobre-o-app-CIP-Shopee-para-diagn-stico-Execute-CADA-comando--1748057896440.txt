@@ -1,0 +1,112 @@
+TAREFA: Colete informações completas sobre o app CIP Shopee para diagnóstico.
+
+Execute CADA comando abaixo e compile os resultados em um relatório organizado.
+
+FASE 1 - ESTRUTURA DO PROJETO:
+
+1. Liste a estrutura de arquivos:
+   - Execute: find . -type f -name "*.js" -o -name "*.jsx" -o -name "*.json" -o -name "*.md" | grep -v node_modules | sort
+   - Mostre a árvore de diretórios principal
+
+2. Mostre o package.json completo
+
+3. Liste as variáveis de ambiente necessárias:
+   - Mostre o conteúdo de .env.example
+   - Execute: grep -r "process.env" --include="*.js" --include="*.jsx" | grep -v node_modules | cut -d: -f2 | sort | uniq
+
+FASE 2 - ARQUIVOS PRINCIPAIS (mostre o conteúdo COMPLETO):
+
+Frontend:
+- client/App.jsx
+- client/components/Sidebar.jsx
+- client/pages/Dashboard.jsx
+- client/pages/Products.jsx
+
+Backend:
+- server/index.js
+- server/routes/auth.js
+- server/routes/shopee.js
+- server/routes/products.js
+- server/db/prisma.js
+
+Configurações:
+- prisma/schema.prisma
+- .gitignore
+- README.md (se existir)
+
+FASE 3 - DIAGNÓSTICO DE PROBLEMAS:
+
+1. Erros do servidor:
+   - Execute: npm run dev 2>&1 | head -50
+   - Capture os primeiros erros que aparecem
+
+2. Verificar dependências faltando:
+   - Execute: npm ls 2>&1 | grep "npm ERR"
+   
+3. Verificar rotas da API:
+   - Liste todos os endpoints em server/routes/*.js
+   - Use: grep -h "router\." server/routes/*.js | grep -E "(get|post|put|delete|patch)"
+
+4. Verificar integração Shopee:
+   - Mostre qualquer arquivo em server/shopee/*
+   - Procure por funções de autenticação OAuth
+
+FASE 4 - ESTADO ATUAL:
+
+1. O servidor inicia sem erros? (sim/não)
+2. A página inicial carrega? (sim/não)
+3. O login funciona? (sim/não)
+4. Existe modo demo? (sim/não)
+5. A integração com Shopee conecta? (sim/não)
+
+FASE 5 - CONFIGURAÇÕES ESPECIAIS:
+
+1. Existe algum arquivo de configuração customizado?
+   - server/config/*
+   - client/config/*
+
+2. Middlewares de segurança implementados:
+   - Liste os middlewares em server/index.js
+
+3. Serviços implementados:
+   - Liste arquivos em server/services/*
+
+FORMATO DO RELATÓRIO:
+
+Organize as informações assim:
+
+## RELATÓRIO DIAGNÓSTICO - CIP SHOPEE
+
+### 1. ESTRUTURA DO PROJETO
+[cole a estrutura de arquivos]
+
+### 2. DEPENDÊNCIAS
+[cole o package.json]
+
+### 3. ARQUIVOS PRINCIPAIS
+[cole o conteúdo de cada arquivo solicitado]
+
+### 4. PROBLEMAS ENCONTRADOS
+- Erro 1: [descrição]
+- Erro 2: [descrição]
+...
+
+### 5. ROTAS DA API
+- GET /api/...
+- POST /api/...
+...
+
+### 6. ESTADO ATUAL
+- Servidor inicia: [sim/não]
+- Frontend carrega: [sim/não]
+...
+
+### 7. OBSERVAÇÕES IMPORTANTES
+[qualquer coisa relevante que encontrou]
+
+---
+
+IMPORTANTE: 
+- Se algum arquivo não existir, indique "ARQUIVO NÃO ENCONTRADO"
+- Se algum comando falhar, mostre o erro
+- Inclua TUDO que parecer relevante para debugging

@@ -35,18 +35,31 @@ const corsOptions = {
       'https://' + process.env.REPL_SLUG + '.repl.co'
     ].filter(Boolean);
 
-    // Em desenvolvimento, permitir localhost
+    // Em desenvolvimento, permitir localhost e domínios do Replit
     if (process.env.NODE_ENV === 'development') {
       allowedOrigins.push('http://localhost:3000');
       allowedOrigins.push('http://localhost:5173');
+      // Adicionar padrões de Replit para desenvolvimento
+      allowedOrigins.push(/.*\.replit\.dev$/);
+      allowedOrigins.push(/.*-.*\.preview\.app\.github\.dev$/);
     }
 
-    // Permitir requisições sem origin (ex: Postman) apenas em dev
-    if (!origin && process.env.NODE_ENV === 'development') {
+    // Permitir requisições sem origin (ex: Postman) ou em desenvolvimento
+    if (!origin || process.env.NODE_ENV === 'development') {
       return callback(null, true);
     }
 
-    if (allowedOrigins.includes(origin)) {
+    // Verificar se o origin corresponde a algum dos padrões permitidos
+    const originIsAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return allowedOrigin === origin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+
+    if (originIsAllowed) {
       callback(null, true);
     } else {
       callback(new Error('Não permitido pelo CORS'));
