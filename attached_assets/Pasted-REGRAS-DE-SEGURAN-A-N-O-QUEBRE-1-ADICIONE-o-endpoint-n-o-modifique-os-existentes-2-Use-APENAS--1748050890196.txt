@@ -1,0 +1,67 @@
+REGRAS DE SEGURANÇA - NÃO QUEBRE:
+1. ADICIONE o endpoint, não modifique os existentes
+2. Use APENAS serviços que já existem
+
+No arquivo server/routes/shopee.js, ADICIONE este endpoint no final, antes do module.exports:
+
+// Endpoint de sincronização de produtos
+router.post('/sync-products', requireAuth, async (req, res) => {
+  try {
+    console.log('=== SYNC PRODUCTS START ===');
+    
+    // 1. Buscar loja do usuário
+    const store = await prisma.shopeeStore.findFirst({
+      where: { userId: req.user.id }
+    });
+    
+    if (!store) {
+      return res.status(404).json({ error: 'Loja não conectada' });
+    }
+    
+    // 2. Verificar se existe shopeeService e método getProducts
+    if (!shopeeService || typeof shopeeService.getProducts !== 'function') {
+      console.log('Método getProducts não encontrado, usando dados mock');
+      return res.json({ synced: 0, message: 'Sincronização simulada' });
+    }
+    
+    // 3. Buscar produtos da Shopee
+    const products = await shopeeService.getProducts(store.shopId, store.accessToken);
+    
+    // 4. Sincronizar cada produto
+    let synced = 0;
+    for (const product of products.items || []) {
+      await prisma.product.upsert({
+        where: {
+          shopId_productId: {
+            shopId: store.id,
+            productId: product.item_id.toString()
+          }
+        },
+        update: {
+          name: product.name,
+          price: product.price,
+          stock: product.stock,
+          images: product.images || []
+        },
+        create: {
+          shopId: store.id,
+          productId: product.item_id.toString(),
+          name: product.name,
+          price: product.price,
+          stock: product.stock,
+          images: product.images || []
+        }
+      });
+      synced++;
+    }
+    
+    console.log(`Sincronizados ${synced} produtos`);
+    res.json({ synced, message: 'Produtos sincronizados com sucesso' });
+    
+  } catch (error) {
+    console.error('Erro na sincronização:', error);
+    res.status(500).json({ error: 'Erro ao sincronizar produtos' });
+  }
+});
+
+NÃO MODIFIQUE outros endpoints. APENAS adicione este novo.
