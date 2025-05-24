@@ -4,10 +4,47 @@ import { setupVite, serveStatic, log } from "./vite";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import mongoSanitize from "express-mongo-sanitize";
+import cors from 'cors';
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Configuração segura de CORS
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Em produção no Replit
+    const allowedOrigins = [
+      process.env.REPLIT_APP_URL,
+      'https://' + process.env.REPL_SLUG + '.' + process.env.REPL_OWNER + '.repl.co',
+      'https://' + process.env.REPL_SLUG + '.repl.co'
+    ].filter(Boolean);
+
+    // Em desenvolvimento, permitir localhost
+    if (process.env.NODE_ENV === 'development') {
+      allowedOrigins.push('http://localhost:3000');
+      allowedOrigins.push('http://localhost:5173');
+    }
+
+    // Permitir requisições sem origin (ex: Postman) apenas em dev
+    if (!origin && process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Não permitido pelo CORS'));
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['X-Total-Count']
+};
+
+app.use(cors(corsOptions));
 
 // Configurações de segurança
 // Helmet para headers de segurança
