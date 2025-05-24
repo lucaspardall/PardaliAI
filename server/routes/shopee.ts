@@ -1,7 +1,6 @@
 /**
  * Rotas para autenticação e integração com a API da Shopee
  */
-import type { Router } from "express";
 import express from "express";
 import shopeeSecurityValidator from '../shopee/security';
 import { Request, Response } from 'express';
@@ -9,7 +8,7 @@ import crypto from 'crypto';
 import { isAuthenticated } from '../replitAuth';
 import fs from 'fs';
 
-const router = Router();
+const router = express.Router();
 
 /**
  * Inicia o fluxo de autenticação OAuth com a Shopee
