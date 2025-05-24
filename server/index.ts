@@ -6,9 +6,24 @@ import rateLimit from "express-rate-limit";
 import mongoSanitize from "express-mongo-sanitize";
 import cors from 'cors';
 
+// Importar configurações de produção se estiver em ambiente de produção
+const productionConfig = process.env.NODE_ENV === 'production' 
+  ? require('./config/production') 
+  : {};
+
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Forçar HTTPS em produção
+if (process.env.NODE_ENV === 'production' && productionConfig.security?.forceHttps) {
+  app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(`https://${req.headers.host}${req.url}`);
+    }
+    return next();
+  });
+}
 
 // Configuração segura de CORS
 const corsOptions = {
@@ -41,7 +56,11 @@ const corsOptions = {
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['X-Total-Count']
+  exposedHeaders: ['X-Total-Count'],
+  // Aplicar configurações de cookie seguro em produção
+  ...(process.env.NODE_ENV === 'production' && productionConfig.security?.cookieOptions 
+      ? { cookieOptions: productionConfig.security.cookieOptions } 
+      : {})
 };
 
 app.use(cors(corsOptions));
@@ -61,18 +80,28 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// Rate limiting global
+// Aplicar headers adicionais de segurança em produção
+if (process.env.NODE_ENV === 'production' && productionConfig.security?.headers) {
+  app.use((req, res, next) => {
+    Object.entries(productionConfig.security.headers).forEach(([header, value]) => {
+      res.setHeader(header, value);
+    });
+    next();
+  });
+}
+
+// Rate limiting global - usando configurações de produção se disponíveis
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // limite de 100 requests
+  windowMs: productionConfig.rateLimits?.global?.windowMs || 15 * 60 * 1000, // 15 minutos
+  max: productionConfig.rateLimits?.global?.max || 100, // limite de requests
   message: 'Muitas requisições, tente novamente mais tarde.'
 });
 app.use('/api/', globalLimiter);
 
-// Rate limiting estrito para auth
+// Rate limiting estrito para auth - usando configurações de produção se disponíveis
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5, // apenas 5 tentativas de login
+  windowMs: productionConfig.rateLimits?.auth?.windowMs || 15 * 60 * 1000,
+  max: productionConfig.rateLimits?.auth?.max || 5, // tentativas de login
   skipSuccessfulRequests: true
 });
 app.use('/api/auth/login', authLimiter);
@@ -98,16 +127,38 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
+      // Em produção, use configurações de log restritas
+      if (process.env.NODE_ENV === 'production') {
+        if (productionConfig.logging?.level === 'error') {
+          // Log apenas em caso de erro
+          if (res.statusCode >= 400) {
+            let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+            
+            // Não incluir corpo da resposta em produção se sanitize estiver ativo
+            if (!productionConfig.logging?.sanitize && capturedJsonResponse) {
+              logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+            }
+            
+            if (logLine.length > 80) {
+              logLine = logLine.slice(0, 79) + "…";
+            }
+            
+            log(logLine);
+          }
+        }
+      } else {
+        // Em desenvolvimento, manter logs completos
+        let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+        if (capturedJsonResponse) {
+          logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        }
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
+        if (logLine.length > 80) {
+          logLine = logLine.slice(0, 79) + "…";
+        }
 
-      log(logLine);
+        log(logLine);
+      }
     }
   });
 

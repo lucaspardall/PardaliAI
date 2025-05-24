@@ -76,3 +76,77 @@ class SecurityLogger {
 }
 
 module.exports = new SecurityLogger();
+/**
+ * Utilitário para log de eventos de segurança
+ * Garante que informações sensíveis não sejam logadas em produção
+ */
+
+const { log } = require('../vite');
+
+/**
+ * Loga eventos de segurança de forma segura
+ * @param {string} event - O evento de segurança
+ * @param {Object} data - Dados relacionados ao evento
+ * @param {boolean} isSensitive - Se os dados contêm informações sensíveis
+ */
+function securityLog(event, data = {}, isSensitive = false) {
+  // Verifica se está em produção
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Em produção, não registra dados sensíveis
+  if (isProduction && isSensitive) {
+    log(`[SECURITY] ${event} - Dados sensíveis omitidos`, 'security');
+    return;
+  }
+  
+  // Em desenvolvimento ou para dados não sensíveis
+  try {
+    const sanitizedData = isProduction 
+      ? sanitizeData(data)
+      : data;
+      
+    log(`[SECURITY] ${event} - ${JSON.stringify(sanitizedData)}`, 'security');
+  } catch (error) {
+    log(`[SECURITY] ${event} - Erro ao registrar log: ${error.message}`, 'security');
+  }
+}
+
+/**
+ * Sanitiza dados para remover informações sensíveis
+ * @param {Object} data - Dados a serem sanitizados
+ * @returns {Object} Dados sanitizados
+ */
+function sanitizeData(data) {
+  const sensitiveFields = [
+    'password', 'senha', 'token', 'secret', 'api_key', 'apiKey', 
+    'access_token', 'accessToken', 'refresh_token', 'refreshToken',
+    'authorization', 'sessionId', 'session_id', 'cookie'
+  ];
+  
+  // Clone o objeto para não modificar o original
+  const sanitized = JSON.parse(JSON.stringify(data));
+  
+  // Função recursiva para sanitizar objetos aninhados
+  function sanitizeRecursive(obj) {
+    if (!obj || typeof obj !== 'object') return;
+    
+    Object.keys(obj).forEach(key => {
+      // Verifica se é um campo sensível
+      if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
+        obj[key] = '[REDACTED]';
+      } 
+      // Verifica recursivamente objetos aninhados
+      else if (typeof obj[key] === 'object' && obj[key] !== null) {
+        sanitizeRecursive(obj[key]);
+      }
+    });
+  }
+  
+  sanitizeRecursive(sanitized);
+  return sanitized;
+}
+
+module.exports = {
+  securityLog,
+  sanitizeData
+};
