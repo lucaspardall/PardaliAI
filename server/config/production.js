@@ -1,39 +1,37 @@
-
-// Configurações específicas de produção
-export default {
-  // Segurança
+module.exports = {
   security: {
-    // Forçar HTTPS
     forceHttps: true,
-    
-    // Cookies seguros
-    cookieOptions: {
-      secure: true,
-      httpOnly: true,
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000 // 24 horas
-    },
-    
-    // Headers adicionais
     headers: {
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-      'Referrer-Policy': 'strict-origin-when-cross-origin'
+      'X-XSS-Protection': '1; mode=block'
+    },
+    cookieOptions: {
+      secure: true,
+      httpOnly: true,
+      sameSite: 'strict'
+    },
+    cors: {
+      allowedOrigins: [
+        'https://*.replit.app',
+        'https://*.repl.co',
+        'https://*.preview.app.github.dev'
+      ]
     }
   },
-  
-  // Logs
-  logging: {
-    level: 'error', // Apenas erros em produção
-    sanitize: true
-  },
-  
-  // Rate limits mais restritivos
   rateLimits: {
-    global: { windowMs: 15 * 60 * 1000, max: 50 },
-    auth: { windowMs: 15 * 60 * 1000, max: 3 },
-    api: { windowMs: 1 * 60 * 1000, max: 20 }
+    global: {
+      windowMs: 15 * 60 * 1000, // 15 minutos
+      max: 300 // limite de requests
+    },
+    auth: {
+      windowMs: 15 * 60 * 1000, // 15 minutos
+      max: 10 // tentativas de login
+    }
+  },
+  logging: {
+    level: 'error',
+    sanitize: true
   }
 };

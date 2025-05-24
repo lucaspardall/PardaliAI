@@ -40,11 +40,25 @@ if (process.env.NODE_ENV === 'production' && productionConfig.security?.forceHtt
 const corsOptions = {
   origin: function (origin, callback) {
     // Em produção no Replit
-    const allowedOrigins = [
+    let allowedOrigins = [
       process.env.REPLIT_APP_URL,
       'https://' + process.env.REPL_SLUG + '.' + process.env.REPL_OWNER + '.repl.co',
       'https://' + process.env.REPL_SLUG + '.repl.co'
     ].filter(Boolean);
+
+    // Adicionar padrões permitidos da configuração de produção
+    if (process.env.NODE_ENV === 'production' && productionConfig.security?.cors?.allowedOrigins) {
+      const corsPatterns = productionConfig.security.cors.allowedOrigins;
+      corsPatterns.forEach(pattern => {
+        if (pattern.includes('*')) {
+          // Converter wildcard para regex
+          const regexPattern = pattern.replace(/\./g, '\\.').replace(/\*/g, '.*');
+          allowedOrigins.push(new RegExp(regexPattern));
+        } else {
+          allowedOrigins.push(pattern);
+        }
+      });
+    }
 
     // Em desenvolvimento, permitir localhost e domínios do Replit
     if (process.env.NODE_ENV === 'development') {
@@ -57,6 +71,11 @@ const corsOptions = {
 
     // Permitir requisições sem origin (ex: Postman) ou em desenvolvimento
     if (!origin || process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+
+    // Permitir todas as origens em produção temporariamente para debug
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_ALL_ORIGINS === 'true') {
       return callback(null, true);
     }
 
@@ -73,6 +92,7 @@ const corsOptions = {
     if (originIsAllowed) {
       callback(null, true);
     } else {
+      console.log(`CORS bloqueou acesso de origem: ${origin}`);
       callback(new Error('Não permitido pelo CORS'));
     }
   },
