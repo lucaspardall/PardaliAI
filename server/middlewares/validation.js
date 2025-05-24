@@ -1,0 +1,82 @@
+
+// Validações de segurança para inputs
+const validateInput = {
+  // Validar ID do MongoDB
+  mongoId: (value) => {
+    const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
+    return mongoIdRegex.test(value);
+  },
+
+  // Validar email
+  email: (value) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(value) && value.length < 255;
+  },
+
+  // Validar string segura (sem scripts)
+  safeString: (value, maxLength = 1000) => {
+    if (typeof value !== 'string') return false;
+    if (value.length > maxLength) return false;
+    
+    // Bloquear tags HTML e scripts
+    const dangerous = /<script|<\/script|javascript:|on\w+=/gi;
+    return !dangerous.test(value);
+  },
+
+  // Validar número
+  number: (value, min = 0, max = Number.MAX_SAFE_INTEGER) => {
+    const num = Number(value);
+    return !isNaN(num) && num >= min && num <= max;
+  },
+
+  // Validar URL
+  url: (value) => {
+    try {
+      const url = new URL(value);
+      return ['http:', 'https:'].includes(url.protocol);
+    } catch {
+      return false;
+    }
+  }
+};
+
+// Middleware para validar body da requisição
+const validateRequest = (rules) => {
+  return (req, res, next) => {
+    const errors = [];
+
+    for (const [field, rule] of Object.entries(rules)) {
+      const value = req.body[field];
+      
+      // Verificar campo obrigatório
+      if (rule.required && !value) {
+        errors.push(`Campo ${field} é obrigatório`);
+        continue;
+      }
+
+      // Se não é obrigatório e está vazio, pular validação
+      if (!rule.required && !value) continue;
+
+      // Aplicar validação específica
+      if (rule.type === 'email' && !validateInput.email(value)) {
+        errors.push(`${field} deve ser um email válido`);
+      } else if (rule.type === 'mongoId' && !validateInput.mongoId(value)) {
+        errors.push(`${field} deve ser um ID válido`);
+      } else if (rule.type === 'string' && !validateInput.safeString(value, rule.maxLength)) {
+        errors.push(`${field} contém caracteres inválidos ou é muito longo`);
+      } else if (rule.type === 'number' && !validateInput.number(value, rule.min, rule.max)) {
+        errors.push(`${field} deve ser um número válido`);
+      } else if (rule.type === 'url' && !validateInput.url(value)) {
+        errors.push(`${field} deve ser uma URL válida`);
+      }
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    next();
+  };
+};
+
+module.exports = { validateInput, validateRequest };
