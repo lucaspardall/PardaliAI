@@ -1,4 +1,6 @@
-module.exports = {
+
+// Configurações de produção
+const productionConfig = {
   // Configurações de segurança para produção
   security: {
     // Configurações adicionais para CORS
@@ -44,3 +46,5 @@ module.exports = {
     sanitize: true // Não incluir informações sensíveis nos logs
   }
 };
+
+export default productionConfig;

@@ -17,8 +17,9 @@ import { setupRouteValidators } from "./middlewares/security/apply-validators";
 import { setupCsrfProtection } from "./middlewares/security/csrf-protection";
 
 // Importar configurações de produção se estiver em ambiente de produção
+import productionConfigModule from './config/production';
 const productionConfig = process.env.NODE_ENV === 'production' 
-  ? require('./config/production') 
+  ? productionConfigModule 
   : {};
 
 const app = express();
