@@ -15,6 +15,7 @@ import ShopeeConnect from "@/pages/shopee-connect";
 import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import { useAuth } from "./hooks/useAuth";
+import { loadIcons } from "@/lib/utils/icons";
 
 // Importar páginas do modo de demonstração
 import DemoLogin from "@/pages/demo/login";
@@ -51,7 +52,7 @@ function Router() {
     <Switch>
       {/* Public route */}
       <Route path="/" component={Landing} />
-      
+
       {/* Demo mode routes */}
       <Route path="/demo/login" component={DemoLogin} />
       <Route path="/demo/dashboard" component={DemoDashboard} />
@@ -62,7 +63,7 @@ function Router() {
       <Route path="/demo/profile" component={DemoProfile} />
       <Route path="/demo/subscription" component={DemoSubscription} />
       <Route path="/demo/stores/:id" component={DemoStore} />
-      
+
       {/* Protected dashboard routes */}
       <Route path="/dashboard">
         {() => <ProtectedRoute component={Dashboard} />}
@@ -88,7 +89,7 @@ function Router() {
       <Route path="/dashboard/shopee-connect">
         {() => <ProtectedRoute component={ShopeeConnect} />}
       </Route>
-      
+
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
@@ -96,6 +97,10 @@ function Router() {
 }
 
 function App() {
+  // Carregar ícones do Remix Icon ao iniciar o aplicativo
+  useEffect(() => {
+    loadIcons();
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="cip-shopee-theme">
