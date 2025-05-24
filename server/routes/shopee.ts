@@ -3,8 +3,8 @@
  */
 import type { Router } from "express";
 import express from "express";
-const shopeeSecurityValidator = require('../shopee/security');
-import { Router, Request, Response } from 'express';
+import shopeeSecurityValidator from '../shopee/security';
+import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { isAuthenticated } from '../replitAuth';
 import fs from 'fs';

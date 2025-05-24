@@ -1,80 +1,48 @@
+import crypto from 'crypto';
 
-const crypto = require('crypto');
-const securityLogger = require('../utils/securityLogger');
+/**
+ * Validador de segurança para requisições da Shopee
+ * Verifica assinaturas e parâmetros para proteger contra ataques
+ */
+function validateShopeeRequest(req, partnerId, partnerKey) {
+  const { sign, timestamp } = req.query;
 
-class ShopeeSecurityValidator {
-  // Validar assinatura da Shopee
-  validateWebhookSignature(payload, signature, secret) {
-    const calculatedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(JSON.stringify(payload))
-      .digest('hex');
-    
-    return calculatedSignature === signature;
-  }
-
-  // Validar resposta da API
-  validateApiResponse(response) {
-    // Verificar se tem estrutura esperada
-    if (!response || typeof response !== 'object') {
-      securityLogger.log('INVALID_SHOPEE_RESPONSE', { response });
-      return false;
-    }
-
-    // Verificar código de erro
-    if (response.error || response.code !== 0) {
-      securityLogger.log('SHOPEE_API_ERROR', { 
-        error: response.error,
-        code: response.code 
-      });
-      return false;
-    }
-
-    return true;
-  }
-
-  // Sanitizar dados do produto antes de salvar
-  sanitizeProductData(product) {
+  if (!sign || !timestamp) {
     return {
-      productId: String(product.item_id || ''),
-      name: this.sanitizeString(product.name || ''),
-      description: this.sanitizeString(product.description || ''),
-      price: Math.abs(Number(product.price) || 0),
-      stock: Math.abs(Math.floor(Number(product.stock) || 0)),
-      images: Array.isArray(product.images) 
-        ? product.images.filter(img => this.isValidUrl(img)).slice(0, 10)
-        : [],
-      category: this.sanitizeString(product.category || ''),
-      status: ['active', 'inactive'].includes(product.status) ? product.status : 'active'
+      valid: false,
+      reason: 'Parâmetros de segurança ausentes'
     };
   }
 
-  sanitizeString(str, maxLength = 5000) {
-    if (typeof str !== 'string') return '';
-    
-    // Remove caracteres de controle e limita tamanho
-    return str
-      .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove caracteres de controle
-      .trim()
-      .substring(0, maxLength);
+  // Verificar se o timestamp está dentro de um período válido (15 minutos)
+  const currentTime = Math.floor(Date.now() / 1000);
+  const requestTime = parseInt(timestamp);
+
+  if (isNaN(requestTime) || Math.abs(currentTime - requestTime) > 900) {
+    return {
+      valid: false,
+      reason: 'Timestamp inválido ou expirado'
+    };
   }
 
-  isValidUrl(url) {
-    try {
-      const parsed = new URL(url);
-      return ['http:', 'https:'].includes(parsed.protocol);
-    } catch {
-      return false;
-    }
+  // Verificar assinatura
+  const path = req.path;
+  const baseString = `${partnerId}${path}${timestamp}`;
+
+  const hmac = crypto.createHmac('sha256', partnerKey);
+  hmac.update(baseString);
+  const expectedSign = hmac.digest('hex');
+
+  if (sign !== expectedSign) {
+    return {
+      valid: false,
+      reason: 'Assinatura inválida'
+    };
   }
 
-  // Verificar limites de rate da API
-  checkRateLimit(userId, endpoint) {
-    // Implementar controle de rate limit por usuário/endpoint
-    const key = `${userId}:${endpoint}`;
-    // TODO: Implementar com Redis quando disponível
-    return true; // Por enquanto sempre permite
-  }
+  return {
+    valid: true
+  };
 }
 
-module.exports = new ShopeeSecurityValidator();
+export default validateShopeeRequest;
