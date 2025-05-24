@@ -1,5 +1,38 @@
-node_modules
-dist
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.production
+.env.*
+
+# Replit
+.replit
+.config/
+.cache/
+.upm/
+
+# Node
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Backups
+backups/
+*.backup
+
+# Database
+*.db
+*.sqlite
+
+# Temporários
+tmp/
+temp/
+
+# Arquivos do sistema
 .DS_Store
 server/public
 vite.config.ts.*
