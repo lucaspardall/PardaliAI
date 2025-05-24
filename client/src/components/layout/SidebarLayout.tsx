@@ -143,7 +143,7 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
             <Button 
               variant="ghost" 
               size="icon"
-              className="ml-auto text-gray-400 hover:text-white"
+              className="ml-auto text-primary hover:text-white bg-primary/10 hover:bg-primary/20"
               onClick={() => {
                 if (demoMode) {
                   // Limpar localStorage para o modo demo
@@ -236,7 +236,7 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
             <Button 
               variant="ghost" 
               size="icon"
-              className="ml-auto text-gray-400 hover:text-white"
+              className="ml-auto text-primary hover:text-white bg-primary/10 hover:bg-primary/20"
               onClick={() => {
                 if (demoMode) {
                   // Limpar localStorage para o modo demo
