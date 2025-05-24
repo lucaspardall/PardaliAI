@@ -56,11 +56,6 @@ function Router() {
       <Route path="/demo/reports" component={DemoDashboard} />
       <Route path="/demo/stores/:id" component={DemoDashboard} />
       
-      {/* Dashboard routes that redirect to demo when in demo mode */}
-      <Route path="/dashboard/optimizations" component={DemoOptimizations} />
-      <Route path="/dashboard/reports" component={DemoDashboard} />
-      <Route path="/dashboard/products" component={DemoProducts} />
-      
       {/* Protected dashboard routes */}
       <Route path="/dashboard">
         {() => <ProtectedRoute component={Dashboard} />}

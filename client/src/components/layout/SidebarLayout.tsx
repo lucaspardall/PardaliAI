@@ -145,7 +145,15 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
               size="icon"
               className="ml-auto text-gray-400 hover:text-white"
               onClick={() => {
-                window.location.href = demoMode ? '/demo/logout' : '/api/logout';
+                if (demoMode) {
+                  // Limpar localStorage para o modo demo
+                  localStorage.removeItem('demo_logged_in');
+                  localStorage.removeItem('demo_user');
+                  window.location.href = '/demo/logout';
+                } else {
+                  // Usar a rota de API para logout normal
+                  window.location.href = '/api/logout';
+                }
               }} 
             >
               <i className="ri-logout-box-r-line"></i>
@@ -230,7 +238,15 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
               size="icon"
               className="ml-auto text-gray-400 hover:text-white"
               onClick={() => {
-                window.location.href = demoMode ? '/demo/logout' : '/api/logout';
+                if (demoMode) {
+                  // Limpar localStorage para o modo demo
+                  localStorage.removeItem('demo_logged_in');
+                  localStorage.removeItem('demo_user');
+                  window.location.href = '/demo/logout';
+                } else {
+                  // Usar a rota de API para logout normal
+                  window.location.href = '/api/logout';
+                }
               }} 
             >
               <i className="ri-logout-box-r-line"></i>
