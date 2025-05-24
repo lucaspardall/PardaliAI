@@ -67,7 +67,7 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
     { href: `${basePath}`, icon: "ri-dashboard-line", label: "Dashboard" },
     { href: `${basePath}/products`, icon: "ri-shopping-bag-3-line", label: "Produtos" },
     { href: demoMode ? `${basePath}/stores` : "/dashboard/store/connect", icon: "ri-store-2-line", label: "Minha Loja" },
-    { href: demoMode ? `${basePath}/optimizations`, icon: "ri-ai-generate", label: "Otimizações" }, //Fixed duplicate key by changing the href.
+    { href: demoMode ? `${basePath}/optimizations` : `${basePath}/ai-optimize`, icon: "ri-ai-generate", label: "Otimizações" },
     { href: `${basePath}/reports`, icon: "ri-line-chart-line", label: "Relatórios" },
   ];
 
