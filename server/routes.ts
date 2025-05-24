@@ -149,7 +149,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Product endpoints
+  // Product endpoints - usando router com validações de segurança
+  const productsRouter = require('./routes/products');
+  app.use('/api/products', productsRouter);
+  
+  // Mantendo a rota existente para compatibilidade
   app.get('/api/stores/:storeId/products', isAuthenticated, async (req: any, res) => {
     try {
       const storeId = parseInt(req.params.storeId);
