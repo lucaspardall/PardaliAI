@@ -150,7 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Product endpoints - usando router com validações de segurança
-  const productsRouter = require('./routes/products');
+  const { default: productsRouter } = await import('./routes/products');
   app.use('/api/products', productsRouter);
   
   // Mantendo a rota existente para compatibilidade
