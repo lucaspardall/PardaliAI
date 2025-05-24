@@ -61,7 +61,7 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
   const unreadCount = userNotifications?.filter((n: any) => !n.isRead).length || 0;
 
   // Base paths for links based on mode
-  const basePath = demoMode ? "/demo" : "/dashboard";
+  const basePath = demoMode ? "/demo" : "/dashboard"";
 
   const navItems = [
     { href: `${basePath}`, icon: "ri-dashboard-line", label: "Dashboard" },

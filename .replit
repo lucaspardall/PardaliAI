@@ -8,7 +8,7 @@ packages = ["lsof"]
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
+build = ["sh", "-c", "npm run build"]
 run = ["sh", "-c", "npm run start"]
 
 [[ports]]
@@ -48,6 +48,7 @@ localPort = 5007
 externalPort = 6000
 
 [workflows]
+runButton = "Dev Server"
 
 [[workflows.workflow]]
 name = "Project"
@@ -93,3 +94,12 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node test-security.js"
+
+[[workflows.workflow]]
+name = "Dev Server"
+author = 41750934
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
