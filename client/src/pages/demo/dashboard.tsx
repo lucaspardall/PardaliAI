@@ -20,19 +20,19 @@ export default function DemoDashboard() {
   const [stores, setStores] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [storeStats, setStoreStats] = useState<any[]>([]);
-  
+
   // Verificar autenticação e carregar dados do localStorage
   useEffect(() => {
     const checkAuth = () => {
       const isLoggedIn = localStorage.getItem('demo_logged_in');
       const userData = localStorage.getItem('demo_user');
-      
+
       if (isLoggedIn === 'true' && userData) {
         try {
           // Carregar usuário do localStorage
           const user = JSON.parse(userData);
           setDemoUser(user);
-          
+
           // Dados de demonstração para lojas
           setStores([
             {
@@ -62,7 +62,7 @@ export default function DemoDashboard() {
               updatedAt: new Date()
             }
           ]);
-          
+
           // Dados de demonstração para notificações
           setNotifications([
             {
@@ -84,7 +84,7 @@ export default function DemoDashboard() {
               userId: user.id
             }
           ]);
-          
+
           // Dados de demonstração para estatísticas
           const today = new Date();
           const stats = Array.from({ length: 7 }, (_, i) => {
@@ -110,10 +110,10 @@ export default function DemoDashboard() {
       } else {
         navigate('/demo/login');
       }
-      
+
       setIsLoadingUser(false);
     };
-    
+
     checkAuth();
   }, [navigate]);
 
@@ -190,7 +190,7 @@ export default function DemoDashboard() {
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="stores">Lojas ({stores?.length || 0})</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="overview" className="mt-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -210,7 +210,7 @@ export default function DemoDashboard() {
                   </p>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Visitantes</CardTitle>
@@ -228,7 +228,7 @@ export default function DemoDashboard() {
                   </p>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Vendas</CardTitle>
@@ -246,7 +246,7 @@ export default function DemoDashboard() {
                   </p>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">CTR Médio</CardTitle>
@@ -265,7 +265,7 @@ export default function DemoDashboard() {
                 </CardContent>
               </Card>
             </div>
-            
+
             <div className="grid gap-4 md:grid-cols-2 mt-4">
               <Card className="col-span-1">
                 <CardHeader>
@@ -289,7 +289,7 @@ export default function DemoDashboard() {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card className="col-span-1">
                 <CardHeader>
                   <CardTitle>Categorias</CardTitle>
@@ -321,7 +321,7 @@ export default function DemoDashboard() {
               </Card>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="stores" className="mt-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {stores && stores.length > 0 ? (

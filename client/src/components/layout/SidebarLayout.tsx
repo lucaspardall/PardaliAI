@@ -65,6 +65,7 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
 
   const navItems = [
     { href: `${basePath}`, icon: "ri-dashboard-line", label: "Dashboard" },
+    { href: `${basePath}/store`, icon: "ri-store-2-line", label: "Minha Loja" },
     { href: `${basePath}/products`, icon: "ri-shopping-bag-3-line", label: "Produtos" },
     { href: demoMode ? `${basePath}/stores` : "/dashboard/store/connect", icon: "ri-store-2-line", label: "Minha Loja" },
     { href: demoMode ? `${basePath}/optimizations` : `${basePath}/ai-optimize`, icon: "ri-ai-generate", label: "Otimizações" },

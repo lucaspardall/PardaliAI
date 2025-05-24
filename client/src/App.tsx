@@ -21,6 +21,8 @@ import DemoLogin from "@/pages/demo/login";
 import DemoDashboard from "@/pages/demo/dashboard";
 import DemoProducts from "@/pages/demo/products";
 import DemoOptimizations from "@/pages/demo/optimizations";
+import DemoReports from "@/pages/demo/reports";
+import DemoStore from "@/pages/demo/store";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -53,7 +55,8 @@ function Router() {
       <Route path="/demo/dashboard" component={DemoDashboard} />
       <Route path="/demo/products" component={DemoProducts} />
       <Route path="/demo/optimizations" component={DemoOptimizations} />
-      <Route path="/demo/reports" component={DemoDashboard} />
+      <Route path="/demo/reports" component={DemoReports} />
+      <Route path="/demo/store" component={DemoStore} />
       <Route path="/demo/stores/:id" component={DemoDashboard} />
       
       {/* Protected dashboard routes */}
