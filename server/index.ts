@@ -5,6 +5,11 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import mongoSanitize from "express-mongo-sanitize";
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
+// Importar middlewares de segurança adicionais
+import { sanitizeRequest, sqlInjectionProtection } from "./middlewares/security";
+import { setupRouteValidators } from "./middlewares/security/apply-validators";
+import { setupCsrfProtection } from "./middlewares/security/csrf-protection";
 
 // Importar configurações de produção se estiver em ambiente de produção
 const productionConfig = process.env.NODE_ENV === 'production' 
@@ -14,6 +19,7 @@ const productionConfig = process.env.NODE_ENV === 'production'
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // Forçar HTTPS em produção
 if (process.env.NODE_ENV === 'production' && productionConfig.security?.forceHttps) {
@@ -122,6 +128,16 @@ app.use('/api/shopee/auth', authLimiter);
 
 // Sanitização contra NoSQL injection
 app.use(mongoSanitize());
+
+// Middlewares de segurança adicionais
+app.use(sanitizeRequest); // Sanitiza entradas para prevenir XSS
+app.use(sqlInjectionProtection); // Proteção contra SQL Injection
+
+// Aplicar validadores específicos para rotas vulneráveis
+setupRouteValidators(app);
+
+// Configurar proteção CSRF para rotas sensíveis
+setupCsrfProtection(app);
 
 // Desabilitar header X-Powered-By
 app.disable('x-powered-by');
