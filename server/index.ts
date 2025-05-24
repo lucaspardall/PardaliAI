@@ -1,10 +1,51 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import mongoSanitize from "express-mongo-sanitize";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Configurações de segurança
+// Helmet para headers de segurança
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https://api.shopee.com"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Rate limiting global
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // limite de 100 requests
+  message: 'Muitas requisições, tente novamente mais tarde.'
+});
+app.use('/api/', globalLimiter);
+
+// Rate limiting estrito para auth
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // apenas 5 tentativas de login
+  skipSuccessfulRequests: true
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/shopee/auth', authLimiter);
+
+// Sanitização contra NoSQL injection
+app.use(mongoSanitize());
+
+// Desabilitar header X-Powered-By
+app.disable('x-powered-by');
 
 app.use((req, res, next) => {
   const start = Date.now();
