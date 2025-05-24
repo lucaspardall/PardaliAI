@@ -1,37 +1,46 @@
 module.exports = {
+  // Configurações de segurança para produção
   security: {
-    forceHttps: true,
+    // Configurações adicionais para CORS
+    cors: {
+      allowedOrigins: [
+        'https://cipshopee.com',
+        'https://*.repl.co',
+        'https://*.replit.app',
+        'https://*.replit.dev',
+        '*' // Temporariamente permitir todas as origens para debug
+      ]
+    },
+    // Opções para cookies em produção
+    cookieOptions: {
+      secure: true,
+      httpOnly: true,
+      sameSite: 'none'
+    },
+    // Headers de segurança adicionais
     headers: {
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block'
+      'Referrer-Policy': 'strict-origin-when-cross-origin'
     },
-    cookieOptions: {
-      secure: true,
-      httpOnly: true,
-      sameSite: 'strict'
-    },
-    cors: {
-      allowedOrigins: [
-        'https://*.replit.app',
-        'https://*.repl.co',
-        'https://*.preview.app.github.dev'
-      ]
-    }
+    // Forçar redirecionamento para HTTPS
+    forceHttps: true
   },
+  // Configurações de limites de requisições
   rateLimits: {
     global: {
       windowMs: 15 * 60 * 1000, // 15 minutos
-      max: 300 // limite de requests
+      max: 200 // Aumentado para produção
     },
     auth: {
-      windowMs: 15 * 60 * 1000, // 15 minutos
-      max: 10 // tentativas de login
+      windowMs: 60 * 60 * 1000, // 1 hora
+      max: 10 // Tentativas de login
     }
   },
+  // Configurações de logging para produção
   logging: {
-    level: 'error',
-    sanitize: true
+    level: 'error', // Log apenas erros
+    sanitize: true // Não incluir informações sensíveis nos logs
   }
 };

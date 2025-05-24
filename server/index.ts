@@ -76,6 +76,7 @@ const corsOptions = {
 
     // Permitir todas as origens em produção temporariamente para debug
     if (process.env.NODE_ENV === 'production' && process.env.ALLOW_ALL_ORIGINS === 'true') {
+      console.log(`CORS: Permitindo origem: ${origin}`);
       return callback(null, true);
     }
 
