@@ -1,4 +1,3 @@
-
 # Variáveis de ambiente
 .env
 .env.local
@@ -19,6 +18,7 @@ build/
 # Logs
 *.log
 npm-debug.log*
+logs/
 
 # Backups
 backups/
