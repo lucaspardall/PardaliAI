@@ -27,17 +27,16 @@ import {
 import { getStatusIcon, getStatusColorClass } from "@/lib/utils/icons";
 import { Product, ProductOptimization } from "@/lib/types";
 import { Helmet } from "react-helmet";
-import { Security } from "@/lib/utils/security";
 
 export default function ProductDetail() {
   const { id } = useParams();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
+  
   // Fetch product details
   const { data: product, isLoading: productLoading } = useQuery({
     queryKey: [`/api/products/${id}`],
   });
-
+  
   // Fetch product optimizations
   const { data: optimizations, isLoading: optimizationsLoading } = useQuery({
     queryKey: [`/api/products/${id}/optimizations`],
@@ -46,20 +45,20 @@ export default function ProductDetail() {
   // Generate sample performance data for the chart
   const generatePerformanceData = (product: Product) => {
     if (!product) return [];
-
+    
     const baseDate = new Date();
     const baseCtr = product.ctr || 2;
     const baseViews = product.views || 100;
     const baseSales = product.sales || 5;
-
+    
     return Array.from({ length: 7 }).map((_, i) => {
       const date = new Date(baseDate);
       date.setDate(date.getDate() - (6 - i));
-
+      
       // Add some randomness to create realistic looking data
       const randomFactor = 0.8 + (Math.random() * 0.4); // 0.8 to 1.2
       const trendFactor = 1 + (i * 0.02); // Slight upward trend
-
+      
       return {
         date: formatDate(date),
         ctr: parseFloat((baseCtr * randomFactor * trendFactor).toFixed(2)),
@@ -160,14 +159,13 @@ export default function ProductDetail() {
   }
 
   const performanceData = generatePerformanceData(product);
-  const safeProduct = Security.sanitizeProductData(product);
 
   return (
     <SidebarLayout title="Detalhes do Produto">
       <Helmet>
-        <title>{safeProduct.name} | CIP Shopee</title>
+        <title>{product.name} | CIP Shopee</title>
       </Helmet>
-
+      
       <div className="mb-6">
         <Link href="/dashboard/products">
           <a className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
@@ -175,15 +173,15 @@ export default function ProductDetail() {
           </a>
         </Link>
       </div>
-
+      
       <div className="flex flex-col md:flex-row gap-6">
         {/* Product Images */}
         <div className="md:w-1/3 flex-shrink-0">
           <div className="bg-background border rounded-lg overflow-hidden shadow-sm">
-            {safeProduct.images && safeProduct.images.length > 0 ? (
+            {product.images && product.images.length > 0 ? (
               <img 
-                src={safeProduct.images[selectedImageIndex]} 
-                alt={safeProduct.name} 
+                src={product.images[selectedImageIndex]} 
+                alt={product.name} 
                 className="w-full h-80 object-contain"
               />
             ) : (
@@ -192,11 +190,11 @@ export default function ProductDetail() {
               </div>
             )}
           </div>
-
+          
           {/* Thumbnails */}
-          {safeProduct.images && safeProduct.images.length > 0 && (
+          {product.images && product.images.length > 0 && (
             <div className="mt-4 grid grid-cols-4 gap-2">
-              {safeProduct.images.map((image, index) => (
+              {product.images.map((image, index) => (
                 <div 
                   key={index} 
                   className={`border rounded-md cursor-pointer overflow-hidden h-16 ${
@@ -206,7 +204,7 @@ export default function ProductDetail() {
                 >
                   <img 
                     src={image} 
-                    alt={`${safeProduct.name} - Imagem ${index + 1}`} 
+                    alt={`${product.name} - Imagem ${index + 1}`} 
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -214,64 +212,64 @@ export default function ProductDetail() {
             </div>
           )}
         </div>
-
+        
         {/* Product Details */}
         <div className="md:w-2/3">
           <div className="flex justify-between items-start flex-wrap gap-4">
             <div>
-              <h1 className="text-2xl font-bold mb-2">{safeProduct.name}</h1>
+              <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
               <div className="flex items-center gap-3 mb-4 flex-wrap">
-                <Badge variant={safeProduct.status === 'active' ? 'success' : 'secondary'}>
-                  <i className={`${getStatusIcon(safeProduct.status)} mr-1`}></i>
-                  {safeProduct.status === 'active' ? 'Ativo' : safeProduct.status === 'inactive' ? 'Inativo' : 'Excluído'}
+                <Badge variant={product.status === 'active' ? 'success' : 'secondary'}>
+                  <i className={`${getStatusIcon(product.status)} mr-1`}></i>
+                  {product.status === 'active' ? 'Ativo' : product.status === 'inactive' ? 'Inativo' : 'Excluído'}
                 </Badge>
                 <span className="text-muted-foreground text-sm">
-                  ID: {safeProduct.productId}
+                  ID: {product.productId}
                 </span>
               </div>
             </div>
-            <span className="text-2xl font-bold">{formatCurrency(safeProduct.price)}</span>
+            <span className="text-2xl font-bold">{formatCurrency(product.price)}</span>
           </div>
-
+          
           {/* Product Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
             <Card>
               <CardContent className="pt-6">
                 <div className="text-sm text-muted-foreground">CTR</div>
-                <div className="text-2xl font-semibold mt-1">{formatCTR(safeProduct.ctr)}</div>
-                <Badge variant={getCtrBadgeVariant(safeProduct.ctr)} className="mt-1">
-                  {safeProduct.ctr && safeProduct.ctr >= 3 ? 'Bom' : safeProduct.ctr && safeProduct.ctr >= 2 ? 'Médio' : 'Precisa melhorar'}
+                <div className="text-2xl font-semibold mt-1">{formatCTR(product.ctr)}</div>
+                <Badge variant={getCtrBadgeVariant(product.ctr)} className="mt-1">
+                  {product.ctr && product.ctr >= 3 ? 'Bom' : product.ctr && product.ctr >= 2 ? 'Médio' : 'Precisa melhorar'}
                 </Badge>
               </CardContent>
             </Card>
-
+            
             <Card>
               <CardContent className="pt-6">
                 <div className="text-sm text-muted-foreground">Visualizações</div>
-                <div className="text-2xl font-semibold mt-1">{safeProduct.views ? formatNumber(safeProduct.views) : '-'}</div>
+                <div className="text-2xl font-semibold mt-1">{product.views ? formatNumber(product.views) : '-'}</div>
                 <div className="text-xs text-muted-foreground mt-1">Últimos 30 dias</div>
               </CardContent>
             </Card>
-
+            
             <Card>
               <CardContent className="pt-6">
                 <div className="text-sm text-muted-foreground">Vendas</div>
-                <div className="text-2xl font-semibold mt-1">{safeProduct.sales ? formatNumber(safeProduct.sales) : '-'}</div>
+                <div className="text-2xl font-semibold mt-1">{product.sales ? formatNumber(product.sales) : '-'}</div>
                 <div className="text-xs text-muted-foreground mt-1">Últimos 30 dias</div>
               </CardContent>
             </Card>
-
+            
             <Card>
               <CardContent className="pt-6">
                 <div className="text-sm text-muted-foreground">Estoque</div>
-                <div className="text-2xl font-semibold mt-1">{formatNumber(safeProduct.stock)}</div>
-                <Badge variant={safeProduct.stock > 10 ? 'success' : safeProduct.stock > 0 ? 'warning' : 'destructive'} className="mt-1">
-                  {safeProduct.stock > 10 ? 'Em estoque' : safeProduct.stock > 0 ? 'Estoque baixo' : 'Indisponível'}
+                <div className="text-2xl font-semibold mt-1">{formatNumber(product.stock)}</div>
+                <Badge variant={product.stock > 10 ? 'success' : product.stock > 0 ? 'warning' : 'destructive'} className="mt-1">
+                  {product.stock > 10 ? 'Em estoque' : product.stock > 0 ? 'Estoque baixo' : 'Indisponível'}
                 </Badge>
               </CardContent>
             </Card>
           </div>
-
+          
           {/* Description */}
           <Card className="mb-6">
             <CardHeader className="pb-3">
@@ -279,15 +277,15 @@ export default function ProductDetail() {
             </CardHeader>
             <CardContent>
               <div className="whitespace-pre-line">
-                {safeProduct.description || "Nenhuma descrição disponível."}
+                {product.description || "Nenhuma descrição disponível."}
               </div>
             </CardContent>
           </Card>
-
+          
           {/* Actions */}
           <div className="flex flex-wrap gap-3">
             <Button asChild>
-              <Link href={`/dashboard/optimize/${safeProduct.id}`}>
+              <Link href={`/dashboard/optimize/${product.id}`}>
                 <i className="ri-ai-generate mr-2"></i> Otimizar com IA
               </Link>
             </Button>
@@ -300,7 +298,7 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-
+      
       {/* Tabs for metrics and optimizations */}
       <div className="mt-8">
         <Tabs defaultValue="performance">
@@ -313,7 +311,7 @@ export default function ProductDetail() {
               )}
             </TabsTrigger>
           </TabsList>
-
+          
           <TabsContent value="performance" className="mt-6">
             <Card>
               <CardHeader>
@@ -379,7 +377,7 @@ export default function ProductDetail() {
               </CardContent>
             </Card>
           </TabsContent>
-
+          
           <TabsContent value="optimizations" className="mt-6">
             <Card>
               <CardHeader>
@@ -398,7 +396,7 @@ export default function ProductDetail() {
                     <p className="text-lg font-medium">Nenhuma otimização encontrada</p>
                     <p className="text-muted-foreground mt-1">Este produto ainda não foi otimizado.</p>
                     <Button asChild className="mt-4">
-                      <Link href={`/dashboard/optimize/${safeProduct.id}`}>
+                      <Link href={`/dashboard/optimize/${product.id}`}>
                         Otimizar agora
                       </Link>
                     </Button>
@@ -435,14 +433,14 @@ export default function ProductDetail() {
                               : 'Pendente'}
                           </Badge>
                         </div>
-
+                        
                         <Tabs defaultValue="title">
                           <TabsList>
                             <TabsTrigger value="title">Título</TabsTrigger>
                             <TabsTrigger value="description">Descrição</TabsTrigger>
                             <TabsTrigger value="keywords">Palavras-chave</TabsTrigger>
                           </TabsList>
-
+                          
                           <TabsContent value="title" className="mt-4 space-y-4">
                             <div>
                               <p className="text-sm font-medium mb-1">Original:</p>
@@ -457,7 +455,7 @@ export default function ProductDetail() {
                               </div>
                             </div>
                           </TabsContent>
-
+                          
                           <TabsContent value="description" className="mt-4 space-y-4">
                             <div>
                               <p className="text-sm font-medium mb-1">Original:</p>
@@ -472,7 +470,7 @@ export default function ProductDetail() {
                               </div>
                             </div>
                           </TabsContent>
-
+                          
                           <TabsContent value="keywords" className="mt-4 space-y-4">
                             <div>
                               <p className="text-sm font-medium mb-1">Original:</p>
@@ -500,7 +498,7 @@ export default function ProductDetail() {
                             </div>
                           </TabsContent>
                         </Tabs>
-
+                        
                         {optimization.reasoningNotes && (
                           <div className="mt-4">
                             <p className="text-sm font-medium mb-1">Análise da IA:</p>
@@ -509,7 +507,7 @@ export default function ProductDetail() {
                             </div>
                           </div>
                         )}
-
+                        
                         {optimization.status === 'pending' && (
                           <div className="mt-4 flex gap-3">
                             <Button size="sm" className="w-full sm:w-auto">

@@ -1,3 +1,4 @@
+
 /**
  * Funções para buscar dados da loja através da API da Shopee
  */
@@ -42,11 +43,11 @@ export async function getProductList(
     offset,
     page_size: pageSize
   };
-
+  
   if (itemStatus) {
     params.item_status = itemStatus;
   }
-
+  
   return client.get('/api/v2/product/get_item_list', params);
 }
 
@@ -103,15 +104,15 @@ export async function getOrderList(
     time_to: timeTo,
     page_size: pageSize
   };
-
+  
   if (cursor) {
     params.cursor = cursor;
   }
-
+  
   if (orderStatus) {
     params.order_status = orderStatus;
   }
-
+  
   return client.get('/api/v2/order/get_order_list', params);
 }
 
@@ -171,22 +172,4 @@ export async function getCategories(
   client: ShopeeClient
 ): Promise<ShopeeApiResponse> {
   return client.get('/api/v2/product/get_category');
-}
-
-// Add new function to the file
-export async function getProductDetailsWithSanitization(shopId: string, productId: string, accessToken: string): Promise<any> {
-  const client = new ShopeeClient(accessToken);
-  const response = await client.request<any>('/product/get_item_base_info', {
-    item_id_list: [productId]
-  });
-
-  // Sanitize product data before returning
-  const securityValidator = require('./security');
-  if (response?.item_list && response.item_list.length > 0) {
-    response.item_list = response.item_list.map((item: any) => 
-      securityValidator.sanitizeProductData(item)
-    );
-  }
-
-  return response;
 }

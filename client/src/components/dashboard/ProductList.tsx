@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { formatCTR, formatCurrency } from "@/lib/utils/formatters";
 import { Product } from "@/lib/types";
 import { EMPTY_STATES } from "@/lib/constants";
-import { Security } from '@/utils/security';
 
 interface ProductListProps {
   products: Product[];
@@ -41,47 +40,45 @@ export default function ProductList({ products, showOptimizeButton = false }: Pr
 
   return (
     <ul className="space-y-3">
-      {products.map((product) => {
-        const safeProduct = Security.sanitizeProductData(product);
-        return (
-        <li key={safeProduct.id} className="flex items-center p-2 rounded-md hover:bg-accent/50 transition-colors">
+      {products.map((product) => (
+        <li key={product.id} className="flex items-center p-2 rounded-md hover:bg-accent/50 transition-colors">
           <Avatar className="h-12 w-12 rounded-md mr-4 border border-border">
-            {getProductImage(safeProduct) ? (
-              <AvatarImage src={getProductImage(safeProduct)!} alt={safeProduct.name} className="object-cover" />
+            {getProductImage(product) ? (
+              <AvatarImage src={getProductImage(product)!} alt={product.name} className="object-cover" />
             ) : (
               <AvatarFallback className="rounded-md bg-muted">
                 <i className="ri-image-line text-muted-foreground"></i>
               </AvatarFallback>
             )}
           </Avatar>
-
+          
           <div className="flex-1 min-w-0">
-            <Link href={`/dashboard/product/${safeProduct.id}`}>
-              <a className="text-sm font-medium hover:underline line-clamp-1">{safeProduct.name}</a>
+            <Link href={`/dashboard/product/${product.id}`}>
+              <a className="text-sm font-medium hover:underline line-clamp-1">{product.name}</a>
             </Link>
             <div className="flex items-center mt-1">
-              <Badge variant={getCtrBadgeVariant(safeProduct.ctr)} className="mr-2 text-xs">
-                CTR {formatCTR(safeProduct.ctr)}
+              <Badge variant={getCtrBadgeVariant(product.ctr)} className="mr-2 text-xs">
+                CTR {formatCTR(product.ctr)}
               </Badge>
-              <span className="text-xs text-muted-foreground">{formatCurrency(safeProduct.price)}</span>
+              <span className="text-xs text-muted-foreground">{formatCurrency(product.price)}</span>
             </div>
           </div>
-
-          <Link href={`/dashboard/product/${safeProduct.id}`}>
+          
+          <Link href={`/dashboard/product/${product.id}`}>
             <Button variant="ghost" size="icon" className="ml-2">
               <i className="ri-arrow-right-s-line text-xl"></i>
             </Button>
           </Link>
-
+          
           {showOptimizeButton && (
-            <Link href={`/dashboard/optimize/${safeProduct.id}`}>
+            <Link href={`/dashboard/optimize/${product.id}`}>
               <Button variant="default" size="sm" className="ml-2">
                 Otimizar
               </Button>
             </Link>
           )}
         </li>
-      )})}
+      ))}
     </ul>
   );
 }

@@ -64,16 +64,16 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
   const basePath = demoMode ? "/demo" : "/dashboard";
 
   const navItems = [
-    { href: demoMode ? `${basePath}/dashboard` : basePath, icon: "ri-dashboard-line", label: "Dashboard" },
-    { href: `${basePath}/store`, icon: "ri-store-2-line", label: "Minha Loja" },
+    { href: `${basePath}`, icon: "ri-dashboard-line", label: "Dashboard" },
     { href: `${basePath}/products`, icon: "ri-shopping-bag-3-line", label: "Produtos" },
+    { href: demoMode ? `${basePath}/stores` : "/dashboard/store/connect", icon: "ri-store-2-line", label: "Minha Loja" },
     { href: `${basePath}/optimizations`, icon: "ri-ai-generate", label: "Otimizações" },
     { href: `${basePath}/reports`, icon: "ri-line-chart-line", label: "Relatórios" },
   ];
 
   const settingsItems = [
-    { href: `${basePath}/profile`, icon: "ri-user-settings-line", label: "Perfil" },
-    { href: `${basePath}/subscription`, icon: "ri-vip-crown-line", label: "Assinatura" },
+    { href: demoMode ? `${basePath}/profile` : "/dashboard/profile", icon: "ri-user-settings-line", label: "Perfil" },
+    { href: demoMode ? `${basePath}/subscription` : "/dashboard/subscription", icon: "ri-vip-crown-line", label: "Assinatura" },
   ];
 
   // Close mobile sidebar on route change
@@ -94,16 +94,11 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
           <div className="space-y-1">
             {navItems.map((item) => (
               <NavItem 
-                key={item.id || item.href}
+                key={item.href}
                 href={item.href}
                 icon={item.icon}
                 label={item.label}
-                isActive={demoMode 
-                  ? location === item.href 
-                  : (location === item.href || 
-                     (item.id === "dashboard" && location === "/dashboard") ||
-                     location.startsWith(`/${item.id}`) || 
-                     location.startsWith(`/dashboard/${item.id}`))}
+                isActive={location === item.href}
               />
             ))}
           </div>
@@ -148,17 +143,9 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
             <Button 
               variant="ghost" 
               size="icon"
-              className="ml-auto text-primary hover:text-white bg-primary/10 hover:bg-primary/20"
+              className="ml-auto text-gray-400 hover:text-white"
               onClick={() => {
-                if (demoMode) {
-                  // Limpar localStorage para o modo demo
-                  localStorage.removeItem('demo_logged_in');
-                  localStorage.removeItem('demo_user');
-                  window.location.href = '/demo/logout';
-                } else {
-                  // Usar a rota de API para logout normal
-                  window.location.href = '/api/logout';
-                }
+                window.location.href = demoMode ? '/demo/logout' : '/api/logout';
               }} 
             >
               <i className="ri-logout-box-r-line"></i>
@@ -192,16 +179,11 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
           <div className="space-y-1">
             {navItems.map((item) => (
               <NavItem 
-                key={item.id || item.href}
+                key={item.href}
                 href={item.href}
                 icon={item.icon}
                 label={item.label}
-                isActive={demoMode 
-                  ? location === item.href 
-                  : (location === item.href || 
-                     (item.id === "dashboard" && location === "/dashboard") ||
-                     location.startsWith(`/${item.id}`) || 
-                     location.startsWith(`/dashboard/${item.id}`))}
+                isActive={location === item.href}
               />
             ))}
           </div>
@@ -246,17 +228,9 @@ export default function SidebarLayout({ children, title = "Dashboard", user, sto
             <Button 
               variant="ghost" 
               size="icon"
-              className="ml-auto text-primary hover:text-white bg-primary/10 hover:bg-primary/20"
+              className="ml-auto text-gray-400 hover:text-white"
               onClick={() => {
-                if (demoMode) {
-                  // Limpar localStorage para o modo demo
-                  localStorage.removeItem('demo_logged_in');
-                  localStorage.removeItem('demo_user');
-                  window.location.href = '/demo/logout';
-                } else {
-                  // Usar a rota de API para logout normal
-                  window.location.href = '/api/logout';
-                }
+                window.location.href = demoMode ? '/demo/logout' : '/api/logout';
               }} 
             >
               <i className="ri-logout-box-r-line"></i>

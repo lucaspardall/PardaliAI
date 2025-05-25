@@ -149,11 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Product endpoints - usando router com validações de segurança
-  const { default: productsRouter } = await import('./routes/products');
-  app.use('/api/products', productsRouter);
-  
-  // Mantendo a rota existente para compatibilidade
+  // Product endpoints
   app.get('/api/stores/:storeId/products', isAuthenticated, async (req: any, res) => {
     try {
       const storeId = parseInt(req.params.storeId);

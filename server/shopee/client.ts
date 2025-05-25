@@ -458,22 +458,6 @@ export class ShopeeClient {
       throw apiError;
     }
   }
-  async request<T>(endpoint: string, params: any = {}, method: RequestMethod = 'GET'): Promise<T> {
-    try {
-      const response = await this.makeRequest<T>(endpoint, params, method);
-
-      // Validate API response for security
-      const securityValidator = require('./security');
-      if (!securityValidator.validateApiResponse(response)) {
-        throw new Error(`Invalid response from Shopee API: ${JSON.stringify(response)}`);
-      }
-
-      return response;
-    } catch (error) {
-      console.error(`Error in Shopee API request to ${endpoint}:`, error);
-      throw error;
-    }
-  }
 
   /**
    * Verifica se o cliente está conectado
