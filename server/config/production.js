@@ -1,50 +1,50 @@
 
-// Configurações de produção
-const productionConfig = {
-  // Configurações de segurança para produção
+// Configurações específicas para o ambiente de produção
+export default {
+  // Configurações de segurança
   security: {
-    // Configurações adicionais para CORS
+    // Forçar HTTPS em produção
+    forceHttps: false,
+    
+    // Configurações de CORS
     cors: {
-      allowedOrigins: [
-        'https://cipshopee.com',
-        'https://*.repl.co',
-        'https://*.replit.app',
-        'https://*.replit.dev',
-        '*' // Temporariamente permitir todas as origens para debug
-      ]
+      // Origens permitidas
+      allowedOrigins: ['*'],
     },
-    // Opções para cookies em produção
-    cookieOptions: {
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none'
-    },
+    
     // Headers de segurança adicionais
     headers: {
-      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
       'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'SAMEORIGIN',
-      'Referrer-Policy': 'strict-origin-when-cross-origin'
+      'X-XSS-Protection': '1; mode=block',
+      'Referrer-Policy': 'no-referrer-when-downgrade',
     },
-    // Forçar redirecionamento para HTTPS
-    forceHttps: false
-  },
-  // Configurações de limites de requisições
-  rateLimits: {
-    global: {
-      windowMs: 15 * 60 * 1000, // 15 minutos
-      max: 200 // Aumentado para produção
-    },
-    auth: {
-      windowMs: 60 * 60 * 1000, // 1 hora
-      max: 10 // Tentativas de login
+    
+    // Opções de cookie seguro
+    cookieOptions: {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none'
     }
   },
-  // Configurações de logging para produção
+  
+  // Limites de taxa de requisições
+  rateLimits: {
+    // Limite global
+    global: {
+      windowMs: 15 * 60 * 1000, // 15 minutos
+      max: 500, // Aumentado para 500 requisições
+    },
+    
+    // Limite para endpoints de autenticação
+    auth: {
+      windowMs: 15 * 60 * 1000, // 15 minutos
+      max: 20, // Aumentado para 20 tentativas
+    }
+  },
+  
+  // Configurações de log
   logging: {
-    level: 'error', // Log apenas erros
-    sanitize: false // Temporariamente permitir logs para debug
+    level: 'info', // 'error', 'info', 'debug'
+    sanitize: false // Não sanitizar logs para facilitar depuração
   }
 };
-
-export default productionConfig;
