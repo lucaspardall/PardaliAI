@@ -23,11 +23,11 @@ const productionConfig = {
     headers: {
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
       'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
+      'X-Frame-Options': 'SAMEORIGIN',
       'Referrer-Policy': 'strict-origin-when-cross-origin'
     },
     // Forçar redirecionamento para HTTPS
-    forceHttps: true
+    forceHttps: false
   },
   // Configurações de limites de requisições
   rateLimits: {
@@ -43,7 +43,7 @@ const productionConfig = {
   // Configurações de logging para produção
   logging: {
     level: 'error', // Log apenas erros
-    sanitize: true // Não incluir informações sensíveis nos logs
+    sanitize: false // Temporariamente permitir logs para debug
   }
 };
 

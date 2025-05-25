@@ -247,10 +247,38 @@ app.use((req, res, next) => {
       const message = err.message || "Internal Server Error";
 
       log(`Erro ${status}: ${message}`);
-      res.status(status).json({ message });
+
+      // Garantir que o erro não derruba o servidor
+      try {
+        res.status(status).json({ message });
+      } catch (responseErr) {
+        console.error('Erro ao enviar resposta de erro:', responseErr);
+      }
 
       // Não lançar o erro, apenas logar
-      console.error(err);
+      console.error('Erro na aplicação:', err);
+    });
+
+    // Rota de fallback para todas as solicitações não correspondidas
+    app.use('*', (req, res) => {
+      console.log(`Rota não encontrada: ${req.originalUrl}`);
+
+      // Se for API, retornar JSON
+      if (req.originalUrl.startsWith('/api')) {
+        return res.status(404).json({ message: 'Endpoint não encontrado' });
+      }
+
+      // Para rotas de frontend, servir o index.html
+      if (process.env.NODE_ENV === 'production') {
+        try {
+          return res.sendFile('index.html', { root: './dist/public' });
+        } catch (err) {
+          console.error('Erro ao servir index.html:', err);
+          return res.status(500).send('Erro interno do servidor');
+        }
+      }
+
+      res.status(404).send('Página não encontrada');
     });
 
     // importantly only setup vite in development and after
