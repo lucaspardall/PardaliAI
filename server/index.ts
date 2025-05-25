@@ -17,10 +17,15 @@ import { setupRouteValidators } from "./middlewares/security/apply-validators";
 import { setupCsrfProtection } from "./middlewares/security/csrf-protection";
 
 // Importar configurações de produção se estiver em ambiente de produção
-import productionConfigModule from './config/production';
-const productionConfig = process.env.NODE_ENV === 'production' 
-  ? productionConfigModule 
-  : {};
+let productionConfig = {};
+if (process.env.NODE_ENV === 'production') {
+  try {
+    const prodModule = await import('./config/production.js');
+    productionConfig = prodModule.default || {};
+  } catch (err) {
+    console.error('Erro ao carregar configurações de produção:', err);
+  }
+}
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
