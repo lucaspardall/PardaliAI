@@ -1,0 +1,147 @@
+025-05-25 00:48:51.73
+5434cd8f
+User
+Conexão com banco de dados estabelecida com sucesso
+2025-05-25 00:48:51.77
+5434cd8f
+User
+Conexão com banco de dados estabelecida com sucesso
+2025-05-25 00:48:51.83
+5434cd8f
+User
+Rota não encontrada: /assets/index-Bw2QLM88.js
+2025-05-25 00:48:53.89
+5434cd8f
+User
+Rota não encontrada: /assets/index-BScl9qsC.css
+2025-05-25 00:50:17.49
+a7cd2adc
+System
+starting up user application
+2025-05-25 00:50:17.62
+a7cd2adc
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-05-25 00:50:19.42
+a7cd2adc
+User
+✅ Validadores de segurança aplicados às rotas vulneráveis
+2025-05-25 00:50:19.42
+a7cd2adc
+User
+🔒 Proteção CSRF configurada
+2025-05-25 00:50:24.59
+a7cd2adc
+User
+3:50:24 AM [express] Conexão com o banco de dados estabelecida com sucesso
+2025-05-25 00:50:24.79
+a7cd2adc
+User
+Modo de demonstração configurado com sucesso
+2025-05-25 00:50:24.85
+a7cd2adc
+User
+3:50:24 AM [express] serving on port 5000
+2025-05-25 00:50:25.92
+a7cd2adc
+User
+Rota não encontrada: /
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/dashboard/product/[id] (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/dashboard/optimize/[id] (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/dashboard/store/connect (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/shopee-connect (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/dashboard/profile (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/dashboard/subscription (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/lib/utils/icons (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/demo/login (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/demo/dashboard (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/demo/products (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/demo/optimizations (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/demo/reports (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/demo/store (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/demo/profile (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+@/pages/demo/subscription (imported by /home/runner/workspace/client/src/App.tsx)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+Are they installed?
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+at file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-CHZK6zbr.js:50668:15
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-05-25 00:50:26.02
+a7cd2adc
+User
+at async file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-CHZK6zbr.js:50173:26
+2025-05-25 00:54:00.90
+5434cd8f
+System
+system: received signal terminated
+2025-05-25 01:18:11.37
+a7cd2adc
+User
+Rota não encontrada: /api/shopee/webhook
+2025-05-25 01:18:11.38
+a7cd2adc
+User
+4:18:11 AM [express] POST /api/shopee/webhook 404 in 4ms :: {"message":"Endpoint não encontrado"}
+2025-05-25 01:19:09.20
+a7cd2adc
+User
+Rota não encontrada: /api/shopee/webhook
+2025-05-25 01:19:09.20
+a7cd2adc
+User
+4:19:09 AM [express] POST /api/shopee/webhook 404 in 2ms :: {"message":"Endpoint não encontrado"}
