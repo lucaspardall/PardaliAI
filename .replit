@@ -47,6 +47,10 @@ externalPort = 5173
 localPort = 5007
 externalPort = 6000
 
+[[ports]]
+localPort = 30001
+externalPort = 6800
+
 [workflows]
 
 [[workflows.workflow]]
@@ -102,3 +106,12 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
+
+[[workflows.workflow]]
+name = "Run Full Project"
+author = 41750934
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development npm run dev"

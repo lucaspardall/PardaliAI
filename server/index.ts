@@ -287,7 +287,14 @@ app.use((req, res, next) => {
     if (app.get("env") === "development") {
       await setupVite(app, server);
     } else {
+      // Configurar rotas da API antes de servir estáticos para produção
+      await registerRoutes(app);
       serveStatic(app);
+    }
+
+    // Em desenvolvimento, as rotas são configuradas após o Vite
+    if (app.get("env") === "development") {
+      await registerRoutes(app);
     }
 
     // Configuração de porta adaptada para funcionar tanto em desenvolvimento quanto em deploy

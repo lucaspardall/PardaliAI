@@ -18,12 +18,20 @@ export const serveStatic = (app: express.Express) => {
   const publicDir = path.resolve('dist/public');
   
   if (fs.existsSync(publicDir)) {
+    // Servir arquivos estáticos
     app.use(express.static(publicDir, {
       maxAge: '1d',
       etag: true,
       index: false
     }));
     
+    // Servir os assets com caminhos específicos
+    app.use('/assets', express.static(path.join(publicDir, 'assets'), {
+      maxAge: '30d',
+      etag: true
+    }));
+    
+    // Todas as rotas não-API vão para o index.html (SPA pattern)
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api')) {
         return next();
