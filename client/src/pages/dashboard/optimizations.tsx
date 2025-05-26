@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils/formatters';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 
 interface Optimization {
   id: number;
@@ -58,7 +59,7 @@ export default function OptimizationsPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 px-4">
+    <SidebarLayout title="Otimizações">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Otimizações</h1>
         <p className="text-muted-foreground">
@@ -217,6 +218,6 @@ export default function OptimizationsPage() {
           ))}
         </div>
       )}
-    </div>
+    </SidebarLayout>
   );
 }

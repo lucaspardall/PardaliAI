@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { formatDate } from '@/lib/utils/formatters';
+import SidebarLayout from '@/components/layout/SidebarLayout';
 
 export default function ReportsPage() {
   const [dateRange, setDateRange] = useState('30d');
@@ -41,7 +42,7 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div className="container mx-auto py-6 px-4">
+    <SidebarLayout title="Relatórios">
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
@@ -255,6 +256,6 @@ export default function ReportsPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </SidebarLayout>
   );
 }
