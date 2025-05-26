@@ -6,6 +6,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import { storage } from '../storage';
 import { syncStore } from './sync';
+import { storage } from '../storage';
 
 interface WebhookEvent {
   code: number;
@@ -125,9 +126,13 @@ async function handleOrderCancellation(event: WebhookEvent): Promise<void> {
 export async function handleShopeeWebhook(req: Request, res: Response): Promise<void> {
   try {
     const signature = req.headers['authorization'] as string;
-    const body = JSON.stringify(req.body);
+    const rawBody = JSON.stringify(req.body);
+    
+    console.log(`[Webhook] Recebendo webhook - Headers:`, req.headers);
+    console.log(`[Webhook] Body recebido:`, req.body);
     
     if (!signature) {
+      console.warn('[Webhook] Assinatura ausente no header authorization');
       res.status(401).json({ error: 'Missing signature' });
       return;
     }
@@ -140,40 +145,57 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
       return;
     }
 
-    const isValidSignature = verifyWebhookSignature(body, signature, partnerKey);
+    const isValidSignature = verifyWebhookSignature(rawBody, signature, partnerKey);
     if (!isValidSignature) {
-      console.warn('[Webhook] Assinatura inválida');
+      console.warn('[Webhook] Assinatura inválida:', {
+        received: signature,
+        body: rawBody.substring(0, 100)
+      });
       res.status(401).json({ error: 'Invalid signature' });
       return;
     }
 
     const event: WebhookEvent = req.body;
     
+    // Log do evento para auditoria
+    await logWebhookEvent(event, rawBody, signature);
+    
     console.log(`[Webhook] Evento recebido - Code: ${event.code}, Shop: ${event.shop_id}`);
 
-    // Processar diferentes tipos de eventos
-    switch (event.code) {
-      case 1: // Produto criado/atualizado
-        await handleProductUpdate(event);
-        break;
-      
-      case 2: // Novo pedido
-        await handleNewOrder(event);
-        break;
-      
-      case 3: // Pedido cancelado
-        await handleOrderCancellation(event);
-        break;
-      
-      default:
-        console.log(`[Webhook] Tipo de evento não tratado: ${event.code}`);
-    }
+    // Adicionar evento ao processador para processamento em background
+    const { webhookProcessor } = await import('./webhookProcessor');
+    const jobId = webhookProcessor.addJob(event);
+    
+    console.log(`[Webhook] Evento ${event.code} da loja ${event.shop_id} adicionado à fila de processamento: ${jobId}`);
 
-    res.status(200).json({ success: true });
+    res.status(200).json({ 
+      success: true, 
+      jobId,
+      message: 'Webhook received and queued for processing'
+    });
 
   } catch (error) {
     console.error('[Webhook] Erro ao processar webhook:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+/**
+ * Salva log do evento webhook para auditoria
+ */
+async function logWebhookEvent(event: WebhookEvent, rawBody: string, signature: string): Promise<void> {
+  try {
+    // Criar uma tabela de logs de webhook se não existir
+    // Por enquanto, apenas log no console
+    console.log(`[Webhook] Evento registrado:`, {
+      code: event.code,
+      shop_id: event.shop_id,
+      timestamp: event.timestamp,
+      signature: signature.substring(0, 20) + '...',
+      bodySize: rawBody.length
+    });
+  } catch (error) {
+    console.error('[Webhook] Erro ao salvar log do evento:', error);
   }
 }
 

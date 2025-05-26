@@ -900,8 +900,91 @@ router.get('/stores/:storeId/products', isAuthenticated, async (req: Request, re
  * Webhook endpoint para receber atualizações da Shopee
  */
 router.post('/webhook', async (req: Request, res: Response) => {
-  const { handleShopeeWebhook } = await import('../shopee/webhooks');
-  await handleShopeeWebhook(req, res);
+  try {
+    console.log(`[Routes] Webhook da Shopee recebido - IP: ${req.ip}, User-Agent: ${req.get('User-Agent')}`);
+    
+    const { handleShopeeWebhook } = await import('../shopee/webhooks');
+    await handleShopeeWebhook(req, res);
+  } catch (error) {
+    console.error('[Routes] Erro no webhook da Shopee:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * Endpoint para testar webhooks (desenvolvimento)
+ */
+router.post('/webhook/test', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { event } = req.body;
+    
+    if (!event) {
+      return res.status(400).json({ error: 'Event data required' });
+    }
+    
+    console.log(`[Routes] Teste de webhook iniciado pelo usuário:`, (req.user as any).claims.sub);
+    
+    // Simular evento de webhook
+    const mockEvent = {
+      code: event.code || 1,
+      shop_id: event.shop_id || 123456,
+      timestamp: Math.floor(Date.now() / 1000),
+      data: event.data || { item_id: 123, status: 'updated' }
+    };
+    
+    // Processar webhook simulado
+    const { handleShopeeWebhook } = await import('../shopee/webhooks');
+    
+    // Criar request simulado
+    const mockReq = {
+      body: mockEvent,
+      headers: {
+        'authorization': 'test-signature'
+      }
+    } as any;
+    
+    const mockRes = {
+      status: (code: number) => ({
+        json: (data: any) => {
+          console.log(`[Routes] Webhook teste respondeu com status ${code}:`, data);
+          return res.status(code).json(data);
+        }
+      })
+    } as any;
+    
+    await handleShopeeWebhook(mockReq, mockRes);
+    
+  } catch (error) {
+    console.error('[Routes] Erro no teste de webhook:', error);
+    res.status(500).json({ 
+      error: 'Failed to test webhook',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * Monitorar status dos webhooks
+ */
+router.get('/webhook/status', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { webhookProcessor } = await import('../shopee/webhookProcessor');
+    const stats = webhookProcessor.getStats();
+    
+    res.json({
+      webhookProcessor: stats,
+      message: 'Webhook processor status retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Error getting webhook status:', error);
+    res.status(500).json({
+      message: 'Failed to get webhook status',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 /**
