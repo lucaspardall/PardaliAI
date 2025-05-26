@@ -32,12 +32,14 @@ export default function OptimizationsPage() {
 
   const { data: optimizations, isLoading } = useQuery({
     queryKey: ['/api/optimizations'],
-    queryFn: () => apiRequest('GET', '/api/optimizations'),
+    queryFn: () => apiRequest('GET', '/api/optimizations').then(res => res.json()),
   });
 
-  const filteredOptimizations = optimizations?.filter((opt: Optimization) => 
-    statusFilter === 'all' || opt.status === statusFilter
-  ) || [];
+  const filteredOptimizations = Array.isArray(optimizations) 
+    ? optimizations.filter((opt: Optimization) => 
+        statusFilter === 'all' || opt.status === statusFilter
+      )
+    : [];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
