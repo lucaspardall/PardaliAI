@@ -42,7 +42,10 @@ export default function SidebarLayout({
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    // Check if we're on mobile to determine initial state
+    return typeof window !== 'undefined' && window.innerWidth < 768 ? true : false;
+  });
 
   const { user } = useAuth();
 
@@ -73,16 +76,26 @@ export default function SidebarLayout({
 
   // Close mobile sidebar on route change (only for mobile)
   useEffect(() => {
-    // Only close mobile sidebar, not desktop sidebar
+    const handleResize = () => {
+      // Only close mobile sidebar on route change for mobile devices
+      if (window.innerWidth < 768) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+
+    // Close mobile sidebar on route change only
     if (window.innerWidth < 768) {
       setIsMobileSidebarOpen(false);
     }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [location]);
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar - Desktop */}
-      <aside className={`hidden md:flex ${isSidebarCollapsed ? 'md:w-16' : 'md:w-64'} bg-secondary border-r border-border h-full flex-col flex-shrink-0 transition-all duration-300`}>
+      <aside className={`hidden md:flex ${isSidebarCollapsed ? 'md:w-16' : 'md:w-64'} bg-secondary border-r border-border h-full flex-col flex-shrink-0 transition-all duration-300 relative z-10`}>
         <div className="p-4 border-b border-sidebar-border flex items-center">
           <i className="ri-bird-fill text-primary text-2xl mr-2"></i>
           <h1 className="text-xl font-bold text-white font-heading">CIP Shopee</h1>
