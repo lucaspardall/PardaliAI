@@ -178,34 +178,59 @@ export class ShopeeClient {
       throw new Error('No refresh token available');
     }
 
+    // Verificar se o refresh token ainda é válido (não expirou)
+    if (!this.tokens.refreshToken) {
+      throw new Error('Refresh token is missing');
+    }
+
     try {
+      console.log(`[Shopee Auth] Refreshing token for shop ${this.tokens.shopId}`);
+
       // Obter novos tokens
       const newTokens = await this.authManager.refreshAccessToken(
         this.tokens.refreshToken,
         this.tokens.shopId
       );
 
-      // Verificar se obtivemos novos tokens válidos
+      // Validar tokens recebidos
       if (!newTokens.accessToken || !newTokens.refreshToken) {
-        throw new Error('Invalid tokens received during refresh');
+        throw new Error('Invalid tokens received during refresh - missing access_token or refresh_token');
+      }
+
+      // Validar shopId
+      if (newTokens.shopId !== this.tokens.shopId) {
+        throw new Error('Shop ID mismatch in refreshed tokens');
       }
 
       // Atualizar tokens em memória imediatamente
       this.tokens = newTokens;
 
-      // Persistir novos tokens
-      await this.saveTokensToStorage(newTokens);
-
-      console.log(`Tokens refreshed successfully for shop ${newTokens.shopId}`);
+      // Persistir novos tokens no armazenamento
+      try {
+        await this.saveTokensToStorage(newTokens);
+        console.log(`[Shopee Auth] Tokens refreshed and saved successfully for shop ${newTokens.shopId}`);
+      } catch (saveError) {
+        console.error(`[Shopee Auth] Failed to save refreshed tokens:`, saveError);
+        // Não falhar aqui, pois os tokens em memória ainda são válidos
+      }
 
       return newTokens;
-    } catch (error) {
-      console.error('Failed to refresh access token:', error);
+    } catch (error: any) {
+      console.error(`[Shopee Auth] Failed to refresh access token:`, error);
 
-      // Em caso de falha, podemos precisar forçar nova autenticação
-      this.tokens = null;
+      // Determinar se é um erro recuperável ou não
+      const isRecoverable = error.response?.status !== 400 && 
+                           !error.message?.includes('invalid_grant') &&
+                           !error.message?.includes('invalid refresh token');
 
-      throw new Error(`Token refresh failed: ${error.message || 'Unknown error'}`);
+      if (!isRecoverable) {
+        // Em caso de erro não recuperável, limpar tokens para forçar nova autenticação
+        console.warn(`[Shopee Auth] Refresh token invalid, clearing tokens for shop ${this.tokens.shopId}`);
+        this.tokens = null;
+      }
+
+      const errorMessage = error.response?.data?.message || error.message || 'Unknown refresh error';
+      throw new Error(`Token refresh failed: ${errorMessage}`);
     }
   }
 
@@ -338,9 +363,17 @@ export class ShopeeClient {
    * @param endpoint Endpoint da API
    * @param params Parâmetros da requisição (opcionais)
    * @param useCache Se deve usar cache (padrão: true)
+   * @param retryCount Contador interno de tentativas
    */
-  async get<T>(endpoint: string, params: Record<string, any> = {}, useCache: boolean = true): Promise<T> {
+  async get<T>(endpoint: string, params: Record<string, any> = {}, useCache: boolean = true, retryCount: number = 0): Promise<T> {
+    const maxRetries = 3;
+    
     try {
+      // Verificar se não temos tokens válidos
+      if (!this.tokens) {
+        throw new Error('No valid tokens available. Please authenticate first.');
+      }
+
       // Verificar cache se habilitado
       if (useCache && ShopeeCache) {
         const cacheKey = `${endpoint}:${JSON.stringify(params)}`;
@@ -362,12 +395,20 @@ export class ShopeeClient {
 
       const data = response.data;
 
+      // Verificar se há erro na resposta
       if (data.error) {
         throw {
           error: data.error,
-          message: data.message,
+          message: data.message || 'API Error',
           requestId: data.request_id,
+          response: data
         };
+      }
+
+      // Verificar se há response válida
+      if (data.response === undefined || data.response === null) {
+        console.warn(`[Shopee API] Empty response for ${endpoint}`);
+        return {} as T;
       }
 
       // Armazenar em cache se habilitado
@@ -385,20 +426,38 @@ export class ShopeeClient {
       }
 
       return data.response;
-    } catch (error) {
-      // Tratamento especial para erro de limite de taxa
+    } catch (error: any) {
+      console.error(`[Shopee API] Error in GET ${endpoint}:`, error);
+
+      // Parse do erro
       const apiError = parseApiError(error);
 
+      // Tratamento para rate limiting
       if (apiError.error === 'TooManyRequests' || 
-          (error.response?.status === 429) || 
+          error.response?.status === 429 || 
           apiError.message?.includes('rate limit')) {
-        console.warn(`[Shopee API] Rate limit hit for ${endpoint}. Retrying after delay.`);
+        
+        if (retryCount < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff
+          console.warn(`[Shopee API] Rate limit hit for ${endpoint}. Retrying in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+          
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return this.get(endpoint, params, false, retryCount + 1);
+        }
+      }
 
-        // Esperar antes de tentar novamente
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        // Tentar novamente com cache desabilitado para garantir resposta fresca
-        return this.get(endpoint, params, false);
+      // Tratamento para erro de autenticação
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        if (this.tokens && retryCount === 0) {
+          try {
+            console.log(`[Shopee API] Token expired, refreshing...`);
+            this.tokens = await this.refreshToken();
+            return this.get(endpoint, params, useCache, retryCount + 1);
+          } catch (refreshError) {
+            console.error(`[Shopee API] Failed to refresh token:`, refreshError);
+            throw new Error('Authentication failed. Please re-authenticate.');
+          }
+        }
       }
 
       throw apiError;
@@ -463,7 +522,50 @@ export class ShopeeClient {
    * Verifica se o cliente está conectado
    */
   isConnected(): boolean {
-    return !!this.tokens && !this.authManager.isTokenExpired(this.tokens.expiresAt);
+    return !!this.tokens && 
+           !!this.tokens.accessToken && 
+           !!this.tokens.refreshToken && 
+           !this.authManager.isTokenExpired(this.tokens.expiresAt);
+  }
+
+  /**
+   * Valida a conexão fazendo uma requisição de teste
+   */
+  async validateConnection(): Promise<boolean> {
+    if (!this.isConnected()) {
+      return false;
+    }
+
+    try {
+      // Fazer uma requisição simples para validar os tokens
+      await this.get('/api/v2/shop/get_shop_info', {}, false);
+      return true;
+    } catch (error) {
+      console.warn(`[Shopee Client] Connection validation failed:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Obtém informações detalhadas do status da conexão
+   */
+  getConnectionStatus(): {
+    connected: boolean;
+    hasTokens: boolean;
+    tokenExpired: boolean;
+    shopId?: string;
+    expiresAt?: Date;
+  } {
+    const hasTokens = !!this.tokens?.accessToken && !!this.tokens?.refreshToken;
+    const tokenExpired = this.tokens ? this.authManager.isTokenExpired(this.tokens.expiresAt) : true;
+    
+    return {
+      connected: this.isConnected(),
+      hasTokens,
+      tokenExpired,
+      shopId: this.tokens?.shopId,
+      expiresAt: this.tokens?.expiresAt
+    };
   }
 
   /**
