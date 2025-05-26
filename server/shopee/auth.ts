@@ -194,10 +194,15 @@ export class ShopeeAuthManager {
 
       // Verificar se os tokens necessários estão presentes
       if (!data.access_token || !data.refresh_token) {
-        console.error('Tokens não encontrados na resposta:', data);
+        console.error('==== TOKENS NÃO ENCONTRADOS ====');
+        console.error('Resposta completa da API:', JSON.stringify(data, null, 2));
+        console.error('access_token presente:', !!data.access_token);
+        console.error('refresh_token presente:', !!data.refresh_token);
+        console.error('===============================');
         throw {
           error: 'TokenNotFound',
           message: 'Tokens de acesso não encontrados na resposta',
+          response: data
         };
       }
 

@@ -274,65 +274,99 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     console.log('Iniciando troca de código por tokens...');
 
     // Obter tokens diretamente usando o método de autenticação renovado
-    const tokens = await getAccessToken(config, code as string, shop_id as string);
+    try {
+      const tokens = await getAccessToken(config, code as string, shop_id as string);
 
-    console.log('Tokens obtidos com sucesso!');
+      // Obter informações da loja (será implementado posteriormente)
+      // Temporariamente vamos utilizar um nome genérico
+      const shopName = `Shopee Store ${shop_id}`;
 
-    // Obter informações da loja (será implementado posteriormente)
-    // Temporariamente vamos utilizar um nome genérico
-    const shopName = `Shopee Store ${shop_id}`;
+      console.log(`Verificando se loja ${shop_id} já existe no banco...`);
 
-    // Verificar se a loja já existe
-    const existingStore = await storage.getStoreByShopId(shop_id as string);
+      // Verificar se a loja já existe
+      const existingStore = await storage.getStoreByShopId(shop_id as string);
 
-    if (existingStore) {
-      // Atualizar a loja existente
-      await storage.updateStore(existingStore.id, {
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        tokenExpiresAt: tokens.expiresAt,
-        isActive: true,
-        updatedAt: new Date()
+      if (existingStore) {
+        console.log(`Loja existente encontrada, atualizando tokens...`);
+        // Atualizar a loja existente
+        await storage.updateStore(existingStore.id, {
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          tokenExpiresAt: tokens.expiresAt,
+          isActive: true,
+          updatedAt: new Date()
+        });
+
+        console.log(`Loja ${existingStore.shopName} atualizada com sucesso`);
+
+        // Criar notificação
+        await storage.createNotification({
+          userId: (req.user as any).claims.sub,
+          title: 'Loja Shopee reconectada',
+          message: `A loja ${existingStore.shopName} foi reconectada com sucesso.`,
+          type: 'success',
+          isRead: false,
+          createdAt: new Date()
+        });
+
+        console.log(`Redirecionando para dashboard após reconexão`);
+        return res.redirect('/dashboard?status=success&message=' + encodeURIComponent('Loja reconectada com sucesso'));
+      } else {
+        console.log(`Criando nova loja no banco...`);
+        // Criar nova loja
+        const newStore = await storage.createStore({
+          userId: (req.user as any).claims.sub,
+          shopId: shop_id as string,
+          shopName,
+          shopRegion: 'BR',
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          tokenExpiresAt: tokens.expiresAt,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          totalProducts: 0
+        });
+
+        console.log(`Nova loja criada com ID: ${newStore.id}`);
+
+        // Criar notificação
+        await storage.createNotification({
+          userId: (req.user as any).claims.sub,
+          title: 'Nova loja Shopee conectada',
+          message: `A loja ${shopName} foi conectada com sucesso.`,
+          type: 'success',
+          isRead: false,
+          createdAt: new Date()
+        });
+
+        console.log(`Redirecionando para dashboard após criação da nova loja`);
+        return res.redirect('/dashboard?status=success&message=' + encodeURIComponent('Loja conectada com sucesso'));
+      }
+
+    } catch (tokenError: any) {
+      console.error('Erro ao obter tokens da Shopee:', tokenError);
+      console.error('Detalhes do erro:', {
+        message: tokenError.message,
+        error: tokenError.error,
+        stack: tokenError.stack
       });
 
-      // Criar notificação
-      await storage.createNotification({
-        userId: (req.user as any).claims.sub,
-        title: 'Loja Shopee reconectada',
-        message: `A loja ${existingStore.shopName} foi reconectada com sucesso.`,
-        type: 'success',
-        isRead: false,
-        createdAt: new Date()
-      });
+      // Criar notificação de erro
+      try {
+        await storage.createNotification({
+          userId: (req.user as any).claims.sub,
+          title: 'Erro ao conectar loja Shopee',
+          message: `Falha na obtenção de tokens: ${tokenError.message || 'Erro desconhecido'}`,
+          type: 'error',
+          isRead: false,
+          createdAt: new Date()
+        });
+      } catch (notificationError) {
+        console.error('Erro ao criar notificação de erro:', notificationError);
+      }
 
-      res.redirect('/dashboard');
-    } else {
-      // Criar nova loja
-      const newStore = await storage.createStore({
-        userId: (req.user as any).claims.sub,
-        shopId: shop_id as string,
-        shopName,
-        shopRegion: 'BR',
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        tokenExpiresAt: tokens.expiresAt,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        totalProducts: 0
-      });
-
-      // Criar notificação
-      await storage.createNotification({
-        userId: (req.user as any).claims.sub,
-        title: 'Nova loja Shopee conectada',
-        message: `A loja ${shopName} foi conectada com sucesso.`,
-        type: 'success',
-        isRead: false,
-        createdAt: new Date()
-      });
-
-      res.redirect('/dashboard');
+      return res.redirect('/dashboard?status=error&message=' + encodeURIComponent(`Erro ao obter tokens: ${tokenError.message || 'Erro desconhecido'}`));
     }
   } catch (error: any) {
     console.error('Error in Shopee OAuth callback:', error);
@@ -690,7 +724,7 @@ function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
         <div class="option">
           <h2>Opção 3: API Minimalista</h2>
           <p>Use a API padrão de autorização com apenas parâmetros obrigatórios.</p>
-          <a href="/api/shopee/authorize?minimal=true" class="btn" target="_blank">Testar API Minimalista</a>
+          <a href="/api/shopee/authorize?minimal=true" class="btn" target="_blank">Testar API API Minimalista</a>
         </div>
 
         <div class="warning">
@@ -781,34 +815,35 @@ router.post('/stores/:storeId/sync/test', isAuthenticated, async (req: Request, 
   try {
     const { storeId } = req.params;
     const userId = (req.user as any).claims.sub;
-    
+
     // Verificar se a loja existe e pertence ao usuário
     const store = await storage.getStoreById(parseInt(storeId));
-    
+
     if (!store) {
       return res.status(404).json({ message: 'Store not found' });
     }
-    
+
     if (store.userId !== userId) {
+```javascript
       return res.status(403).json({ message: 'Access denied' });
     }
 
     console.log(`[Debug] Iniciando teste de sincronização para loja ${storeId}`);
-    
+
     // Testar apenas buscar lista de produtos (sem salvar)
     const { loadShopeeClientForStore } = await import('../shopee/index');
     const client = await loadShopeeClientForStore(store.shopId);
-    
+
     if (!client) {
       return res.status(400).json({ message: 'Failed to load Shopee client' });
     }
-    
+
     // Buscar apenas os primeiros 10 produtos para teste
     const { getProductList } = await import('../shopee/data');
     const productList = await getProductList(client, 0, 10);
-    
+
     console.log(`[Debug] Resposta da API Shopee:`, JSON.stringify(productList, null, 2));
-    
+
     res.json({
       success: true,
       message: 'Test completed',
@@ -819,7 +854,7 @@ router.post('/stores/:storeId/sync/test', isAuthenticated, async (req: Request, 
         shopName: store.shopName
       }
     });
-    
+
   } catch (error: any) {
     console.error('Error testing product sync:', error);
     res.status(500).json({
@@ -896,7 +931,7 @@ router.get('/stores/:storeId/products', isAuthenticated, async (req: Request, re
 router.post('/webhook', async (req: Request, res: Response) => {
   try {
     console.log(`[Routes] Webhook da Shopee recebido - IP: ${req.ip}, User-Agent: ${req.get('User-Agent')}`);
-    
+
     const { handleShopeeWebhook } = await import('../shopee/webhooks');
     await handleShopeeWebhook(req, res);
   } catch (error) {
@@ -914,13 +949,13 @@ router.post('/webhook', async (req: Request, res: Response) => {
 router.post('/webhook/test', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const { event } = req.body;
-    
+
     if (!event) {
       return res.status(400).json({ error: 'Event data required' });
     }
-    
+
     console.log(`[Routes] Teste de webhook iniciado pelo usuário:`, (req.user as any).claims.sub);
-    
+
     // Simular evento de webhook
     const mockEvent = {
       code: event.code || 1,
@@ -928,10 +963,10 @@ router.post('/webhook/test', isAuthenticated, async (req: Request, res: Response
       timestamp: Math.floor(Date.now() / 1000),
       data: event.data || { item_id: 123, status: 'updated' }
     };
-    
+
     // Processar webhook simulado
     const { handleShopeeWebhook } = await import('../shopee/webhooks');
-    
+
     // Criar request simulado
     const mockReq = {
       body: mockEvent,
@@ -939,7 +974,7 @@ router.post('/webhook/test', isAuthenticated, async (req: Request, res: Response
         'authorization': 'test-signature'
       }
     } as any;
-    
+
     const mockRes = {
       status: (code: number) => ({
         json: (data: any) => {
@@ -948,9 +983,9 @@ router.post('/webhook/test', isAuthenticated, async (req: Request, res: Response
         }
       })
     } as any;
-    
+
     await handleShopeeWebhook(mockReq, mockRes);
-    
+
   } catch (error) {
     console.error('[Routes] Erro no teste de webhook:', error);
     res.status(500).json({ 
@@ -967,7 +1002,7 @@ router.get('/webhook/status', isAuthenticated, async (req: Request, res: Respons
   try {
     const { webhookProcessor } = await import('../shopee/webhookProcessor');
     const stats = webhookProcessor.getStats();
-    
+
     res.json({
       webhookProcessor: stats,
       message: 'Webhook processor status retrieved successfully'
