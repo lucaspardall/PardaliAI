@@ -129,42 +129,71 @@ export class ShopeeSyncManager {
     let hasMore = true;
 
     try {
+      console.log(`[Sync] Iniciando sincronização de produtos para loja ${this.storeId}`);
+
       while (hasMore) {
         console.log(`[Sync] Buscando produtos (offset: ${offset}, batch: ${this.options.batchSize})`);
 
-        // Buscar lista de produtos
+        // Buscar lista de produtos com retry
         const productList = await this.withRetry(async () => {
-          return await getProductList(this.client, offset, this.options.batchSize);
+          const result = await getProductList(this.client, offset, this.options.batchSize);
+          console.log(`[Sync] API retornou:`, result);
+          return result;
         });
 
-        if (!productList?.item || productList.item.length === 0) {
+        // Verificar estrutura da resposta da API Shopee
+        const items = productList?.response?.item || productList?.item || [];
+        
+        if (!items || items.length === 0) {
+          console.log(`[Sync] Nenhum produto encontrado no offset ${offset}`);
           hasMore = false;
           break;
         }
 
+        console.log(`[Sync] Encontrados ${items.length} produtos`);
+
         // Processar produtos em lotes menores para detalhes
-        const itemIds = productList.item.map(item => item.item_id);
+        const itemIds = items.map((item: any) => item.item_id).filter(id => id);
+        
+        if (itemIds.length === 0) {
+          console.warn(`[Sync] Nenhum item_id válido encontrado nos produtos`);
+          offset += this.options.batchSize;
+          continue;
+        }
+
         const detailBatchSize = Math.min(20, itemIds.length); // Shopee limita detalhes em lotes menores
 
         for (let i = 0; i < itemIds.length; i += detailBatchSize) {
           const batchIds = itemIds.slice(i, i + detailBatchSize);
           
           try {
+            console.log(`[Sync] Buscando detalhes para ${batchIds.length} produtos`);
+            
             // Buscar detalhes dos produtos
             const productDetails = await this.withRetry(async () => {
-              return await getProductDetails(this.client, batchIds);
+              const result = await getProductDetails(this.client, batchIds);
+              console.log(`[Sync] Detalhes recebidos:`, result);
+              return result;
             });
 
-            if (productDetails?.item_list) {
+            // Processar detalhes dos produtos
+            const itemList = productDetails?.response?.item_list || productDetails?.item_list || [];
+            
+            if (itemList.length > 0) {
               // Salvar produtos no banco
-              for (const product of productDetails.item_list) {
+              for (const product of itemList) {
                 try {
                   await this.saveProduct(product);
                   processed++;
+                  console.log(`[Sync] Produto ${product.item_id} salvo com sucesso`);
                 } catch (error) {
-                  errors.push(`Erro ao salvar produto ${product.item_id}: ${error.message}`);
+                  const errorMsg = `Erro ao salvar produto ${product.item_id}: ${error.message}`;
+                  console.error(errorMsg);
+                  errors.push(errorMsg);
                 }
               }
+            } else {
+              console.warn(`[Sync] Nenhum detalhe de produto retornado para lote ${batchIds.join(',')}`);
             }
 
             // Delay entre lotes para evitar rate limiting
@@ -173,25 +202,32 @@ export class ShopeeSyncManager {
             }
 
           } catch (error) {
-            errors.push(`Erro ao buscar detalhes do lote ${i}-${i + detailBatchSize}: ${error.message}`);
+            const errorMsg = `Erro ao buscar detalhes do lote ${i}-${i + detailBatchSize}: ${error.message}`;
+            console.error(errorMsg);
+            errors.push(errorMsg);
           }
         }
 
         // Verificar se há mais páginas
-        hasMore = productList.has_next_page || false;
+        hasMore = productList?.response?.has_next_page || productList?.has_next_page || false;
         offset += this.options.batchSize;
 
         // Delay entre páginas
         await this.sleep(this.options.delayBetweenBatches);
       }
 
+      console.log(`[Sync] Sincronização de produtos concluída: ${processed} produtos processados`);
+
       // Atualizar total de produtos na loja
       await storage.updateStore(this.storeId, {
-        totalProducts: processed
+        totalProducts: processed,
+        lastSyncAt: new Date()
       });
 
     } catch (error) {
-      errors.push(`Erro geral na sincronização: ${error.message}`);
+      const errorMsg = `Erro geral na sincronização: ${error.message}`;
+      console.error(errorMsg);
+      errors.push(errorMsg);
     }
 
     const duration = Date.now() - startTime;
@@ -250,30 +286,83 @@ export class ShopeeSyncManager {
    * Salva um produto no banco de dados
    */
   private async saveProduct(product: any): Promise<void> {
-    const existingProduct = await storage.getProductsByStoreId(this.storeId, 1, 0)
-      .then(products => products.find(p => p.productId === String(product.item_id)));
-
-    const productData = {
-      storeId: this.storeId,
-      productId: String(product.item_id),
-      name: product.item_name || 'Produto sem nome',
-      description: product.description || '',
-      price: product.price_info?.current_price || 0,
-      stock: product.stock_info?.current_stock || 0,
-      images: product.image?.image_url_list || [],
-      category: product.category_id ? String(product.category_id) : '',
-      status: this.mapProductStatus(product.status),
-      lastSyncAt: new Date()
-    };
-
-    if (existingProduct) {
-      await storage.updateProduct(existingProduct.id, productData);
-    } else {
-      await storage.createProduct({
-        ...productData,
-        createdAt: new Date(),
-        updatedAt: new Date()
+    try {
+      console.log(`[Sync] Processando produto:`, {
+        item_id: product.item_id,
+        item_name: product.item_name,
+        status: product.status
       });
+
+      const existingProduct = await storage.getProductsByStoreId(this.storeId, 1, 0)
+        .then(products => products.find(p => p.productId === String(product.item_id)));
+
+      // Extrair dados com fallbacks seguros
+      const itemId = product.item_id || product.id;
+      const itemName = product.item_name || product.name || 'Produto sem nome';
+      const description = product.description || '';
+      
+      // Extrair preço com múltiplos caminhos possíveis
+      let price = 0;
+      if (product.price_info?.current_price) {
+        price = product.price_info.current_price;
+      } else if (product.price_info?.original_price) {
+        price = product.price_info.original_price;
+      } else if (product.price) {
+        price = product.price;
+      }
+
+      // Extrair estoque com múltiplos caminhos possíveis
+      let stock = 0;
+      if (product.stock_info?.current_stock !== undefined) {
+        stock = product.stock_info.current_stock;
+      } else if (product.stock_info?.normal_stock !== undefined) {
+        stock = product.stock_info.normal_stock;
+      } else if (product.stock !== undefined) {
+        stock = product.stock;
+      }
+
+      // Extrair imagens
+      let images: string[] = [];
+      if (product.image?.image_url_list) {
+        images = product.image.image_url_list;
+      } else if (product.images && Array.isArray(product.images)) {
+        images = product.images;
+      } else if (product.image_urls && Array.isArray(product.image_urls)) {
+        images = product.image_urls;
+      }
+
+      const productData = {
+        storeId: this.storeId,
+        productId: String(itemId),
+        name: itemName,
+        description: description,
+        price: Number(price) || 0,
+        stock: Number(stock) || 0,
+        images: images,
+        category: product.category_id ? String(product.category_id) : '',
+        status: this.mapProductStatus(product.status),
+        lastSyncAt: new Date()
+      };
+
+      console.log(`[Sync] Dados do produto mapeados:`, productData);
+
+      if (existingProduct) {
+        await storage.updateProduct(existingProduct.id, {
+          ...productData,
+          updatedAt: new Date()
+        });
+        console.log(`[Sync] Produto ${itemId} atualizado`);
+      } else {
+        await storage.createProduct({
+          ...productData,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        console.log(`[Sync] Produto ${itemId} criado`);
+      }
+    } catch (error) {
+      console.error(`[Sync] Erro ao salvar produto:`, error);
+      throw error;
     }
   }
 

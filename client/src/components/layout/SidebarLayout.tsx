@@ -90,7 +90,7 @@ export default function SidebarLayout({
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [location]);on]);
+  }, [location]);
 
   return (
     <div className="flex h-screen overflow-hidden">

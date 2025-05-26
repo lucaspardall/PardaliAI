@@ -781,6 +781,62 @@ router.post('/sync/:storeId', isAuthenticated, async (req: Request, res: Respons
 });
 
 /**
+ * Testar sincronização de produtos (endpoint de debug)
+ */
+router.post('/stores/:storeId/sync/test', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+    
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+    
+    if (!store) {
+      return res.status(404).json({ message: 'Store not found' });
+    }
+    
+    if (store.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    console.log(`[Debug] Iniciando teste de sincronização para loja ${storeId}`);
+    
+    // Testar apenas buscar lista de produtos (sem salvar)
+    const { loadShopeeClientForStore } = await import('../shopee/index');
+    const client = await loadShopeeClientForStore(store.shopId);
+    
+    if (!client) {
+      return res.status(400).json({ message: 'Failed to load Shopee client' });
+    }
+    
+    // Buscar apenas os primeiros 10 produtos para teste
+    const { getProductList } = await import('../shopee/data');
+    const productList = await getProductList(client, 0, 10);
+    
+    console.log(`[Debug] Resposta da API Shopee:`, JSON.stringify(productList, null, 2));
+    
+    res.json({
+      success: true,
+      message: 'Test completed',
+      data: productList,
+      store: {
+        id: store.id,
+        shopId: store.shopId,
+        shopName: store.shopName
+      }
+    });
+    
+  } catch (error: any) {
+    console.error('Error testing product sync:', error);
+    res.status(500).json({
+      message: 'Failed to test sync',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+/**
  * Buscar produtos com filtros avançados
  */
 router.get('/stores/:storeId/products', isAuthenticated, async (req: Request, res: Response) => {
