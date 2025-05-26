@@ -11,15 +11,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   await setupAuth(app);
   
-  // Setup demo mode
-  try {
-    const { setupDemoSession, demoRouter } = await import('./demo');
-    setupDemoSession(app);
-    app.use('/api/demo', demoRouter);
-    console.log('Modo de demonstração configurado com sucesso');
-  } catch (error) {
-    console.error('Erro ao configurar modo de demonstração:', error);
-  }
+  
   
   // Register Shopee routes
   app.use('/api/shopee', shopeeRoutes);
