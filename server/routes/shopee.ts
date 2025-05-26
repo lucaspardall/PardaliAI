@@ -595,7 +595,6 @@ router.post('/stores/:storeId/sync/test', isAuthenticated, async (req: Request, 
     }
 
     if (store.userId !== userId) {
-```javascript
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -655,9 +654,7 @@ router.get('/stores/:storeId/products', isAuthenticated, async (req: Request, re
     }
 
     if (store.userId !== userId) {
-      return res.status(403).json({
-        message: 'Access denied'
-      });
+      return res.status(403).json({ message: 'Access denied' });
     }
 
     // Buscar produtos do banco de dados local
