@@ -14,8 +14,10 @@ import ConnectStore from "@/pages/dashboard/store/connect";
 import ShopeeConnect from "@/pages/shopee-connect";
 import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
+import Optimizations from "@/pages/dashboard/optimizations";
+import Reports from "@/pages/dashboard/reports";
 import { useAuth } from "./hooks/useAuth";
-import { lazy } from 'react';
+import { Suspense } from 'react';
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -57,10 +59,10 @@ function Router() {
         {(params) => <ProtectedRoute component={OptimizeProduct} id={params.id} />}
       </Route>
       <Route path="/dashboard/optimizations">
-        {() => <ProtectedRoute component={lazy(() => import('./pages/dashboard/optimizations'))} />}
+        {() => <ProtectedRoute component={Optimizations} />}
       </Route>
       <Route path="/dashboard/reports">
-        {() => <ProtectedRoute component={lazy(() => import('./pages/dashboard/reports'))} />}
+        {() => <ProtectedRoute component={Reports} />}
       </Route>
       <Route path="/dashboard/store/connect">
         {() => <ProtectedRoute component={ConnectStore} />}
@@ -87,7 +89,13 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="cip-shopee-theme">
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <Suspense fallback={
+            <div className="h-screen w-full flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          }>
+            <Router />
+          </Suspense>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
