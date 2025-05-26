@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -24,7 +25,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
 
   // Fetch user's stores
-  const { data: stores, isLoading: storesLoading } = useQuery({
+  const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
     queryKey: ["/api/stores"],
   });
 
@@ -97,7 +98,30 @@ export default function Dashboard() {
         <Helmet>
           <title>Dashboard | CIP Shopee</title>
         </Helmet>
-        <ConnectStore />
+        <div className="container mx-auto px-4 py-8">
+          <ConnectStore />
+        </div>
+      </SidebarLayout>
+    );
+  }
+
+  if (storesLoading) {
+    return (
+      <SidebarLayout title="Dashboard">
+        <Helmet>
+          <title>Dashboard | CIP Shopee</title>
+        </Helmet>
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid gap-6">
+            <Skeleton className="h-32 w-full" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </div>
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
       </SidebarLayout>
     );
   }
@@ -108,31 +132,77 @@ export default function Dashboard() {
         <title>Dashboard | CIP Shopee</title>
       </Helmet>
 
-      {/* Store selector if multiple stores */}
-      {stores?.length > 1 && (
-        <div className="mb-6">
-          <div className="flex items-center space-x-4">
-            <label className="text-sm font-medium">Selecionar loja:</label>
-            <select 
-              className="border border-input rounded-md bg-background p-2"
-              value={activeStore || ''}
-              onChange={(e) => setActiveStore(parseInt(e.target.value))}
-            >
-              {stores.map((store: any) => (
-                <option key={store.id} value={store.id}>
-                  {store.shopName}
-                </option>
-              ))}
-            </select>
+      <div className="container mx-auto px-4 py-8 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground mt-1">
+              Visão geral das suas lojas e produtos na Shopee
+            </p>
           </div>
+          
+          {activeStore && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleSyncStore(activeStore)}
+                disabled={syncStoreMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                {syncStoreMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sincronizando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4" />
+                    Sincronizar
+                  </>
+                )}
+              </Button>
+              
+              <Button asChild>
+                <Link href="/dashboard/products">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ver Produtos
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Store Stats */}
-      <StoreStats activeStore={activeStore} storeMetrics={storeMetrics} isLoading={storesLoading || metricsLoading} />
+        {/* Store selector if multiple stores */}
+        {stores?.length > 1 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-4">
+                <label className="text-sm font-medium">Loja ativa:</label>
+                <select 
+                  className="border border-input rounded-md bg-background p-2 min-w-[200px]"
+                  value={activeStore || ''}
+                  onChange={(e) => setActiveStore(parseInt(e.target.value))}
+                >
+                  {stores.map((store: any) => (
+                    <option key={store.id} value={store.id}>
+                      {store.shopName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Performance Chart */}
-      <div className="mt-6">
+        {/* Store Stats */}
+        <StoreStats 
+          activeStore={activeStore} 
+          storeMetrics={storeMetrics} 
+          isLoading={storesLoading || metricsLoading} 
+        />
+
+        {/* Performance Chart */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle>Performance da Loja</CardTitle>
@@ -142,105 +212,103 @@ export default function Dashboard() {
             <PerformanceChart metrics={storeMetrics} isLoading={metricsLoading} />
           </CardContent>
         </Card>
-      </div>
 
-      {/* Products and Optimization Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        {/* Top Products */}
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Produtos com Melhor Desempenho</CardTitle>
-              <CardDescription>Produtos com maior CTR na sua loja</CardDescription>
-            </div>
-            <Link href="/dashboard/products">
-              <Button variant="ghost" size="sm">
-                Ver todos
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {productsLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex items-center space-x-4">
-                    <Skeleton className="h-12 w-12 rounded-md" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-24" />
-                    </div>
-                  </div>
-                ))}
+        {/* Products and Optimization Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Products */}
+          <Card>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Produtos com Melhor Desempenho</CardTitle>
+                <CardDescription>Produtos com maior CTR na sua loja</CardDescription>
               </div>
-            ) : products?.length > 0 ? (
-              <ProductList 
-                products={products
-                  .filter((p: any) => p.ctr !== null)
-                  .sort((a: any, b: any) => (b.ctr || 0) - (a.ctr || 0))
-                  .slice(0, 3)
-                } 
-              />
-            ) : (
-              <div className="py-8 text-center">
-                <i className="ri-shopping-bag-line text-3xl text-muted-foreground mb-2"></i>
-                <p className="text-muted-foreground">Nenhum produto encontrado.</p>
-                <Button asChild className="mt-4" variant="outline">
-                  <Link href="/dashboard/products">Adicionar produtos</Link>
+              <Link href="/dashboard/products">
+                <Button variant="ghost" size="sm">
+                  Ver todos
                 </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Optimization Opportunities */}
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Oportunidades de Otimização</CardTitle>
-              <CardDescription>Produtos que podem melhorar com IA</CardDescription>
-            </div>
-            <Link href="/dashboard/products">
-              <Button variant="ghost" size="sm">
-                Ver todos
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {productsLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex items-center space-x-4">
-                    <Skeleton className="h-12 w-12 rounded-md" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-24" />
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {productsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center space-x-4">
+                      <Skeleton className="h-12 w-12 rounded-md" />
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
                     </div>
-                    <Skeleton className="h-8 w-20" />
-                  </div>
-                ))}
-              </div>
-            ) : optimizationOpportunities.length > 0 ? (
-              <div className="space-y-1">
-                {optimizationOpportunities.map((product: any) => (
-                  <OptimizationItem key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="py-8 text-center">
-                <i className="ri-award-line text-3xl text-muted-foreground mb-2"></i>
-                <p className="text-muted-foreground">Todos os seus produtos estão em bom desempenho!</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  ))}
+                </div>
+              ) : products?.length > 0 ? (
+                <ProductList 
+                  products={products
+                    .filter((p: any) => p.ctr !== null)
+                    .sort((a: any, b: any) => (b.ctr || 0) - (a.ctr || 0))
+                    .slice(0, 3)
+                  } 
+                />
+              ) : (
+                <div className="py-8 text-center">
+                  <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-4">Nenhum produto encontrado.</p>
+                  <Button asChild variant="outline">
+                    <Link href="/dashboard/products">Gerenciar produtos</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* AI Credits Info */}
-      <div className="mt-6">
+          {/* Optimization Opportunities */}
+          <Card>
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Oportunidades de Otimização</CardTitle>
+                <CardDescription>Produtos que podem melhorar com IA</CardDescription>
+              </div>
+              <Link href="/dashboard/products">
+                <Button variant="ghost" size="sm">
+                  Ver todos
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {productsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex items-center space-x-4">
+                      <Skeleton className="h-12 w-12 rounded-md" />
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                      <Skeleton className="h-8 w-20" />
+                    </div>
+                  ))}
+                </div>
+              ) : optimizationOpportunities.length > 0 ? (
+                <div className="space-y-1">
+                  {optimizationOpportunities.map((product: any) => (
+                    <OptimizationItem key={product.id} product={product} />
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center">
+                  <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
+                  <p className="text-muted-foreground">Todos os seus produtos estão com bom desempenho!</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* AI Credits Info */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div>
+              <div className="text-center sm:text-left">
                 <h3 className="text-lg font-medium">Créditos de IA</h3>
                 <p className="text-muted-foreground">
                   {user?.plan === 'free' ? (
