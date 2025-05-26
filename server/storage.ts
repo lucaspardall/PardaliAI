@@ -358,7 +358,8 @@ export class DatabaseStorage implements IStorage {
         .from(notifications)
         .where(eq(notifications.userId, userId))
         .orderBy(desc(notifications.createdAt))
-        .limit(limit);
+        .limit(limit)
+        .execute();
       return results;
     } catch (error) {
       console.error("Erro ao buscar notificações:", error);

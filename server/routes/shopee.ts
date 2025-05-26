@@ -480,7 +480,7 @@ function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
     timestamp: timestamp.toString(),
     sign: signature,
     redirect: config.redirectUrl,
-    state: stateParam,
+    state: stateParam
   });
 
   return `${baseUrl}${apiPath}?${params.toString()}`;
@@ -555,18 +555,12 @@ function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
         const url = new URL(`${baseUrl}${apiPath}`);
         const params = new URLSearchParams();
 
-        // Adicionar parâmetros obrigatórios
+        // Adicionar apenas parâmetros obrigatórios para evitar erro 302
         params.append('partner_id', config.partnerId.toString());
         params.append('timestamp', timestamp.toString());
         params.append('sign', signature);
         params.append('redirect', config.redirectUrl);
         params.append('state', stateParam);
-
-        // Adicionar parâmetros opcionais
-        params.append('region', config.region);
-        params.append('is_auth_shop', 'true');
-        params.append('login_type', 'seller');
-        params.append('auth_type', 'direct');
 
         url.search = params.toString();
         authUrl = url.toString();
