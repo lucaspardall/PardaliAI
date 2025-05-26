@@ -42,6 +42,7 @@ export default function SidebarLayout({
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const { user } = useAuth();
 
@@ -70,15 +71,18 @@ export default function SidebarLayout({
     { href: "/dashboard/subscription", icon: "ri-vip-crown-line", label: "Assinatura" },
   ];
 
-  // Close mobile sidebar on route change
+  // Close mobile sidebar on route change (only for mobile)
   useEffect(() => {
-    setIsMobileSidebarOpen(false);
+    // Only close mobile sidebar, not desktop sidebar
+    if (window.innerWidth < 768) {
+      setIsMobileSidebarOpen(false);
+    }
   }, [location]);
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex md:w-64 bg-secondary border-r border-border h-full flex-col flex-shrink-0">
+      <aside className={`hidden md:flex ${isSidebarCollapsed ? 'md:w-16' : 'md:w-64'} bg-secondary border-r border-border h-full flex-col flex-shrink-0 transition-all duration-300`}>
         <div className="p-4 border-b border-sidebar-border flex items-center">
           <i className="ri-bird-fill text-primary text-2xl mr-2"></i>
           <h1 className="text-xl font-bold text-white font-heading">CIP Shopee</h1>
@@ -87,37 +91,49 @@ export default function SidebarLayout({
         <div className="px-3 py-4 flex-1 overflow-auto">
           <div className="space-y-1">
             {navItems.map((item) => (
-              <NavItem 
-                key={item.href}
-                href={item.href}
-                icon={item.icon}
-                label={item.label}
-                isActive={location === item.href || (item.href !== basePath && location.startsWith(item.href))}
-              />
+              <div key={item.href} className="nav-item">
+                <Link href={item.href} className={`sidebar-link ${location === item.href || (item.href !== basePath && location.startsWith(item.href)) ? 'active' : ''} ${isSidebarCollapsed ? 'justify-center px-2' : ''}`}>
+                  <i className={`${item.icon} ${isSidebarCollapsed ? '' : 'mr-3'} text-lg`}></i>
+                  {!isSidebarCollapsed && <span>{item.label}</span>}
+                </Link>
+              </div>
             ))}
           </div>
 
-          <div className="mt-8">
-            <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Configurações
-            </h3>
-            <div className="mt-2 space-y-1">
+          {!isSidebarCollapsed && (
+            <div className="mt-8">
+              <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Configurações
+              </h3>
+              <div className="mt-2 space-y-1">
+                {settingsItems.map((item) => (
+                  <div key={item.href} className="nav-item">
+                    <Link href={item.href} className={`sidebar-link ${location === item.href ? 'active' : ''}`}>
+                      <i className={`${item.icon} mr-3 text-lg`}></i>
+                      <span>{item.label}</span>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {isSidebarCollapsed && (
+            <div className="mt-8 space-y-1">
               {settingsItems.map((item) => (
-                <NavItem 
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  isActive={location === item.href}
-                />
+                <div key={item.href} className="nav-item">
+                  <Link href={item.href} className={`sidebar-link ${location === item.href ? 'active' : ''} justify-center px-2`}>
+                    <i className={`${item.icon} text-lg`}></i>
+                  </Link>
+                </div>
               ))}
             </div>
-          </div>
+          )}
         </div>
 
         <div className="border-t border-sidebar-border p-4">
-          <div className="flex items-center">
-            <Avatar className="h-10 w-10 mr-3">
+          <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+            <Avatar className={`h-10 w-10 ${isSidebarCollapsed ? '' : 'mr-3'}`}>
               {user?.profileImageUrl ? (
                 <AvatarImage src={user.profileImageUrl} alt={user.firstName || "User"} />
               ) : (
@@ -126,24 +142,28 @@ export default function SidebarLayout({
                 </AvatarFallback>
               )}
             </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
-                {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email || 'Usuário'}
-              </p>
-              <p className="text-xs text-gray-400 truncate">
-                Plano {user?.plan === 'free' ? 'Gratuito' : user?.plan === 'starter' ? 'Starter' : user?.plan === 'pro' ? 'Pro' : 'Enterprise'}
-              </p>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="ml-auto text-gray-400 hover:text-white"
-              onClick={() => {
-                window.location.href = '/api/logout';
-              }} 
-            >
-              <i className="ri-logout-box-r-line"></i>
-            </Button>
+            {!isSidebarCollapsed && (
+              <>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">
+                    {user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email || 'Usuário'}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate">
+                    Plano {user?.plan === 'free' ? 'Gratuito' : user?.plan === 'starter' ? 'Starter' : user?.plan === 'pro' ? 'Pro' : 'Enterprise'}
+                  </p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="ml-auto text-gray-400 hover:text-white"
+                  onClick={() => {
+                    window.location.href = '/api/logout';
+                  }} 
+                >
+                  <i className="ri-logout-box-r-line"></i>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </aside>
@@ -243,6 +263,12 @@ export default function SidebarLayout({
               onClick={() => setIsMobileSidebarOpen(true)}
             >
               <i className="ri-menu-line text-xl"></i>
+            </button>
+            <button 
+              className="hidden md:block mr-4 text-muted-foreground hover:text-foreground"
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            >
+              <i className={`${isSidebarCollapsed ? 'ri-menu-unfold-line' : 'ri-menu-fold-line'} text-xl`}></i>
             </button>
             <h1 className="text-lg font-semibold text-foreground">{title}</h1>
           </div>
