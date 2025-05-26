@@ -15,6 +15,7 @@ import ShopeeConnect from "@/pages/shopee-connect";
 import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import { useAuth } from "./hooks/useAuth";
+import { lazy } from 'react';
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -55,6 +56,12 @@ function Router() {
       <Route path="/dashboard/optimize/:id">
         {(params) => <ProtectedRoute component={OptimizeProduct} id={params.id} />}
       </Route>
+      <Route path="/dashboard/optimizations">
+        {() => <ProtectedRoute component={lazy(() => import('./pages/dashboard/optimizations'))} />}
+      </Route>
+      <Route path="/dashboard/reports">
+        {() => <ProtectedRoute component={lazy(() => import('./pages/dashboard/reports'))} />}
+      </Route>
       <Route path="/dashboard/store/connect">
         {() => <ProtectedRoute component={ConnectStore} />}
       </Route>
@@ -88,3 +95,4 @@ function App() {
 }
 
 export default App;
+```

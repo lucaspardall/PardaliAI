@@ -52,6 +52,8 @@ export interface IStorage {
   getOptimizationById(id: number): Promise<ProductOptimization | undefined>;
   createOptimization(optimization: InsertProductOptimization): Promise<ProductOptimization>;
   updateOptimization(id: number, data: Partial<ProductOptimization>): Promise<ProductOptimization | undefined>;
+  // Product Optimization operations
+  getAllOptimizationsByUserId(userId: string): Promise<any[]>;
 
   // Metrics operations
   getStoreMetrics(storeId: number, days?: number): Promise<StoreMetric[]>;
@@ -126,7 +128,7 @@ export class DatabaseStorage implements IStorage {
         .from(shopeeStores)
         .where(eq(shopeeStores.userId, userId))
         .orderBy(desc(shopeeStores.createdAt));
-        
+
       console.log(`Encontradas ${stores.length} lojas para o usuário ${userId}`);
       return stores;
     } catch (error) {
@@ -259,6 +261,33 @@ export class DatabaseStorage implements IStorage {
       .where(eq(productOptimizations.id, id))
       .returning();
     return updatedOptimization;
+  }
+
+  async getAllOptimizationsByUserId(userId: string): Promise<any[]> {
+    const result = await db
+      .select({
+        id: productOptimizations.id,
+        productId: productOptimizations.productId,
+        productName: products.name,
+        productImage: sql<string>`CASE WHEN ${products.images} != '' AND ${products.images} IS NOT NULL THEN SUBSTR(${products.images}, 1, INSTR(${products.images}, ',') - 1) ELSE NULL END`,
+        status: productOptimizations.status,
+        originalTitle: productOptimizations.originalTitle,
+        suggestedTitle: productOptimizations.suggestedTitle,
+        originalDesc: productOptimizations.originalDesc,
+        suggestedDesc: productOptimizations.suggestedDesc,
+        originalKeywords: productOptimizations.originalKeywords,
+        suggestedKeywords: productOptimizations.suggestedKeywords,
+        reasoningNotes: productOptimizations.reasoningNotes,
+        createdAt: productOptimizations.createdAt,
+        appliedAt: productOptimizations.appliedAt,
+      })
+      .from(productOptimizations)
+      .innerJoin(products, eq(productOptimizations.productId, products.id))
+      .innerJoin(shopeeStores, eq(products.storeId, shopeeStores.id))
+      .where(eq(shopeeStores.userId, userId))
+      .orderBy(desc(productOptimizations.createdAt));
+
+    return result;
   }
 
   // Metrics operations
@@ -634,6 +663,9 @@ export class MemStorage implements IStorage {
     };
     this.notifications.set(id, newNotification);
     return newNotification;
+  }
+  async getAllOptimizationsByUserId(userId: string): Promise<any[]> {
+    return [];
   }
 }
 

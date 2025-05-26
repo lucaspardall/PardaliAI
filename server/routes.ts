@@ -353,6 +353,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all optimizations for user
+  app.get('/api/optimizations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const optimizations = await storage.getAllOptimizationsByUserId(userId);
+      res.json(optimizations);
+    } catch (error) {
+      console.error("Error fetching all optimizations:", error);
+      res.status(500).json({ message: "Failed to fetch optimizations" });
+    }
+  });
+
+  // Get reports data
+  app.get('/api/reports', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const range = req.query.range || '30d';
+      
+      // For now, return mock data - in real implementation, this would query actual analytics
+      const reportsData = {
+        totalSales: 26300,
+        averageCtr: 3.7,
+        totalConversions: 838,
+        totalOptimizations: 80,
+        appliedOptimizations: 45,
+        range
+      };
+      
+      res.json(reportsData);
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      res.status(500).json({ message: "Failed to fetch reports" });
+    }
+  });
+
   app.put('/api/optimizations/:id/status', isAuthenticated, async (req: any, res) => {
     try {
       const optimizationId = parseInt(req.params.id);
