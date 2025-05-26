@@ -92,7 +92,7 @@ export default function SidebarLayout({
                 href={item.href}
                 icon={item.icon}
                 label={item.label}
-                isActive={location === item.href}
+                isActive={location === item.href || (item.href !== basePath && location.startsWith(item.href))}
               />
             ))}
           </div>
@@ -177,7 +177,7 @@ export default function SidebarLayout({
                 href={item.href}
                 icon={item.icon}
                 label={item.label}
-                isActive={location === item.href}
+                isActive={location === item.href || (item.href !== basePath && location.startsWith(item.href))}
               />
             ))}
           </div>
