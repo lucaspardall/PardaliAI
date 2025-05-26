@@ -1,0 +1,49 @@
+======= INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE =======
+Usuário autenticado: {
+  claims: {
+    aud: '73ee031f-24e8-4b77-96e8-2cd2724cf5f2',
+    exp: 1748306877,
+    iat: 1748303277,
+    iss: 'https://replit.com/oidc',
+    sub: '42614523',
+    email: 'lalingerieoficial04@gmail.com',
+    at_hash: 'iG4p8aZhbU5YegAP_H2XUA',
+    username: 'lalingerieofici',
+    auth_time: 1748303276,
+    last_name: 'Lingerie',
+    first_name: 'La'
+  },
+  expires_at: 1748306877,
+  access_token: 'leknl_kR7Urq1tMTdhc1fD5aLiM5phrR_aYueQXRgM6',
+  refresh_token: 'ttARHBjHOlcbcXwcLGkDs4W5x-8qJzxKgIP6_iMLMnc'
+}
+Ambiente: development
+Informações de configuração da API:
+Partner ID: 2011285
+URL de redirecionamento configurada: undefined
+===================================================
+URL de redirecionamento que será usada: https://cipshopee.replit.app/api/shopee/callback
+===================================================
+Ambiente: development
+Informações de configuração da API:
+Partner ID: 2011285
+URL de redirecionamento configurada: https://cipshopee.replit.app/api/shopee/callback
+===================================================
+String base para assinatura (método padrão): 2011285/api/v2/shop/auth_partner1748303283
+Assinatura gerada: 0a3414793a8cf15ae164a1eb1ef0f60a2b2ecc8c828540ea378db017bee0998b
+✅ URL de autorização da Shopee: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748303283&sign=0a3414793a8cf15ae164a1eb1ef0f60a2b2ecc8c828540ea378db017bee0998b&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback
+Verificação de parâmetros importantes:
+- partner_id: true
+- timestamp: true
+- sign: true
+- redirect: true
+- auth_type=direct: false
+- login_type=seller: false
+🔎 Verificação direta do timestamp: timestamp=1748303283
+================================================
+✅ URL salva em arquivo para inspeção: shopee_auth_url.txt
+Redirecionando para autorização oficial Shopee: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748303283&si...
+Verificando conexão com banco de dados...
+✅ URL salva em arquivo para inspeção: shopee_auth_url.txt
+Conexão com banco de dados estabelecida com sucesso
+11:48:03 PM [express] GET /api/shopee/authorize 302 in 100ms

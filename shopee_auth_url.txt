@@ -1,1 +1,1 @@
-https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748302669&sign=2515b9a93bb264a33cf9629e8468e00577e61250363ec0162b65abf511efba61&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748302669285&region=BR&is_auth_shop=true&login_type=seller&auth_type=direct
+https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748303283&sign=0a3414793a8cf15ae164a1eb1ef0f60a2b2ecc8c828540ea378db017bee0998b&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback
