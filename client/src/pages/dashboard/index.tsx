@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import SidebarLayout from "@/components/layout/SidebarLayout";
 import { Button } from "@/components/ui/button";
@@ -12,29 +12,71 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Building2, Package, TrendingUp, Users, ShoppingCart, DollarSign, RefreshCw, Plus, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [activeStore, setActiveStore] = useState<number | null>(null);
-  
+
+  const queryClient = useQueryClient();
+
   // Fetch user's stores
   const { data: stores, isLoading: storesLoading } = useQuery({
     queryKey: ["/api/stores"],
   });
-  
+
+  const syncStoreMutation = useMutation({
+    mutationFn: async (storeId: number) => {
+      const response = await fetch(`/api/shopee/sync/${storeId}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to sync store');
+      }
+      return response.json();
+    },
+    onSuccess: (data, storeId) => {
+      // Invalidar queries relacionadas para atualizar a UI
+      queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
+      queryClient.invalidateQueries({ queryKey: [activeStore ? `/api/stores/${activeStore}/products?limit=5` : null] });
+      queryClient.invalidateQueries({ queryKey: [activeStore ? `/api/stores/${activeStore}/metrics` : null] });
+
+      toast({
+        title: "Sincronização concluída",
+        description: `${data.processed} itens processados em ${Math.round(data.duration / 1000)}s`,
+        variant: data.success ? "default" : "destructive",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro na sincronização",
+        description: error?.message || "Erro desconhecido",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSyncStore = (storeId: number) => {
+    syncStoreMutation.mutate(storeId);
+  };
+
   // Set active store when stores are loaded
   useEffect(() => {
     if (stores?.length > 0 && !activeStore) {
       setActiveStore(stores[0].id);
     }
   }, [stores, activeStore]);
-  
+
   // Fetch store metrics if a store is selected
   const { data: storeMetrics, isLoading: metricsLoading } = useQuery({
     queryKey: [activeStore ? `/api/stores/${activeStore}/metrics` : null],
     enabled: !!activeStore,
   });
-  
+
   // Fetch products for active store
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: [activeStore ? `/api/stores/${activeStore}/products?limit=5` : null],
@@ -65,7 +107,7 @@ export default function Dashboard() {
       <Helmet>
         <title>Dashboard | CIP Shopee</title>
       </Helmet>
-      
+
       {/* Store selector if multiple stores */}
       {stores?.length > 1 && (
         <div className="mb-6">
@@ -85,10 +127,10 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-      
+
       {/* Store Stats */}
       <StoreStats activeStore={activeStore} storeMetrics={storeMetrics} isLoading={storesLoading || metricsLoading} />
-      
+
       {/* Performance Chart */}
       <div className="mt-6">
         <Card>
@@ -101,7 +143,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Products and Optimization Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         {/* Top Products */}
@@ -149,7 +191,7 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
-        
+
         {/* Optimization Opportunities */}
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -192,7 +234,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* AI Credits Info */}
       <div className="mt-6">
         <Card>

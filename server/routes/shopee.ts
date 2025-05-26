@@ -722,4 +722,182 @@ function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
       });
     }
   });
+/**
+ * Sincronizar dados de uma loja específica
+ */
+router.post('/sync/:storeId', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+
+    if (!store) {
+      return res.status(404).json({
+        message: 'Store not found'
+      });
+    }
+
+    if (store.userId !== userId) {
+      return res.status(403).json({
+        message: 'Access denied'
+      });
+    }
+
+    // Importar e executar sincronização
+    const { syncStore } = await import('../shopee/sync');
+    const result = await syncStore(store.id);
+
+    // Criar notificação baseada no resultado
+    const notificationType = result.success ? 'success' : 'error';
+    const notificationMessage = result.success 
+      ? `Sincronização concluída: ${result.processed} itens processados`
+      : `Sincronização falhou: ${result.errors.join(', ')}`;
+
+    await storage.createNotification({
+      userId,
+      title: 'Sincronização da loja',
+      message: notificationMessage,
+      type: notificationType,
+      isRead: false,
+      createdAt: new Date()
+    });
+
+    res.json({
+      success: result.success,
+      processed: result.processed,
+      duration: result.duration,
+      errors: result.errors
+    });
+
+  } catch (error: any) {
+    console.error('Error syncing Shopee store:', error);
+    res.status(500).json({
+      message: 'Failed to sync store',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Buscar produtos com filtros avançados
+ */
+router.get('/stores/:storeId/products', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+    const { status, search, limit = 50, offset = 0 } = req.query;
+
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+
+    if (!store) {
+      return res.status(404).json({
+        message: 'Store not found'
+      });
+    }
+
+    if (store.userId !== userId) {
+      return res.status(403).json({
+        message: 'Access denied'
+      });
+    }
+
+    // Buscar produtos do banco de dados local
+    const products = await storage.getProductsByStoreId(
+      store.id, 
+      parseInt(limit as string), 
+      parseInt(offset as string)
+    );
+
+    // Filtrar por status se especificado
+    let filteredProducts = products;
+    if (status) {
+      filteredProducts = products.filter(p => p.status === status);
+    }
+
+    // Filtrar por busca se especificado
+    if (search) {
+      const searchTerm = (search as string).toLowerCase();
+      filteredProducts = filteredProducts.filter(p => 
+        p.name.toLowerCase().includes(searchTerm) ||
+        p.description?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    res.json({
+      products: filteredProducts,
+      total: filteredProducts.length
+    });
+
+  } catch (error: any) {
+    console.error('Error fetching store products:', error);
+    res.status(500).json({
+      message: 'Failed to fetch products',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Webhook endpoint para receber atualizações da Shopee
+ */
+router.post('/webhook', async (req: Request, res: Response) => {
+  const { handleShopeeWebhook } = await import('../shopee/webhooks');
+  await handleShopeeWebhook(req, res);
+});
+
+/**
+ * Buscar métricas de uma loja
+ */
+router.get('/stores/:storeId/metrics', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+    const { days = 7 } = req.query;
+
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+
+    if (!store) {
+      return res.status(404).json({
+        message: 'Store not found'
+      });
+    }
+
+    if (store.userId !== userId) {
+      return res.status(403).json({
+        message: 'Access denied'
+      });
+    }
+
+    // Buscar métricas da loja
+    const metrics = await storage.getStoreMetrics(store.id, parseInt(days as string));
+
+    // Calcular estatísticas básicas
+    const products = await storage.getProductsByStoreId(store.id);
+    const activeProducts = products.filter(p => p.status === 'active').length;
+    const totalRevenue = products.reduce((sum, p) => sum + (p.revenue || 0), 0);
+
+    res.json({
+      metrics,
+      summary: {
+        totalProducts: products.length,
+        activeProducts,
+        totalRevenue,
+        averageCtr: store.averageCtr || 0,
+        monthlyRevenue: store.monthlyRevenue || 0
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Error fetching store metrics:', error);
+    res.status(500).json({
+      message: 'Failed to fetch metrics',
+      error: error.message
+    });
+  }
+});
+
 export default router;
