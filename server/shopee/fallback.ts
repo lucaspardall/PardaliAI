@@ -1,3 +1,6 @@
+Fixes a syntax error in the fallback.ts file and adds a timestamp log.
+```
+```replit_final_file
 /**
  * Implementação alternativa para autenticação com a Shopee
  * Com foco no redirecionamento correto para o Seller Centre
@@ -36,7 +39,7 @@ export function generateAuthUrls(config: ShopeeAuthConfig) {
 
   // String base para gerar assinatura
   const baseString = `${config.partnerId}${apiPath}${timestamp}`;
-  
+
   // Gerar assinatura HMAC-SHA256
   const hmac = createHmac('sha256', config.partnerKey);
   hmac.update(baseString);
@@ -199,7 +202,29 @@ export function generateDiagnosticPage(urls: Record<string, string>): string {
     </body>
     </html>
   `;
-`p: ${timestamp}`);
+}
+
+/**
+ * Gera diferentes variações da URL de autorização da Shopee para
+ * diagnóstico e resolução de problemas de autenticação
+ */
+export function generateTestVariants(config: ShopeeAuthConfig): Record<string, string> {
+  // Verificar se a URL de redirecionamento está definida
+  if (!config.redirectUrl) {
+    throw new Error('URL de redirecionamento não definida na configuração');
+  }
+
+  // URL BASE para o fluxo de autorização de loja
+  const baseUrl = 'https://partner.shopeemobile.com';
+  const apiPath = '/api/v2/shop/auth_partner';
+
+  // Gerar timestamp em segundos (unix timestamp)
+  const timestamp = Math.floor(Date.now() / 1000);
+  console.log(`[Shopee Auth] Timestamp: ${timestamp}`);
+
+  // Criar estado único para CSRF protection
+  const stateParam = `cipshopee_${Date.now()}`;
+  console.log(`[Shopee Auth] State Param: ${stateParam}`);
 
   // ===== Método padrão usando a URL de autorização oficial =====
   // String base para gerar assinatura - EXATAMENTE conforme documentação oficial
@@ -499,7 +524,7 @@ export function generateDiagnosticPage(urls: Record<string, string>): string {
       <div class="section">
         <h2>Opções Minimalistas <span class="badge recommended">RECOMENDADO</span></h2>
         <p>Estas opções usam apenas os parâmetros essenciais e adicionam um por um para identificar problemas específicos.</p>
-        
+
         <div class="urls">
           ${Object.entries(urls)
             .filter(([key]) => ['minimal', 'withRegion', 'withAuthShop', 'withLoginType', 'withAuthType', 'withRegionAndAuthShop', 'withLoginAndAuthType'].includes(key))
@@ -517,7 +542,7 @@ export function generateDiagnosticPage(urls: Record<string, string>): string {
       <div class="section">
         <h2>Opções Alternativas <span class="badge experimental">FALLBACK</span></h2>
         <p>Estas são abordagens alternativas que tentam diferentes domínios, padrões de URL e combinações de parâmetros.</p>
-        
+
         <div class="urls">
           ${Object.entries(urls)
             .filter(([key]) => !['minimal', 'withRegion', 'withAuthShop', 'withLoginType', 'withAuthType', 'withRegionAndAuthShop', 'withLoginAndAuthType'].includes(key))
@@ -614,7 +639,7 @@ function getReadableName(key: string): string {
     withAuthType: "Minimal + AuthType",
     withRegionAndAuthShop: "Minimal + Region + AuthShop",
     withLoginAndAuthType: "Minimal + LoginType + AuthType",
-    
+
     // Opções antigas
     standard: "Padrão",
     enhanced: "Completa",
@@ -642,7 +667,7 @@ function getDescription(key: string): string {
     withAuthType: "Adiciona apenas o parâmetro auth_type=direct aos parâmetros essenciais, para isolar se este parâmetro está causando problemas.",
     withRegionAndAuthShop: "Adiciona os parâmetros region=BR e is_auth_shop=true aos parâmetros essenciais, para testar esta combinação específica.",
     withLoginAndAuthType: "Adiciona os parâmetros login_type=seller e auth_type=direct aos parâmetros essenciais, para testar esta combinação específica.",
-    
+
     // Opções antigas
     standard: "URL padrão com parâmetro de região adicionado (BR).",
     enhanced: "URL completa com todos os parâmetros de direcionamento para o Seller Center.",
