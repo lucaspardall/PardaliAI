@@ -1,7 +1,9 @@
+
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Link } from 'wouter';
+import { SignInButton } from '@clerk/clerk-react';
 import { useAuth } from '@/hooks/useAuth';
+import { Link } from 'wouter';
 
 export default function HeroSection() {
   const { isAuthenticated } = useAuth();
@@ -16,7 +18,7 @@ export default function HeroSection() {
         >
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
             Potencialize sua loja 
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> Shopee</span> com IA
+            <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent"> Shopee</span> com IA
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
             Transforme seus produtos em campeões de vendas! Nossa inteligência artificial otimiza títulos, 
@@ -25,15 +27,15 @@ export default function HeroSection() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             {!isAuthenticated ? (
-              <Link href="/login">
-                <Button size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
+              <SignInButton mode="modal">
+                <Button size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg">
                   <i className="ri-rocket-line mr-2"></i>
                   Começar Grátis
                 </Button>
-              </Link>
+              </SignInButton>
             ) : (
               <Link href="/dashboard">
-                <Button size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
+                <Button size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg">
                   <i className="ri-dashboard-line mr-2"></i>
                   Ir para Dashboard
                 </Button>

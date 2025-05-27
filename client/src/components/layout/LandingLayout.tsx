@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ui/theme-provider";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
+import { SignInButton } from "@clerk/clerk-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Link } from 'wouter';
 
 interface LandingLayoutProps {
   children: React.ReactNode;
@@ -33,7 +35,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
       }`}>
         <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
               <i className="ri-bird-fill text-white text-sm"></i>
             </div>
             <span className="font-bold text-xl">CIP Shopee</span>
@@ -68,18 +70,18 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
 
             {!isAuthenticated ? (
               <div className="flex items-center space-x-2">
-                <Link href="/login">
+                <SignInButton mode="modal">
                   <Button variant="ghost" className="font-medium">Entrar</Button>
-                </Link>
-                <Link href="/login">
-                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 font-medium">
+                </SignInButton>
+                <SignInButton mode="modal">
+                  <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-medium">
                     Começar Grátis
                   </Button>
-                </Link>
+                </SignInButton>
               </div>
             ) : (
               <Link href="/dashboard">
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 font-medium">
+                <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-medium">
                   Ir para Dashboard
                 </Button>
               </Link>
@@ -99,7 +101,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
           <div className="flex flex-col md:flex-row justify-between">
             <div className="mb-8 md:mb-0">
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-2">
                   <i className="ri-bird-fill text-white text-sm"></i>
                 </div>
                 <h2 className="text-xl font-bold text-white">CIP Shopee</h2>
