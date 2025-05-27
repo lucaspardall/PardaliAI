@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -143,7 +142,7 @@ export default function Dashboard() {
               Visão geral das suas lojas e produtos na Shopee
             </p>
           </div>
-          
+
           {/* Period Selector */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Período:</span>
@@ -164,7 +163,7 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-          
+
           {activeStore && (
             <div className="flex items-center gap-2">
               <Button
@@ -185,7 +184,7 @@ export default function Dashboard() {
                   </>
                 )}
               </Button>
-              
+
               <Button asChild>
                 <Link href="/dashboard/products">
                   <Plus className="h-4 w-4 mr-2" />
@@ -245,11 +244,20 @@ export default function Dashboard() {
                 <CardTitle>Produtos com Melhor Desempenho</CardTitle>
                 <CardDescription>Produtos com maior CTR na sua loja</CardDescription>
               </div>
-              <Link href="/dashboard/products">
-                <Button variant="ghost" size="sm">
-                  Ver todos
-                </Button>
-              </Link>
+              <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/dashboard/bulk-optimize">
+                      <i className="ri-magic-line mr-1"></i>
+                      Otimizar em Lote
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href="/dashboard/products">
+                      <i className="ri-eye-line mr-1"></i>
+                      Ver todos
+                    </Link>
+                  </Button>
+                </div>
             </CardHeader>
             <CardContent>
               {productsLoading ? (

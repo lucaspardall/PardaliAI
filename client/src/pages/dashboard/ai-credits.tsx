@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { formatDate } from '@/lib/utils/formatters';
 import { useAuth } from '@/hooks/useAuth';
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import { Helmet } from 'react-helmet-async';
+import { Helmet } from 'react-helmet';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
 interface CreditHistoryItem {
@@ -94,7 +93,7 @@ export default function AiCreditsPage() {
       <Helmet>
         <title>Créditos de IA | CIP Shopee</title>
       </Helmet>
-      
+
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Créditos de IA</h1>
         <p className="text-muted-foreground">
@@ -205,7 +204,7 @@ export default function AiCreditsPage() {
                         }`}>
                           <i className={`${getActionIcon(item.action)} text-sm`}></i>
                         </div>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h4 className="font-medium">{item.description}</h4>
@@ -221,7 +220,7 @@ export default function AiCreditsPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="text-right">
                         <div className={`font-medium ${
                           item.amount < 0 ? 'text-red-600' : 'text-green-600'
