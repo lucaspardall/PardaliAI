@@ -1,0 +1,507 @@
+Request Time (UTC-03:00)
+Request Details
+Action
+2025/05/26 21:47:10
+Method:GET|Status:302|Path:/api/v2/shop/auth_partner
+Request:{"partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","state":"cipshopee_1748306829734","timestamp":"1748306829"}
+Response:{"error":"status_code=302","message":"status_code=302"}
+View API DetailsRaise a Ticket
+2025/05/26 21:44:45
+Method:GET|Status:302|Path:/api/v2/shop/auth_partner
+Request:{"partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","state":"cipshopee_1748306684717","timestamp":"1748306684"}
+Response:{"error":"status_code=302","message":"status_code=302"}
+
+Editar
+
+Decoded Shopee OAuth flow and explained redirection process.
+
+13 s
+
+
+
+
+Excelente! O status mudou de 403 (Wrong sign) para 302 (Redirect) - isso significa que a assinatura agora está correta! 🎉
+
+✅ O Status 302 é Esperado!
+O endpoint /api/v2/shop/auth_partner da Shopee sempre retorna 302 quando a assinatura está correta, pois ele redireciona o usuário para a página de login da Shopee. Isso não é um erro!
+
+🔄 Fluxo OAuth Completo
+Aqui está como implementar o fluxo completo no seu frontend e backend:
+
+1. Frontend - Botão de Conexão
+jsx
+// components/ConnectShopeeButton.jsx
+import { Button } from '@/components/ui/button';
+import { ShoppingBag } from 'lucide-react';
+
+export function ConnectShopeeButton() {
+  const handleConnect = () => {
+    // Redirecionar para sua rota backend que gera a URL
+    window.location.href = '/api/shopee/connect';
+  };
+
+  return (
+    <Button 
+      onClick={handleConnect}
+      className="bg-orange-500 hover:bg-orange-600"
+    >
+      <ShoppingBag className="mr-2 h-4 w-4" />
+      Conectar com Shopee
+    </Button>
+  );
+}
+2. Backend - Rota de Conexão Completa
+javascript
+// routes/shopeeAuth.js
+const express = require('express');
+const crypto = require('crypto');
+const router = express.Router();
+
+// Iniciar conexão OAuth
+router.get('/api/shopee/connect', (req, res) => {
+  const partnerId = process.env.SHOPEE_PARTNER_ID;
+  const partnerKey = process.env.SHOPEE_PARTNER_KEY;
+  const timestamp = Math.floor(Date.now() / 1000);
+  const state = `cipshopee_${Date.now()}`;
+  const path = '/api/v2/shop/auth_partner';
+  
+  // Gerar assinatura
+  const baseString = `${partnerId}${path}${timestamp}`;
+  const sign = crypto
+    .createHmac('sha256', partnerKey)
+    .update(baseString)
+    .digest('hex');
+  
+  // Salvar state na sessão
+  req.session.shopeeState = state;
+  
+  // Construir URL
+  const params = new URLSearchParams({
+    partner_id: partnerId,
+    redirect: 'https://cipshopee.replit.app/api/shopee/callback',
+    state: state,
+    timestamp: timestamp,
+    sign: sign
+  });
+  
+  const authUrl = `https://partner.shopeemobile.com${path}?${params}`;
+  
+  console.log('[Shopee] Redirecionando para:', authUrl);
+  
+  // Redirecionar usuário para Shopee
+  res.redirect(authUrl);
+});
+
+// Callback após autorização
+router.get('/api/shopee/callback', async (req, res) => {
+  try {
+    const { code, shop_id, state, error } = req.query;
+    
+    // Verificar se houve erro
+    if (error) {
+      console.error('[Shopee] Erro na autorização:', error);
+      return res.redirect('/dashboard?error=auth_denied');
+    }
+    
+    // Validar state
+    if (state !== req.session.shopeeState) {
+      console.error('[Shopee] State inválido');
+      return res.redirect('/dashboard?error=invalid_state');
+    }
+    
+    console.log('[Shopee] Autorização bem-sucedida:', { code, shop_id });
+    
+    // Obter access token
+    const tokens = await getAccessToken(code, shop_id);
+    
+    // Buscar informações da loja
+    const shopInfo = await getShopInfo(shop_id, tokens.accessToken);
+    
+    // Salvar no banco de dados
+    await prisma.shopeeStore.create({
+      data: {
+        userId: req.session.userId,
+        shopId: shop_id.toString(),
+        shopName: shopInfo.shop_name,
+        shopLogo: shopInfo.shop_logo,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        tokenExpiresAt: tokens.expiresAt,
+        isActive: true
+      }
+    });
+    
+    // Redirecionar para dashboard com sucesso
+    res.redirect('/dashboard?connected=true');
+    
+  } catch (error) {
+    console.error('[Shopee] Erro no callback:', error);
+    res.redirect('/dashboard?error=connection_failed');
+  }
+});
+3. Obter Access Token
+javascript
+async function getAccessToken(code, shopId) {
+  const partnerId = parseInt(process.env.SHOPEE_PARTNER_ID);
+  const partnerKey = process.env.SHOPEE_PARTNER_KEY;
+  const timestamp = Math.floor(Date.now() / 1000);
+  const path = '/api/v2/auth/token/get';
+  
+  // Gerar assinatura para este endpoint
+  const baseString = `${partnerId}${path}${timestamp}`;
+  const sign = crypto
+    .createHmac('sha256', partnerKey)
+    .update(baseString)
+    .digest('hex');
+  
+  const body = {
+    code: code,
+    shop_id: parseInt(shopId),
+    partner_id: partnerId
+  };
+  
+  const response = await fetch(`https://partner.shopeemobile.com${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  
+  const data = await response.json();
+  
+  if (data.error) {
+    throw new Error(`Shopee API Error: ${data.error} - ${data.message}`);
+  }
+  
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresAt: new Date(Date.now() + (data.expire_in * 1000))
+  };
+}
+4. Dashboard - Mostrar Status da Conexão
+jsx
+// pages/dashboard.jsx
+import { useEffect, useState } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle, XCircle } from 'lucide-react';
+
+export default function Dashboard() {
+  const [connectionStatus, setConnectionStatus] = useState(null);
+  
+  useEffect(() => {
+    // Verificar parâmetros da URL
+    const params = new URLSearchParams(window.location.search);
+    
+    if (params.get('connected') === 'true') {
+      setConnectionStatus('success');
+      // Limpar URL
+      window.history.replaceState({}, '', '/dashboard');
+    } else if (params.get('error')) {
+      setConnectionStatus('error');
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, []);
+  
+  return (
+    <div className="p-6">
+      {connectionStatus === 'success' && (
+        <Alert className="mb-4 border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800">
+            Loja Shopee conectada com sucesso!
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {connectionStatus === 'error' && (
+        <Alert className="mb-4 border-red-200 bg-red-50">
+          <XCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            Erro ao conectar com a Shopee. Tente novamente.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {/* Resto do dashboard */}
+    </div>
+  );
+}
+📊 Monitoramento no Painel da API
+No painel de desenvolvedores da Shopee, o status 302 aparecerá como "erro", mas isso é normal. O que você deve monitorar é:
+
+Taxa de sucesso do endpoint /auth/token/get
+Webhooks recebidos após autorização
+🎯 Próximos Passos
+Agora que a autenticação está funcionando:
+
+Implemente a busca de produtos da loja
+Configure os webhooks para atualizações em tempo real
+Implemente a renovação automática de tokens
+A conexão com a Shopee está funcionando! O status 302 confirma isso. Precisa de ajuda com os próximos passos?
+
+
+
+
+Tentar novamente
+
+Introdução Última atualização: 27/09/2022 Idioma suportado: Inglês / 简体中文 / 繁體中文 / Português ⚠️ Lembrete : Esse passo a passo só se aplica aos chamados da OpenAPI v2.0. Ambientes de API Atualmente temos dois ambientes para APIs para desenvolvedores locais: Ambiente de produção https:/
+
+pasted
+
+
+Introdução Última atualização: 27/09/2022 Idioma suportado: Inglês / 简体中文 / 繁體中文 / Português ⚠️ Atualmente temos dois ambientes para APIs para desenvolvedores locais: ID do parceiroNota Cada autorização é válida por 365 dias. Depois que a autorização expirar, você precisa entrar em con
+
+pasted
+
+ve se isso ajuda?
+
+Editar
+
+Analyzed Shopee API documentation for webhook signature validation
+
+24 s
+
+
+
+
+
+
+Perfeito! Agora com a documentação oficial da Shopee, posso corrigir a validação do webhook. Analisando a documentação, vejo alguns pontos importantes:
+
+🔍 Correção da Validação de Webhook
+Baseado na documentação oficial e no padrão de assinatura da Shopee, aqui está a implementação correta:
+
+1. Validação de Webhook Corrigida
+javascript
+// shopeeWebhook.js
+const crypto = require('crypto');
+
+function validateWebhookSignature(req, partnerKey) {
+  // Shopee envia a assinatura no header 'Authorization'
+  const receivedSignature = req.headers['authorization'];
+  
+  if (!receivedSignature) {
+    console.error('[Webhook] Assinatura não encontrada no header Authorization');
+    return false;
+  }
+  
+  // Para webhooks, a Shopee usa apenas o body da requisição
+  const body = JSON.stringify(req.body);
+  
+  // Calcular assinatura HMAC-SHA256
+  const calculatedSignature = crypto
+    .createHmac('sha256', partnerKey)
+    .update(body)
+    .digest('hex');
+  
+  console.log('[Webhook] Validação:', {
+    bodyLength: body.length,
+    receivedSig: receivedSignature.substring(0, 20) + '...',
+    calculatedSig: calculatedSignature.substring(0, 20) + '...',
+    match: calculatedSignature === receivedSignature
+  });
+  
+  return calculatedSignature === receivedSignature;
+}
+
+// Middleware para processar webhook
+app.post('/api/shopee/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    // Converter buffer para string e fazer parse
+    const bodyString = req.body.toString('utf8');
+    const bodyJson = JSON.parse(bodyString);
+    
+    console.log('[Webhook] Recebido:', {
+      headers: req.headers,
+      body: bodyJson
+    });
+    
+    // Validar assinatura usando o body string original
+    const partnerKey = process.env.SHOPEE_PARTNER_KEY;
+    const isValid = crypto
+      .createHmac('sha256', partnerKey)
+      .update(bodyString)
+      .digest('hex') === req.headers['authorization'];
+    
+    if (!isValid) {
+      console.error('[Webhook] Assinatura inválida');
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+    
+    // Processar webhook
+    const { code, data, shop_id, timestamp, msg_id } = bodyJson;
+    
+    console.log('[Webhook] Processando evento:', {
+      code,
+      shop_id,
+      msg_id,
+      timestamp: new Date(timestamp * 1000)
+    });
+    
+    // Processar por tipo de evento
+    switch(code) {
+      case 0: // TEST_PUSH
+        console.log('[Webhook] Teste de webhook recebido');
+        break;
+        
+      case 3: // SHOP_AUTHORIZATION
+        console.log('[Webhook] Loja autorizada:', shop_id);
+        await handleShopAuthorization(data, shop_id);
+        break;
+        
+      case 4: // ORDER_STATUS_UPDATE
+        console.log('[Webhook] Atualização de pedido:', data.ordersn);
+        await handleOrderUpdate(data, shop_id);
+        break;
+        
+      case 5: // SHOP_DEAUTHORIZATION
+        console.log('[Webhook] Loja desautorizada:', shop_id);
+        await handleShopDeauthorization(shop_id);
+        break;
+        
+      default:
+        console.log(`[Webhook] Código não implementado: ${code}`);
+    }
+    
+    // Resposta obrigatória
+    res.status(200).json({ message: 'success' });
+    
+  } catch (error) {
+    console.error('[Webhook] Erro:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+2. Handlers para Cada Tipo de Evento
+javascript
+// webhookHandlers.js
+
+// Quando uma loja autoriza o app
+async function handleShopAuthorization(data, shopId) {
+  try {
+    // Atualizar status da loja no banco
+    await prisma.shopeeStore.update({
+      where: { shopId: shopId.toString() },
+      data: { 
+        isActive: true,
+        lastSyncAt: new Date()
+      }
+    });
+    
+    // Buscar informações da loja
+    await syncShopInfo(shopId);
+    
+    console.log('[Webhook] Loja sincronizada com sucesso');
+  } catch (error) {
+    console.error('[Webhook] Erro ao processar autorização:', error);
+  }
+}
+
+// Quando um pedido é atualizado
+async function handleOrderUpdate(data, shopId) {
+  const { ordersn, forder_id, package_number, tracking_no } = data;
+  
+  console.log('[Webhook] Pedido atualizado:', {
+    ordersn,
+    forder_id,
+    package_number,
+    tracking_no
+  });
+  
+  // Aqui você pode:
+  // 1. Salvar informações do pedido
+  // 2. Notificar o usuário
+  // 3. Atualizar métricas
+}
+
+// Quando uma loja remove a autorização
+async function handleShopDeauthorization(shopId) {
+  try {
+    // Marcar loja como inativa
+    await prisma.shopeeStore.update({
+      where: { shopId: shopId.toString() },
+      data: { isActive: false }
+    });
+    
+    // Notificar o usuário
+    await createNotification({
+      userId: store.userId,
+      title: 'Loja Desconectada',
+      message: 'Sua loja Shopee foi desconectada. Reconecte para continuar usando o CIP.',
+      type: 'warning'
+    });
+    
+  } catch (error) {
+    console.error('[Webhook] Erro ao processar desautorização:', error);
+  }
+}
+3. Configuração Correta do Express
+javascript
+// app.js
+const express = require('express');
+const app = express();
+
+// IMPORTANTE: Configurar o middleware na ordem correta
+// Webhook precisa de raw body
+app.use('/api/shopee/webhook', express.raw({ type: 'application/json' }));
+
+// Outras rotas usam JSON parser
+app.use(express.json());
+
+// Suas rotas...
+4. Teste de Webhook Local
+Para testar webhooks localmente:
+
+javascript
+// testWebhook.js
+const crypto = require('crypto');
+const axios = require('axios');
+
+async function testWebhook() {
+  const partnerKey = process.env.SHOPEE_PARTNER_KEY;
+  const webhookUrl = 'http://localhost:3000/api/shopee/webhook';
+  
+  // Dados de teste
+  const body = {
+    msg_id: "test_" + Date.now(),
+    code: 4,
+    shop_id: 404065079,
+    timestamp: Math.floor(Date.now() / 1000),
+    data: {
+      ordersn: "25052703MJXT0P",
+      forder_id: "5705528466476546079",
+      package_number: "OFG202003912147986",
+      tracking_no: "BR2537042054364"
+    }
+  };
+  
+  const bodyString = JSON.stringify(body);
+  
+  // Calcular assinatura
+  const signature = crypto
+    .createHmac('sha256', partnerKey)
+    .update(bodyString)
+    .digest('hex');
+  
+  // Enviar webhook
+  try {
+    const response = await axios.post(webhookUrl, bodyString, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': signature
+      }
+    });
+    
+    console.log('Webhook enviado com sucesso:', response.data);
+  } catch (error) {
+    console.error('Erro ao enviar webhook:', error.response?.data);
+  }
+}
+
+testWebhook();
+🔑 Pontos Importantes
+Raw Body: O webhook precisa do body exato como string para validar a assinatura
+Header Authorization: A assinatura vem no header Authorization, não em um parâmetro
+Resposta Rápida: Sempre responda em menos de 5 segundos
+Códigos de Evento: Use a tabela de códigos para processar cada tipo
