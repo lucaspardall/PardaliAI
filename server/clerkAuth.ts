@@ -31,6 +31,14 @@ export function setupClerkAuth(app: Express) {
   app.get('/api/auth/user', requireAuth(), async (req: any, res) => {
     try {
       const { userId } = req.auth;
+      
+      if (!userId) {
+        return res.status(401).json({ 
+          error: 'User not authenticated',
+          authenticated: false 
+        });
+      }
+
       const clerkUser = req.auth.user;
 
       // Buscar ou criar usuário no banco
@@ -54,12 +62,20 @@ export function setupClerkAuth(app: Express) {
         user = await storage.getUser(userId);
       }
 
+      if (!user) {
+        return res.status(404).json({ 
+          error: 'User not found',
+          authenticated: false 
+        });
+      }
+
       res.json(user);
     } catch (error) {
       console.error("Erro ao buscar dados do usuário:", error);
       res.status(500).json({ 
-        message: "Falha ao buscar dados do usuário",
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: "Falha ao buscar dados do usuário",
+        authenticated: false,
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       });
     }
   });

@@ -74,6 +74,12 @@ app.use((req, res, next) => {
       console.error(err);
     });
 
+    // Middleware para garantir respostas JSON válidas
+    app.use('/api/*', (req, res, next) => {
+      res.setHeader('Content-Type', 'application/json');
+      next();
+    });
+
     // Setup Clerk authentication
     setupClerkAuth(app);
 

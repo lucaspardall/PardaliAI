@@ -26,21 +26,44 @@ async function fetchUserData(): Promise<User | null> {
       },
     });
 
-    if (response.status === 401) {
+    // Casos de não autenticado
+    if (response.status === 401 || response.status === 302) {
       return null;
     }
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erro ao buscar dados do usuário:', error);
-    // Se for erro de autenticação, não logar como erro
-    if (error instanceof Error && error.message.includes('401')) {
+      console.warn(`Auth API returned ${response.status}: ${response.statusText}`);
       return null;
     }
+
+    // Verificar se a resposta tem conteúdo
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('Auth API did not return JSON');
+      return null;
+    }
+
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      console.warn('Auth API returned empty response');
+      return null;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      console.warn('Failed to parse auth response as JSON:', text.substring(0, 100));
+      return null;
+    }
+
+  } catch (error) {
+    // Não logar erros de rede como críticos se for problema de autenticação
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.warn('Network error during auth check');
+      return null;
+    }
+    
+    console.warn('Auth check failed:', error instanceof Error ? error.message : 'Unknown error');
     return null;
   }
 }
@@ -56,9 +79,21 @@ export function useAuth() {
     queryKey: ['auth', 'user-data'],
     queryFn: fetchUserData,
     enabled: isSignedIn && isLoaded,
-    retry: false,
+    retry: (failureCount, error) => {
+      // Não fazer retry para erros de autenticação
+      if (error instanceof Error && (
+        error.message.includes('401') || 
+        error.message.includes('403') ||
+        error.message.includes('Network error')
+      )) {
+        return false;
+      }
+      return failureCount < 2;
+    },
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const isLoading = !isLoaded || (isSignedIn && isLoadingData);
