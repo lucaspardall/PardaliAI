@@ -4,8 +4,6 @@
  */
 import { createHmac } from 'crypto';
 import { ShopeeAuthConfig } from './types';
-import { getTimestamp } from './utils';
-
 /**
  * Gera URL de autorização minimalista com apenas os parâmetros essenciais
  * Os únicos parâmetros usados são: partner_id, timestamp, sign, redirect, state
@@ -46,25 +44,8 @@ export function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
   const finalUrl = `${url.origin}${url.pathname}?${params.toString()}`;
 
   console.log(`URL minimalista gerada: ${finalUrl}`);
-  
+
   return finalUrl;
-}
-
-const params = new URLSearchParams();
-
-  // Adicionar parâmetros na ordem recomendada pela documentação
-  params.append('partner_id', config.partnerId.toString());
-  params.append('timestamp', timestamp.toString());
-  params.append('sign', signature);
-  params.append('redirect', config.redirectUrl);
-  params.append('state', stateParam);
-
-  // Garantir que a URL não tenha caracteres problemáticos
-  url.search = params.toString();
-
-  console.log(`URL minimalista gerada: ${url.toString()}`);
-
-  return url.toString();
 }
 
 /**
