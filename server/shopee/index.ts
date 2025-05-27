@@ -9,7 +9,7 @@ import { ShopeeCache } from './cache';
 // Configuração padrão para ambiente de desenvolvimento
 const DEFAULT_CONFIG: ShopeeAuthConfig = {
   partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
-  partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
+  partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4761',
   // Sempre usar o domínio de produção cipshopee.replit.app como URL de redirecionamento
   redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
   region: process.env.SHOPEE_REGION || 'SG'  // Alterado para SG (Singapura) como no Upseller
