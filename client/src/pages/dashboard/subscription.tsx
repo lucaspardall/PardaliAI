@@ -62,12 +62,12 @@ export default function SubscriptionPage() {
 
   // Create checkout session mutation
   const checkoutMutation = useMutation({
-    mutationFn: async ({ planId, billingPeriod }: { planId: string; billingPeriod: 'monthly' | 'yearly' }) => {
+    mutationFn: async ({ planId }: { planId: string }) => {
       const response = await fetch('/api/payments/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ planId, billingPeriod })
+        body: JSON.stringify({ planId })
       });
       if (!response.ok) throw new Error('Failed to create checkout session');
       return response.json();
@@ -84,27 +84,11 @@ export default function SubscriptionPage() {
     },
   });
 
-  // Customer portal mutation
-  const portalMutation = useMutation({
-    mutationFn: async () => {
-      const response = await fetch('/api/payments/customer-portal', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to create portal session');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      window.location.href = data.url;
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao acessar portal",
-        variant: "destructive",
-      });
-    },
-  });
+  // Para gerenciar a assinatura, usar o portal do Clerk
+  const handleManageBilling = () => {
+    // Redirecionar para o portal do usuário do Clerk
+    window.open(`${process.env.VITE_CLERK_PUBLISHABLE_KEY?.replace('pk_test_', 'https://dashboard.clerk.com/')}/users/${user?.id}`, '_blank');
+  };
 
   // Cancel subscription mutation
   const cancelMutation = useMutation({
