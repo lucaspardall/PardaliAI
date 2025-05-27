@@ -72,17 +72,11 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // Configuração de porta - usa PORT do ambiente ou 5000 para deployment
+    // Configuração simplificada de porta para deployment
     const port = parseInt(process.env.PORT || '5000', 10);
-    
-    server.listen({
-      port: port,
-      host: "0.0.0.0",
-    }, () => {
-      log(`serving on port ${port}`);
-    }).on('error', (err: any) => {
-      log(`Erro no servidor: ${err.message}`);
-      throw err;
+
+    server.listen(port, '0.0.0.0', () => {
+      log(`Server running on port ${port}`);
     });
   } catch (err) {
     console.error("Erro na inicialização do servidor:", err);
