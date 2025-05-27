@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { SignInButton } from '@clerk/clerk-react';
 import { motion } from "framer-motion";
 
 export default function CTASection() {
@@ -21,18 +22,26 @@ export default function CTASection() {
             Mais de 500 vendedores já aumentaram suas vendas em 27%. Configure sua loja em minutos e otimize automaticamente.
           </p>
           <div className="flex justify-center">
-            <Button 
-              size="lg" 
-              variant="secondary" 
-              className="bg-white text-primary hover:bg-primary-50 px-8"
-              asChild
-            >
-              {isAuthenticated ? (
+            {isAuthenticated ? (
+              <Button 
+                size="lg" 
+                variant="secondary" 
+                className="bg-white text-primary hover:bg-primary-50 px-8"
+                asChild
+              >
                 <a href="/dashboard">Acessar Dashboard</a>
-              ) : (
-                <a href="/api/login">Começar agora</a>
-              )}
-            </Button>
+              </Button>
+            ) : (
+              <SignInButton mode="modal">
+                <Button 
+                  size="lg" 
+                  variant="secondary" 
+                  className="bg-white text-primary hover:bg-primary-50 px-8"
+                >
+                  Começar agora
+                </Button>
+              </SignInButton>
+            )}
           </div>
         </motion.div>
       </div>

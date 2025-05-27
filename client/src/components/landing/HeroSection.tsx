@@ -35,33 +35,20 @@ export default function HeroSection() {
                   </Link>
                 </Button>
               ) : (
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <SignedOut>
-            <SignInButton mode="modal">
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0">
-                Começar Agora
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </SignInButton>
-          </SignedOut>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <SignInButton mode="modal">
+                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0">
+                      Começar Agora
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </SignInButton>
 
-          <SignedIn>
-            <Button 
-              size="lg" 
-              onClick={() => window.location.href = '/dashboard'}
-              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white border-0"
-            >
-              Ir para Dashboard
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </SignedIn>
-
-          <Button asChild variant="outline" size="lg" className="bg-white/10 border-white/20 hover:bg-white/20">
-                <a href="#features">
-                  Ver recursos
-                </a>
-              </Button>
-        </div>
+                  <Button asChild variant="outline" size="lg" className="bg-white/10 border-white/20 hover:bg-white/20">
+                    <a href="#features">
+                      Ver recursos
+                    </a>
+                  </Button>
+                </div>
               )}
               
             </div>
