@@ -1,0 +1,136 @@
+2025-05-27 16:45:42.31
+a82f985c
+User
+Conexão com banco de dados estabelecida com sucesso
+2025-05-27 16:45:42.50
+a82f985c
+User
+Verificando conexão com banco de dados...
+2025-05-27 16:45:42.55
+a82f985c
+User
+Conexão com banco de dados estabelecida com sucesso
+2025-05-27 16:45:42.59
+a82f985c
+User
+Token expirado para usuário: 42614523
+2025-05-27 16:45:42.60
+a82f985c
+User
+Verificando conexão com banco de dados...
+2025-05-27 16:45:42.64
+a82f985c
+User
+Conexão com banco de dados estabelecida com sucesso
+2025-05-27 16:45:42.69
+a82f985c
+User
+7:45:42 PM [express] GET /api/auth/user 401 in 189ms :: {"message":"Token expirado","code":"TOKEN_EX…
+2025-05-27 16:45:49.32
+a82f985c
+User
+Verificando conexão com banco de dados...
+2025-05-27 16:45:49.45
+a82f985c
+User
+Conexão com banco de dados estabelecida com sucesso
+2025-05-27 16:45:49.59
+a82f985c
+User
+Tue, 27 May 2025 19:45:49 GMT express deprecated req.host: Use req.hostname instead at file:/home/runner/workspace/node_modules/openid-client/build/passport.js:165:49
+2025-05-27 16:45:49.60
+a82f985c
+User
+Verificando conexão com banco de dados...
+2025-05-27 16:45:49.64
+a82f985c
+User
+Conexão com banco de dados estabelecida com sucesso
+2025-05-27 16:45:49.69
+a82f985c
+User
+7:45:49 PM [express] GET /api/login 302 in 365ms
+2025-05-27 16:45:52.99
+a82f985c
+User
+Verificando conexão com banco de dados...
+2025-05-27 16:45:53.04
+a82f985c
+User
+Conexão com banco de dados estabelecida com sucesso
+2025-05-27 16:45:53.25
+a82f985c
+User
+Verificando conexão com banco de dados...
+2025-05-27 16:45:53.29
+a82f985c
+User
+Conexão com banco de dados estabelecida com sucesso
+2025-05-27 16:45:53.34
+a82f985c
+User
+Erro na tentativa 1/5: {
+2025-05-27 16:45:53.34
+a82f985c
+User
+message: 'bind message supplies 1 parameters, but prepared statement "" requires 0',
+2025-05-27 16:45:53.34
+a82f985c
+User
+code: '08P01',
+2025-05-27 16:45:53.34
+a82f985c
+User
+detail: undefined,
+2025-05-27 16:45:53.34
+a82f985c
+User
+severity: 'ERROR',
+2025-05-27 16:45:53.34
+a82f985c
+User
+position: undefined
+2025-05-27 16:45:53.34
+a82f985c
+User
+}
+2025-05-27 16:45:53.35
+a82f985c
+User
+Erro na execução de query após múltiplas tentativas: NeonDbError: bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-05-27 16:45:53.35
+a82f985c
+User
+at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+2025-05-27 16:45:53.35
+a82f985c
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-05-27 16:45:53.35
+a82f985c
+User
+at async file:///home/runner/workspace/dist/index.js:425:28
+2025-05-27 16:45:53.35
+a82f985c
+User
+at async executeWithRetry (file:///home/runner/workspace/dist/index.js:387:26)
+2025-05-27 16:45:53.35
+a82f985c
+User
+at async Function.query (file:///home/runner/workspace/dist/index.js:417:18)
+2025-05-27 16:45:53.35
+a82f985c
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-05-27 16:45:53.35
+a82f985c
+User
+at async DatabaseStorage.upsertUser (file:///home/runner/workspace/dist/index.js:464:24)
+2025-05-27 16:45:53.35
+a82f985c
+User
+at async upsertUser (file:///home/runner/workspace/dist/index.js:3861:5)
+2025-05-27 16:45:53.35
+a82f985c
+User
+at async Strategy.verify [as _verify] (file:///home/runner/workspace/dist/index.js:3902:7) {
