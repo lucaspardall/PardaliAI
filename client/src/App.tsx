@@ -16,21 +16,21 @@ import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
-import { useLocation, useRouter } from "wouter";
+import { useLocation } from "wouter";
 import { useAuth } from "./hooks/useAuth";
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
 
-  // Sempre usar useEffect para redirecionamentos
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      window.location.href = "/?login=required";
+      setLocation("/");
     }
-  }, [isLoading, isAuthenticated]);
+  }, [isAuthenticated, isLoading, setLocation]);
 
-  // Se ainda está carregando, mostrar loading
+  // Se está carregando, mostrar loading
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -39,11 +39,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Se não estiver autenticado, redirecionar para home
-  const [, setLocation] = useLocation();
+  // Se não estiver autenticado, não renderizar nada (useEffect já redirecionou)
   if (!isAuthenticated) {
-      setLocation("/");
-      return null;
+    return null;
   }
 
   return <>{children}</>;
