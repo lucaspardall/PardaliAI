@@ -271,10 +271,35 @@ export const apiCache = pgTable("api_cache", {
   ];
 });
 
+// Tabela para histórico de créditos de IA
+export const aiCreditsHistory = pgTable("ai_credits_history", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  action: varchar("action").notNull(), // 'used', 'refunded', 'bonus', 'plan_upgrade'
+  amount: integer("amount").notNull(), // Quantidade de créditos (positivo para ganho, negativo para uso)
+  previousBalance: integer("previous_balance").notNull(),
+  newBalance: integer("new_balance").notNull(),
+  description: text("description").notNull(),
+  relatedEntityType: varchar("related_entity_type"), // 'optimization', 'bulk_optimization', 'product_creation'
+  relatedEntityId: integer("related_entity_id"),
+  metadata: jsonb("metadata").$type<Record<string, any>>().default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return [
+    index("idx_credits_history_user_date").on(table.userId, table.createdAt),
+    index("idx_credits_history_action").on(table.action),
+    index("idx_credits_history_entity").on(table.relatedEntityType, table.relatedEntityId)
+  ];
+});
+
 // Schemas para as novas tabelas
 export const insertSystemLogSchema = createInsertSchema(systemLogs).omit({ id: true });
 export type InsertSystemLog = z.infer<typeof insertSystemLogSchema>;
 export type SystemLog = typeof systemLogs.$inferSelect;
+
+export const insertAiCreditsHistorySchema = createInsertSchema(aiCreditsHistory).omit({ id: true });
+export type InsertAiCreditsHistory = z.infer<typeof insertAiCreditsHistorySchema>;
+export type AiCreditsHistory = typeof aiCreditsHistory.$inferSelect;
 
 export const insertApiCacheSchema = createInsertSchema(apiCache).omit({ id: true });
 export type InsertApiCache = z.infer<typeof insertApiCacheSchema>;

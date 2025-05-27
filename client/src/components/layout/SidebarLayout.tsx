@@ -220,15 +220,29 @@ export default function SidebarLayout({
               Configurações
             </h3>
             <div className="mt-2 space-y-1">
-              {settingsItems.map((item) => (
-                <NavItem 
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  isActive={location === item.href}
-                />
-              ))}
+              <a
+                href="/dashboard/ai-credits"
+                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location === '/dashboard/ai-credits'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <i className="ri-ai-generate mr-3"></i>
+                Créditos IA
+              </a>
+
+              <a
+                href="/dashboard/subscription"
+                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location === '/dashboard/subscription'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <i className="ri-vip-crown-line mr-3"></i>
+                Assinatura
+              </a>
             </div>
           </div>
         </div>

@@ -324,7 +324,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Deduct AI credit if user is on free plan
       if (user.plan === 'free') {
-        await storage.updateUserAiCredits(userId, Math.max(0, user.aiCreditsLeft - 1));
+        await storage.updateUserAiCredits(
+          userId, 
+          Math.max(0, user.aiCreditsLeft - 1),
+          'used',
+          `Otimização do produto: ${product.name}`,
+          { type: 'optimization', id: newOptimization.id }
+        );
       }
 
       res.status(201).json({
@@ -377,6 +383,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get AI credits history
+  app.get('/api/ai-credits/history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = req.query.limit ? parseInt(req.query.limit) : 50;
+      const offset = req.query.offset ? parseInt(req.query.offset) : 0;
+
+      const history = await storage.getAiCreditsHistory(userId, limit, offset);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching AI credits history:", error);
+      res.status(500).json({ message: "Failed to fetch AI credits history" });
+    }
+  });
+
+  // Get AI usage analytics
+  app.get('/api/ai-credits/analytics', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const days = req.query.days ? parseInt(req.query.days) : 30;
+
+      const analytics = await storage.getAiUsageAnalytics(userId, days);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching AI usage analytics:", error);
+      res.status(500).json({ message: "Failed to fetch AI usage analytics" });
+    }
+  });
+
   // Get reports data
   app.get('/api/reports', isAuthenticated, async (req: any, res) => {
     try {
@@ -397,6 +432,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching reports:", error);
       res.status(500).json({ message: "Failed to fetch reports" });
+    }
+  });
+
+  // Export reports
+  app.get('/api/reports/export', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const format = req.query.format || 'csv';
+      const range = req.query.range || '30d';
+
+      const exportData = await storage.exportUserReports(userId, range, format);
+      
+      if (format === 'csv') {
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="cip-shopee-report-${range}.csv"`);
+      } else {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="cip-shopee-report-${range}.json"`);
+      }
+
+      res.send(exportData);
+    } catch (error) {
+      console.error("Error exporting reports:", error);
+      res.status(500).json({ message: "Failed to export reports" });
     }
   });
 

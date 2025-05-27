@@ -16,7 +16,10 @@ import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
+
+const BulkOptimizePage = lazy(() => import('./pages/dashboard/bulk-optimize'));
+const AiCreditsPage = lazy(() => import('./pages/dashboard/ai-credits'));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = React.useState<{
@@ -78,7 +81,7 @@ function Router() {
         {() => <ProtectedRoute><Optimizations /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/bulk-optimize">
-        {() => <ProtectedRoute><ShopeeConnect /></ProtectedRoute>}
+        {() => <ProtectedRoute><BulkOptimizePage /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/reports">
         {() => <ProtectedRoute><Reports /></ProtectedRoute>}
@@ -91,6 +94,9 @@ function Router() {
       </Route>
       <Route path="/dashboard/subscription">
         {() => <ProtectedRoute><Subscription /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/ai-credits">
+        {() => <ProtectedRoute><AiCreditsPage /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/shopee-connect">
         {() => <ProtectedRoute><ShopeeConnect /></ProtectedRoute>}

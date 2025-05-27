@@ -22,7 +22,9 @@ import {
   type InsertNotification,
   orders,
   type Order,
-  type InsertOrder
+  type InsertOrder,
+  aiCreditsHistory,
+  type AiCreditsHistory,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gt, lt, gte, lte, sql } from "drizzle-orm";
@@ -72,6 +74,17 @@ export interface IStorage {
   getNotificationsByUserId(userId: string, limit?: number): Promise<Notification[]>;
   markNotificationAsRead(id: number): Promise<boolean>;
   createNotification(notification: InsertNotification): Promise<Notification>;
+
+    // Credits history
+    getAiCreditsHistory(userId: string, limit?: number, offset?: number): Promise<AiCreditsHistory[]>;
+    getAiUsageAnalytics(userId: string, days?: number): Promise<any>;
+    exportUserReports(userId: string, range: string, format: string): Promise<string>;
+  // Order operations
+  createOrder(order: any): Promise<any>;
+  updateOrder(orderId: number, updates: any): Promise<any>;
+  getOrderByOrderSn(orderSn: string): Promise<any>;
+  getOrdersByStoreId(storeId: number, limit: number, offset: number, status?: string): Promise<any[]>;
+  getProductByStoreIdAndProductId(storeId: number, productId: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -109,16 +122,164 @@ export class DatabaseStorage implements IStorage {
     return updatedUser;
   }
 
-  async updateUserAiCredits(userId: string, credits: number): Promise<User | undefined> {
-    const [updatedUser] = await db
+  async updateUserAiCredits(userId: string, newCredits: number, action = 'used', description = 'Crédito utilizado', relatedEntity?: { type: string, id: number }): Promise<void> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error('User not found');
+
+    const previousBalance = user.aiCreditsLeft;
+
+    // Atualizar saldo do usuário
+    await db
       .update(users)
-      .set({
-        aiCreditsLeft: credits,
-        updatedAt: new Date(),
+      .set({ 
+        aiCreditsLeft: newCredits,
+        updatedAt: new Date()
       })
-      .where(eq(users.id, userId))
-      .returning();
-    return updatedUser;
+      .where(eq(users.id, userId));
+
+    // Registrar histórico apenas se houve mudança no saldo
+    if (previousBalance !== newCredits) {
+      await db.insert(aiCreditsHistory).values({
+        userId,
+        action,
+        amount: newCredits - previousBalance,
+        previousBalance,
+        newBalance: newCredits,
+        description,
+        relatedEntityType: relatedEntity?.type,
+        relatedEntityId: relatedEntity?.id,
+        createdAt: new Date()
+      });
+    }
+  }
+
+  async getAiCreditsHistory(userId: string, limit = 50, offset = 0): Promise<AiCreditsHistory[]> {
+    return await db
+      .select()
+      .from(aiCreditsHistory)
+      .where(eq(aiCreditsHistory.userId, userId))
+      .orderBy(desc(aiCreditsHistory.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getAiUsageAnalytics(userId: string, days = 30): Promise<any> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const history = await db
+      .select()
+      .from(aiCreditsHistory)
+      .where(
+        and(
+          eq(aiCreditsHistory.userId, userId),
+          gte(aiCreditsHistory.createdAt, startDate)
+        )
+      )
+      .orderBy(desc(aiCreditsHistory.createdAt));
+
+    // Agrupar por dia
+    const dailyUsage = new Map();
+    const actionStats = new Map();
+    let totalUsed = 0;
+    let totalGained = 0;
+
+    history.forEach(record => {
+      const date = record.createdAt.toISOString().split('T')[0];
+
+      if (!dailyUsage.has(date)) {
+        dailyUsage.set(date, { used: 0, gained: 0 });
+      }
+
+      if (record.amount < 0) {
+        dailyUsage.get(date).used += Math.abs(record.amount);
+        totalUsed += Math.abs(record.amount);
+      } else {
+        dailyUsage.get(date).gained += record.amount;
+        totalGained += record.amount;
+      }
+
+      // Estatísticas por ação
+      if (!actionStats.has(record.action)) {
+        actionStats.set(record.action, { count: 0, total: 0 });
+      }
+      actionStats.get(record.action).count++;
+      actionStats.get(record.action).total += Math.abs(record.amount);
+    });
+
+    return {
+      totalUsed,
+      totalGained,
+      netUsage: totalUsed - totalGained,
+      dailyUsage: Array.from(dailyUsage.entries()).map(([date, data]) => ({
+        date,
+        ...data
+      })),
+      actionBreakdown: Array.from(actionStats.entries()).map(([action, data]) => ({
+        action,
+        ...data
+      })),
+      period: days
+    };
+  }
+
+  async exportUserReports(userId: string, range: string, format: string): Promise<string> {
+    // Buscar dados do usuário
+    const user = await this.getUser(userId);
+    const stores = await this.getStoresByUserId(userId);
+    const optimizations = await this.getAllOptimizationsByUserId(userId);
+
+    // Determinar período
+    const days = range === '7d' ? 7 : range === '30d' ? 30 : 90;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Filtrar otimizações por período
+    const periodOptimizations = optimizations.filter(opt => 
+      opt.createdAt >= startDate
+    );
+
+    const reportData = {
+      user: {
+        email: user?.email,
+        plan: user?.plan,
+        aiCreditsLeft: user?.aiCreditsLeft
+      },
+      period: range,
+      summary: {
+        totalStores: stores.length,
+        totalOptimizations: periodOptimizations.length,
+        appliedOptimizations: periodOptimizations.filter(opt => opt.status === 'applied').length,
+        pendingOptimizations: periodOptimizations.filter(opt => opt.status === 'pending').length
+      },
+      stores: stores.map(store => ({
+        name: store.shopName,
+        region: store.shopRegion,
+        totalProducts: store.totalProducts,
+        isActive: store.isActive
+      })),
+      optimizations: periodOptimizations.map(opt => ({
+        createdAt: opt.createdAt.toISOString(),
+        status: opt.status,
+        appliedAt: opt.appliedAt?.toISOString(),
+        originalTitle: opt.originalTitle,
+        suggestedTitle: opt.suggestedTitle
+      })),
+      generatedAt: new Date().toISOString()
+    };
+
+    if (format === 'csv') {
+      // Converter para CSV
+      const csvLines = [
+        'Data,Tipo,Status,Título Original,Título Sugerido',
+        ...periodOptimizations.map(opt => 
+          `${opt.createdAt.toISOString()},Otimização,${opt.status},"${opt.originalTitle || ''}","${opt.suggestedTitle || ''}"`
+        )
+      ];
+      return csvLines.join('\n');
+    } else {
+      return JSON.stringify(reportData, null, 2);
+    }
   }
 
   // Store operations
@@ -515,17 +676,52 @@ export class MemStorage implements IStorage {
     return updatedUser;
   }
 
-  async updateUserAiCredits(userId: string, credits: number): Promise<User | undefined> {
+  async updateUserAiCredits(userId: string, newCredits: number, action = 'used', description = 'Crédito utilizado', relatedEntity?: { type: string, id: number }): Promise<void> {
     const user = this.users.get(userId);
-    if (!user) return undefined;
+    if (!user) throw new Error('User not found');
+
+    const previousBalance = user.aiCreditsLeft;
+    const amount = newCredits - previousBalance;
 
     const updatedUser: User = {
       ...user,
-      aiCreditsLeft: credits,
+      aiCreditsLeft: newCredits,
       updatedAt: new Date()
     };
+
     this.users.set(userId, updatedUser);
-    return updatedUser;
+
+    //Simulando o histórico em memória
+    //this.aiCreditsHistory.push({
+    //  userId,
+    //  action,
+    //  amount,
+    //  previousBalance,
+    //  newBalance: newCredits,
+    //  description,
+    //  relatedEntityType: relatedEntity?.type,
+    //  relatedEntityId: relatedEntity?.id,
+    //  createdAt: new Date()
+    //});
+  }
+
+  //Implementações de MemStorage para os métodos de histórico e relatório
+  async getAiCreditsHistory(userId: string, limit = 50, offset = 0): Promise<AiCreditsHistory[]> {
+    return [];
+  }
+
+  async getAiUsageAnalytics(userId: string, days = 30): Promise<any> {
+    return {
+      totalUsed: 0,
+      totalGained: 0,
+      netUsage: 0,
+      dailyUsage: [],
+      actionBreakdown: [],
+      period: days
+    };
+  }
+  async exportUserReports(userId: string, range: string, format: string): Promise<string> {
+    return '';
   }
 
   // Store operations
@@ -744,6 +940,7 @@ export class MemStorage implements IStorage {
   async getAllOptimizationsByUserId(userId: string): Promise<any[]> {
     return [];
   }
+  
 }
 
 // Use in-memory storage for development and DB storage for production
