@@ -1,6 +1,3 @@
-Fixes a syntax error in the fallback.ts file and adds a timestamp log.
-```
-```replit_final_file
 /**
  * Implementação alternativa para autenticação com a Shopee
  * Com foco no redirecionamento correto para o Seller Centre
