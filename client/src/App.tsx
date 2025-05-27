@@ -16,33 +16,24 @@ import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
-import { useLocation } from "wouter";
-import { useAuth } from "./hooks/useAuth";
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense } from 'react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
-  const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      setLocation("/");
-    }
-  }, [isAuthenticated, isLoading, setLocation]);
-
-  // Se está carregando, mostrar loading
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  // Se não estiver autenticado, não renderizar nada (useEffect já redirecionou)
-  if (!isAuthenticated) {
-    return null;
-  }
+  // Usar window.location para redirecionamento simples sem hooks condicionais
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/user');
+        if (!response.ok) {
+          window.location.href = '/';
+        }
+      } catch (error) {
+        window.location.href = '/';
+      }
+    };
+    
+    checkAuth();
+  }, []);
 
   return <>{children}</>;
 }
