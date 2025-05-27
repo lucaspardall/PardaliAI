@@ -1,0 +1,72 @@
+
+Build failed
+Your deployment attempt had the following errors:
+Build failed due to syntax errors in TypeScript files
+Multiple syntax errors found in server/shopee directory files
+Server attempts to listen on multiple ports but Autoscale/Cloud Run only supports a single exposed port
+Assistant suggestions
+console.warn(`[Sync] Nenhum item_id válido encontrado ...
+console.warn(`[Sync] Nenhum item_id válido encontrado ...`);
+}p: ${timestamp}`);
+p: ${timestamp}`);
+// Configuração de porta adaptada para funcionar tanto em desenvolvimento quanto em deploy
+    const port = process.env.PORT || 5000;
+    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+
+    // Tentar portas alternativas se a primeira estiver ocupada
+    function tryConnect(currentPort: number) {
+      server.listen({
+        port: currentPort,
+        host: "0.0.0.0",
+      }, () => {
+        log(`serving on port ${currentPort}`);
+      }).on('error', (err: any) => {
+        log(`Erro na porta ${currentPort}: ${err.message}`);
+
+        if (err.code === 'EADDRINUSE' && currentPort < 5010) {
+          // Tentar próxima porta
+          const nextPort = currentPort + 1;
+          log(`Porta ${currentPort} está em uso, tentando porta ${nextPort}...`);
+          tryConnect(nextPort);
+        } else {
+          log(`Erro não recuperável no servidor: ${err.message}`);
+          throw err;
+        }
+      });
+    }
+
+    // Iniciar com a porta configurada
+    tryConnect(port);
+// Configuração de porta para Cloud Run deployment
+    const port = process.env.PORT || 5000;
+    
+    server.listen({
+      port: port,
+      host: "0.0.0.0",
+    }, () => {
+      log(`serving on port ${port}`);
+    }).on('error', (err: any) => {
+      log(`Erro no servidor: ${err.message}`);
+      throw err;
+    });
+Add to package.json:
+{
+  "name": "rest-express",
+  "version": "1.0.0",
+  ...
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "main": "dist/index.js",
+  "type": "module"
+}
+[nix]
+Channel = "stable-23_05"
+
+[deployment]
+run = ["sh", "-c", "npm start"]
+deploymentTarget = "cloud_run"
+ignorePackageJson = false
+
+[ports]
+5000 = { external = 80 }
