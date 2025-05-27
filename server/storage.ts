@@ -161,6 +161,14 @@ export class DatabaseStorage implements IStorage {
     return store;
   }
 
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db
+      .insert(notifications)
+      .values(notificationData)
+      .returning();
+    return newNotification;
+  }
+
   async createStore(store: InsertShopeeStore): Promise<ShopeeStore> {
     const [newStore] = await db
       .insert(shopeeStores)
@@ -382,15 +390,6 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
-  async createNotification(notification: InsertNotification): Promise<Notification> {
-    const [newNotification] = await db
-      .insert(notifications)
-      .values(notification)
-      .returning();
-    return newNotification;
-  }
-
-  // Métodos para pedidos
   async createOrder(order: any): Promise<any> {
     try {
       const [newOrder] = await db.insert(orders).values(order).returning();
