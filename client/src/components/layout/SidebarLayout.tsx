@@ -130,7 +130,7 @@ export default function SidebarLayout({
               </div>
             </div>
           )}
-          
+
           {isSidebarCollapsed && (
             <div className="mt-8 space-y-1">
               {settingsItems.map((item) => (

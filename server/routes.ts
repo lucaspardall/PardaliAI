@@ -332,12 +332,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         request,
         creditsLeft: user.plan === 'free' ? Math.max(0, user.aiCreditsLeft - 1) : user.aiCreditsLeft
       });
-    } catch (error) {
-      console.error("Error optimizing product:", error);
-      res.status(500).json({ message: "Failed to optimize product" });
-    }
-  });
+    } catch (error: any) {
+    console.error('Error optimizing product:', error);
+    res.status(500).json({ 
+      message: "Failed to optimize product",
+      error: error.message
+    });
+  }
+});
 
+  // Get optimizations for a product
   app.get('/api/products/:id/optimizations', isAuthenticated, async (req: any, res) => {
     try {
       const productId = parseInt(req.params.id);

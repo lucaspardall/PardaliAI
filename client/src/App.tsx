@@ -77,6 +77,9 @@ function Router() {
       <Route path="/dashboard/optimizations">
         {() => <ProtectedRoute><Optimizations /></ProtectedRoute>}
       </Route>
+      <Route path="/dashboard/bulk-optimize">
+        {() => <ProtectedRoute><ShopeeConnect /></ProtectedRoute>}
+      </Route>
       <Route path="/dashboard/reports">
         {() => <ProtectedRoute><Reports /></ProtectedRoute>}
       </Route>
