@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/components/ui/theme-provider";
 import { SignInButton } from '@clerk/clerk-react';
 import { useState, useEffect } from "react";
 
@@ -61,13 +60,13 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
                 </Link>
               </Button>
             ) : (
-              <SignInButton mode="modal">
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
-                  <i className="ri-rocket-line mr-2"></i>
-                  Teste Grátis 7 Dias
-                </Button>
-              </SignInButton>
-            )}
+                <SignInButton mode="modal">
+                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
+                    <i className="ri-rocket-line mr-2"></i>
+                    Teste Grátis 7 Dias
+                  </Button>
+                </SignInButton>
+              )}
           </div>
 
           {/* Mobile menu button */}
