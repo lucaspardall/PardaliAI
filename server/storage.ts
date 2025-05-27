@@ -19,7 +19,10 @@ import {
   type InsertAiRequest,
   notifications,
   type Notification,
-  type InsertNotification
+  type InsertNotification,
+  orders,
+  type Order,
+  type InsertOrder
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gt, lt, gte, lte, sql } from "drizzle-orm";

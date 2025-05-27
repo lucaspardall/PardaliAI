@@ -172,10 +172,6 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 
-export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
-export type InsertOrder = z.infer<typeof insertOrderSchema>;
-export type Order = typeof orders.$inferSelect;
-
 // Schema para pedidos
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
@@ -203,4 +199,7 @@ export const orders = pgTable('orders', {
   ];
 });
 
-// Schemas já exportados individualmente acima
+// Order schemas (após definição da tabela)
+export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;
