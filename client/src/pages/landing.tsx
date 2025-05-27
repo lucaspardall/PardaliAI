@@ -41,10 +41,10 @@ export default function Landing() {
             <SignInButton mode="modal">
               <Button 
                 size="lg" 
-                className="bg-primary hover:bg-primary/90 shadow-xl animate-pulse"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-xl animate-pulse"
               >
                 <i className="ri-gift-line mr-2"></i>
-                Grátis 7 Dias
+                Teste Grátis
               </Button>
             </SignInButton>
           </div>
@@ -55,7 +55,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               onClick={() => setLocation('/dashboard')}
-              className="bg-primary hover:bg-primary/90 shadow-xl"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-xl"
             >
               <i className="ri-dashboard-line mr-2"></i>
               Dashboard

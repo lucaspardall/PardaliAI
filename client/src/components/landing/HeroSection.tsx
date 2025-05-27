@@ -46,20 +46,18 @@ export default function HeroSection() {
               ) : (
                 <div className="flex flex-col sm:flex-row gap-4">
                   <SignInButton mode="modal">
-                    <Button size="lg" className="bg-primary hover:bg-primary/90 text-white border-0 shadow-lg">
-                      🚀 Começar Grátis
+                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
+                      🚀 Teste Grátis 7 Dias
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </SignInButton>
-
-                  <Button asChild variant="outline" size="lg" className="bg-white/10 border-white/20 hover:bg-white/20 text-white">
-                    <a href="#features">
-                      Ver recursos
-                    </a>
+                  <Button variant="outline" size="lg" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                    <Play className="mr-2 h-4 w-4" />
+                    Ver Demo
                   </Button>
                 </div>
               )}
-              
+
             </div>
           </motion.div>
           <motion.div 

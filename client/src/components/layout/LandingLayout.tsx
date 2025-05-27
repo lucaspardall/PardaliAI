@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ui/theme-provider";
+import { SignInButton } from '@clerk/clerk-react';
 import { useState, useEffect } from "react";
 
 interface LandingLayoutProps {
@@ -53,7 +54,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             {isLoading ? (
               <div className="h-10 w-24 bg-muted/50 rounded-md animate-pulse"></div>
             ) : isAuthenticated ? (
-              <Button asChild className="bg-primary hover:bg-primary/90">
+              <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
                 <Link href="/dashboard">
                   <i className="ri-dashboard-line mr-2"></i>
                   Dashboard
@@ -61,9 +62,9 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               </Button>
             ) : (
               <SignInButton mode="modal">
-                <Button className="bg-primary hover:bg-primary/90">
-                  <i className="ri-gift-line mr-2"></i>
-                  Começar Grátis
+                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
+                  <i className="ri-rocket-line mr-2"></i>
+                  Teste Grátis 7 Dias
                 </Button>
               </SignInButton>
             )}
@@ -121,7 +122,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
                 <div className="h-10 bg-muted animate-pulse rounded-lg"></div>
               ) : isAuthenticated ? (
                 <div className="space-y-2">
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0">
                     <Link href="/dashboard">
                       <i className="ri-dashboard-line mr-2"></i>
                       Ir para Dashboard
@@ -133,18 +134,15 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Button asChild className="w-full">
-                    <a href="/api/login">
+                  <SignInButton mode="modal">
+                    <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0">
                       <i className="ri-rocket-line mr-2"></i>
-                      Comece grátis
-                    </a>
-                  </Button>
-                  <Button asChild variant="outline" className="w-full">
-                    <a href="/api/login">
-                      <i className="ri-login-box-line mr-2"></i>
-                      Já tenho conta
-                    </a>
-                  </Button>
+                      Teste Grátis 7 Dias
+                    </Button>
+                  </SignInButton>
+                  <div className="text-xs text-center text-muted-foreground mt-2">
+                    🎁 Sem cartão de crédito • Cancele a qualquer momento
+                  </div>
                 </div>
               )}
             </div>
