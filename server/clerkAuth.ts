@@ -10,15 +10,15 @@ export function setupAuth(app: Express) {
 
 export function setupClerkAuth(app: Express) {
   // Verificar se as chaves do Clerk estão configuradas
-  if (!process.env.CLERK_SECRET_KEY || !process.env.CLERK_PUBLISHABLE_KEY) {
-    console.error('⚠️ Clerk não configurado. Configure CLERK_SECRET_KEY e CLERK_PUBLISHABLE_KEY no arquivo .env');
+  if (!process.env.CLERK_SECRET_KEY || !process.env.VITE_CLERK_PUBLISHABLE_KEY) {
+    console.error('⚠️ Clerk não configurado. Configure CLERK_SECRET_KEY e VITE_CLERK_PUBLISHABLE_KEY nos Secrets do Replit');
     return;
   }
 
   // Middleware do Clerk
   app.use(clerkMiddleware({
     secretKey: process.env.CLERK_SECRET_KEY,
-    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+    publishableKey: process.env.VITE_CLERK_PUBLISHABLE_KEY,
   }));
 
   // Rota para obter dados do usuário
