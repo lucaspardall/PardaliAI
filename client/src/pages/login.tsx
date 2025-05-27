@@ -3,17 +3,31 @@ import React, { useEffect } from 'react';
 import { SignIn } from '@clerk/clerk-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from 'wouter';
+import Loading from '@/components/ui/loading';
 
 export default function LoginPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Se já estiver autenticado, redireciona para o dashboard
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!isLoading && isAuthenticated) {
       setLocation('/dashboard');
     }
-  }, [isAuthenticated, setLocation]);
+  }, [isAuthenticated, isLoading, setLocation]);
+
+  // Mostrar loading enquanto verifica se já está autenticado
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50">
+        <Loading />
+      </div>
+    );
+  }
+
+  // Se já autenticado, não mostrar o formulário de login
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
@@ -25,7 +39,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">CIP Shopee</h1>
           <p className="text-gray-600">Centro de Inteligência Pardal</p>
-          <p className="text-gray-500 text-sm">Otimização Inteligente para Lojas Shopee</p>
+          <p className="text-gray-500 text-sm">Faça login para acessar sua conta</p>
         </div>
 
         {/* Clerk SignIn Component */}
@@ -52,6 +66,7 @@ export default function LoginPage() {
             }}
             redirectUrl="/dashboard"
             signUpUrl="/signup"
+            afterSignInUrl="/dashboard"
           />
         </div>
 

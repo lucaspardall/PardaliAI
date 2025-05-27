@@ -1,8 +1,10 @@
+
 import { Route, Switch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ClerkProvider } from '@clerk/clerk-react'
+import { ErrorBoundary } from 'react-error-boundary';
 
 // Pages
 import LandingPage from "@/pages/landing";
@@ -32,6 +34,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -39,100 +42,115 @@ const queryClient = new QueryClient({
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!CLERK_PUBLISHABLE_KEY) {
-  throw new Error("Missing Publishable Key")
+  throw new Error("Missing Publishable Key. Please set VITE_CLERK_PUBLISHABLE_KEY in your environment variables.")
+}
+
+function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center p-8">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">Algo deu errado</h2>
+        <p className="text-gray-600 mb-4">Ocorreu um erro inesperado. Tente novamente.</p>
+        <button 
+          onClick={resetErrorBoundary}
+          className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+        >
+          Tentar Novamente
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function App() {
   return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-          <Switch>
-            {/* Public Routes */}
-            <Route path="/" component={LandingPage} />
-            <Route path="/login" component={LoginPage} />
-            <Route path="/signup" component={SignUpPage} />
-            <Route path="/shopee-connect" component={ShopeeConnectPage} />
-
-            {/* Protected Dashboard Routes */}
-            <Route path="/dashboard">
-              <ProtectedRoute>
-                <DashboardHome />
-              </ProtectedRoute>
-            </Route>
-
-            <Route path="/dashboard/products">
-              <ProtectedRoute>
-                <Products />
-              </ProtectedRoute>
-            </Route>
-
-            <Route path="/dashboard/optimizations">
-              <ProtectedRoute>
-                <Optimizations />
-              </ProtectedRoute>
-            </Route>
-
-            <Route path="/dashboard/reports">
-              <ProtectedRoute>
-                <Reports />
-              </ProtectedRoute>
-            </Route>
-
-            <Route path="/dashboard/profile">
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            </Route>
-
-            <Route path="/dashboard/subscription">
-              <ProtectedRoute>
-                <Subscription />
-              </ProtectedRoute>
-            </Route>
-
-            <Route path="/dashboard/ai-credits">
-              <ProtectedRoute>
-                <AiCredits />
-              </ProtectedRoute>
-            </Route>
-
-            <Route path="/dashboard/bulk-optimize">
-              <ProtectedRoute>
-                <BulkOptimize />
-              </ProtectedRoute>
-            </Route>
-
-            <Route path="/dashboard/optimize/:id">
-              {(params) => (
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <Switch>
+              {/* Public Routes */}
+              <Route path="/" component={LandingPage} />
+              <Route path="/login" component={LoginPage} />
+              <Route path="/signup" component={SignUpPage} />
+              <Route path="/shopee-connect" component={ShopeeConnectPage} />
+              
+              {/* Protected Dashboard Routes */}
+              <Route path="/dashboard">
                 <ProtectedRoute>
-                  <OptimizePage id={params.id} />
+                  <DashboardHome />
                 </ProtectedRoute>
-              )}
-            </Route>
-
-            <Route path="/dashboard/product/:id">
-              {(params) => (
+              </Route>
+              
+              <Route path="/dashboard/products">
                 <ProtectedRoute>
-                  <ProductPage id={params.id} />
+                  <Products />
                 </ProtectedRoute>
-              )}
-            </Route>
+              </Route>
+              
+              <Route path="/dashboard/optimizations">
+                <ProtectedRoute>
+                  <Optimizations />
+                </ProtectedRoute>
+              </Route>
+              
+              <Route path="/dashboard/reports">
+                <ProtectedRoute>
+                  <Reports />
+                </ProtectedRoute>
+              </Route>
+              
+              <Route path="/dashboard/profile">
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              </Route>
+              
+              <Route path="/dashboard/subscription">
+                <ProtectedRoute>
+                  <Subscription />
+                </ProtectedRoute>
+              </Route>
+              
+              <Route path="/dashboard/ai-credits">
+                <ProtectedRoute>
+                  <AiCredits />
+                </ProtectedRoute>
+              </Route>
+              
+              <Route path="/dashboard/bulk-optimize">
+                <ProtectedRoute>
+                  <BulkOptimize />
+                </ProtectedRoute>
+              </Route>
+              
+              <Route path="/dashboard/optimize/:id">
+                <ProtectedRoute>
+                  <OptimizePage />
+                </ProtectedRoute>
+              </Route>
+              
+              <Route path="/dashboard/product/:id">
+                <ProtectedRoute>
+                  <ProductPage />
+                </ProtectedRoute>
+              </Route>
+              
+              <Route path="/dashboard/store/connect">
+                <ProtectedRoute>
+                  <ConnectStorePage />
+                </ProtectedRoute>
+              </Route>
 
-            <Route path="/dashboard/store/connect">
-              <ProtectedRoute>
-                <ConnectStorePage />
-              </ProtectedRoute>
-            </Route>
-
-            {/* 404 Route */}
-            <Route component={NotFoundPage} />
-          </Switch>
-
-          <Toaster />
-        </ThemeProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
+              {/* 404 Page */}
+              <Route component={NotFoundPage} />
+            </Switch>
+            
+            <Toaster />
+          </ThemeProvider>
+        </QueryClientProvider>
+      </ClerkProvider>
+    </ErrorBoundary>
   );
 }
 

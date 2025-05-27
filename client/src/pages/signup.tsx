@@ -3,17 +3,31 @@ import React, { useEffect } from 'react';
 import { SignUp } from '@clerk/clerk-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from 'wouter';
+import Loading from '@/components/ui/loading';
 
 export default function SignUpPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Se já estiver autenticado, redireciona para o dashboard
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!isLoading && isAuthenticated) {
       setLocation('/dashboard');
     }
-  }, [isAuthenticated, setLocation]);
+  }, [isAuthenticated, isLoading, setLocation]);
+
+  // Mostrar loading enquanto verifica se já está autenticado
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50">
+        <Loading />
+      </div>
+    );
+  }
+
+  // Se já autenticado, não mostrar o formulário de signup
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
@@ -52,6 +66,7 @@ export default function SignUpPage() {
             }}
             redirectUrl="/dashboard"
             signInUrl="/login"
+            afterSignUpUrl="/dashboard"
           />
         </div>
 
