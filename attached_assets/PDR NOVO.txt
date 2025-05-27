@@ -1,0 +1,223 @@
+# PRD v2 — CIP Shopee: Centro de Inteligência Pardal
+
+## 📊 Visão Geral do Produto
+
+O **CIP Shopee** é um SaaS inteligente que integra dados da Shopee e aplica IA para otimizar produtos, campanhas e performance geral da loja. O sistema oferece sugestões táticas, aplicação direta de melhorias, diagnósticos e planos de ação com base em dados reais.
+
+## 🏛 Posicionamento
+
+Plataforma central de inteligência operacional para lojistas da Shopee. Atua como um "co-piloto de vendas" com IA, aumentando conversões, organização e diagnósticos.
+
+## 💼 Público-Alvo
+
+* Lojistas da Shopee (pequenos, médios e grandes)
+* Agências que gerenciam lojas
+* Profissionais de tráfego e gestão de marketplace
+
+## 🎡 Funcionalidades Principais
+
+### Página Inicial (Landing Page)
+
+* Headline direta com proposta de valor: "Otimize sua loja Shopee com IA em minutos"
+* Demonstração visual do sistema em ação (vídeo ou carrossel animado)
+* Seção com os principais benefícios (Ex: mais conversão, menos trabalho manual)
+* Depoimentos de lojistas ou resultados simulados (estilo antes/depois)
+* Comparativo dos planos
+* CTA destacado: “Comece grátis por 7 dias”
+* Design responsivo e focado em conversão
+
+### Dashboard Inteligente e Interativo
+
+* Design avançado, visual e responsivo, inspirado em referências como Coupler.io, Behance e BootstrapDash
+* Visão geral da performance por loja conectada
+* Cartões principais com métricas: CTR médio, conversão, vendas, nota CIP
+* Gráficos de tendência (últimos 7/30 dias) com Recharts ou Chart.js
+* Lista de produtos com maior e menor performance com tags de destaque (verde/vermelho)
+* Funil de vendas e visualizações analíticas
+* Análise visual de campanhas (CTR, ROI, conversão)
+* Alertas automáticos: produtos em queda, anúncios com baixo CTR, estoque baixo
+* Acesso rápido para ações táticas: otimizar, diagnosticar, criar produto IA
+* Painel com notificações centralizadas (novidades, atualizações, problemas detectados)
+* Modo escuro e adaptação PWA mobile opcional
+* Visão geral da performance por loja conectada
+* Cartões principais com métricas: CTR médio, conversão, vendas, nota CIP
+* Gráficos de tendência (últimos 7/30 dias)
+* Lista de produtos com maior e menor performance
+* Alertas automáticos (produtos em queda, anúncios com baixo CTR)
+* Acesso rápido para ações: otimizar, diagnosticar, criar novo anúncio
+* Notificações centralizadas (novidades, atualizações, alertas técnicos)
+
+### Dashboard Inteligente e Interativo
+
+* Visão geral da performance por loja conectada
+* Cartões principais com métricas: CTR médio, conversão, vendas, nota CIP
+* Gráficos de tendência (últimos 7/30 dias)
+* Lista de produtos com maior e menor performance
+* Alertas automáticos (produtos em queda, anúncios com baixo CTR)
+* Acesso rápido para ações: otimizar, diagnosticar, criar novo anúncio
+* Notificações centralizadas (novidades, atualizações, alertas técnicos)
+
+### 1. Autenticação e Onboarding (Clerk)
+
+* Cadastro/login com Clerk
+* Integração com MongoDB (user sync)
+* Proteção JWT + middleware `withAuth`
+* Registro de plano, status e progresso
+
+### 2. Integração com Shopee (OAuth)
+
+* Autenticação do vendedor via OAuth 2.0
+* Geração de assinatura HMAC-SHA256 para todas as requisições
+* Armazenamento seguro de access\_token e refresh\_token com renovação automática
+* Sincronização inicial de dados da loja:
+
+  * Produtos (`/product/get_item_list`)
+  * Detalhes da loja (`/shop/get_shop_info`)
+  * Métricas de performance (`/shop/get_shop_performance_v2`)
+  * Campanhas e anúncios (endpoints de Ads)
+* Atualizações periódicas via botão e agendadas (cron job)
+* Fallback inteligente para recuperação em caso de erro de token
+* Suporte a múltiplas lojas por usuário com separação por `store_id`
+* Planejamento para Webhooks da Shopee no futuro (eventos como novos pedidos ou alterações de status). Central de Produtos
+* Listagem de produtos conectados
+* Detalhes e métricas (CTR, views, vendas, preço, etc.)
+* Histórico e variação de performance
+
+### 4. Otimização de Produtos com IA (GPT)
+
+* Envio do produto para agente via API
+* Recebimento de sugestão de título, descrição e palavras-chave
+* Exibição de Antes x Depois
+* Ações: aplicar na Shopee / salvar / ignorar
+* Registro no histórico do usuário
+
+### 5. Criação de Produtos com IA
+
+* Formulário assistido para novos produtos
+* Sugestão de título, descrição, categoria e imagens
+* Recomendação de atributos e palavras-chave
+* Validação com regras da Shopee
+* Envio direto para a Shopee (se autorizado)
+* Registro no histórico de criações IA
+
+### 6. Diagnóstico da Loja
+
+* Avaliação geral da loja: nota CIP, pontos fortes/fracos
+* Sugestões gerais de melhoria
+* Benchmark com outras lojas do mesmo nicho
+
+### 7. Análise de Campanhas (Ads)
+
+* Importa campanhas via API
+* Mede CTR, conversão, custo, ROAS
+* IA sugere ajustes: palavra-chave, orçamento, pausa
+* Exporta plano de melhoria
+
+### 8. Plano de Aceleração de 7 Dias
+
+* Ações diárias táticas para produtos
+* Checklist interativo para o lojista
+* Sugestões adaptadas à performance real
+
+### 9. Radar de Oportunidades
+
+* Identifica campanhas e descontos ativos da Shopee
+* IA sugere produtos ideais para entrar
+* Exibe elegibilidade, prazo, impacto previsto
+
+### 10. Pagamentos e Planos (Stripe)
+
+* Checkout com Stripe (Starter, Pro, Enterprise)
+* Webhooks para atualização de status
+* Controle de limites de uso com base em **número de lojas conectadas**
+* Cada loja tem acesso a todas as funcionalidades do plano correspondente
+* Planos definidos por quantidade de lojas conectadas:
+
+#### 🟢 Starter — R\$39/mês
+
+* Até 1 loja conectada
+* 5 otimizações IA/mês
+* 1 diagnóstico de loja/mês
+* Acesso parcial ao plano de 7 dias
+* Sem criação de produtos IA
+* Sem radar de oportunidades
+* Suporte via e-mail
+* Acesso ao trial de 7 dias
+
+#### 🔵 Pro — R\$97/mês
+
+* Até 3 lojas conectadas
+* Otimizações e diagnósticos ilimitados
+* 3 criações de produto IA/mês
+* Acesso completo ao plano de 7 dias
+* Acesso ao radar de oportunidades
+* Análise básica de campanhas
+* Suporte prioritário por e-mail
+
+#### 🟣 Enterprise — R\$197/mês
+
+* Lojas conectadas ilimitadas
+* Otimizações, diagnósticos e criações IA ilimitadas
+* Análise avançada de campanhas
+* Relatórios comparativos e benchmarking
+* Integração com webhooks e automações
+* Suporte VIP por WhatsApp e e-mail
+
+#### 🔶 Add-ons para Starter:
+
+* +5 otimizações IA: R\$19
+
+* +5 criações de produto IA: R\$29
+
+* Upgrade/Downgrade em 1 clique. Feedback & IA Aprendizado
+
+* Avaliação das sugestões da IA (estrela, thumbs)
+
+* Armazena interações para melhoria dos prompts
+
+* Relatório de impacto das ações aplicadas
+
+## ⚖️ Estrutura Técnica
+
+* Backend: Node.js + Express
+* Frontend: React + Tailwind + Zustand
+* DB: Prisma + MongoDB Atlas
+* Cache: Upstash Redis (L2)
+* IA: Agente GPT via Webhook com ID fixo
+* Auth: Clerk (sessões seguras com JWT)
+* Pagamento: Stripe
+* DevOps: Replit + GitHub + GitHub Actions
+
+## ♻️ Fluxos IA (Webhook)
+
+* Cada módulo usa um `agentId` fixo para comunicação com IA
+* Para evitar sobrecarga, o sistema usa **redundância por função**:
+
+  * 2 agentes para otimização de produtos e criação de produtos IA
+  * 2 agentes para diagnóstico de loja e análise de campanhas Shopee Ads
+* O sistema alterna entre os agentes ativos com base na fila ou prioridade
+* Caso um agente falhe ou atinja timeout, o segundo agente assume automaticamente
+* Todos os envios e respostas são logados na tabela `AIInteraction`
+* O sistema pode escalar horizontalmente o número de agentes se necessário
+* Exibe sugestão para o usuário após análise
+
+### 📈 Capacidade Estimada
+
+* Cada agente suporta até 30 requisições por minuto
+* Com 4 agentes ativos, o sistema pode atender entre 60–120 usuários simultâneos realizando ações com IA
+* Para uso real distribuído (clientes espalhados ao longo do dia), a estrutura atual comporta entre **500 e 1.000 clientes ativos mensais com conforto**
+* Monitoramento de fila, tempo de resposta e fallback será aplicado para garantir estabilidade
+
+## 📈 KPIs Esperados (MVP)
+
+* Conversão trial → pago: 25%
+* Crescimento MRR: 15%/mês
+* Implementação de sugestões IA: 70%
+* Tempo médio para 1ª otimização: < 5min
+
+## 🌐 Roadmap Inicial
+
+* Semana 1: Auth Clerk + Stripe Checkout + Conexão Shopee
+* Semana 2: Produtos + Otimização com IA + Diagnóstico
+* Semana 3: Criação de Produto + Campanhas + Plano 7 Dias + Feedback IA
+* Semana 4: Radar de Oportunidades + Refinamentos UI + Cache
