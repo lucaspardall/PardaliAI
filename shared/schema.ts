@@ -49,17 +49,43 @@ export const shopeeStores = pgTable("shopee_stores", {
   shopId: varchar("shop_id").unique().notNull(),
   shopName: varchar("shop_name").notNull(),
   shopLogo: varchar("shop_logo"),
+  shopDescription: text("shop_description"),
   shopRegion: varchar("shop_region").default("BR").notNull(),
+  shopStatus: varchar("shop_status").default("normal"), // normal, frozen, banned
+  isOfficial: boolean("is_official").default(false),
+  isPreferred: boolean("is_preferred").default(false),
+  // Tokens de acesso
   accessToken: varchar("access_token").notNull(),
   refreshToken: varchar("refresh_token").notNull(),
   tokenExpiresAt: timestamp("token_expires_at").notNull(),
+  // Configurações
   isActive: boolean("is_active").default(true).notNull(),
+  autoSync: boolean("auto_sync").default(true),
+  syncInterval: integer("sync_interval").default(60), // em minutos
+  // Dados de sincronização
   lastSyncAt: timestamp("last_sync_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  lastSuccessfulSync: timestamp("last_successful_sync"),
+  syncErrors: integer("sync_errors").default(0),
+  lastSyncError: text("last_sync_error"),
+  // Métricas da loja
   totalProducts: integer("total_products").default(0).notNull(),
+  activeProducts: integer("active_products").default(0),
+  totalOrders: integer("total_orders").default(0),
+  totalRevenue: real("total_revenue").default(0),
   averageCtr: real("average_ctr"),
   monthlyRevenue: real("monthly_revenue"),
+  followerCount: integer("follower_count").default(0),
+  rating: real("rating"),
+  ratingCount: integer("rating_count").default(0),
+  // Datas
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return [
+    index("idx_stores_user_active").on(table.userId, table.isActive),
+    index("idx_stores_region").on(table.shopRegion),
+    index("idx_stores_sync").on(table.lastSyncAt, table.isActive)
+  ];
 });
 
 export const products = pgTable("products", {
@@ -69,22 +95,56 @@ export const products = pgTable("products", {
   name: varchar("name").notNull(),
   description: text("description"),
   price: real("price").notNull(),
+  originalPrice: real("original_price"), // Preço original antes de promoções
   stock: integer("stock").notNull(),
+  sold: integer("sold").default(0), // Quantidade vendida
   images: jsonb("images").$type<string[]>().default([]),
   category: varchar("category"),
-  status: varchar("status").default("active").notNull(), // active, inactive, deleted
+  categoryId: varchar("category_id"), // ID da categoria na Shopee
+  brand: varchar("brand"),
+  weight: real("weight"), // Peso do produto
+  dimensions: jsonb("dimensions").$type<{length?: number, width?: number, height?: number}>(),
+  attributes: jsonb("attributes").$type<Record<string, any>>().default({}),
+  variations: jsonb("variations").$type<ProductVariation[]>().default([]),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  status: varchar("status").default("active").notNull(), // active, inactive, deleted, banned
+  wholesales: jsonb("wholesales").$type<any[]>().default([]),
+  condition: varchar("condition").default("new"), // new, used
+  preOrder: boolean("pre_order").default(false),
+  // Métricas de performance
   ctr: real("ctr"),
-  views: integer("views"),
-  sales: integer("sales"),
-  revenue: real("revenue"),
+  conversionRate: real("conversion_rate"),
+  views: integer("views").default(0),
+  sales: integer("sales").default(0),
+  revenue: real("revenue").default(0),
+  likes: integer("likes").default(0),
+  rating: real("rating"),
+  ratingCount: integer("rating_count").default(0),
+  // Datas
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   lastSyncAt: timestamp("last_sync_at"),
+  shopeeCreatedAt: timestamp("shopee_created_at"),
+  shopeeUpdatedAt: timestamp("shopee_updated_at"),
 }, (table) => {
   return [
-    uniqueIndex("idx_store_product").on(table.storeId, table.productId)
+    uniqueIndex("idx_store_product").on(table.storeId, table.productId),
+    index("idx_products_status").on(table.status),
+    index("idx_products_category").on(table.categoryId),
+    index("idx_products_performance").on(table.revenue, table.sales, table.views)
   ];
 });
+
+// Tipo para variações de produto
+export interface ProductVariation {
+  variationId: string;
+  name: string;
+  price: number;
+  stock: number;
+  sku?: string;
+  images?: string[];
+  attributes?: Record<string, string>;
+}
 
 export const productOptimizations = pgTable("product_optimizations", {
   id: serial("id").primaryKey(),
@@ -172,14 +232,67 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 
-// Schema para pedidos
+// Tabela para logs de sistema e auditoria
+export const systemLogs = pgTable("system_logs", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  storeId: integer("store_id").references(() => shopeeStores.id, { onDelete: "set null" }),
+  action: varchar("action").notNull(), // sync, auth, api_call, error, etc.
+  entity: varchar("entity"), // product, order, store, etc.
+  entityId: varchar("entity_id"),
+  details: jsonb("details").$type<Record<string, any>>().default({}),
+  level: varchar("level").default("info").notNull(), // info, warning, error, debug
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return [
+    index("idx_logs_user_action").on(table.userId, table.action),
+    index("idx_logs_store_action").on(table.storeId, table.action),
+    index("idx_logs_level_date").on(table.level, table.createdAt),
+    index("idx_logs_entity").on(table.entity, table.entityId)
+  ];
+});
+
+// Tabela para cache de dados da API Shopee
+export const apiCache = pgTable("api_cache", {
+  id: serial("id").primaryKey(),
+  storeId: integer("store_id").notNull().references(() => shopeeStores.id, { onDelete: "cascade" }),
+  endpoint: varchar("endpoint").notNull(), // get_item_list, get_order_list, etc.
+  cacheKey: varchar("cache_key").notNull(),
+  data: jsonb("data").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return [
+    uniqueIndex("idx_cache_store_endpoint_key").on(table.storeId, table.endpoint, table.cacheKey),
+    index("idx_cache_expires").on(table.expiresAt)
+  ];
+});
+
+// Schemas para as novas tabelas
+export const insertSystemLogSchema = createInsertSchema(systemLogs).omit({ id: true });
+export type InsertSystemLog = z.infer<typeof insertSystemLogSchema>;
+export type SystemLog = typeof systemLogs.$inferSelect;
+
+export const insertApiCacheSchema = createInsertSchema(apiCache).omit({ id: true });
+export type InsertApiCache = z.infer<typeof insertApiCacheSchema>;
+export type ApiCache = typeof apiCache.$inferSelect;
+
+// Schemas para orders
+export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;
+
+// Tabela de pedidos da Shopee
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
   storeId: integer('store_id').notNull().references(() => shopeeStores.id, { onDelete: "cascade" }),
   orderSn: varchar('order_sn', { length: 255 }).notNull().unique(),
   orderStatus: varchar('order_status', { length: 50 }).notNull(),
-  totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
-  currency: varchar('currency', { length: 10 }).default('BRL'),
+  totalAmount: real('total_amount').notNull(), // Mudado de decimal para real para consistência
+  currency: varchar('currency', { length: 10 }).default('BRL').notNull(),
   paymentMethod: varchar('payment_method', { length: 100 }),
   shippingCarrier: varchar('shipping_carrier', { length: 100 }),
   trackingNumber: varchar('tracking_number', { length: 255 }),
@@ -187,7 +300,7 @@ export const orders = pgTable('orders', {
   updateTime: timestamp('update_time').notNull(),
   buyerUsername: varchar('buyer_username', { length: 255 }),
   recipientAddress: text('recipient_address'),
-  items: jsonb('items').$type<any[]>(),
+  items: jsonb('items').$type<OrderItem[]>().default([]),
   lastSyncAt: timestamp('last_sync_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
@@ -195,11 +308,19 @@ export const orders = pgTable('orders', {
   return [
     index("idx_orders_store_status").on(table.storeId, table.orderStatus),
     index("idx_orders_create_time").on(table.createTime),
-    index("idx_orders_tracking").on(table.trackingNumber)
+    index("idx_orders_tracking").on(table.trackingNumber),
+    index("idx_orders_store_date").on(table.storeId, table.createTime)
   ];
 });
 
-// Order schemas (após definição da tabela)
-export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
-export type InsertOrder = z.infer<typeof insertOrderSchema>;
-export type Order = typeof orders.$inferSelect;
+// Tipo para itens do pedido
+export interface OrderItem {
+  itemId: string;
+  itemName: string;
+  modelName?: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  itemSku?: string;
+  variation?: string;
+}
