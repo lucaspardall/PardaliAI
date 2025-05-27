@@ -67,9 +67,34 @@ export default function SubscriptionPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ planId })
+        body: JSON.stringify({ planId, billingPeriod })
       });
       if (!response.ok) throw new Error('Failed to create checkout session');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      window.location.href = data.url;
+      setIsProcessing(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao iniciar pagamento",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+    },
+  });
+
+  // Portal mutation for billing management
+  const portalMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/payments/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to create portal session');
       return response.json();
     },
     onSuccess: (data) => {
@@ -78,17 +103,12 @@ export default function SubscriptionPage() {
     onError: (error: any) => {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao iniciar pagamento",
+        description: error.message || "Erro ao acessar portal de pagamentos",
         variant: "destructive",
       });
+      setIsProcessing(false);
     },
   });
-
-  // Para gerenciar a assinatura, usar o portal do Clerk
-  const handleManageBilling = () => {
-    // Redirecionar para o portal do usuário do Clerk
-    window.open(`${process.env.VITE_CLERK_PUBLISHABLE_KEY?.replace('pk_test_', 'https://dashboard.clerk.com/')}/users/${user?.id}`, '_blank');
-  };
 
   // Cancel subscription mutation
   const cancelMutation = useMutation({
@@ -143,7 +163,7 @@ export default function SubscriptionPage() {
 
   const handleUpgrade = (planId: string) => {
     setIsProcessing(true);
-    checkoutMutation.mutate({ planId, billingPeriod });
+    checkoutMutation.mutate({ planId });
   };
 
   const handleManageBilling = () => {

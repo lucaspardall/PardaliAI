@@ -41,6 +41,26 @@ router.post('/checkout', isAuthenticated, async (req: Request, res: Response) =>
 });
 
 /**
+ * Criar portal de gerenciamento de pagamentos
+ */
+router.post('/portal', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.auth;
+    
+    // Como estamos usando Clerk para pagamentos, redirecionar para o portal do usuário
+    const portalUrl = `${process.env.CLERK_FRONTEND_API || 'https://clerk.com'}/user`;
+    
+    res.json({ url: portalUrl });
+  } catch (error) {
+    console.error('Erro ao criar portal de pagamentos:', error);
+    res.status(500).json({ 
+      message: 'Erro interno do servidor',
+      error: process.env.NODE_ENV === 'development' ? error : undefined 
+    });
+  }
+});
+
+/**
  * Buscar informações da assinatura atual
  */
 router.get('/subscription', isAuthenticated, async (req: Request, res: Response) => {
