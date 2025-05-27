@@ -18,7 +18,7 @@ import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
 import { useAuth } from "./hooks/useAuth";
 import { Suspense } from 'react';
-import { useLocation, Navigate } from "wouter"; // Import useLocation and Navigate
+import { useLocation } from "wouter";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -35,7 +35,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   // Se não está autenticado, redirecionar para login
   if (!isAuthenticated) {
-    return <Navigate to="/?login=required" replace />;
+    window.location.href = "/?login=required";
+    return null;
   }
 
   return <>{children}</>;
