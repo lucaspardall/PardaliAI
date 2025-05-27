@@ -583,6 +583,79 @@ router.post('/sync/:storeId', isAuthenticated, async (req: Request, res: Respons
 });
 
 /**
+ * Testar conexão real com Shopee (PRODUÇÃO)
+ */
+router.post('/stores/:storeId/test-production', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+
+    if (!store) {
+      return res.status(404).json({ message: 'Store not found' });
+    }
+
+    if (store.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    console.log(`[Production Test] Testando conexão real para loja ${storeId}`);
+
+    // Importar cliente de produção
+    const { testShopeeConnection } = await import('../shopee/production');
+    const result = await testShopeeConnection(store.shopId);
+
+    if (result.success) {
+      console.log(`[Production Test] ✅ Conexão bem-sucedida:`, result.data);
+      
+      // Criar notificação de sucesso
+      await storage.createNotification({
+        userId,
+        title: '✅ Conexão Shopee testada',
+        message: 'Conexão com API da Shopee funcionando corretamente!',
+        type: 'success',
+        isRead: false,
+        createdAt: new Date()
+      });
+    } else {
+      console.error(`[Production Test] ❌ Falha na conexão:`, result.error);
+      
+      // Criar notificação de erro
+      await storage.createNotification({
+        userId,
+        title: '❌ Falha na conexão Shopee',
+        message: `Erro: ${result.error}`,
+        type: 'error',
+        isRead: false,
+        createdAt: new Date()
+      });
+    }
+
+    res.json({
+      success: result.success,
+      message: result.success ? 'Conexão testada com sucesso' : 'Falha no teste de conexão',
+      data: result.data,
+      error: result.error,
+      store: {
+        id: store.id,
+        shopId: store.shopId,
+        shopName: store.shopName
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Error testing production connection:', error);
+    res.status(500).json({
+      message: 'Failed to test production connection',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+/**
  * Testar sincronização de produtos (endpoint de debug)
  */
 router.post('/stores/:storeId/sync/test', isAuthenticated, async (req: Request, res: Response) => {

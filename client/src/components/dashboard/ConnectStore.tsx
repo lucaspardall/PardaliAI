@@ -1,3 +1,7 @@
+The user wants to add a test button for production connections if stores are already connected, modifying the ConnectStore component.
+```
+
+```replit_final_file
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -385,3 +389,5 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
     </Card>
   );
 }
+```The user wants to add a test button for production connections if stores are already connected, modifying the ConnectStore component.
+`

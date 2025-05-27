@@ -12,27 +12,23 @@ export function getTimestamp(): number {
 }
 
 /**
- * Obtém URL base da API baseada na região
+ * Obtém a URL base da API conforme a região
  */
-export function getApiBaseUrl(region: ShopeeRegion): string {
-  const urls = {
-    'SG': 'https://partner.shopeemobile.com',
-    'MY': 'https://partner.shopeemobile.com',
-    'TH': 'https://partner.shopeemobile.com',
-    'TW': 'https://partner.shopeemobile.com',
-    'ID': 'https://partner.shopeemobile.com',
-    'VN': 'https://partner.shopeemobile.com',
-    'PH': 'https://partner.shopeemobile.com',
-    'BR': 'https://partner.shopeemobile.com',
-    'MX': 'https://partner.shopeemobile.com',
-    'CO': 'https://partner.shopeemobile.com',
-    'CL': 'https://partner.shopeemobile.com',
-    'PL': 'https://partner.shopeemobile.com',
-    'ES': 'https://partner.shopeemobile.com',
-    'FR': 'https://partner.shopeemobile.com'
-  };
+export function getApiBaseUrl(region: ShopeeRegion, isAuth: boolean = false): string {
+  // CORREÇÃO: URLs específicas para Brasil
+  if (region === 'BR') {
+    if (isAuth) {
+      // URL de autenticação para Brasil
+      return 'https://partner.shopeemobile.com';
+    } else {
+      // URL da API para Brasil
+      return 'https://partner.shopeemobile.com';
+    }
+  }
 
-  return urls[region] || 'https://partner.shopeemobile.com';
+  // Para outras regiões, manter comportamento atual
+  const baseUrl = 'https://partner.shopeemobile.com';
+  return baseUrl;
 }
 
 /**
@@ -43,33 +39,40 @@ export function generateSignature(
   partnerKey: string,
   path: string,
   timestamp: number,
-  accessToken?: string,
-  shopId?: string,
-  requestBody?: any
+  accessToken?: Record<string, string>,
+  shopId?: Record<string, string>,
+  body?: any
 ): string {
+  // CORREÇÃO: Basestring exata conforme documentação Shopee
+  // Formato: {partner_id}{path}{timestamp}{access_token}{shop_id}{request_body}
+
   let baseString = `${partnerId}${path}${timestamp}`;
 
-  // Adicionar access_token e shop_id se fornecidos
-  if (accessToken && shopId) {
-    baseString += `${accessToken}${shopId}`;
+  // Adicionar access_token se fornecido (SEM chaves extras)
+  if (accessToken?.access_token) {
+    baseString += accessToken.access_token;
   }
 
-  // Adicionar corpo da requisição se fornecido
-  if (requestBody) {
-    const bodyString = typeof requestBody === 'string' 
-      ? requestBody 
-      : JSON.stringify(requestBody);
+  // Adicionar shop_id se fornecido (SEM chaves extras)
+  if (shopId?.shop_id) {
+    baseString += shopId.shop_id;
+  }
+
+  // Adicionar corpo da requisição se fornecido (JSON compacto, sem espaços)
+  if (body) {
+    // IMPORTANTE: JSON deve ser minificado (sem espaços)
+    const bodyString = typeof body === 'string' ? body : JSON.stringify(body);
     baseString += bodyString;
   }
 
-  console.log('🔐 Gerando assinatura com base string:', baseString);
+  console.log(`[Shopee Auth] Base string: ${baseString}`);
 
+  // Gerar HMAC-SHA256
   const hmac = crypto.createHmac('sha256', partnerKey);
-  hmac.update(baseString);
+  hmac.update(baseString, 'utf8');
   const signature = hmac.digest('hex');
 
-  console.log('✅ Assinatura gerada:', signature);
-
+  console.log(`[Shopee Auth] Generated signature: ${signature}`);
   return signature;
 }
 
