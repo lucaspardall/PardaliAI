@@ -30,32 +30,32 @@ const checkConnection = async (): Promise<boolean> => {
 // Função para executar queries com retry e diagnóstico
 const executeWithRetry = async (fn: Function, maxRetries = 5): Promise<any> => {
   let lastError;
-  
+
   // Verifica se a conexão está funcionando antes de tentar executar a query
   const isConnected = await checkConnection();
   if (!isConnected) {
     console.log("Tentando reconectar ao banco de dados...");
   }
-  
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       // Log de diagnóstico
       if (attempt > 0) {
         console.log(`Tentativa ${attempt + 1}/${maxRetries} - Executando query...`);
       }
-      
+
       // Executa a função
       const result = await fn();
-      
+
       // Se chegou aqui, a query foi bem-sucedida
       if (attempt > 0) {
         console.log(`Query executada com sucesso após ${attempt + 1} tentativas`);
       }
-      
+
       return result;
     } catch (err: any) {
       lastError = err;
-      
+
       // Log detalhado do erro
       console.error(`Erro na tentativa ${attempt + 1}/${maxRetries}:`, {
         message: err.message,
@@ -64,7 +64,7 @@ const executeWithRetry = async (fn: Function, maxRetries = 5): Promise<any> => {
         severity: err.severity,
         position: err.position
       });
-      
+
       // Se for erro de timeout ou conexão, aguarda e tenta novamente
       if (err.message && (
           err.message.includes('connection timed out') || 
@@ -77,12 +77,12 @@ const executeWithRetry = async (fn: Function, maxRetries = 5): Promise<any> => {
         await new Promise(resolve => setTimeout(resolve, waitTime));
         continue;
       }
-      
+
       // Para outros erros, lança imediatamente
       throw err;
     }
   }
-  
+
   console.error("Todas as tentativas falharam. Último erro:", lastError);
   throw lastError;
 };
@@ -101,7 +101,7 @@ const enhancedSql = Object.assign(rawSql, {
             rowCount: Array.isArray(result) ? result.length : 0
           };
         }
-        
+
         const result = await rawSql(text, params);
         // Formata o resultado para o formato que o connect-pg-simple espera
         return {
@@ -121,3 +121,36 @@ export const sql = enhancedSql;
 
 // Exporta o cliente Drizzle para operações de ORM
 export const db = drizzle(rawSql);
+
+// Cache para evitar múltiplas verificações simultâneas
+let connectionPromise: Promise<boolean> | null = null;
+
+export async function connectToDatabase() {
+  // Se já há uma verificação em andamento, aguardar ela
+  if (connectionPromise) {
+    return connectionPromise;
+  }
+
+  connectionPromise = (async () => {
+    try {
+      console.log("Verificando conexão com banco de dados...");
+
+      // Verificar se existe a variável de ambiente
+      if (!process.env.DATABASE_URL) {
+        throw new Error("DATABASE_URL não está definida");
+      }
+
+      // Testar a conexão executando uma query simples
+      await sql`SELECT 1`;
+      console.log("Conexão com banco de dados estabelecida com sucesso");
+
+      return true;
+    } catch (error) {
+      console.error("Erro ao conectar com o banco de dados:", error);
+      connectionPromise = null; // Reset para permitir nova tentativa
+      throw error;
+    }
+  })();
+
+  return connectionPromise;
+}

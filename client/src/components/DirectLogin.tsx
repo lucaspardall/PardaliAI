@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
@@ -11,7 +10,7 @@ export default function DirectLogin() {
 
   const handleLoginWithReplit = () => {
     setIsLoading(true);
-    
+
     window.addEventListener("message", authComplete);
     const h = 500;
     const w = 350;
@@ -36,19 +35,23 @@ export default function DirectLogin() {
         return;
       }
 
+      setIsLoading(false);
       window.removeEventListener("message", authComplete);
-      authWindow?.close();
-      
+
+      if (authWindow) {
+        authWindow.close();
+      }
+
+      // Aguardar um pouco antes de redirecionar para garantir que a sessão foi criada
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1000);
+
       toast({
-        title: "Login realizado com sucesso",
-        description: "Você está conectado e pode usar o sistema agora.",
+        title: "Login realizado com sucesso!",
+        description: "Redirecionando para o dashboard...",
         variant: "default",
       });
-      
-      // Recarregar a página após login bem-sucedido
-      setTimeout(() => {
-        location.reload();
-      }, 1000);
     }
 
     // Timeout de segurança caso a janela seja fechada manualmente
@@ -109,7 +112,7 @@ export default function DirectLogin() {
             </>
           )}
         </Button>
-        
+
         <Button 
           onClick={handleSimpleLogin}
           variant="outline"
@@ -119,7 +122,7 @@ export default function DirectLogin() {
           <i className="ri-login-box-line mr-2"></i>
           Login Direto
         </Button>
-        
+
         <p className="text-xs text-muted-foreground text-center">
           Problemas com pop-ups? Use o "Login Direto" acima.
         </p>

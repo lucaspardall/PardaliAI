@@ -18,25 +18,27 @@ import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
 import { useAuth } from "./hooks/useAuth";
 import { Suspense } from 'react';
+import { useLocation, Navigate } from "wouter"; // Import useLocation and Navigate
 
-function ProtectedRoute({ component: Component, ...rest }: any) {
-  const { isAuthenticated, isLoading } = useAuth();
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const [location] = useLocation();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
+  // Se ainda está carregando, mostrar loading
   if (isLoading) {
     return (
-      <div className="h-screen w-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
+  // Se não está autenticado, redirecionar para login
   if (!isAuthenticated) {
-    // Redirect to login
-    window.location.href = "/api/login";
-    return null;
+    return <Navigate to="/?login=required" replace />;
   }
 
-  return <Component {...rest} />;
+  return <>{children}</>;
 }
 
 function Router() {
@@ -47,34 +49,34 @@ function Router() {
 
       {/* Protected dashboard routes */}
       <Route path="/dashboard">
-        {() => <ProtectedRoute component={Dashboard} />}
+        {() => <ProtectedRoute><Dashboard /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/products">
-        {() => <ProtectedRoute component={Products} />}
+        {() => <ProtectedRoute><Products /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/product/:id">
-        {(params) => <ProtectedRoute component={ProductDetail} id={params.id} />}
+        {(params) => <ProtectedRoute><ProductDetail id={params.id} /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/optimize/:id">
-        {(params) => <ProtectedRoute component={OptimizeProduct} id={params.id} />}
+        {(params) => <ProtectedRoute><OptimizeProduct id={params.id} /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/optimizations">
-        {() => <ProtectedRoute component={Optimizations} />}
+        {() => <ProtectedRoute><Optimizations /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/reports">
-        {() => <ProtectedRoute component={Reports} />}
+        {() => <ProtectedRoute><Reports /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/store/connect">
-        {() => <ProtectedRoute component={ConnectStore} />}
+        {() => <ProtectedRoute><ConnectStore /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/profile">
-        {() => <ProtectedRoute component={Profile} />}
+        {() => <ProtectedRoute><Profile /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/subscription">
-        {() => <ProtectedRoute component={Subscription} />}
+        {() => <ProtectedRoute><Subscription /></ProtectedRoute>}
       </Route>
       <Route path="/dashboard/shopee-connect">
-        {() => <ProtectedRoute component={ShopeeConnect} />}
+        {() => <ProtectedRoute><ShopeeConnect /></ProtectedRoute>}
       </Route>
 
       {/* Fallback to 404 */}
