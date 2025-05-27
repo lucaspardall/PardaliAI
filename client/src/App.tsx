@@ -40,7 +40,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
         window.location.href = '/';
       }
     };
-    
+
     checkAuth();
   }, []);
 
