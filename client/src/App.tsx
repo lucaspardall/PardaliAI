@@ -16,9 +16,9 @@ import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
+import { useLocation, useRouter } from "wouter";
 import { useAuth } from "./hooks/useAuth";
 import React, { Suspense } from 'react';
-import { useLocation } from "wouter";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -39,13 +39,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Se não está autenticado, mostrar loading enquanto redireciona
+  // Se não estiver autenticado, redirecionar para home
+  const [, setLocation] = useLocation();
   if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
-    );
+      setLocation("/");
+      return null;
   }
 
   return <>{children}</>;

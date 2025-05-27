@@ -196,7 +196,6 @@ export interface ShopeeCategory {
   original_category_name: string;
   display_category_name: string;
   has_children: boolean;
-} & string;
 }
 
 // Informações de um produto na Shopee

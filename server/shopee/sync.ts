@@ -109,51 +109,6 @@ export class ShopeeSyncManager {
     }
 
     throw lastError!;
-      }
-
-      // 2. Sincronizar produtos
-      try {
-        const productResult = await this.syncProducts();
-        processed += productResult.processed;
-        errors.push(...productResult.errors);
-        console.log(`[Sync] ${productResult.processed} produtos sincronizados`);
-      } catch (error) {
-        errors.push(`Erro geral na sincronização de produtos: ${error.message}`);
-      }
-
-      // 3. Sincronizar pedidos dos últimos 7 dias
-      try {
-        const orderResult = await this.syncRecentOrders();
-        processed += orderResult.processed;
-        errors.push(...orderResult.errors);
-        console.log(`[Sync] ${orderResult.processed} pedidos sincronizados`);
-      } catch (error) {
-        errors.push(`Erro na sincronização de pedidos: ${error.message}`);
-      }
-
-      // 4. Atualizar timestamp de última sincronização
-      await storage.updateStore(this.storeId, {
-        lastSyncAt: new Date()
-      });
-
-      const duration = Date.now() - startTime;
-
-      return {
-        success: errors.length === 0,
-        processed,
-        errors,
-        duration
-      };
-
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      return {
-        success: false,
-        processed,
-        errors: [...errors, `Erro crítico: ${error.message}`],
-        duration
-      };
-    }
   }
 
   /**
