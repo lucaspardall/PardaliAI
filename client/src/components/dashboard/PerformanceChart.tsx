@@ -15,16 +15,23 @@ export default function PerformanceChart({ metrics, isLoading }: PerformanceChar
   
   useEffect(() => {
     if (metrics && metrics.length > 0) {
-      // Process metrics into chart data format
-      const data = metrics.map(metric => ({
-        date: formatDate(metric.date),
-        views: metric.totalViews,
-        sales: metric.totalSales,
-        ctr: metric.averageCtr,
-        revenue: metric.totalRevenue
-      }));
-      
-      setChartData(data);
+      try {
+        // Process metrics into chart data format
+        const data = metrics.map(metric => ({
+          date: formatDate(metric.date),
+          views: metric.totalViews || 0,
+          sales: metric.totalSales || 0,
+          ctr: metric.averageCtr || 0,
+          revenue: metric.totalRevenue || 0
+        }));
+        
+        setChartData(data);
+      } catch (error) {
+        console.error('Error processing chart data:', error);
+        setChartData([]);
+      }
+    } else {
+      setChartData([]);
     }
   }, [metrics]);
   

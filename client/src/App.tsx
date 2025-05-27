@@ -3,8 +3,9 @@ import { Route, Switch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ui/theme-provider";
-import { ClerkProvider } from '@clerk/clerk-react'
+import { ClerkProvider } from '@clerk/clerk-react';
 import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorFallback } from '@/components/ErrorBoundary';
 
 // Pages
 import LandingPage from "@/pages/landing";
@@ -28,6 +29,13 @@ import ShopeeConnectPage from "@/pages/shopee-connect";
 
 // Components
 import ProtectedRoute from "@/components/ProtectedRoute";
+
+// Get Clerk publishable key from environment
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!CLERK_PUBLISHABLE_KEY) {
+  throw new Error('Missing Publishable Key');
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,7 +72,7 @@ function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetError
 
 function App() {
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary FallbackComponent={ErrorFallback} onError={(error) => console.error('App Error:', error)}>
       <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
@@ -141,6 +149,19 @@ function App() {
                   <ConnectStorePage />
                 </ProtectedRoute>
               </Route>
+
+              {/* 404 Route */}
+              <Route component={NotFoundPage} />
+            </Switch>
+            <Toaster />
+          </ThemeProvider>
+        </QueryClientProvider>
+      </ClerkProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default App;
 
               {/* 404 Page */}
               <Route component={NotFoundPage} />

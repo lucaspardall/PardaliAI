@@ -106,6 +106,31 @@ export default function Dashboard() {
     );
   }
 
+  // Handle errors
+  if (storesError) {
+    return (
+      <SidebarLayout title="Dashboard">
+        <Helmet>
+          <title>Dashboard | CIP Shopee</title>
+        </Helmet>
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
+              <h3 className="text-lg font-medium mb-2">Erro ao carregar lojas</h3>
+              <p className="text-muted-foreground mb-4">
+                Ocorreu um erro ao carregar suas lojas. Tente novamente.
+              </p>
+              <Button onClick={() => window.location.reload()}>
+                Tentar novamente
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </SidebarLayout>
+    );
+  }
+
   if (storesLoading) {
     return (
       <SidebarLayout title="Dashboard">

@@ -15,9 +15,11 @@ export default function InsightsSection({ storeId }: InsightsSectionProps) {
   const queryClient = useQueryClient();
 
   // Fetch insights
-  const { data: insights, isLoading, refetch } = useQuery({
+  const { data: insights, isLoading, error, refetch } = useQuery({
     queryKey: [`/api/shopee/stores/${storeId}/insights`],
     enabled: !!storeId,
+    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Process insights mutation
@@ -86,6 +88,27 @@ export default function InsightsSection({ storeId }: InsightsSectionProps) {
               <Skeleton key={i} className="h-16 w-full" />
             ))}
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-5 w-5" />
+            Erro nos Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            Não foi possível carregar os insights da sua loja.
+          </p>
+          <Button variant="outline" onClick={() => refetch()}>
+            Tentar novamente
+          </Button>
         </CardContent>
       </Card>
     );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React from "react";
 import { Link } from "wouter";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,7 @@ export default function ProductList({ products, showOptimizeButton = false }: Pr
           
           <div className="flex-1 min-w-0">
             <Link href={`/dashboard/product/${product.id}`}>
-              <a className="text-sm font-medium hover:underline line-clamp-1">{product.name}</a>
+              <span className="text-sm font-medium hover:underline cursor-pointer block line-clamp-1">{product.name}</span>
             </Link>
             <div className="flex items-center mt-1">
               <Badge variant={getCtrBadgeVariant(product.ctr)} className="mr-2 text-xs">
@@ -64,18 +64,18 @@ export default function ProductList({ products, showOptimizeButton = false }: Pr
             </div>
           </div>
           
-          <Link href={`/dashboard/product/${product.id}`}>
-            <Button variant="ghost" size="icon" className="ml-2">
+          <Button variant="ghost" size="icon" className="ml-2" asChild>
+            <Link href={`/dashboard/product/${product.id}`}>
               <i className="ri-arrow-right-s-line text-xl"></i>
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           
           {showOptimizeButton && (
-            <Link href={`/dashboard/optimize/${product.id}`}>
-              <Button variant="default" size="sm" className="ml-2">
+            <Button variant="default" size="sm" className="ml-2" asChild>
+              <Link href={`/dashboard/optimize/${product.id}`}>
                 Otimizar
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
         </li>
       ))}
