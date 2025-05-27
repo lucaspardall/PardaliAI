@@ -623,6 +623,15 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<void> {
+    await db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, id));
+  }
+
+  async getUserByStripeCustomerId(customerId: string): Promise<User | null> {
+    const result = await db.select().from(users).where(eq(users.stripeCustomerId, customerId)).limit(1);
+    return result[0] || null;
+  }
 }
 
 // In-memory storage for development or testing
@@ -928,7 +937,7 @@ export class MemStorage implements IStorage {
 
   async createNotification(notification: InsertNotification): Promise<Notification> {
     const id = this.notificationIdCounter++;
-    const newNotification: Notification = {
+    const newNotification:Notification = {
       ...notification,
       id,
       createdAt: new Date(),
@@ -940,7 +949,21 @@ export class MemStorage implements IStorage {
   async getAllOptimizationsByUserId(userId: string): Promise<any[]> {
     return [];
   }
-  
+  async updateUser(id: string, updates: Partial<User>): Promise<void> {
+      const user = this.users.get(id);
+      if (!user) throw new Error('User not found');
+
+      const updatedUser: User = {
+        ...user,
+        ...updates,
+        updatedAt: new Date()
+      };
+      this.users.set(id, updatedUser);
+  }
+
+  async getUserByStripeCustomerId(customerId: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.stripeCustomerId === customerId);
+  }
 }
 
 // Use in-memory storage for development and DB storage for production

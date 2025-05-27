@@ -443,7 +443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const range = req.query.range || '30d';
 
       const exportData = await storage.exportUserReports(userId, range, format);
-      
+
       if (format === 'csv') {
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename="cip-shopee-report-${range}.csv"`);
@@ -625,6 +625,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Auth routes
+  // app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  // app.use('/api/shopee', shopeeRoutes);
+
+  // Payment routes
+  // app.use('/api/payments', paymentsRoutes);
+  // Auth routes
+  //app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  //app.use('/api/shopee', shopeeRouter);
+
+  // Payment routes
+  //app.use('/api/payments', paymentsRouter);
+  // Auth routes
+  //app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  //app.use('/api/shopee', shopeeRoutes);
+  // Payment routes
+  //app.use('/api/payments', paymentsRouter);
+  // Auth routes
+  //app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  //app.use('/api/shopee', shopeeRoutes);
+
+  // Payment routes
+  //app.use('/api/payments', paymentsRouter);
+  // Auth routes
+  //app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  //app.use('/api/shopee', shopeeRoutes);
+
+  // Payment routes
+  //app.use('/api/payments', paymentsRouter);
+
+  // Auth routes
+  // app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  // app.use('/api/shopee', shopeeRoutes);
+
+  // Payment routes
+  // app.use('/api/payments', paymentsRoutes);
+  // Auth routes
+  //app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  //app.use('/api/shopee', shopeeRouter);
+
+  // Payment routes
+  //app.use('/api/payments', paymentsRouter);
+  // Auth routes
+  //app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  //app.use('/api/shopee', shopeeRoutes);
+  // Payment routes
+  //app.use('/api/payments', paymentsRouter);
+  // Auth routes
+  //app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  //app.use('/api/shopee', shopeeRoutes);
+
+  // Payment routes
+  //app.use('/api/payments', paymentsRouter);
+  // Auth routes
+  //app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  //app.use('/api/shopee', shopeeRoutes);
+
+  // Payment routes
+  //app.use('/api/payments', paymentsRouter);
+import authRouter from './routes/auth';
+import shopeeRouter from './routes/shopee';
+import paymentsRouter from './routes/payments';
+
+  // Auth routes
+  app.use('/api/auth', authRouter);
+
+  // Shopee routes
+  app.use('/api/shopee', shopeeRoutes);
+
+  // Payment routes
+  app.use('/api/payments', paymentsRouter);
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;

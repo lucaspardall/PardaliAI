@@ -41,6 +41,9 @@ export const users = pgTable("users", {
   planExpiresAt: timestamp("plan_expires_at"),
   aiCreditsLeft: integer("ai_credits_left").default(10).notNull(),
   storeLimit: integer("store_limit").default(1).notNull(),
+  // Stripe integration fields
+  stripeCustomerId: varchar("stripe_customer_id").unique(),
+  stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
 });
 
 export const shopeeStores = pgTable("shopee_stores", {
