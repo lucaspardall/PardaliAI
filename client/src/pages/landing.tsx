@@ -6,6 +6,10 @@ import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import PricingSection from "@/components/landing/PricingSection";
 import CTASection from "@/components/landing/CTASection";
 import { Helmet } from "react-helmet";
+import { ArrowRight, CheckCircle, Star, Users, TrendingUp, Zap, Shield, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SignInButton } from '@clerk/clerk-react';
 
 export default function Landing() {
   return (

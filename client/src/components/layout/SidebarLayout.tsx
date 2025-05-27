@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useClerk } from '@clerk/clerk-react';
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -93,6 +94,12 @@ export default function SidebarLayout({
     return () => window.removeEventListener('resize', handleResize);
   }, [location]);
 
+  const { signOut } = useClerk();
+
+  const handleLogout = () => {
+    signOut();
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar - Desktop */}
@@ -170,9 +177,7 @@ export default function SidebarLayout({
                   variant="ghost" 
                   size="icon"
                   className="ml-auto text-gray-400 hover:text-white"
-                  onClick={() => {
-                    window.location.href = '/api/logout';
-                  }} 
+                  onClick={handleLogout} 
                 >
                   <i className="ri-logout-box-r-line"></i>
                 </Button>
@@ -271,9 +276,7 @@ export default function SidebarLayout({
               variant="ghost" 
               size="icon"
               className="ml-auto text-gray-400 hover:text-white"
-              onClick={() => {
-                window.location.href = '/api/logout';
-              }} 
+              onClick={handleLogout}
             >
               <i className="ri-logout-box-r-line"></i>
             </Button>

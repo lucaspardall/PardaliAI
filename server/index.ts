@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cors from 'cors';
+import { setupClerkAuth } from "./clerkAuth";
 
 const app = express();
 
@@ -72,6 +73,9 @@ app.use((req, res, next) => {
       // Não lançar o erro, apenas logar
       console.error(err);
     });
+
+    // Setup Clerk authentication
+    setupClerkAuth(app);
 
     // importantly only setup vite in development and after
     // setting up all the other routes so the catch-all route

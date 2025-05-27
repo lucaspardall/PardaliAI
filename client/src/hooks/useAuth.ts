@@ -1,3 +1,4 @@
+import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useEffect } from 'react';
@@ -15,7 +16,7 @@ export interface User {
   storeLimit?: number;
 }
 
-async function fetchUser(): Promise<User | null> {
+async function fetchUserData(): Promise<User | null> {
   try {
     const response = await fetch('/api/auth/user', {
       credentials: 'include',
@@ -26,15 +27,14 @@ async function fetchUser(): Promise<User | null> {
     });
 
     if (response.status === 401) {
-      return null; // Usuário não autenticado
+      return null;
     }
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
     console.error('Erro ao buscar dados do usuário:', error);
     return null;
@@ -44,71 +44,44 @@ async function fetchUser(): Promise<User | null> {
 export function useAuth() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
+  const { isSignedIn, isLoaded } = useClerkAuth();
+  const { user: clerkUser } = useUser();
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['auth', 'user'],
-    queryFn: fetchUser,
+  // Buscar dados adicionais do backend apenas se estiver autenticado
+  const { data: userData, isLoading: isLoadingData, refetch } = useQuery({
+    queryKey: ['auth', 'user-data'],
+    queryFn: fetchUserData,
+    enabled: isSignedIn && isLoaded,
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
   });
 
-  // Redirecionamento automático para dashboard quando autenticado
+  const isLoading = !isLoaded || (isSignedIn && isLoadingData);
+
+  // Redirecionamento automático
   useEffect(() => {
-    if (data && location === '/') {
+    if (isLoaded && isSignedIn && userData && location === '/') {
       console.log('Usuário autenticado, redirecionando para dashboard');
       setLocation('/dashboard');
     }
-  }, [data, location, setLocation]);
+  }, [isLoaded, isSignedIn, userData, location, setLocation]);
 
-  // Verificar se URL tem parâmetro de login requerido
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('login') === 'required' && !isLoading && !data) {
-      toast({
-        title: 'Login necessário',
-        description: 'Por favor, faça login para acessar esta página.',
-        variant: 'destructive',
-      });
-
-      // Remover parâmetro da URL
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-    }
-  }, [location, isLoading, data, toast]);
-
-  // Verificar mensagens de status da URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const status = params.get('status');
-    const message = params.get('message');
-
-    if (status && message) {
-      const variant = status === 'success' ? 'default' : 'destructive';
-      toast({
-        title: status === 'success' ? 'Sucesso' : 'Erro',
-        description: decodeURIComponent(message),
-        variant,
-      });
-
-      // Limpar parâmetros da URL
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-    }
-  }, [toast]);
-
-  const fullName = data ? `${data.firstName || ''} ${data.lastName || ''}`.trim() : '';
+  const fullName = userData 
+    ? `${userData.firstName || ''} ${userData.lastName || ''}`.trim()
+    : clerkUser 
+    ? `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim()
+    : '';
 
   return {
-    user: data ? {
-      ...data,
-      name: fullName || data.email || 'Usuário',
-      picture: data.profileImageUrl
+    user: isSignedIn && userData ? {
+      ...userData,
+      name: fullName || userData.email || clerkUser?.emailAddresses[0]?.emailAddress || 'Usuário',
+      picture: userData.profileImageUrl || clerkUser?.imageUrl
     } : null,
-    isAuthenticated: !!data,
+    isAuthenticated: isSignedIn,
     isLoading,
-    error,
+    error: null,
     refetch,
   };
 }
