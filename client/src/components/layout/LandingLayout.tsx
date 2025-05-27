@@ -3,6 +3,7 @@ import { useTheme } from "@/components/ui/theme-provider";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LandingLayoutProps {
   children: React.ReactNode;
