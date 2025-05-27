@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { requireAuth } from '../clerkAuth';
+import { isAuthenticated } from '../clerkAuth';
 import { PaymentService, PAYMENT_PLANS } from '../services/payments';
 
 const router = Router();
@@ -16,7 +16,7 @@ router.get('/plans', (req: Request, res: Response) => {
 /**
  * Criar sessão de checkout via Clerk
  */
-router.post('/checkout', requireAuth(), async (req: Request, res: Response) => {
+router.post('/checkout', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const { planId } = req.body;
     const { userId } = req.auth;
@@ -43,7 +43,7 @@ router.post('/checkout', requireAuth(), async (req: Request, res: Response) => {
 /**
  * Buscar informações da assinatura atual
  */
-router.get('/subscription', requireAuth(), async (req: Request, res: Response) => {
+router.get('/subscription', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const { userId } = req.auth;
 

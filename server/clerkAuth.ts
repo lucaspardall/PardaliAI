@@ -90,3 +90,6 @@ export function setupClerkAuth(app: Express) {
  * Middleware para verificar autenticação Clerk
  */
 export const isAuthenticated: RequestHandler = requireAuth();
+
+// Alias para compatibilidade
+export { requireAuth };

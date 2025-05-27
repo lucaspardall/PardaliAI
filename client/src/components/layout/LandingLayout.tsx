@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { SignInButton, SignedIn, SignedOut } from '@clerk/clerk-react';
 import { useTheme } from "@/components/ui/theme-provider";
 import { useState, useEffect } from "react";
+import { Moon, Sun } from "lucide-react";
 
 interface LandingLayoutProps {
   children: React.ReactNode;
