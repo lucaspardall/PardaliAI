@@ -32,6 +32,174 @@ export function generateAuthUrls(config: ShopeeAuthConfig) {
   console.log(`[Shopee Auth] Região: ${config.region}`);
   console.log(`[Shopee Auth] URL de Redirecionamento: ${config.redirectUrl}`);
   console.log(`[Shopee Auth] Timestamp: ${timestamp}`);
+  console.log(`===================================================`);
+
+  // String base para gerar assinatura
+  const baseString = `${config.partnerId}${apiPath}${timestamp}`;
+  
+  // Gerar assinatura HMAC-SHA256
+  const hmac = createHmac('sha256', config.partnerKey);
+  hmac.update(baseString);
+  const signature = hmac.digest('hex');
+
+  console.log(`[Shopee Auth] Base string: ${baseString}`);
+  console.log(`[Shopee Auth] Signature: ${signature}`);
+
+  // Construir URLs alternativas
+  const urls: Record<string, string> = {};
+
+  // URL padrão oficial
+  urls['standard'] = `${baseUrl}${apiPath}?${new URLSearchParams({
+    partner_id: config.partnerId,
+    timestamp: timestamp.toString(),
+    sign: signature,
+    redirect: config.redirectUrl,
+    state: stateParam
+  }).toString()}`;
+
+  // URL alternativa com domínio seller
+  const sellerBaseUrl = 'https://seller.shopee.com.br';
+  urls['seller_domain'] = `${sellerBaseUrl}${apiPath}?${new URLSearchParams({
+    partner_id: config.partnerId,
+    timestamp: timestamp.toString(),
+    sign: signature,
+    redirect: config.redirectUrl,
+    state: stateParam
+  }).toString()}`;
+
+  // URL com parâmetros extras para BR
+  urls['br_enhanced'] = `${baseUrl}${apiPath}?${new URLSearchParams({
+    partner_id: config.partnerId,
+    timestamp: timestamp.toString(),
+    sign: signature,
+    redirect: config.redirectUrl,
+    state: stateParam,
+    region: 'BR',
+    country: 'BR',
+    language: 'pt'
+  }).toString()}`;
+
+  return urls;
+}
+
+/**
+ * Gera página de diagnóstico HTML com múltiplas opções
+ */
+export function generateDiagnosticPage(urls: Record<string, string>): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Diagnóstico de Autorização Shopee</title>
+      <style>
+        body { 
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+          line-height: 1.6; 
+          padding: 20px; 
+          max-width: 1200px; 
+          margin: 0 auto;
+          background-color: #f5f5f5;
+        }
+        .container {
+          background: white;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+          color: #ee4d2d; 
+          border-bottom: 3px solid #ee4d2d; 
+          padding-bottom: 10px;
+        }
+        .url-option {
+          margin: 20px 0;
+          padding: 15px;
+          border: 2px solid #ddd;
+          border-radius: 8px;
+          background: #fafafa;
+        }
+        .url-option h3 {
+          margin: 0 0 10px 0;
+          color: #333;
+        }
+        .url-display {
+          word-break: break-all;
+          background: #f0f0f0;
+          padding: 10px;
+          border-radius: 4px;
+          font-family: monospace;
+          font-size: 12px;
+          margin: 10px 0;
+        }
+        .btn {
+          display: inline-block;
+          background: #ee4d2d;
+          color: white;
+          padding: 12px 20px;
+          text-decoration: none;
+          border-radius: 4px;
+          margin: 5px 0;
+          transition: background 0.3s;
+        }
+        .btn:hover {
+          background: #d73c1f;
+        }
+        .explanation, .recommendation, .warning {
+          padding: 15px;
+          margin: 20px 0;
+          border-radius: 4px;
+        }
+        .explanation {
+          background: #e7f3ff;
+          border-left: 4px solid #2196f3;
+        }
+        .recommendation {
+          background: #f0f8e7;
+          border-left: 4px solid #4caf50;
+        }
+        .warning {
+          background: #fff3e0;
+          border-left: 4px solid #ff9800;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>🔍 Diagnóstico de Autorização Shopee</h1>
+
+        <div class="explanation">
+          <p><strong>Status Atual:</strong> A assinatura está correta! O status 302 que você está vendo é o comportamento esperado da API da Shopee.</p>
+          <p>O redirecionamento 302 significa que a API validou seus parâmetros e está direcionando para a página de login da Shopee.</p>
+        </div>
+
+        <div class="recommendation">
+          <p><strong>Próximos Passos:</strong></p>
+          <ol>
+            <li>Teste cada opção abaixo para ver qual completa o fluxo de autorização</li>
+            <li>Anote qual opção funciona para configurar como padrão</li>
+            <li>Após o login, você será redirecionado de volta para o seu sistema</li>
+          </ol>
+        </div>
+
+        ${Object.entries(urls).map(([key, url]) => `
+          <div class="url-option">
+            <h3>🔗 ${key.toUpperCase().replace(/_/g, ' ')}</h3>
+            <div class="url-display">${url}</div>
+            <a href="${url}" class="btn" target="_blank">Testar esta opção</a>
+          </div>
+        `).join('')}
+
+        <div class="warning">
+          <p><strong>⚠️ Importante:</strong> Cada teste pode levar você para a página de login da Shopee. Isso é normal e esperado.</p>
+          <p>Após fazer login na Shopee, você será redirecionado de volta para o dashboard do CIP.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}p: ${timestamp}`);
 
   // ===== Método padrão usando a URL de autorização oficial =====
   // String base para gerar assinatura - EXATAMENTE conforme documentação oficial

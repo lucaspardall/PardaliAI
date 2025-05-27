@@ -1,4 +1,3 @@
-
 /**
  * Gerenciador de autenticação para a API da Shopee
  */
@@ -33,7 +32,7 @@ export class ShopeeAuthManager {
     const timestamp = getTimestamp();
     const baseUrl = getApiBaseUrl(this.config.region);
     const path = '/api/v2/shop/auth_partner';
-    
+
     // Gerar assinatura para autorização OAuth
     const signature = generateSignature(
       this.config.partnerId,
@@ -54,9 +53,9 @@ export class ShopeeAuthManager {
     });
 
     const authUrl = `${baseUrl}${path}?${params.toString()}`;
-    
+
     console.log('URL de autorização gerada:', authUrl);
-    
+
     return authUrl;
   }
 
@@ -113,7 +112,7 @@ export class ShopeeAuthManager {
       }
 
       const tokenData = response.data.response;
-      
+
       return {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
@@ -172,7 +171,7 @@ export class ShopeeAuthManager {
       }
 
       const tokenData = response.data.response;
-      
+
       return {
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,

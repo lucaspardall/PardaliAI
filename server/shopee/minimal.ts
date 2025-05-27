@@ -35,7 +35,65 @@ export function generateMinimalAuthUrl(config: ShopeeAuthConfig): string {
 
   // Construir URL usando URLSearchParams para garantir codificação correta
   const url = new URL(`${baseUrl}${apiPath}`);
-  const params = new URLSearchParams();
+  const params = new URLSearchParams({
+    partner_id: config.partnerId,
+    timestamp: timestamp.toString(),
+    sign: signature,
+    redirect: config.redirectUrl,
+    state: stateParam
+  });
+
+  const finalUrl = `${url.origin}${url.pathname}?${params.toString()}`;
+
+  console.log(`URL minimalista gerada: ${finalUrl}`);
+  
+  return finalUrl;
+}
+
+/**
+ * Gera múltiplas variantes de teste para autorização
+ */
+export function generateTestVariants(config: ShopeeAuthConfig): Record<string, string> {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const baseUrl = 'https://partner.shopeemobile.com';
+  const apiPath = '/api/v2/shop/auth_partner';
+
+  const variants: Record<string, string> = {};
+
+  // Variante 1: Apenas parâmetros essenciais
+  const baseString1 = `${config.partnerId}${apiPath}${timestamp}`;
+  const signature1 = crypto.createHmac('sha256', config.partnerKey).update(baseString1).digest('hex');
+  
+  variants['minimal'] = `${baseUrl}${apiPath}?${new URLSearchParams({
+    partner_id: config.partnerId,
+    timestamp: timestamp.toString(),
+    sign: signature1,
+    redirect: config.redirectUrl,
+    state: `cipshopee_${Date.now()}`
+  }).toString()}`;
+
+  // Variante 2: Com região explícita
+  variants['with_region'] = `${baseUrl}${apiPath}?${new URLSearchParams({
+    partner_id: config.partnerId,
+    timestamp: timestamp.toString(),
+    sign: signature1,
+    redirect: config.redirectUrl,
+    state: `cipshopee_${Date.now()}`,
+    region: config.region
+  }).toString()}`;
+
+  // Variante 3: Com parâmetro de idioma
+  variants['with_language'] = `${baseUrl}${apiPath}?${new URLSearchParams({
+    partner_id: config.partnerId,
+    timestamp: timestamp.toString(),
+    sign: signature1,
+    redirect: config.redirectUrl,
+    state: `cipshopee_${Date.now()}`,
+    language: 'pt'
+  }).toString()}`;
+
+  return variants;
+} new URLSearchParams();
 
   // Adicionar parâmetros na ordem recomendada pela documentação
   params.append('partner_id', config.partnerId.toString());
