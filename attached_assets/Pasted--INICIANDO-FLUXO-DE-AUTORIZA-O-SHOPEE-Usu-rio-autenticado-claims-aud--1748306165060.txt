@@ -1,0 +1,43 @@
+======= INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE =======
+Usuário autenticado: {
+  claims: {
+    aud: '73ee031f-24e8-4b77-96e8-2cd2724cf5f2',
+    exp: 1748304691,
+    iat: 1748301091,
+    iss: 'https://replit.com/oidc',
+    sub: '41750934',
+    email: 'llouback4@gmail.com',
+    at_hash: 'B7u10kg2zbokUbigp1iPwQ',
+    username: 'llouback4',
+    auth_time: 1748301091,
+    last_name: 'Louback',
+    first_name: 'Lucas'
+  },
+  expires_at: 1748304691,
+  access_token: 'qO0NH3wGwOUTEJshtDaWbrRYEQOPbIfZzLyYGUWowFl',
+  refresh_token: 'ZOV3B0zWUkGnL3yeMklS2dz-8mZryBv4IQsBpxZlzQd'
+}
+Ambiente: development
+Informações de configuração da API:
+Partner ID: 2011285
+URL de redirecionamento configurada: undefined
+===================================================
+URL de redirecionamento que será usada: https://cipshopee.replit.app/api/shopee/callback
+Usando URL de API Shopee: https://partner.shopeemobile.com
+String base para assinatura: 477a7248736274574869726b4a704f7569486247767a546f5441706e7a515a64/api/v2/shop/auth_partnerpartner_id2011285redirecthttps://cipshopee.replit.app/api/shopee/callbacktimestamp1748306143477a7248736274574869726b4a704f7569486247767a546f5441706e7a515a64
+Assinatura gerada: cacb177e51adcceff14a20764e22b15e70c53e6a7eb6bf94aa24780460b33d45
+✅ URL de autorização da Shopee: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748306143&sign=cacb177e51adcceff14a20764e22b15e70c53e6a7eb6bf94aa24780460b33d45&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748306143404
+Verificação de parâmetros importantes:
+- partner_id: true
+- timestamp: true
+- sign: true
+- redirect: true
+- auth_type=direct: false
+- login_type=seller: false
+🔎 Verificação direta do timestamp: timestamp=1748306143
+================================================
+✅ URL salva em arquivo para inspeção: shopee_auth_url.txt
+Redirecionando para autorização oficial Shopee: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748306143&si...
+Verificando conexão com banco de dados...
+Conexão com banco de dados estabelecida com sucesso
+12:35:43 AM [express] GET /api/shopee/authorize 302 in 158ms

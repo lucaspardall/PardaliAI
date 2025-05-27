@@ -1,0 +1,212 @@
+Request Time (UTC-03:00)
+Request Details
+Action
+2025/05/26 21:29:36
+Method:GET|Status:403|Path:/api/v2/shop/auth_partner
+Request:{"partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","state":"cipshopee_1748305775895","timestamp":"1748305775"}
+Response:{"error":"error_sign","message":"Wrong sign.","request_id":"e3e3e7f3361328c7cc8907554ea38800"}
+View API DetailsRaise a Ticket
+2025/05/26 21:22:55
+Method:GET|Status:403|Path:/api/v2/shop/auth_partner
+Request:{"partner_id":"2011285","redirect":"https://cipshopee.replit.app/api/shopee/callback","state":"cipshopee_1748305374776","timestamp":"1748305374"}
+Response:{"error":"error_sign","message":"Wrong sign.","request_id":"e3e3e7f3361310e00360ddc1d728d000"}
+
+Editar
+
+Decoded Shopee API authentication signature generation strategy.
+
+8 s
+
+
+
+
+
+Agora vejo o problema! O erro "Wrong sign" na autenticação OAuth indica que a assinatura da requisição está incorreta. Vou te mostrar como corrigir isso.
+
+🔍 Problema Identificado
+A API da Shopee requer uma assinatura específica para o endpoint /api/v2/shop/auth_partner. O erro 403 indica que a assinatura não está sendo calculada corretamente.
+
+✅ Solução Completa
+1. Função de Assinatura Correta
+javascript
+// shopeeAuth.js
+const crypto = require('crypto');
+
+function generateAuthSignature(path, params, partnerKey) {
+  // Passo 1: Construir a base string
+  // Formato: partner_id + path + timestamp
+  const baseString = `${params.partner_id}${path}${params.timestamp}`;
+  
+  // Passo 2: Gerar HMAC-SHA256
+  const sign = crypto
+    .createHmac('sha256', partnerKey)
+    .update(baseString)
+    .digest('hex');
+  
+  console.log('[Auth] Gerando assinatura:', {
+    baseString,
+    sign: sign.substring(0, 20) + '...'
+  });
+  
+  return sign;
+}
+
+// Função para gerar URL de autorização
+function generateAuthUrl(partnerId, partnerKey, redirectUrl) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const state = `cipshopee_${Date.now()}`;
+  const path = '/api/v2/shop/auth_partner';
+  
+  // Parâmetros base
+  const params = {
+    partner_id: parseInt(partnerId),
+    redirect: redirectUrl,
+    state: state,
+    timestamp: timestamp
+  };
+  
+  // Gerar assinatura
+  const sign = generateAuthSignature(path, params, partnerKey);
+  
+  // Construir URL completa
+  const queryString = new URLSearchParams({
+    ...params,
+    sign: sign
+  }).toString();
+  
+  const authUrl = `https://partner.shopeemobile.com${path}?${queryString}`;
+  
+  return { authUrl, state };
+}
+2. Implementação da Rota de Autenticação
+javascript
+// routes/shopee.js
+const express = require('express');
+const router = express.Router();
+
+// Iniciar fluxo OAuth
+router.get('/api/shopee/connect', async (req, res) => {
+  try {
+    const partnerId = process.env.SHOPEE_PARTNER_ID;
+    const partnerKey = process.env.SHOPEE_PARTNER_KEY;
+    const redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
+    
+    const { authUrl, state } = generateAuthUrl(partnerId, partnerKey, redirectUrl);
+    
+    // Salvar state na sessão para validação posterior
+    req.session.shopeeState = state;
+    
+    console.log('[Auth] Redirecionando para Shopee:', authUrl);
+    res.redirect(authUrl);
+    
+  } catch (error) {
+    console.error('[Auth] Erro ao gerar URL:', error);
+    res.status(500).json({ error: 'Erro ao conectar com Shopee' });
+  }
+});
+
+// Callback OAuth
+router.get('/api/shopee/callback', async (req, res) => {
+  try {
+    const { code, shop_id, state } = req.query;
+    
+    // Validar state
+    if (state !== req.session.shopeeState) {
+      throw new Error('State inválido');
+    }
+    
+    console.log('[Callback] Autorização recebida:', { code, shop_id });
+    
+    // Trocar code por access token
+    const tokens = await getAccessToken(code, shop_id);
+    
+    // Salvar no banco
+    await saveShopeeStore({
+      userId: req.user.id,
+      shopId: shop_id,
+      ...tokens
+    });
+    
+    // Redirecionar para dashboard
+    res.redirect('/dashboard?connected=true');
+    
+  } catch (error) {
+    console.error('[Callback] Erro:', error);
+    res.redirect('/dashboard?error=connection_failed');
+  }
+});
+3. Função para Obter Access Token
+javascript
+// shopeeApi.js
+async function getAccessToken(code, shopId) {
+  const partnerId = parseInt(process.env.SHOPEE_PARTNER_ID);
+  const partnerKey = process.env.SHOPEE_PARTNER_KEY;
+  const timestamp = Math.floor(Date.now() / 1000);
+  const path = '/api/v2/auth/token/get';
+  
+  // Body da requisição
+  const body = {
+    code: code,
+    shop_id: parseInt(shopId),
+    partner_id: partnerId
+  };
+  
+  // Gerar assinatura para POST
+  // Formato: partner_id + path + timestamp + access_token + shop_id
+  const baseString = `${partnerId}${path}${timestamp}`;
+  const sign = crypto
+    .createHmac('sha256', partnerKey)
+    .update(baseString)
+    .digest('hex');
+  
+  // Fazer requisição
+  const response = await fetch(`https://partner.shopeemobile.com${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': sign
+    },
+    body: JSON.stringify({
+      ...body,
+      timestamp: timestamp,
+      sign: sign
+    })
+  });
+  
+  const data = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(`Shopee API Error: ${JSON.stringify(data)}`);
+  }
+  
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    tokenExpiresAt: new Date(Date.now() + data.expire_in * 1000)
+  };
+}
+4. Variáveis de Ambiente Necessárias
+bash
+# .env
+SHOPEE_PARTNER_ID=2011285
+SHOPEE_PARTNER_KEY=sua_chave_de_64_caracteres_aqui
+SHOPEE_TEST_MODE=true # Use sandbox para testes
+🎯 Checklist de Verificação
+✅ Partner Key correta: Verifique se está usando a chave de 64 caracteres fornecida pela Shopee
+✅ Timestamp em segundos: Use Math.floor(Date.now() / 1000), não milissegundos
+✅ Partner ID como número: Converta para int com parseInt()
+✅ URL de redirect cadastrada: Confirme no painel da Shopee
+🧪 Teste Manual
+Para testar se a assinatura está correta:
+
+javascript
+// teste.js
+const partnerId = "2011285";
+const partnerKey = "sua_chave_aqui";
+const timestamp = 1748305775;
+const path = "/api/v2/shop/auth_partner";
+
+const baseString = `${partnerId}${path}${timestamp}`;
+const sign = crypto.createHmac('sha256', partnerKey).update(baseString).digest('hex');
+
+console.log('Sign esperado:', sign);
