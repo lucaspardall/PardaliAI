@@ -20,7 +20,7 @@ export default function CTASection() {
           <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
             Junte-se a centenas de vendedores que estão aumentando seus resultados com CIP Shopee.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <div className="flex justify-center">
             <Button 
               size="lg" 
               variant="secondary" 
@@ -32,14 +32,6 @@ export default function CTASection() {
               ) : (
                 <a href="/api/login">Começar agora</a>
               )}
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-white text-white hover:bg-white/20 px-8"
-              asChild
-            >
-              <a href="/demo/login">Experimentar demonstração</a>
             </Button>
           </div>
         </motion.div>

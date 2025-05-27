@@ -43,11 +43,6 @@ export default function HeroSection() {
                   Ver recursos
                 </a>
               </Button>
-              <Button asChild variant="secondary" size="lg" className="shadow-lg">
-                <Link href="/demo/login">
-                  Acessar modo demo
-                </Link>
-              </Button>
             </div>
           </motion.div>
           <motion.div 
