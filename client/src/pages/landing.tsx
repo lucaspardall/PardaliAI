@@ -1,5 +1,6 @@
 import LandingLayout from "@/components/layout/LandingLayout";
 import HeroSection from "@/components/landing/HeroSection";
+import StatsSection from "@/components/landing/StatsSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import PricingSection from "@/components/landing/PricingSection";
@@ -21,6 +22,7 @@ export default function Landing() {
       </Helmet>
       <LandingLayout>
         <HeroSection />
+        <StatsSection />
         <FeaturesSection />
         <TestimonialsSection />
         <PricingSection />

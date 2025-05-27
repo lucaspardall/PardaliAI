@@ -15,10 +15,10 @@ export default function CTASection() {
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-3xl font-bold text-white mb-6 font-heading">
-            Pronto para impulsionar suas vendas na Shopee?
+            Comece hoje e veja resultados em 72 horas
           </h2>
           <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
-            Junte-se a centenas de vendedores que estão aumentando seus resultados com CIP Shopee.
+            Mais de 500 vendedores já aumentaram suas vendas em 27%. Configure sua loja em minutos e otimize automaticamente.
           </p>
           <div className="flex justify-center">
             <Button 

@@ -17,10 +17,10 @@ export default function HeroSection() {
             transition={{ duration: 0.5 }}
           >
             <h1 className="text-4xl md:text-5xl font-bold mb-4 font-heading">
-              Impulsione suas vendas na Shopee com Inteligência Artificial
+              Aumente suas vendas na Shopee em até 45% com IA
             </h1>
             <p className="text-xl mb-8 text-gray-300">
-              Otimize títulos, descrições e performance de produtos automaticamente para aumentar conversões e visibilidade na Shopee.
+              Otimize títulos, descrições e performance automaticamente. Mais de 500 vendedores já aumentaram suas conversões e visibilidade.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               {isLoading ? (
