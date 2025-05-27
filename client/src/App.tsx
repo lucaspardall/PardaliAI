@@ -32,17 +32,29 @@ const ShopeeConnectPage = lazy(() => import('@/pages/shopee-connect'));
 import { ErrorBoundary } from 'react-error-boundary';
 
 function ErrorFallback({ error, resetErrorBoundary }: any) {
+  console.error('Error caught by boundary:', error);
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
+      <div className="text-center max-w-md">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Algo deu errado!</h2>
-        <p className="text-gray-600 mb-4">{error.message}</p>
-        <button
-          onClick={resetErrorBoundary}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Tentar novamente
-        </button>
+        <p className="text-gray-600 mb-4">
+          {error?.message || 'Erro desconhecido'}
+        </p>
+        <div className="space-y-2">
+          <button
+            onClick={resetErrorBoundary}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mr-2"
+          >
+            Tentar novamente
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          >
+            Recarregar página
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -178,12 +190,32 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary 
+      FallbackComponent={ErrorFallback}
+      onError={(error, errorInfo) => {
+        console.error('App Error Boundary:', error, errorInfo);
+      }}
+    >
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider defaultTheme="system" storageKey="app-theme">
             <div className="min-h-screen bg-background">
-              <AppContent />
+              <ErrorBoundary
+                FallbackComponent={({ error, resetErrorBoundary }) => (
+                  <div className="p-4 text-center">
+                    <h3 className="text-lg font-semibold mb-2">Erro na aplicação</h3>
+                    <p className="text-sm text-gray-600 mb-4">{error?.message}</p>
+                    <button
+                      onClick={resetErrorBoundary}
+                      className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
+                    >
+                      Tentar novamente
+                    </button>
+                  </div>
+                )}
+              >
+                <AppContent />
+              </ErrorBoundary>
               <Toaster />
             </div>
           </ThemeProvider>
