@@ -71,6 +71,7 @@ export default function SidebarLayout({
 
   const settingsItems = [
     { href: "/dashboard/profile", icon: "ri-user-settings-line", label: "Perfil" },
+    { href: "/dashboard/ai-credits", icon: "ri-ai-generate", label: "Créditos IA" },
     { href: "/dashboard/subscription", icon: "ri-vip-crown-line", label: "Assinatura" },
   ];
 
