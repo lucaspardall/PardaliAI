@@ -1,4 +1,3 @@
-
 /**
  * Sistema de sincronização para dados da Shopee
  */
@@ -79,7 +78,7 @@ export class ShopeeSyncManager {
     } catch (error: any) {
       console.error(`[Sync] Erro geral na sincronização:`, error);
       const duration = Date.now() - startTime;
-      
+
       return {
         success: false,
         processed,
@@ -101,7 +100,7 @@ export class ShopeeSyncManager {
       } catch (error: any) {
         lastError = error;
         console.warn(`[Sync] Tentativa ${attempt}/${maxRetries} falhou:`, error.message);
-        
+
         if (attempt < maxRetries) {
           const delay = Math.min(1000 * attempt, 5000); // Exponential backoff
           await new Promise(resolve => setTimeout(resolve, delay));
@@ -138,7 +137,7 @@ export class ShopeeSyncManager {
       });
 
       const duration = Date.now() - startTime;
-      
+
       return {
         success: errors.length === 0,
         processed,
@@ -162,7 +161,7 @@ export class ShopeeSyncManager {
    */
   private async syncShopInfo(): Promise<void> {
     const shopInfo = await getShopInfo(this.client);
-    
+
     if (shopInfo) {
       await storage.updateStore(this.storeId, {
         shopName: shopInfo.shop_name || `Loja ${shopInfo.shop_id}`,
@@ -197,7 +196,7 @@ export class ShopeeSyncManager {
 
         // Verificar estrutura da resposta da API Shopee
         const items = productList?.response?.item || productList?.item || [];
-        
+
         if (!items || items.length === 0) {
           console.log(`[Sync] Nenhum produto encontrado no offset ${offset}`);
           hasMore = false;
@@ -262,7 +261,7 @@ export class ShopeeSyncManager {
     } catch (error: any) {
       console.error(`[Sync] Erro na sincronização de produtos:`, error);
       const duration = Date.now() - startTime;
-      
+
       return {
         success: false,
         processed,
@@ -287,7 +286,7 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
     // Carregar cliente Shopee
     const { loadShopeeClientForStore } = await import('./index');
     const client = await loadShopeeClientForStore(store.shopId);
-    
+
     if (!client) {
       throw new Error(`Failed to load Shopee client for store ${storeId}`);
     }
@@ -298,7 +297,7 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
 
   } catch (error: any) {
     console.error(`[Sync] Error syncing store ${storeId}:`, error);
-    
+
     return {
       success: false,
       processed: 0,
@@ -309,7 +308,7 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
 
         // Processar produtos em lotes menores para detalhes
         const itemIds = items.map((item: any) => item.item_id).filter(id => id);
-        
+
         if (itemIds.length === 0) {
           console.warn(`[Sync] Nenhum item_id válido encontrado nos produtos`);
           offset += this.options.batchSize;
@@ -320,10 +319,10 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
 
         for (let i = 0; i < itemIds.length; i += detailBatchSize) {
           const batchIds = itemIds.slice(i, i + detailBatchSize);
-          
+
           try {
             console.log(`[Sync] Buscando detalhes para ${batchIds.length} produtos`);
-            
+
             // Buscar detalhes dos produtos
             const productDetails = await this.withRetry(async () => {
               const result = await getProductDetails(this.client, batchIds);
@@ -333,7 +332,7 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
 
             // Processar detalhes dos produtos
             const itemList = productDetails?.response?.item_list || productDetails?.item_list || [];
-            
+
             if (itemList.length > 0) {
               // Salvar produtos no banco
               for (const product of itemList) {
@@ -399,7 +398,7 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
 
     try {
       console.log(`[Sync] Iniciando sincronização de pedidos para loja ${this.storeId}`);
-      
+
       const now = Math.floor(Date.now() / 1000);
       const sevenDaysAgo = now - (7 * 24 * 60 * 60);
 
@@ -428,10 +427,10 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
 
         // Buscar detalhes dos pedidos em lotes menores
         const detailBatchSize = Math.min(20, orders.length);
-        
+
         for (let i = 0; i < orders.length; i += detailBatchSize) {
           const batchOrderSns = orders.slice(i, i + detailBatchSize).map((order: any) => order.order_sn);
-          
+
           try {
             const { getOrderDetails } = await import('./data');
             const orderDetails = await this.withRetry(async () => {
@@ -439,7 +438,7 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
             });
 
             const detailsList = orderDetails?.response?.order_list || [];
-            
+
             for (const orderDetail of detailsList) {
               try {
                 await this.saveOrder(orderDetail);
@@ -567,7 +566,7 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
       const itemId = product.item_id || product.id;
       const itemName = product.item_name || product.name || 'Produto sem nome';
       const description = product.description || '';
-      
+
       // Extrair preço com múltiplos caminhos possíveis
       let price = 0;
       if (product.price_info?.current_price) {
@@ -660,7 +659,7 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
         return await fn();
       } catch (error) {
         lastError = error;
-        
+
         if (attempt < this.options.maxRetries) {
           const delay = Math.min(1000 * Math.pow(2, attempt), 10000); // Backoff exponencial
           console.warn(`[Sync] Tentativa ${attempt} falhou, tentando novamente em ${delay}ms: ${error.message}`);
@@ -686,7 +685,7 @@ export async function syncStore(storeId: number): Promise<SyncResult> {
 export async function syncStore(storeId: number): Promise<SyncResult> {
   try {
     const store = await storage.getStoreById(storeId);
-    
+
     if (!store || !store.isActive) {
       throw new Error('Loja não encontrada ou inativa');
     }

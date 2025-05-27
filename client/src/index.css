@@ -1,3 +1,7 @@
+/* Fonts - devem vir ANTES de tudo */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -108,10 +112,6 @@
     @apply bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent;
   }
 }
-
-/* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css');
 
 @font-face {
   font-family: 'Inter';
