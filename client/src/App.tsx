@@ -3,6 +3,8 @@ import { Switch, Route, useLocation } from 'wouter';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { useAuth } from '@/hooks/useAuth';
+import { ClerkProvider } from '@clerk/clerk-react';
+import { clerkConfig } from '@/lib/clerk';
 
 // Pages
 import LandingPage from '@/pages/landing';
@@ -202,6 +204,24 @@ function AppContent() {
 }
 
 export default function App() {
+  // Se o Clerk não estiver configurado, mostrar uma mensagem de configuração
+  if (!clerkConfig.isConfigured) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md p-6 bg-white rounded-lg shadow-lg">
+          <div className="mb-4">
+            <i className="ri-settings-3-line text-4xl text-red-500"></i>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Configuração Necessária</h2>
+          <p className="text-gray-600 mb-4">{clerkConfig.errorMessage}</p>
+          <p className="text-sm text-gray-500">
+            Configure as chaves do Clerk nos Secrets do Replit para continuar.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ErrorBoundary 
       FallbackComponent={ErrorFallback}
@@ -209,31 +229,33 @@ export default function App() {
         console.error('App Error Boundary:', error, errorInfo);
       }}
     >
-      <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" storageKey="app-theme">
-            <div className="min-h-screen bg-background">
-              <ErrorBoundary
-                FallbackComponent={({ error, resetErrorBoundary }) => (
-                  <div className="p-4 text-center">
-                    <h3 className="text-lg font-semibold mb-2">Erro na aplicação</h3>
-                    <p className="text-sm text-gray-600 mb-4">{error?.message}</p>
-                    <button
-                      onClick={resetErrorBoundary}
-                      className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
-                    >
-                      Tentar novamente
-                    </button>
-                  </div>
-                )}
-              >
-                <AppContent />
-              </ErrorBoundary>
-              <Toaster />
-            </div>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </HelmetProvider>
+      <ClerkProvider publishableKey={clerkConfig.publishableKey}>
+        <HelmetProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider defaultTheme="system" storageKey="app-theme">
+              <div className="min-h-screen bg-background">
+                <ErrorBoundary
+                  FallbackComponent={({ error, resetErrorBoundary }) => (
+                    <div className="p-4 text-center">
+                      <h3 className="text-lg font-semibold mb-2">Erro na aplicação</h3>
+                      <p className="text-sm text-gray-600 mb-4">{error?.message}</p>
+                      <button
+                        onClick={resetErrorBoundary}
+                        className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
+                      >
+                        Tentar novamente
+                      </button>
+                    </div>
+                  )}
+                >
+                  <AppContent />
+                </ErrorBoundary>
+                <Toaster />
+              </div>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </HelmetProvider>
+      </ClerkProvider>
     </ErrorBoundary>
   );
 }
