@@ -24,14 +24,14 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 16 100% 50%;
     --radius: 0.5rem;
-    
+
     /* Chart colors */
     --chart-1: 16 100% 50%;
     --chart-2: 200 100% 50%;
     --chart-3: 120 100% 30%;
     --chart-4: 40 100% 50%;
     --chart-5: 280 100% 50%;
-    
+
     /* Sidebar specific colors */
     --sidebar-background: 222 47% 18%;
     --sidebar-foreground: 210 40% 98%;
@@ -63,14 +63,14 @@
     --border: 217 33% 25%;
     --input: 217 33% 25%;
     --ring: 16 100% 50%;
-    
+
     /* Chart colors in dark mode */
     --chart-1: 16 100% 60%;
     --chart-2: 200 100% 60%;
     --chart-3: 120 70% 50%;
     --chart-4: 40 100% 60%;
     --chart-5: 280 100% 70%;
-    
+
     /* Sidebar specific colors stay the same in dark mode */
   }
 }
@@ -79,13 +79,13 @@
   * {
     @apply border-border;
   }
-  
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     font-family: 'Inter', sans-serif;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;
   }
@@ -95,21 +95,24 @@
   .card-hover {
     @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
   }
-  
+
   .sidebar-link {
     @apply flex items-center px-3 py-2 text-sm font-medium rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors;
   }
-  
+
   .sidebar-link.active {
     @apply bg-sidebar-accent text-sidebar-foreground border-r-2 border-primary;
   }
-  
+
   .gradient-heading {
     @apply bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent;
   }
 }
 
 /* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css');
+
 @font-face {
   font-family: 'Inter';
   font-style: normal;

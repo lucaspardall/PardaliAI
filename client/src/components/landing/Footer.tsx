@@ -14,27 +14,35 @@ export default function Footer() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-white font-semibold mb-4">Produto</h3>
-              <ul className="space-y-2">
-                <li><a href="#features" className="hover:text-white transition">Recursos</a></li>
-                <li><a href="#pricing" className="hover:text-white transition">Planos</a></li>
-                <li><a href="#" className="hover:text-white transition">API</a></li>
+              <h3 className="font-semibold mb-4">Produto</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/features">Funcionalidades</Link></li>
+                <li><Link href="/pricing">Preços</Link></li>
+                <li><Link href="/integrations">Integrações</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-4">Empresa</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white transition">Sobre</a></li>
-                <li><a href="#" className="hover:text-white transition">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition">Carreiras</a></li>
+              <h3 className="font-semibold mb-4">Empresa</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/about">Sobre nós</Link></li>
+                <li><Link href="/careers">Carreiras</Link></li>
+                <li><Link href="/contact">Contato</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-4">Suporte</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="hover:text-white transition">Documentação</a></li>
-                <li><a href="#" className="hover:text-white transition">Contato</a></li>
-                <li><a href="#" className="hover:text-white transition">Status</a></li>
+              <h3 className="font-semibold mb-4">Suporte</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/help">Central de ajuda</Link></li>
+                <li><Link href="/docs">Documentação</Link></li>
+                <li><Link href="/status">Status</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link href="/privacy">Privacidade</Link></li>
+                <li><Link href="/terms">Termos</Link></li>
+                <li><Link href="/cookies">Cookies</Link></li>
               </ul>
             </div>
           </div>
