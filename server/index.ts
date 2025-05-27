@@ -72,8 +72,8 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // Configuração de porta para Cloud Run deployment
-    const port = process.env.PORT || 5000;
+    // Configuração de porta para deployment
+    const port = parseInt(process.env.PORT || '5000', 10);
     
     server.listen({
       port: port,
