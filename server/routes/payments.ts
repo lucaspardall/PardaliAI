@@ -210,7 +210,8 @@ router.post('/cancel-subscription', isAuthenticated, async (req: Request, res: R
 router.post('/webhook', async (req: Request, res: Response) => {
   try {
     const signature = req.headers['stripe-signature'] as string;
-    const body = req.body;
+    // Para webhooks do Stripe, precisamos do raw body
+    const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
 
     await PaymentService.handleWebhook(body, signature);
 

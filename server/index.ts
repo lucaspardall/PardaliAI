@@ -1,9 +1,19 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import cors from 'cors';
 
 const app = express();
-app.use(express.json());
+
+// Configurar CORS
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://cipshopee.replit.app'] 
+    : ['http://localhost:5000', 'http://localhost:3000'],
+  credentials: true
+}));
+
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {

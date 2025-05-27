@@ -8,6 +8,8 @@ import { insertShopeeStoreSchema, insertProductSchema } from "@shared/schema";
 import shopeeRoutes from './routes/shopee';
 import webhookRoutes from './routes/webhook';
 import webhookTestRoutes from './routes/webhookTest';
+import authRouter from './routes/auth';
+import paymentsRouter from './routes/payments';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -626,93 +628,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth routes
-  // app.use('/api/auth', authRouter);
-
-  // Shopee routes
-  // app.use('/api/shopee', shopeeRoutes);
-
-  // Payment routes
-  // app.use('/api/payments', paymentsRoutes);
-  // Auth routes
-  //app.use('/api/auth', authRouter);
-
-  // Shopee routes
-  //app.use('/api/shopee', shopeeRouter);
-
-  // Payment routes
-  //app.use('/api/payments', paymentsRouter);
-  // Auth routes
-  //app.use('/api/auth', authRouter);
-
-  // Shopee routes
-  //app.use('/api/shopee', shopeeRoutes);
-  // Payment routes
-  //app.use('/api/payments', paymentsRouter);
-  // Auth routes
-  //app.use('/api/auth', authRouter);
-
-  // Shopee routes
-  //app.use('/api/shopee', shopeeRoutes);
-
-  // Payment routes
-  //app.use('/api/payments', paymentsRouter);
-  // Auth routes
-  //app.use('/api/auth', authRouter);
-
-  // Shopee routes
-  //app.use('/api/shopee', shopeeRoutes);
-
-  // Payment routes
-  //app.use('/api/payments', paymentsRouter);
-
-  // Auth routes
-  // app.use('/api/auth', authRouter);
-
-  // Shopee routes
-  // app.use('/api/shopee', shopeeRoutes);
-
-  // Payment routes
-  // app.use('/api/payments', paymentsRoutes);
-  // Auth routes
-  //app.use('/api/auth', authRouter);
-
-  // Shopee routes
-  //app.use('/api/shopee', shopeeRouter);
-
-  // Payment routes
-  //app.use('/api/payments', paymentsRouter);
-  // Auth routes
-  //app.use('/api/auth', authRouter);
-
-  // Shopee routes
-  //app.use('/api/shopee', shopeeRoutes);
-  // Payment routes
-  //app.use('/api/payments', paymentsRouter);
-  // Auth routes
-  //app.use('/api/auth', authRouter);
-
-  // Shopee routes
-  //app.use('/api/shopee', shopeeRoutes);
-
-  // Payment routes
-  //app.use('/api/payments', paymentsRouter);
-  // Auth routes
-  //app.use('/api/auth', authRouter);
-
-  // Shopee routes
-  //app.use('/api/shopee', shopeeRoutes);
-
-  // Payment routes
-  //app.use('/api/payments', paymentsRouter);
-import authRouter from './routes/auth';
-import shopeeRouter from './routes/shopee';
-import paymentsRouter from './routes/payments';
-
-  // Auth routes
   app.use('/api/auth', authRouter);
 
-  // Shopee routes
-  app.use('/api/shopee', shopeeRoutes);
+  // Shopee routes (já configurado acima)
+  // app.use('/api/shopee', shopeeRoutes);
 
   // Payment routes
   app.use('/api/payments', paymentsRouter);
