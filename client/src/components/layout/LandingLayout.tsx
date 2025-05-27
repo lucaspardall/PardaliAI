@@ -33,10 +33,10 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
       }`}>
         <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">S</span>
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <i className="ri-bird-fill text-white text-sm"></i>
             </div>
-            <span className="font-bold text-xl">ShopeeOptimizer</span>
+            <span className="font-bold text-xl">CIP Shopee</span>
           </div>
 
           <div className="hidden md:flex items-center space-x-8">
@@ -99,10 +99,12 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
           <div className="flex flex-col md:flex-row justify-between">
             <div className="mb-8 md:mb-0">
               <div className="flex items-center mb-4">
-                <i className="ri-bird-fill text-primary text-2xl mr-2"></i>
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-2">
+                  <i className="ri-bird-fill text-white text-sm"></i>
+                </div>
                 <h2 className="text-xl font-bold text-white">CIP Shopee</h2>
               </div>
-              <p className="max-w-xs">Otimização inteligente para lojas Shopee com tecnologia de IA.</p>
+              <p className="max-w-xs">Centro de Inteligência Pardal - Otimização inteligente para lojas Shopee com IA.</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
               <div>
