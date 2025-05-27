@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { SignInButton, SignedIn, SignedOut } from '@clerk/clerk-react';
 import { useTheme } from "@/components/ui/theme-provider";
@@ -72,6 +73,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
       <main className="pt-20">
         {children}
       </main>
+
       {/* Footer */}
       <footer className="bg-secondary text-gray-400 py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,4 +125,3 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
     </div>
   );
 }
-```
