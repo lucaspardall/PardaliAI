@@ -200,14 +200,24 @@ export async function setupAuth(app: Express) {
           storeLimit: 1
         };
 
-        // Salva em memória
+        // Tenta salvar no banco
+        try {
+          await upsertUser(req.user.claims);
+        } catch (saveError) {
+          console.log("Erro ao salvar novo usuário no banco:", saveError);
+        }
+
+        // Salva em memória como fallback
         inMemoryUsers[userId] = user;
       }
 
       res.json(user);
     } catch (error) {
       console.error("Erro ao buscar dados do usuário:", error);
-      res.status(500).json({ message: "Falha ao buscar dados do usuário" });
+      res.status(500).json({ 
+        message: "Falha ao buscar dados do usuário",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   });
 }
@@ -216,31 +226,64 @@ export async function setupAuth(app: Express) {
  * Middleware para verificar autenticação Replit Auth
  */
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  // Em ambiente de desenvolvimento, podemos ignorar autenticação
-  if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
-    req.user = {
-      claims: {
-        sub: 'dev_user',
-        name: 'Developer',
-        picture: '',
-      }
-    };
-    return next();
-  }
+  try {
+    // Em ambiente de desenvolvimento, podemos ignorar autenticação
+    if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
+      req.user = {
+        claims: {
+          sub: 'dev_user',
+          email: 'dev@example.com',
+          first_name: 'Developer',
+          last_name: 'Mode',
+          profile_image_url: '',
+        }
+      };
+      return next();
+    }
 
-  // Verifica se o usuário está autenticado
-  if (!req.user) {
-    // Para APIs, retornar 401
+    // Verifica se o usuário está autenticado
+    if (!req.user || !req.user.claims || !req.user.claims.sub) {
+      console.log('Usuário não autenticado tentando acessar:', req.path);
+      
+      // Para APIs, retornar 401
+      if (req.path.startsWith('/api/')) {
+        return res.status(401).json({ 
+          message: 'Não autorizado',
+          code: 'UNAUTHORIZED',
+          redirectTo: '/?login=required'
+        });
+      }
+
+      // Para páginas, redirecionar para a página inicial com parâmetro de login
+      return res.redirect('/?login=required');
+    }
+
+    // Verificar se o token não expirou
+    if (req.user.expires_at && new Date() > new Date(req.user.expires_at * 1000)) {
+      console.log('Token expirado para usuário:', req.user.claims.sub);
+      
+      if (req.path.startsWith('/api/')) {
+        return res.status(401).json({ 
+          message: 'Token expirado',
+          code: 'TOKEN_EXPIRED',
+          redirectTo: '/api/login'
+        });
+      }
+
+      return res.redirect('/api/login');
+    }
+
+    next();
+  } catch (error) {
+    console.error('Erro no middleware de autenticação:', error);
+    
     if (req.path.startsWith('/api/')) {
-      return res.status(401).json({ 
-        message: 'Unauthorized',
-        redirectTo: '/?login=required'
+      return res.status(500).json({ 
+        message: 'Erro interno do servidor',
+        code: 'INTERNAL_ERROR'
       });
     }
 
-    // Para páginas, redirecionar para a página inicial com parâmetro de login
-    return res.redirect('/?login=required');
+    return res.redirect('/?error=auth_error');
   }
-
-  next();
 };

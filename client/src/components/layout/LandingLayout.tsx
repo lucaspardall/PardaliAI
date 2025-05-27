@@ -114,13 +114,32 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               {isLoading ? (
                 <div className="h-10 bg-muted animate-pulse rounded-lg"></div>
               ) : isAuthenticated ? (
-                <Button asChild className="w-full">
-                  <Link href="/dashboard">Dashboard</Link>
-                </Button>
+                <div className="space-y-2">
+                  <Button asChild className="w-full">
+                    <Link href="/dashboard">
+                      <i className="ri-dashboard-line mr-2"></i>
+                      Ir para Dashboard
+                    </Link>
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Bem-vindo de volta!
+                  </p>
+                </div>
               ) : (
-                <Button asChild className="w-full">
-                  <a href="/api/login">Comece grátis</a>
-                </Button>
+                <div className="space-y-2">
+                  <Button asChild className="w-full">
+                    <a href="/api/login">
+                      <i className="ri-rocket-line mr-2"></i>
+                      Comece grátis
+                    </a>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full">
+                    <a href="/api/login">
+                      <i className="ri-login-box-line mr-2"></i>
+                      Já tenho conta
+                    </a>
+                  </Button>
+                </div>
               )}
             </div>
           </div>
