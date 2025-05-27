@@ -108,7 +108,7 @@ export class ShopeeSyncManager {
       }
     }
 
-    throw lastError!;}`);
+    throw lastError!;
       }
 
       // 2. Sincronizar produtos
