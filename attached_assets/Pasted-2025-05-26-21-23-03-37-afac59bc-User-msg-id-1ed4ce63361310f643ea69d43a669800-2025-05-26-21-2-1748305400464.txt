@@ -1,0 +1,112 @@
+2025-05-26 21:23:03.37
+afac59bc
+User
+msg_id: '1ed4ce63361310f643ea69d43a669800',
+2025-05-26 21:23:03.37
+afac59bc
+User
+data: {
+2025-05-26 21:23:03.37
+afac59bc
+User
+ordersn: '25052703S1XAJ5',
+2025-05-26 21:23:03.37
+afac59bc
+User
+forder_id: '5705530916020738079',
+2025-05-26 21:23:03.37
+afac59bc
+User
+package_number: 'OFG202004063165969',
+2025-05-26 21:23:03.37
+afac59bc
+User
+tracking_no: 'BR253039507045Z'
+2025-05-26 21:23:03.37
+afac59bc
+User
+},
+2025-05-26 21:23:03.37
+afac59bc
+User
+shop_id: 404065079,
+2025-05-26 21:23:03.37
+afac59bc
+User
+code: 4,
+2025-05-26 21:23:03.37
+afac59bc
+User
+timestamp: 1748305377
+2025-05-26 21:23:03.37
+afac59bc
+User
+}
+2025-05-26 21:23:03.37
+afac59bc
+User
+[Webhook] Assinatura inválida: {
+2025-05-26 21:23:03.37
+afac59bc
+User
+received: '5e37acc31176a3643959ce836376a52ea70f601dcc122fc8910f5e6a139b5504',
+2025-05-26 21:23:03.37
+afac59bc
+User
+body: '{"msg_id":"1ed4ce63361310f643ea69d43a669800","data":{"ordersn":"25052703S1XAJ5","forder_id":"5705530'
+2025-05-26 21:23:03.37
+afac59bc
+User
+}
+2025-05-26 21:23:03.38
+afac59bc
+User
+12:23:03 AM [express] POST /api/shopee/webhook 401 in 2ms :: {"error":"Invalid signature"}
+2025-05-26 21:23:10.74
+afac59bc
+User
+[Routes] Webhook da Shopee recebido - IP: 104.154.113.146, User-Agent: Go-http-client/1.1
+2025-05-26 21:23:10.74
+afac59bc
+User
+[Webhook] Recebendo webhook - Headers: {
+2025-05-26 21:23:10.74
+afac59bc
+User
+host: 'cipshopee.replit.app',
+2025-05-26 21:23:10.74
+afac59bc
+User
+'user-agent': 'Go-http-client/1.1',
+2025-05-26 21:23:10.74
+afac59bc
+User
+'content-length': '237',
+2025-05-26 21:23:10.74
+afac59bc
+User
+'accept-encoding': 'gzip',
+2025-05-26 21:23:10.74
+afac59bc
+User
+authorization: 'c8e65c53e13136e2d9faea39b275a4a00087d8a8bea557bf85e9657d7503822d',
+2025-05-26 21:23:10.74
+afac59bc
+User
+'content-type': 'application/json',
+2025-05-26 21:23:10.74
+afac59bc
+User
+reqid: '4ff43cc8361311c425624ab7d1846000:00000066a8394477:0000000000000000',
+2025-05-26 21:23:10.74
+afac59bc
+User
+round: '1',
+2025-05-26 21:23:10.74
+afac59bc
+User
+'server-timing': 'depproxy;dur=1748305390734, pid1req;dur=1748305390741',
+2025-05-26 21:23:10.74
+afac59bc
+User
+'shopee-baggage': 'CID=br,DT=18',
