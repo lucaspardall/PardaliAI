@@ -74,6 +74,7 @@ app.use((req, res, next) => {
 
     // Configuração de porta adaptada para funcionar tanto em desenvolvimento quanto em deploy
     const port = process.env.PORT || 5000;
+    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
 
     // Tentar portas alternativas se a primeira estiver ocupada
     function tryConnect(currentPort: number) {

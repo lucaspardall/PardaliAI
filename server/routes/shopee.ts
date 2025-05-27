@@ -23,7 +23,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     // Configuração da integração Shopee - sempre usar região 'BR' para o Brasil
     // Garantir que a URL de redirecionamento NUNCA fique indefinida
-    const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
+    const redirectUrl = process.env.SHOPEE_REDIRECT_URL || `https://${process.env.REPL_SLUG || 'cipshopee'}.${process.env.REPL_OWNER || 'replit'}.repl.co/api/shopee/callback`;
 
     console.log("URL de redirecionamento que será usada:", redirectUrl);
 
@@ -267,7 +267,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     const config = {
       partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
       partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
-      redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
+      redirectUrl: process.env.SHOPEE_REDIRECT_URL || `https://${process.env.REPL_SLUG || 'cipshopee'}.${process.env.REPL_OWNER || 'replit'}.repl.co/api/shopee/callback`,
       region: 'BR'  // Configurado explicitamente para Brasil
     };
 

@@ -17,11 +17,18 @@ import Subscription from "@/pages/dashboard/subscription";
 import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
 import { useAuth } from "./hooks/useAuth";
-import { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { useLocation } from "wouter";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+
+  // Sempre usar useEffect para redirecionamentos
+  React.useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      window.location.href = "/?login=required";
+    }
+  }, [isLoading, isAuthenticated]);
 
   // Se ainda está carregando, mostrar loading
   if (isLoading) {
@@ -32,10 +39,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Se não está autenticado, redirecionar para login
+  // Se não está autenticado, mostrar loading enquanto redireciona
   if (!isAuthenticated) {
-    window.location.href = "/?login=required";
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   return <>{children}</>;
