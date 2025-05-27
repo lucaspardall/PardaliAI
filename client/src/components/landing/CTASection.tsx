@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { SignInButton } from '@clerk/clerk-react';
+import { SignInButton, SignedIn, SignedOut } from '@clerk/clerk-react';
 import { motion } from "framer-motion";
 
 export default function CTASection() {

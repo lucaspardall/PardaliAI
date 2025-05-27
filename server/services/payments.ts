@@ -1,5 +1,3 @@
-import { clerkClient } from '@clerk/clerk-sdk-node';
-
 export interface PaymentPlan {
   id: string;
   name: string;
@@ -46,66 +44,16 @@ export const PAYMENT_PLANS: Record<string, PaymentPlan> = {
 
 export class PaymentService {
   /**
-   * Criar sessão de checkout usando Clerk
+   * Obter planos disponíveis
    */
-  static async createCheckoutSession(userId: string, planId: string) {
-    try {
-      // Usar o Clerk para criar checkout session
-      // Você configurará os preços no dashboard do Clerk
-      const user = await clerkClient.users.getUser(userId);
-
-      // Retornar URL para portal de assinatura do Clerk
-      return {
-        url: `${process.env.CLERK_FRONTEND_API}/v1/payments/checkout?plan=${planId}&user=${userId}`
-      };
-    } catch (error) {
-      console.error('Erro ao criar sessão de checkout:', error);
-      throw error;
-    }
+  static getPlans() {
+    return PAYMENT_PLANS;
   }
 
   /**
-   * Obter informações da assinatura via Clerk
+   * Obter informações de um plano específico
    */
-  static async getSubscriptionInfo(userId: string) {
-    try {
-      const user = await clerkClient.users.getUser(userId);
-
-      // Clerk gerencia as informações de assinatura automaticamente
-      const publicMetadata = user.publicMetadata as any;
-      const privateMetadata = user.privateMetadata as any;
-
-      return {
-        plan: publicMetadata.plan || 'free',
-        status: publicMetadata.subscriptionStatus || 'inactive',
-        customerId: privateMetadata.stripeCustomerId,
-        subscriptionId: privateMetadata.stripeSubscriptionId
-      };
-    } catch (error) {
-      console.error('Erro ao buscar informações da assinatura:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Atualizar plano do usuário
-   */
-  static async updateUserPlan(userId: string, planId: string, subscriptionData: any) {
-    try {
-      await clerkClient.users.updateUserMetadata(userId, {
-        publicMetadata: {
-          plan: planId,
-          subscriptionStatus: subscriptionData.status,
-          planExpiresAt: subscriptionData.current_period_end
-        },
-        privateMetadata: {
-          stripeCustomerId: subscriptionData.customer,
-          stripeSubscriptionId: subscriptionData.id
-        }
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar plano do usuário:', error);
-      throw error;
-    }
+  static getPlan(planId: string) {
+    return PAYMENT_PLANS[planId] || PAYMENT_PLANS.free;
   }
 }

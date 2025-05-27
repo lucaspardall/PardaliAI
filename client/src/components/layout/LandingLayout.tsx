@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { SignInButton } from '@clerk/clerk-react';
+import { SignInButton, SignedIn, SignedOut } from '@clerk/clerk-react';
 import { useTheme } from "@/components/ui/theme-provider";
 import { useState, useEffect } from "react";
 
@@ -54,19 +54,23 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             {isLoading ? (
               <div className="h-10 w-24 bg-muted/50 rounded-md animate-pulse"></div>
             ) : isAuthenticated ? (
-              <Button asChild className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg">
-                <Link href="/dashboard">
-                  <i className="ri-dashboard-line mr-2"></i>
-                  Dashboard
-                </Link>
-              </Button>
+              <SignedIn>
+                <Button asChild className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg">
+                  <Link href="/dashboard">
+                    <i className="ri-dashboard-line mr-2"></i>
+                    Dashboard
+                  </Link>
+                </Button>
+              </SignedIn>
             ) : (
-                <SignInButton mode="modal">
-                  <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg">
-                    <i className="ri-rocket-line mr-2"></i>
-                    Teste Grátis 7 Dias
-                  </Button>
-                </SignInButton>
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg">
+                      <i className="ri-rocket-line mr-2"></i>
+                      Teste Grátis 7 Dias
+                    </Button>
+                  </SignInButton>
+                </SignedOut>
               )}
           </div>
 
@@ -121,29 +125,33 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               {isLoading ? (
                 <div className="h-10 bg-muted animate-pulse rounded-lg"></div>
               ) : isAuthenticated ? (
-                <div className="space-y-2">
-                  <Button asChild className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0">
-                    <Link href="/dashboard">
-                      <i className="ri-dashboard-line mr-2"></i>
-                      Ir para Dashboard
-                    </Link>
-                  </Button>
-                  <p className="text-xs text-center text-muted-foreground">
-                    Bem-vindo de volta!
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <SignInButton mode="modal">
-                    <Button className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0">
-                      <i className="ri-rocket-line mr-2"></i>
-                      Teste Grátis 7 Dias
+                <SignedIn>
+                  <div className="space-y-2">
+                    <Button asChild className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0">
+                      <Link href="/dashboard">
+                        <i className="ri-dashboard-line mr-2"></i>
+                        Ir para Dashboard
+                      </Link>
                     </Button>
-                  </SignInButton>
-                  <div className="text-xs text-center text-muted-foreground mt-2">
-                    🎁 Sem cartão de crédito • Cancele a qualquer momento
+                    <p className="text-xs text-center text-muted-foreground">
+                      Bem-vindo de volta!
+                    </p>
                   </div>
-                </div>
+                </SignedIn>
+              ) : (
+                <SignedOut>
+                  <div className="space-y-2">
+                    <SignInButton mode="modal">
+                      <Button className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0">
+                        <i className="ri-rocket-line mr-2"></i>
+                        Teste Grátis 7 Dias
+                      </Button>
+                    </SignInButton>
+                    <div className="text-xs text-center text-muted-foreground mt-2">
+                      🎁 Sem cartão de crédito • Cancele a qualquer momento
+                    </div>
+                  </div>
+                </SignedOut>
               )}
             </div>
           </div>
