@@ -126,6 +126,15 @@ export interface ShopeeShopPerformance {
   };
 }
 
+// Evento de webhook da Shopee
+export interface WebhookEvent {
+  code: number;
+  data: any;
+  shop_id: number;
+  timestamp: number;
+  msg_id?: string;
+}
+
 // Métricas de desempenho de um produto
 export interface ShopeeProductPerformance {
   item_id: number;
@@ -137,5 +146,5 @@ export interface ShopeeProductPerformance {
   add_to_cart_percentage: number;
   conversion_rate: number;
   sales_30_days: number;
-  revenue_30_days: number;
+  revenue_30_days: number;days: number;
 }

@@ -18,9 +18,18 @@ export class ShopeeAuthManager {
   }
 
   /**
+   * Verifica se o token está expirado
+   */
+  isTokenExpired(expiresAt: Date): boolean {
+    const now = new Date();
+    const bufferTime = 5 * 60 * 1000; // 5 minutos de buffer
+    return now.getTime() >= (expiresAt.getTime() - bufferTime);
+  }
+
+  /**
    * Gera URL de autorização OAuth para a Shopee
    */
-  generateAuthUrl(): string {
+  getAuthorizationUrl(): string {
     const timestamp = getTimestamp();
     const baseUrl = getApiBaseUrl(this.config.region);
     const path = '/api/v2/shop/auth_partner';
@@ -54,7 +63,7 @@ export class ShopeeAuthManager {
   /**
    * Troca código de autorização por tokens de acesso
    */
-  async exchangeCodeForTokens(code: string, shopId: string): Promise<ShopeeAuthTokens> {
+  async getAccessToken(code: string, shopId: string): Promise<ShopeeAuthTokens> {
     const timestamp = getTimestamp();
     const baseUrl = getApiBaseUrl(this.config.region);
     const path = '/api/v2/auth/token/get';
@@ -121,7 +130,7 @@ export class ShopeeAuthManager {
   /**
    * Atualiza tokens usando refresh token
    */
-  async refreshTokens(refreshToken: string, shopId: string): Promise<ShopeeAuthTokens> {
+  async refreshAccessToken(refreshToken: string, shopId: string): Promise<ShopeeAuthTokens> {
     const timestamp = getTimestamp();
     const baseUrl = getApiBaseUrl(this.config.region);
     const path = '/api/v2/auth/access_token/get';
@@ -183,7 +192,7 @@ export class ShopeeAuthManager {
  */
 export function getAuthorizationUrl(config: ShopeeAuthConfig): string {
   const authManager = new ShopeeAuthManager(config);
-  return authManager.generateAuthUrl();
+  return authManager.getAuthorizationUrl();
 }
 
 /**
@@ -191,7 +200,7 @@ export function getAuthorizationUrl(config: ShopeeAuthConfig): string {
  */
 export async function getAccessToken(config: ShopeeAuthConfig, code: string, shopId: string): Promise<ShopeeAuthTokens> {
   const authManager = new ShopeeAuthManager(config);
-  return authManager.exchangeCodeForTokens(code, shopId);
+  return authManager.getAccessToken(code, shopId);
 }
 
 /**
@@ -199,5 +208,5 @@ export async function getAccessToken(config: ShopeeAuthConfig, code: string, sho
  */
 export async function refreshAccessToken(config: ShopeeAuthConfig, refreshToken: string, shopId: string): Promise<ShopeeAuthTokens> {
   const authManager = new ShopeeAuthManager(config);
-  return authManager.refreshTokens(refreshToken, shopId);
+  return authManager.refreshAccessToken(refreshToken, shopId);
 }

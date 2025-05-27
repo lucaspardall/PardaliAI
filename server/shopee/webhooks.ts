@@ -4,6 +4,7 @@
 import { Request, Response } from 'express';
 import { createHmac } from 'crypto';
 import { storage } from '../storage';
+import { WebhookEvent } from './types';
 
 /**
  * Códigos de eventos de webhook da Shopee
