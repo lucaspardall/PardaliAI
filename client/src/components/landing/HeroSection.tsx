@@ -46,12 +46,12 @@ export default function HeroSection() {
               ) : (
                 <div className="flex flex-col sm:flex-row gap-4">
                   <SignInButton mode="modal">
-                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
+                    <Button size="lg" className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg">
                       🚀 Teste Grátis 7 Dias
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </SignInButton>
-                  <Button variant="outline" size="lg" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                  <Button variant="outline" size="lg" className="border-orange-500 text-orange-500 hover:bg-orange-50">
                     <Play className="mr-2 h-4 w-4" />
                     Ver Demo
                   </Button>

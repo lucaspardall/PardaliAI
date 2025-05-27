@@ -41,19 +41,19 @@ export default function CTASection() {
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {isAuthenticated ? (
-              <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
+              <Button asChild size="lg" className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg">
                 <a href="/dashboard">
                   Acessar Dashboard
                 </a>
               </Button>
             ) : (
               <SignInButton mode="modal">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg">
+                <Button size="lg" className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white border-0 shadow-lg">
                   🚀 Teste Grátis 7 Dias
                 </Button>
               </SignInButton>
             )}
-            <Button variant="outline" size="lg" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+            <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
               Falar com Especialista
             </Button>
           </div>
