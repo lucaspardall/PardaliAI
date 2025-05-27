@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
-import { SignInButton } from '@clerk/nextjs';
+import { SignInButton } from '@clerk/clerk-react';
 
 export default function CTASection() {
   const { isAuthenticated } = useAuth();
