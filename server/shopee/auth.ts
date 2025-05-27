@@ -1,4 +1,3 @@
-
 /**
  * Gerenciador de autenticação para a API da Shopee
  */
@@ -19,88 +18,80 @@ export class ShopeeAuthManager {
   }
 
   /**
-   * Gera URL para o fluxo de autorização OAuth
-   * Implementa o fluxo de autorização conforme documentação oficial da Shopee Open Platform
+   * Gera a URL de autorização para OAuth
    */
   getAuthorizationUrl(): string {
-    // Gerar timestamp e parâmetros necessários
     const timestamp = getTimestamp();
+    const baseUrl = getApiBaseUrl(this.config.region);
+    const path = '/api/v2/shop/auth_partner';
 
-    // Criar o estado único para CSRF protection
-    const stateParam = `cipshopee_${Date.now()}`;
+    // Preparar parâmetros para assinatura (SEM o sign)
+    const authParams = {
+      partner_id: this.config.partnerId,
+      timestamp: timestamp.toString(),
+      redirect: this.config.redirectUrl
+    };
 
-    // Verificar se a URL de redirecionamento está definida
-    if (!this.config.redirectUrl) {
-      throw new Error('URL de redirecionamento não definida na configuração');
-    }
+    // Gerar assinatura seguindo o padrão oficial da Shopee
+    const signature = this.generateShopeeSignature(path, authParams);
 
-    console.log(`===================================================`);
-    console.log(`Ambiente: ${process.env.NODE_ENV}`);
-    console.log(`Informações de configuração da API:`);
-    console.log(`Partner ID: ${this.config.partnerId}`);
-    console.log(`URL de redirecionamento configurada: ${this.config.redirectUrl}`);
-    console.log(`===================================================`);
-
-    // MÉTODO PADRÃO: URL oficial de API para autorização de loja
-    // URL BASE para o fluxo de autorização de loja
-    const baseUrl = 'https://partner.shopeemobile.com';
-    const apiPath = '/api/v2/shop/auth_partner';
-    
-    // String base para gerar assinatura (seguindo documentação oficial)
-    const baseString = `${this.config.partnerId}${apiPath}${timestamp}`;
-    console.log(`String base para assinatura (método padrão): ${baseString}`);
-
-    // Gerar assinatura HMAC-SHA256
-    const hmac = createHmac('sha256', this.config.partnerKey);
-    hmac.update(baseString);
-    const signature = hmac.digest('hex');
     console.log(`Assinatura gerada: ${signature}`);
 
-    // Construir URL de autorização conforme documentação oficial
-    // Apenas parâmetros obrigatórios para evitar erro 302
-    const urlParams = new URLSearchParams({
+    // Gerar state único para proteção CSRF
+    const state = `cipshopee_${Date.now()}`;
+
+    // Construir parâmetros finais (COM o sign)
+    const params = new URLSearchParams({
       partner_id: this.config.partnerId,
       timestamp: timestamp.toString(),
       sign: signature,
-      redirect: this.config.redirectUrl
+      redirect: this.config.redirectUrl,
+      state: state
     });
-    
-    // Montar a URL final usando URLSearchParams para garantir codificação correta
-    const authUrl = `${baseUrl}${apiPath}?${urlParams.toString()}`;
 
-    // URL final
-    const finalUrl = authUrl;
+    const authUrl = `${baseUrl}${path}?${params.toString()}`;
 
-    console.log(`✅ URL de autorização da Shopee: ${finalUrl}`);
+    console.log(`✅ URL de autorização da Shopee: ${authUrl}`);
 
-    // Salvar URL em um arquivo para inspeção direta
-    if (process.env.NODE_ENV === 'development') {
-      try {
-        import('fs').then(fs => {
-          fs.writeFileSync('shopee_auth_url.txt', finalUrl, { encoding: 'utf-8' });
-          console.log('✅ URL salva em arquivo para inspeção: shopee_auth_url.txt');
-        }).catch(err => {
-          console.error('Erro ao importar fs:', err);
-        });
-      } catch (e) {
-        console.error('Não foi possível salvar a URL em arquivo:', e);
-      }
-    }
-
-    // Verificação de parâmetros importantes
+    // Log de verificação dos parâmetros
     console.log('Verificação de parâmetros importantes:');
-    console.log('- partner_id:', finalUrl.includes(`partner_id=${this.config.partnerId}`));
-    console.log('- timestamp:', finalUrl.includes(`timestamp=${timestamp}`));
-    console.log('- sign:', finalUrl.includes(`sign=${signature}`));
-    console.log('- redirect:', finalUrl.includes('redirect='));
-    console.log('- auth_type=direct:', finalUrl.includes('auth_type=direct'));
-    console.log('- login_type=seller:', finalUrl.includes('login_type=seller'));
-    
-    // Verificação detalhada do timestamp na URL
-    console.log('🔎 Verificação direta do timestamp:', `timestamp=${timestamp}`);
+    console.log(`- partner_id: ${params.has('partner_id')}`);
+    console.log(`- timestamp: ${params.has('timestamp')}`);
+    console.log(`- sign: ${params.has('sign')}`);
+    console.log(`- redirect: ${params.has('redirect')}`);
+    console.log(`- auth_type=direct: ${params.has('auth_type')}`);
+    console.log(`- login_type=seller: ${params.has('login_type')}`);
+    console.log(`🔎 Verificação direta do timestamp: timestamp=${timestamp}`);
     console.log('================================================');
 
-    return finalUrl;
+    return authUrl;
+  }
+
+  /**
+   * Gera assinatura seguindo o padrão oficial da Shopee
+   */
+  private generateShopeeSignature(path: string, params: Record<string, string>): string {
+    // Ordenar parâmetros alfabeticamente (excluindo 'sign' se existir)
+    const sortedKeys = Object.keys(params)
+      .filter(key => key !== 'sign')
+      .sort();
+
+    // Construir string base: partner_key + path + ordenação(params) + partner_key
+    let baseString = this.config.partnerKey + path;
+
+    // Adicionar parâmetros ordenados
+    sortedKeys.forEach(key => {
+      baseString += key + params[key];
+    });
+
+    baseString += this.config.partnerKey;
+
+    console.log(`String base para assinatura: ${baseString}`);
+
+    // Gerar HMAC SHA256
+    const hmac = createHmac('sha256', this.config.partnerKey);
+    hmac.update(baseString);
+    return hmac.digest('hex');
   }
 
   /**
@@ -333,6 +324,77 @@ export class ShopeeAuthManager {
     expirationWithBuffer.setSeconds(expirationWithBuffer.getSeconds() - bufferSeconds);
 
     return now >= expirationWithBuffer;
+  }
+
+  /**
+   * Troca o código de autorização por tokens de acesso
+   */
+  async exchangeCodeForTokens(code: string, shopId: string): Promise<ShopeeAuthTokens> {
+    const timestamp = getTimestamp();
+    const baseUrl = getApiBaseUrl(this.config.region);
+    const path = '/api/v2/auth/token/get';
+
+    // Criar payload da requisição
+    const requestBody = {
+      code,
+      shop_id: parseInt(shopId),
+      partner_id: parseInt(this.config.partnerId)
+    };
+
+    // Preparar parâmetros para assinatura
+    const queryParams = {
+      partner_id: this.config.partnerId,
+      timestamp: timestamp.toString()
+    };
+
+    // Gerar assinatura para a requisição POST
+    const signature = this.generateShopeeSignature(path, queryParams);
+
+    console.log(`[Auth] Trocando código por tokens...`);
+    console.log(`[Auth] Código: ${code}`);
+    console.log(`[Auth] Shop ID: ${shopId}`);
+    console.log(`[Auth] Timestamp: ${timestamp}`);
+    console.log(`[Auth] Assinatura: ${signature}`);
+
+    try {
+      const response = await fetch(`${baseUrl}${path}?partner_id=${this.config.partnerId}&timestamp=${timestamp}&sign=${signature}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[Auth] Erro HTTP ${response.status}:`, errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`[Auth] Resposta da API:`, JSON.stringify(data, null, 2));
+
+      if (data.error || !data.response) {
+        console.error(`[Auth] Erro da API Shopee:`, data);
+        throw new Error(data.message || data.error || 'Failed to get tokens');
+      }
+
+      const tokenData = data.response;
+      const expiresAt = new Date(Date.now() + (tokenData.expire_in * 1000));
+
+      console.log(`[Auth] Tokens obtidos com sucesso. Expiram em: ${expiresAt}`);
+
+      return {
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token,
+        expiresAt,
+        shopId
+      };
+
+    } catch (error) {
+      console.error(`[Auth] Erro ao trocar código por tokens:`, error);
+      throw error;
+    }
   }
 }
 
