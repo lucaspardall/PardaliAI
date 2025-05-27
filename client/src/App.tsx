@@ -18,9 +18,11 @@ import Subscription from "@/pages/dashboard/subscription";
 import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
 import React, { Suspense, lazy } from 'react';
+import { Loading } from "@/components/ui/loading";
 
 const BulkOptimizePage = lazy(() => import('./pages/dashboard/bulk-optimize'));
 const AiCreditsPage = lazy(() => import('./pages/dashboard/ai-credits'));
+const LoginPage = lazy(() => import('./components/auth/LoginPage'));
 import { HelmetProvider } from 'react-helmet-async';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -31,51 +33,94 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   );
 }
 
+
+
 function Router() {
   return (
     <Switch>
-      {/* Public route */}
-      <Route path="/" component={Landing} />
+      {/* Página de Login */}
+      <Route path="/login">
+        <SignedOut>
+          <Suspense fallback={<Loading message="Preparando login..." />}>
+            <LoginPage />
+          </Suspense>
+        </SignedOut>
+        <SignedIn>
+          <Landing />
+        </SignedIn>
+      </Route>
 
-      {/* Protected dashboard routes */}
+      {/* Landing Page */}
+      <Route path="/">
+        <SignedOut>
+          <Landing />
+        </SignedOut>
+        <SignedIn>
+          <Dashboard />
+        </SignedIn>
+      </Route>
+
+      {/* Dashboard Routes - Protegidas */}
       <Route path="/dashboard">
-        {() => <ProtectedRoute><Dashboard /></ProtectedRoute>}
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
       </Route>
       <Route path="/dashboard/products">
-        {() => <ProtectedRoute><Products /></ProtectedRoute>}
+        <ProtectedRoute>
+          <Products />
+        </ProtectedRoute>
       </Route>
       <Route path="/dashboard/product/:id">
-        {(params) => <ProtectedRoute><ProductDetail id={params.id} /></ProtectedRoute>}
+        <ProtectedRoute>
+          <ProductDetail />
+        </ProtectedRoute>
       </Route>
       <Route path="/dashboard/optimize/:id">
-        {(params) => <ProtectedRoute><OptimizeProduct id={params.id} /></ProtectedRoute>}
-      </Route>
-      <Route path="/dashboard/optimizations">
-        {() => <ProtectedRoute><Optimizations /></ProtectedRoute>}
-      </Route>
-      <Route path="/dashboard/bulk-optimize">
-        {() => <ProtectedRoute><BulkOptimizePage /></ProtectedRoute>}
-      </Route>
-      <Route path="/dashboard/reports">
-        {() => <ProtectedRoute><Reports /></ProtectedRoute>}
+        <ProtectedRoute>
+          <OptimizeProduct />
+        </ProtectedRoute>
       </Route>
       <Route path="/dashboard/store/connect">
-        {() => <ProtectedRoute><ConnectStore /></ProtectedRoute>}
+        <ProtectedRoute>
+          <ConnectStore />
+        </ProtectedRoute>
       </Route>
+      <Route path="/shopee-connect" component={ShopeeConnect} />
       <Route path="/dashboard/profile">
-        {() => <ProtectedRoute><Profile /></ProtectedRoute>}
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>
       </Route>
       <Route path="/dashboard/subscription">
-        {() => <ProtectedRoute><Subscription /></ProtectedRoute>}
+        <ProtectedRoute>
+          <Subscription />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/dashboard/optimizations">
+        <ProtectedRoute>
+          <Optimizations />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/dashboard/reports">
+        <ProtectedRoute>
+          <Reports />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/dashboard/bulk-optimize">
+        <ProtectedRoute>
+          <Suspense fallback={<Loading size="sm" message="Carregando otimização..." />}>
+            <BulkOptimizePage />
+          </Suspense>
+        </ProtectedRoute>
       </Route>
       <Route path="/dashboard/ai-credits">
-        {() => <ProtectedRoute><AiCreditsPage /></ProtectedRoute>}
+        <ProtectedRoute>
+          <Suspense fallback={<Loading size="sm" message="Carregando créditos..." />}>
+            <AiCreditsPage />
+          </Suspense>
+        </ProtectedRoute>
       </Route>
-      <Route path="/dashboard/shopee-connect">
-        {() => <ProtectedRoute><ShopeeConnect /></ProtectedRoute>}
-      </Route>
-
-      {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
   );

@@ -9,9 +9,12 @@ import { Helmet } from "react-helmet";
 import { ArrowRight, CheckCircle, Star, Users, TrendingUp, Zap, Shield, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SignInButton } from '@clerk/clerk-react';
+import { SignInButton, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { useLocation } from 'wouter';
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+
   return (
     <>
       <Helmet>
@@ -31,6 +34,34 @@ export default function Landing() {
         <TestimonialsSection />
         <PricingSection />
         <CTASection />
+        
+        {/* Auth Navigation */}
+        <SignedOut>
+          <div className="fixed bottom-6 right-6 z-50">
+            <SignInButton mode="modal">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
+              >
+                <i className="ri-login-box-line mr-2"></i>
+                Entrar
+              </Button>
+            </SignInButton>
+          </div>
+        </SignedOut>
+        
+        <SignedIn>
+          <div className="fixed bottom-6 right-6 z-50">
+            <Button 
+              size="lg" 
+              onClick={() => setLocation('/dashboard')}
+              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 shadow-lg"
+            >
+              <i className="ri-dashboard-line mr-2"></i>
+              Dashboard
+            </Button>
+          </div>
+        </SignedIn>
       </LandingLayout>
     </>
   );
