@@ -72,7 +72,7 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // Configuração de porta para deployment
+    // Configuração de porta - usa PORT do ambiente ou 5000 para desenvolvimento
     const port = parseInt(process.env.PORT || '5000', 10);
     
     server.listen({
