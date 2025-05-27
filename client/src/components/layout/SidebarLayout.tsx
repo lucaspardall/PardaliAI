@@ -382,3 +382,5 @@ export default function SidebarLayout({
     </div>
   );
 }
+
+export default SidebarLayout;
