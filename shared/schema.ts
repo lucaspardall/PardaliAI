@@ -280,11 +280,6 @@ export const insertApiCacheSchema = createInsertSchema(apiCache).omit({ id: true
 export type InsertApiCache = z.infer<typeof insertApiCacheSchema>;
 export type ApiCache = typeof apiCache.$inferSelect;
 
-// Schemas para orders
-export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
-export type InsertOrder = z.infer<typeof insertOrderSchema>;
-export type Order = typeof orders.$inferSelect;
-
 // Tabela de pedidos da Shopee
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
@@ -324,3 +319,8 @@ export interface OrderItem {
   itemSku?: string;
   variation?: string;
 }
+
+// Schemas para orders
+export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;

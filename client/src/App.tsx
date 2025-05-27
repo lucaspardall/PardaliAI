@@ -21,8 +21,7 @@ import { Suspense } from 'react';
 import { useLocation } from "wouter";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   // Se ainda está carregando, mostrar loading
   if (isLoading) {
