@@ -199,7 +199,7 @@ export function generateDiagnosticPage(urls: Record<string, string>): string {
     </body>
     </html>
   `;
-}p: ${timestamp}`);
+`p: ${timestamp}`);
 
   // ===== Método padrão usando a URL de autorização oficial =====
   // String base para gerar assinatura - EXATAMENTE conforme documentação oficial

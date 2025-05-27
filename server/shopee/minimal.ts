@@ -93,7 +93,7 @@ export function generateTestVariants(config: ShopeeAuthConfig): Record<string, s
   }).toString()}`;
 
   return variants;
-} new URLSearchParams();
+const params = new URLSearchParams();
 
   // Adicionar parâmetros na ordem recomendada pela documentação
   params.append('partner_id', config.partnerId.toString());
