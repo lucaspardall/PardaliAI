@@ -1,8 +1,9 @@
-
 import React, { useState, useEffect } from "react";
-import { SignInButton, SignedIn, SignedOut } from '@clerk/clerk-react';
 import { useTheme } from "@/components/ui/theme-provider";
 import { Moon, Sun } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 interface LandingLayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ interface LandingLayoutProps {
 export default function LandingLayout({ children }: LandingLayoutProps) {
   const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,22 +51,18 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             </button>
 
             {/* Auth Buttons */}
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                  Entrar
-                </button>
-              </SignInButton>
-            </SignedOut>
-
-            <SignedIn>
-              <a 
-                href="/dashboard" 
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-              >
-                Dashboard
-              </a>
-            </SignedIn>
+            {!isAuthenticated ? (
+              <Button asChild>
+                <Link href="/login">Entrar</Link>
+              </Button>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600 dark:text-gray-300">Bem-vindo!</span>
+                <Button asChild variant="outline">
+                  <Link href="/dashboard">Dashboard</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </nav>
       </header>
