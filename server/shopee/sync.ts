@@ -243,6 +243,8 @@ export class ShopeeSyncManager {
     let processed = 0;
 
     try {
+      console.log(`[Sync] Iniciando sincronização de pedidos para loja ${this.storeId}`);
+      
       const now = Math.floor(Date.now() / 1000);
       const sevenDaysAgo = now - (7 * 24 * 60 * 60);
 
@@ -261,18 +263,60 @@ export class ShopeeSyncManager {
           );
         });
 
-        if (!orderList?.order_list || orderList.order_list.length === 0) {
+        if (!orderList?.response?.order_list || orderList.response.order_list.length === 0) {
           hasMore = false;
           break;
         }
 
-        processed += orderList.order_list.length;
-        cursor = orderList.next_cursor;
+        const orders = orderList.response.order_list;
+        console.log(`[Sync] Encontrados ${orders.length} pedidos`);
+
+        // Buscar detalhes dos pedidos em lotes menores
+        const detailBatchSize = Math.min(20, orders.length);
+        
+        for (let i = 0; i < orders.length; i += detailBatchSize) {
+          const batchOrderSns = orders.slice(i, i + detailBatchSize).map((order: any) => order.order_sn);
+          
+          try {
+            const { getOrderDetails } = await import('./data');
+            const orderDetails = await this.withRetry(async () => {
+              return await getOrderDetails(this.client, batchOrderSns);
+            });
+
+            const detailsList = orderDetails?.response?.order_list || [];
+            
+            for (const orderDetail of detailsList) {
+              try {
+                await this.saveOrder(orderDetail);
+                processed++;
+                console.log(`[Sync] Pedido ${orderDetail.order_sn} salvo com sucesso`);
+              } catch (error) {
+                const errorMsg = `Erro ao salvar pedido ${orderDetail.order_sn}: ${error.message}`;
+                console.error(errorMsg);
+                errors.push(errorMsg);
+              }
+            }
+
+            // Delay entre lotes
+            if (i + detailBatchSize < orders.length) {
+              await this.sleep(this.options.delayBetweenBatches);
+            }
+
+          } catch (error) {
+            const errorMsg = `Erro ao buscar detalhes do lote de pedidos: ${error.message}`;
+            console.error(errorMsg);
+            errors.push(errorMsg);
+          }
+        }
+
+        cursor = orderList.response.next_cursor;
         hasMore = !!cursor;
 
         // Delay entre páginas
         await this.sleep(this.options.delayBetweenBatches);
       }
+
+      console.log(`[Sync] Sincronização de pedidos concluída: ${processed} pedidos processados`);
 
     } catch (error) {
       errors.push(`Erro na sincronização de pedidos: ${error.message}`);
@@ -280,6 +324,74 @@ export class ShopeeSyncManager {
 
     const duration = Date.now() - startTime;
     return { success: errors.length === 0, processed, errors, duration };
+  }
+
+  /**
+   * Salva um pedido no banco de dados
+   */
+  private async saveOrder(order: any): Promise<void> {
+    try {
+      console.log(`[Sync] Processando pedido:`, {
+        order_sn: order.order_sn,
+        order_status: order.order_status,
+        total_amount: order.total_amount
+      });
+
+      const existingOrder = await storage.getOrderByOrderSn(order.order_sn);
+
+      const orderData = {
+        storeId: this.storeId,
+        orderSn: order.order_sn,
+        orderStatus: this.mapOrderStatus(order.order_status),
+        totalAmount: Number(order.total_amount) || 0,
+        currency: order.currency || 'BRL',
+        paymentMethod: order.payment_method || '',
+        shippingCarrier: order.shipping_carrier || '',
+        trackingNumber: order.tracking_no || '',
+        createTime: new Date(order.create_time * 1000),
+        updateTime: new Date(order.update_time * 1000),
+        buyerUsername: order.buyer_username || '',
+        recipientAddress: JSON.stringify(order.recipient_address || {}),
+        items: JSON.stringify(order.item_list || []),
+        lastSyncAt: new Date()
+      };
+
+      if (existingOrder) {
+        await storage.updateOrder(existingOrder.id, {
+          ...orderData,
+          updatedAt: new Date()
+        });
+        console.log(`[Sync] Pedido ${order.order_sn} atualizado`);
+      } else {
+        await storage.createOrder({
+          ...orderData,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        console.log(`[Sync] Pedido ${order.order_sn} criado`);
+      }
+    } catch (error) {
+      console.error(`[Sync] Erro ao salvar pedido:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mapeia status do pedido da Shopee para o sistema local
+   */
+  private mapOrderStatus(shopeeStatus: string): string {
+    const statusMap: Record<string, string> = {
+      'UNPAID': 'pending',
+      'TO_SHIP': 'confirmed',
+      'SHIPPED': 'shipped',
+      'TO_CONFIRM_RECEIVE': 'delivered',
+      'IN_CANCEL': 'cancelling',
+      'CANCELLED': 'cancelled',
+      'TO_RETURN': 'returning',
+      'COMPLETED': 'completed'
+    };
+
+    return statusMap[shopeeStatus] || 'unknown';
   }
 
   /**

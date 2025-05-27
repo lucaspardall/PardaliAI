@@ -386,6 +386,80 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return newNotification;
   }
+
+  // Métodos para pedidos
+  async createOrder(order: any): Promise<any> {
+    try {
+      const [newOrder] = await db.insert(orders).values(order).returning();
+      return newOrder;
+    } catch (error) {
+      console.error('Erro ao criar pedido:', error);
+      throw error;
+    }
+  }
+
+  async updateOrder(orderId: number, updates: any): Promise<any> {
+    try {
+      const [updatedOrder] = await db
+        .update(orders)
+        .set(updates)
+        .where(eq(orders.id, orderId))
+        .returning();
+      return updatedOrder;
+    } catch (error) {
+      console.error('Erro ao atualizar pedido:', error);
+      throw error;
+    }
+  }
+
+  async getOrderByOrderSn(orderSn: string): Promise<any> {
+    try {
+      const order = await db.query.orders.findFirst({
+        where: eq(orders.orderSn, orderSn)
+      });
+      return order;
+    } catch (error) {
+      console.error('Erro ao buscar pedido por orderSn:', error);
+      throw error;
+    }
+  }
+
+  async getOrdersByStoreId(storeId: number, limit: number = 50, offset: number = 0, status?: string): Promise<any[]> {
+    try {
+      let whereCondition = eq(orders.storeId, storeId);
+
+      if (status) {
+        whereCondition = and(whereCondition, eq(orders.orderStatus, status));
+      }
+
+      const result = await db.query.orders.findMany({
+        where: whereCondition,
+        limit,
+        offset,
+        orderBy: desc(orders.createTime)
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar pedidos por storeId:', error);
+      throw error;
+    }
+  }
+
+  async getProductByStoreIdAndProductId(storeId: number, productId: string): Promise<any> {
+    try {
+      const product = await db.query.products.findFirst({
+        where: and(
+          eq(products.storeId, storeId),
+          eq(products.productId, productId)
+        )
+      });
+      return product;
+    } catch (error) {
+      console.error('Erro ao buscar produto por storeId e productId:', error);
+      throw error;
+    }
+  }
 }
 
 // In-memory storage for development or testing

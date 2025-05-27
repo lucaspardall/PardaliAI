@@ -836,4 +836,184 @@ router.get('/stores/:storeId/metrics', isAuthenticated, async (req: Request, res
   }
 });
 
+/**
+ * Atualizar produtos em lote (preço, estoque, status)
+ */
+router.post('/stores/:storeId/products/batch-update', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+    const { updates } = req.body;
+
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+
+    if (!store) {
+      return res.status(404).json({ message: 'Store not found' });
+    }
+
+    if (store.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    if (!updates || !Array.isArray(updates)) {
+      return res.status(400).json({ message: 'Updates array is required' });
+    }
+
+    // Executar atualizações
+    const { updateStoreProducts } = await import('../shopee/update');
+    const result = await updateStoreProducts(store.id, updates);
+
+    res.json({
+      success: result.success,
+      failed: result.failed,
+      errors: result.errors,
+      message: `${result.success} produtos atualizados com sucesso, ${result.failed} falharam`
+    });
+
+  } catch (error: any) {
+    console.error('Error updating products:', error);
+    res.status(500).json({
+      message: 'Failed to update products',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Gerenciar inventário da loja (monitoramento e otimizações)
+ */
+router.post('/stores/:storeId/inventory/manage', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+
+    if (!store) {
+      return res.status(404).json({ message: 'Store not found' });
+    }
+
+    if (store.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Executar gerenciamento de inventário
+    const { manageStoreInventory } = await import('../shopee/inventory');
+    const result = await manageStoreInventory(store.id);
+
+    res.json({
+      success: true,
+      monitoring: result.monitoringResult,
+      optimizations: result.optimizations,
+      report: result.report,
+      message: 'Gerenciamento de inventário executado com sucesso'
+    });
+
+  } catch (error: any) {
+    console.error('Error managing inventory:', error);
+    res.status(500).json({
+      message: 'Failed to manage inventory',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Buscar pedidos da loja
+ */
+router.get('/stores/:storeId/orders', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+    const { status, limit = 50, offset = 0 } = req.query;
+
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+
+    if (!store) {
+      return res.status(404).json({ message: 'Store not found' });
+    }
+
+    if (store.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Buscar pedidos do banco de dados local
+    const orders = await storage.getOrdersByStoreId(
+      store.id,
+      parseInt(limit as string),
+      parseInt(offset as string),
+      status as string
+    );
+
+    res.json({
+      orders,
+      total: orders.length
+    });
+
+  } catch (error: any) {
+    console.error('Error fetching store orders:', error);
+    res.status(500).json({
+      message: 'Failed to fetch orders',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Aplicar otimizações de preço
+ */
+router.post('/stores/:storeId/inventory/apply-optimizations', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+    const { optimizations } = req.body;
+
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+
+    if (!store) {
+      return res.status(404).json({ message: 'Store not found' });
+    }
+
+    if (store.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    if (!optimizations || !Array.isArray(optimizations)) {
+      return res.status(400).json({ message: 'Optimizations array is required' });
+    }
+
+    // Carregar cliente e aplicar otimizações
+    const { loadShopeeClientForStore } = await import('../shopee/index');
+    const client = await loadShopeeClientForStore(store.shopId);
+
+    if (!client) {
+      return res.status(400).json({ message: 'Failed to load Shopee client' });
+    }
+
+    const { InventoryManager } = await import('../shopee/inventory');
+    const inventoryManager = new InventoryManager(client, store.id);
+    
+    const result = await inventoryManager.applyPriceOptimizations(optimizations);
+
+    res.json({
+      success: true,
+      applied: result.applied,
+      failed: result.failed,
+      errors: result.errors,
+      message: `${result.applied} otimizações aplicadas com sucesso`
+    });
+
+  } catch (error: any) {
+    console.error('Error applying price optimizations:', error);
+    res.status(500).json({
+      message: 'Failed to apply optimizations',
+      error: error.message
+    });
+  }
+});
+
 export default router;

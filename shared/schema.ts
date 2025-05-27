@@ -9,7 +9,8 @@ import {
   real,
   boolean,
   serial,
-  uniqueIndex
+  uniqueIndex,
+  decimal
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -170,3 +171,36 @@ export type AiRequest = typeof aiRequests.$inferSelect;
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true });
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
+
+// Schema para pedidos
+export const orders = pgTable('orders', {
+  id: serial('id').primaryKey(),
+  storeId: integer('store_id').notNull().references(() => shopeeStores.id, { onDelete: "cascade" }),
+  orderSn: varchar('order_sn', { length: 255 }).notNull().unique(),
+  orderStatus: varchar('order_status', { length: 50 }).notNull(),
+  totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
+  currency: varchar('currency', { length: 10 }).default('BRL'),
+  paymentMethod: varchar('payment_method', { length: 100 }),
+  shippingCarrier: varchar('shipping_carrier', { length: 100 }),
+  trackingNumber: varchar('tracking_number', { length: 255 }),
+  createTime: timestamp('create_time').notNull(),
+  updateTime: timestamp('update_time').notNull(),
+  buyerUsername: varchar('buyer_username', { length: 255 }),
+  recipientAddress: text('recipient_address'),
+  items: jsonb('items').$type<any[]>(),
+  lastSyncAt: timestamp('last_sync_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+// Exportar esquemas
+export {
+  users,
+  notifications,
+  shopeeStores,
+  products,
+  storeMetrics,
+  productOptimizations,
+  aiRequests,
+  orders
+};
