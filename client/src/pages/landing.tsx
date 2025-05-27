@@ -18,14 +18,15 @@ export default function Landing() {
   return (
     <>
       <Helmet>
-        <title>CIP Shopee - Otimização Inteligente para Lojas Shopee</title>
+        <title>CIP Shopee - Otimização Inteligente para Vendedores Shopee</title>
         <meta 
           name="description" 
-          content="Impulsione suas vendas na Shopee com Inteligência Artificial. Otimize produtos e alcance mais clientes automaticamente."
+          content="Transforme sua loja Shopee com nossa IA! Otimize títulos, descrições e palavras-chave automaticamente. Aumente suas vendas e visibilidade na plataforma."
         />
-        <meta property="og:title" content="CIP Shopee - Otimização para Lojas Shopee" />
-        <meta property="og:description" content="Impulsione suas vendas na Shopee com IA. Plataforma completa para análise e otimização de produtos." />
+        <meta property="og:title" content="CIP Shopee - IA para Otimização de Produtos Shopee" />
+        <meta property="og:description" content="Plataforma de IA que otimiza automaticamente seus produtos na Shopee. Aumente vendas, melhore rankings e maximize resultados." />
         <meta property="og:type" content="website" />
+        <meta name="keywords" content="shopee, otimização, IA, vendas, produtos, e-commerce, marketplace" />
       </Helmet>
       <LandingLayout>
         <HeroSection />

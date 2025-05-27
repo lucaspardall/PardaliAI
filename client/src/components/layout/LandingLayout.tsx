@@ -39,29 +39,50 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             <span className="font-bold text-xl">ShopeeOptimizer</span>
           </div>
 
+          <div className="hidden md:flex items-center space-x-8">
+            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
+              Recursos
+            </a>
+            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
+              Preços
+            </a>
+            <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
+              Depoimentos
+            </a>
+            <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
+              Sobre
+            </a>
+          </div>
+
           <div className="flex items-center space-x-4">
-            {/* Theme Toggle */}
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10"
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              className="rounded-full"
             >
               <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               <span className="sr-only">Toggle theme</span>
-            </button>
+            </Button>
 
-            {/* Auth Buttons */}
             {!isAuthenticated ? (
-              <Button asChild>
-                <Link href="/login">Entrar</Link>
-              </Button>
-            ) : (
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Bem-vindo!</span>
-                <Button asChild variant="outline">
-                  <Link href="/dashboard">Dashboard</Link>
-                </Button>
+                <Link href="/login">
+                  <Button variant="ghost" className="font-medium">Entrar</Button>
+                </Link>
+                <Link href="/login">
+                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 font-medium">
+                    Começar Grátis
+                  </Button>
+                </Link>
               </div>
+            ) : (
+              <Link href="/dashboard">
+                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 font-medium">
+                  Ir para Dashboard
+                </Button>
+              </Link>
             )}
           </div>
         </nav>
