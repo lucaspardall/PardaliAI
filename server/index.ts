@@ -72,34 +72,18 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // Configuração de porta adaptada para funcionar tanto em desenvolvimento quanto em deploy
+    // Configuração de porta para Cloud Run deployment
     const port = process.env.PORT || 5000;
-    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
-
-    // Tentar portas alternativas se a primeira estiver ocupada
-    function tryConnect(currentPort: number) {
-      server.listen({
-        port: currentPort,
-        host: "0.0.0.0",
-      }, () => {
-        log(`serving on port ${currentPort}`);
-      }).on('error', (err: any) => {
-        log(`Erro na porta ${currentPort}: ${err.message}`);
-
-        if (err.code === 'EADDRINUSE' && currentPort < 5010) {
-          // Tentar próxima porta
-          const nextPort = currentPort + 1;
-          log(`Porta ${currentPort} está em uso, tentando porta ${nextPort}...`);
-          tryConnect(nextPort);
-        } else {
-          log(`Erro não recuperável no servidor: ${err.message}`);
-          throw err;
-        }
-      });
-    }
-
-    // Iniciar com a porta configurada
-    tryConnect(port);
+    
+    server.listen({
+      port: port,
+      host: "0.0.0.0",
+    }, () => {
+      log(`serving on port ${port}`);
+    }).on('error', (err: any) => {
+      log(`Erro no servidor: ${err.message}`);
+      throw err;
+    });
   } catch (err) {
     console.error("Erro na inicialização do servidor:", err);
     process.exit(1);

@@ -19,23 +19,38 @@ import Reports from "@/pages/dashboard/reports";
 import React, { Suspense } from 'react';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  // Usar window.location para redirecionamento simples sem hooks condicionais
+  const [isChecking, setIsChecking] = React.useState(true);
+  const [isAuthed, setIsAuthed] = React.useState(false);
+
   React.useEffect(() => {
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/user');
-        if (!response.ok) {
+        if (response.ok) {
+          setIsAuthed(true);
+        } else {
           window.location.href = '/';
+          return;
         }
       } catch (error) {
         window.location.href = '/';
+        return;
       }
+      setIsChecking(false);
     };
     
     checkAuth();
   }, []);
 
-  return <>{children}</>;
+  if (isChecking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  return isAuthed ? <>{children}</> : null;
 }
 
 function Router() {
