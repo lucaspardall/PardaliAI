@@ -2,9 +2,15 @@
 import Stripe from 'stripe';
 import { storage } from '../storage';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-11-20.acacia',
-});
+// Verificar se a chave do Stripe está configurada
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey || stripeSecretKey === 'sk_test_your_secret_key_here') {
+  console.warn('⚠️ Stripe não configurado. Configure STRIPE_SECRET_KEY no arquivo .env para usar funcionalidades de pagamento.');
+}
+
+const stripe = stripeSecretKey && stripeSecretKey !== 'sk_test_your_secret_key_here' 
+  ? new Stripe(stripeSecretKey, { apiVersion: '2024-11-20.acacia' })
+  : null;
 
 export interface PlanPrice {
   monthly: string;
@@ -67,6 +73,10 @@ export class PaymentService {
     successUrl: string,
     cancelUrl: string
   ) {
+    if (!stripe) {
+      throw new Error('Stripe não configurado. Configure as chaves da API no arquivo .env');
+    }
+
     const plan = PAYMENT_PLANS[planId];
     if (!plan) {
       throw new Error('Plano inválido');
@@ -105,6 +115,10 @@ export class PaymentService {
    * Criar portal do cliente para gerenciar assinatura
    */
   static async createCustomerPortal(customerId: string, returnUrl: string) {
+    if (!stripe) {
+      throw new Error('Stripe não configurado. Configure as chaves da API no arquivo .env');
+    }
+
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
@@ -117,6 +131,10 @@ export class PaymentService {
    * Processar webhook do Stripe
    */
   static async handleWebhook(body: string, signature: string) {
+    if (!stripe) {
+      throw new Error('Stripe não configurado. Configure as chaves da API no arquivo .env');
+    }
+
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret) {
       throw new Error('Webhook secret não configurado');
@@ -350,6 +368,11 @@ export class PaymentService {
    * Buscar informações da assinatura
    */
   static async getSubscriptionInfo(subscriptionId: string) {
+    if (!stripe) {
+      console.warn('Stripe não configurado');
+      return null;
+    }
+
     try {
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       return subscription;
@@ -363,6 +386,10 @@ export class PaymentService {
    * Cancelar assinatura
    */
   static async cancelSubscription(subscriptionId: string, immediately = false) {
+    if (!stripe) {
+      throw new Error('Stripe não configurado. Configure as chaves da API no arquivo .env');
+    }
+
     try {
       if (immediately) {
         return await stripe.subscriptions.cancel(subscriptionId);
