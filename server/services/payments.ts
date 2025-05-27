@@ -4,12 +4,14 @@ import { storage } from '../storage';
 
 // Verificar se a chave do Stripe está configurada
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-if (!stripeSecretKey || stripeSecretKey === 'sk_test_your_secret_key_here') {
+const isStripeConfigured = stripeSecretKey && stripeSecretKey.startsWith('sk_');
+
+if (!isStripeConfigured) {
   console.warn('⚠️ Stripe não configurado. Configure STRIPE_SECRET_KEY no arquivo .env para usar funcionalidades de pagamento.');
 }
 
-const stripe = stripeSecretKey && stripeSecretKey !== 'sk_test_your_secret_key_here' 
-  ? new Stripe(stripeSecretKey, { apiVersion: '2024-11-20.acacia' })
+const stripe = isStripeConfigured 
+  ? new Stripe(stripeSecretKey!, { apiVersion: '2024-11-20.acacia' })
   : null;
 
 export interface PlanPrice {

@@ -89,6 +89,14 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private db: PostgresJsDatabase<typeof schema> | null = null;
+
+  private async getDb() {
+    if (!this.db) {
+      this.db = await connectWithRetry();
+    }
+    return this.db;
+  }
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -929,7 +937,7 @@ export class MemStorage implements IStorage {
   async getNotificationsByUserId(userId: string, limit = 10): Promise<Notification[]> {
     return Array.from(this.notifications.values())
       .filter(notification => notification.userId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
   }
 
