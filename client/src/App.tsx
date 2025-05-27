@@ -81,6 +81,19 @@ function AppContent() {
     }
   }, [isAuthenticated, isLoading, location, setLocation]);
 
+  // Handle Cloudflare Turnstile errors
+  useEffect(() => {
+    const handleGlobalError = (event: ErrorEvent) => {
+      if (event.error && event.error.toString().includes('Turnstile')) {
+        console.warn('Cloudflare Turnstile error detected, ignoring:', event.error);
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('error', handleGlobalError);
+    return () => window.removeEventListener('error', handleGlobalError);
+  }, []);
+
   if (isLoading) {
     return <Loading />;
   }
