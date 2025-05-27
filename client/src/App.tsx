@@ -2,6 +2,7 @@ import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
+import { clerkConfig } from "./lib/clerk";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -127,10 +128,26 @@ function Router() {
 }
 
 function App() {
-  const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_your_publishable_key_here';
+  if (!clerkConfig.isConfigured) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-red-50">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+          <h1 className="text-xl font-bold text-red-600 mb-4">Configuração Necessária</h1>
+          <p className="text-gray-600 mb-4">
+            {clerkConfig.errorMessage}
+          </p>
+          <div className="text-sm text-gray-500 space-y-2">
+            <p>1. Vá em Secrets → Add Secret</p>
+            <p>2. Nome: VITE_CLERK_PUBLISHABLE_KEY</p>
+            <p>3. Valor: sua chave do Clerk Dashboard</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <ClerkProvider publishableKey={clerkPubKey}>
+    <ClerkProvider publishableKey={clerkConfig.publishableKey}>
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
           <ThemeProvider defaultTheme="light" storageKey="cip-shopee-theme">

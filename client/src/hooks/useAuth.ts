@@ -37,6 +37,10 @@ async function fetchUserData(): Promise<User | null> {
     return await response.json();
   } catch (error) {
     console.error('Erro ao buscar dados do usuário:', error);
+    // Se for erro de autenticação, não logar como erro
+    if (error instanceof Error && error.message.includes('401')) {
+      return null;
+    }
     return null;
   }
 }

@@ -10,8 +10,14 @@ export function setupAuth(app: Express) {
 
 export function setupClerkAuth(app: Express) {
   // Verificar se as chaves do Clerk estão configuradas
-  if (!process.env.CLERK_SECRET_KEY || !process.env.VITE_CLERK_PUBLISHABLE_KEY) {
-    console.error('⚠️ Clerk não configurado. Configure CLERK_SECRET_KEY e VITE_CLERK_PUBLISHABLE_KEY nos Secrets do Replit');
+  if (!process.env.CLERK_SECRET_KEY) {
+    console.error('⚠️ Clerk não configurado. Configure CLERK_SECRET_KEY nos Secrets do Replit');
+    console.error('Acesse: https://dashboard.clerk.com para obter suas chaves');
+    return;
+  }
+
+  if (!process.env.VITE_CLERK_PUBLISHABLE_KEY) {
+    console.error('⚠️ Configure VITE_CLERK_PUBLISHABLE_KEY nos Secrets do Replit');
     return;
   }
 
