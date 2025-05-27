@@ -51,15 +51,21 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             </Button>
 
             {isLoading ? (
-              <div className="h-10 w-24 bg-muted animate-pulse rounded-lg"></div>
+              <div className="h-10 w-24 bg-muted/50 rounded-md animate-pulse"></div>
             ) : isAuthenticated ? (
-              <Button asChild>
-                <Link href="/dashboard">Dashboard</Link>
+              <Button asChild className="bg-primary hover:bg-primary/90">
+                <Link href="/dashboard">
+                  <i className="ri-dashboard-line mr-2"></i>
+                  Dashboard
+                </Link>
               </Button>
             ) : (
-              <Button asChild>
-                <a href="/api/login">Comece grátis</a>
-              </Button>
+              <SignInButton mode="modal">
+                <Button className="bg-primary hover:bg-primary/90">
+                  <i className="ri-gift-line mr-2"></i>
+                  Começar Grátis
+                </Button>
+              </SignInButton>
             )}
           </div>
 

@@ -16,17 +16,34 @@ export default function CTASection() {
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-3xl font-bold text-white mb-6 font-heading">
-            Comece hoje e veja resultados em 72 horas
+            Experimente grátis por 7 dias e veja resultados em 72 horas
           </h2>
-          <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-white/80 mb-4 max-w-3xl mx-auto">
             Mais de 500 vendedores já aumentaram suas vendas em 27%. Configure sua loja em minutos e otimize automaticamente.
           </p>
+          <div className="flex justify-center mb-8">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div className="flex items-center gap-4 text-white text-sm">
+                <div className="flex items-center gap-2">
+                  <i className="ri-check-line text-green-400"></i>
+                  <span>7 dias grátis</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <i className="ri-check-line text-green-400"></i>
+                  <span>Sem cartão de crédito</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <i className="ri-check-line text-green-400"></i>
+                  <span>Cancele quando quiser</span>
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="flex justify-center">
             {isAuthenticated ? (
               <Button 
                 size="lg" 
-                variant="secondary" 
-                className="bg-white text-primary hover:bg-primary-50 px-8"
+                className="bg-white text-primary hover:bg-white/90 px-8 shadow-lg"
                 asChild
               >
                 <a href="/dashboard">Acessar Dashboard</a>
@@ -35,10 +52,9 @@ export default function CTASection() {
               <SignInButton mode="modal">
                 <Button 
                   size="lg" 
-                  variant="secondary" 
-                  className="bg-white text-primary hover:bg-primary-50 px-8"
+                  className="bg-white text-primary hover:bg-white/90 px-8 shadow-lg"
                 >
-                  Começar agora
+                  🎯 Teste Grátis por 7 Dias
                 </Button>
               </SignInButton>
             )}

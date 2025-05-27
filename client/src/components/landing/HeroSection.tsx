@@ -22,9 +22,18 @@ export default function HeroSection() {
             <h1 className="text-4xl md:text-5xl font-bold mb-4 font-heading">
               Aumente suas vendas na Shopee em até 45% com IA
             </h1>
-            <p className="text-xl mb-8 text-gray-300">
+            <p className="text-xl mb-4 text-gray-300">
               Otimize títulos, descrições e performance automaticamente. Mais de 500 vendedores já aumentaram suas conversões e visibilidade.
             </p>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-8 border border-white/20">
+              <div className="flex items-center justify-center gap-3 text-white">
+                <i className="ri-gift-line text-2xl text-yellow-400"></i>
+                <div>
+                  <p className="font-semibold">Período de teste GRATUITO por 7 dias</p>
+                  <p className="text-sm text-gray-300">Sem compromisso • Cancele quando quiser</p>
+                </div>
+              </div>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4">
               {isLoading ? (
                 <div className="h-12 w-40 bg-white/10 rounded-lg animate-pulse"></div>
@@ -37,13 +46,13 @@ export default function HeroSection() {
               ) : (
                 <div className="flex flex-col sm:flex-row gap-4">
                   <SignInButton mode="modal">
-                    <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0">
-                      Começar Agora
+                    <Button size="lg" className="bg-primary hover:bg-primary/90 text-white border-0 shadow-lg">
+                      🚀 Começar Grátis
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </SignInButton>
 
-                  <Button asChild variant="outline" size="lg" className="bg-white/10 border-white/20 hover:bg-white/20">
+                  <Button asChild variant="outline" size="lg" className="bg-white/10 border-white/20 hover:bg-white/20 text-white">
                     <a href="#features">
                       Ver recursos
                     </a>
