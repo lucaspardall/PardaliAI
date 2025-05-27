@@ -172,6 +172,10 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 
+export const insertOrderSchema = createInsertSchema(orders).omit({ id: true });
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;
+
 // Schema para pedidos
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
@@ -191,16 +195,12 @@ export const orders = pgTable('orders', {
   lastSyncAt: timestamp('last_sync_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
+}, (table) => {
+  return [
+    index("idx_orders_store_status").on(table.storeId, table.orderStatus),
+    index("idx_orders_create_time").on(table.createTime),
+    index("idx_orders_tracking").on(table.trackingNumber)
+  ];
 });
 
-// Exportar esquemas
-export {
-  users,
-  notifications,
-  shopeeStores,
-  products,
-  storeMetrics,
-  productOptimizations,
-  aiRequests,
-  orders
-};
+// Schemas já exportados individualmente acima
