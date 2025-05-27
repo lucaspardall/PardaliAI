@@ -186,7 +186,10 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     }
 
     // Modo normal: redirecionar diretamente para a URL de autorização
-    console.log(`Redirecionando para autorização oficial Shopee: ${authUrl.substring(0, 100)}...`);
+    console.log(`🚀 Redirecionando para autorização OAuth da Shopee...`);
+    console.log(`📋 URL completa: ${authUrl}`);
+    console.log(`ℹ️  NOTA: Status 302 é normal - indica redirecionamento para login da Shopee`);
+    
     return res.redirect(authUrl);
 
   } catch (error: any) {
@@ -219,17 +222,16 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
       const errorCode = req.query.errcode || req.query.error || '';
       const errorMsg = req.query.errMsg || req.query.message || 'Erro desconhecido';
 
-      console.error('Erro retornado pela Shopee:', {
+      console.error('❌ Erro retornado pela Shopee:', {
         error: req.query.error,
         errcode: errorCode,
         message: errorMsg
       });
 
-      // Log adicional para depuração de redirecionamento
-      console.log('Detalhes completos da requisição:', {
+      // Log adicional para depuração
+      console.log('📋 Detalhes completos da requisição:', {
         method: req.method,
         url: req.url,
-        headers: req.headers,
         query: req.query
       });
 
@@ -253,12 +255,13 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     const { code, shop_id } = req.query;
 
     if (!code || !shop_id) {
-      console.error('Parâmetros obrigatórios ausentes na callback da Shopee:', req.query);
+      console.error('❌ Parâmetros obrigatórios ausentes na callback da Shopee:', req.query);
       return res.redirect('/dashboard?status=error&message=Parâmetros obrigatórios ausentes na resposta da Shopee');
     }
 
-    console.log(`Código recebido: ${code}`);
-    console.log(`ID da loja: ${shop_id}`);
+    console.log(`✅ Código de autorização recebido: ${code}`);
+    console.log(`🏪 ID da loja: ${shop_id}`);
+    console.log(`🔄 Iniciando troca de código por tokens de acesso...`);
 
     // Configuração da integração Shopee
     const config = {

@@ -43,7 +43,7 @@ export class ShopeeAuthManager {
 
     const state = `cipshopee_${Date.now()}`;
 
-    // Construir URL com parâmetros
+    // Construir URL com parâmetros corretos
     const params = new URLSearchParams({
       partner_id: this.config.partnerId,
       timestamp: timestamp.toString(),
@@ -54,7 +54,8 @@ export class ShopeeAuthManager {
 
     const authUrl = `${baseUrl}${path}?${params.toString()}`;
 
-    console.log('URL de autorização gerada:', authUrl);
+    console.log('✅ URL de autorização OAuth gerada com sucesso:', authUrl);
+    console.log('🔄 Status 302 é esperado - indica redirecionamento para login da Shopee');
 
     return authUrl;
   }
