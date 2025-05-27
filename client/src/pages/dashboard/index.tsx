@@ -9,6 +9,7 @@ import PerformanceChart from "@/components/dashboard/PerformanceChart";
 import ProductList from "@/components/dashboard/ProductList";
 import OptimizationItem from "@/components/dashboard/OptimizationItem";
 import ConnectStore from "@/components/dashboard/ConnectStore";
+import InsightsSection from "@/components/dashboard/InsightsSection";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +22,7 @@ import { toast } from "@/hooks/use-toast";
 export default function Dashboard() {
   const { user } = useAuth();
   const [activeStore, setActiveStore] = useState<number | null>(null);
+  const [period, setPeriod] = useState<string>('7');
 
   const queryClient = useQueryClient();
 
@@ -74,7 +76,7 @@ export default function Dashboard() {
 
   // Fetch store metrics if a store is selected
   const { data: storeMetrics, isLoading: metricsLoading } = useQuery({
-    queryKey: [activeStore ? `/api/stores/${activeStore}/metrics` : null],
+    queryKey: [activeStore ? `/api/stores/${activeStore}/metrics?days=${period}` : null],
     enabled: !!activeStore,
   });
 
@@ -140,6 +142,27 @@ export default function Dashboard() {
             <p className="text-muted-foreground mt-1">
               Visão geral das suas lojas e produtos na Shopee
             </p>
+          </div>
+          
+          {/* Period Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Período:</span>
+            <div className="flex gap-1">
+              {[
+                { value: '7', label: '7d' },
+                { value: '30', label: '30d' },
+                { value: '90', label: '90d' }
+              ].map((option) => (
+                <Button
+                  key={option.value}
+                  variant={period === option.value ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setPeriod(option.value)}
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
           </div>
           
           {activeStore && (
@@ -303,6 +326,11 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* AI Insights Section */}
+        {activeStore && (
+          <InsightsSection storeId={activeStore} />
+        )}
 
         {/* AI Credits Info */}
         <Card>

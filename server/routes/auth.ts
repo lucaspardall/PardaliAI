@@ -62,4 +62,29 @@ router.get('/health', (req: Request, res: Response) => {
   });
 });
 
+// Notification Service Functions
+export async function createNotification(userId: string, title: string, message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') {
+  try {
+    await storage.createNotification({
+      userId,
+      title,
+      message,
+      type,
+      isRead: false,
+      createdAt: new Date()
+    });
+  } catch (error) {
+    console.error('Error creating notification:', error);
+  }
+}
+
+export async function createSystemInsight(userId: string, insight: string, actionSuggestion?: string) {
+  await createNotification(
+    userId,
+    'Insight da IA',
+    `${insight}${actionSuggestion ? ` Sugestão: ${actionSuggestion}` : ''}`,
+    'info'
+  );
+}
+
 export default router;

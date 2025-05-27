@@ -966,6 +966,88 @@ router.get('/stores/:storeId/orders', isAuthenticated, async (req: Request, res:
 });
 
 /**
+ * Processar insights automáticos para uma loja
+ */
+router.post('/stores/:storeId/insights/process', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+
+    if (!store) {
+      return res.status(404).json({ message: 'Store not found' });
+    }
+
+    if (store.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Processar insights
+    const { aiInsights } = await import('../ai/insights');
+    await aiInsights.processInsightsForUser(userId, store.id);
+
+    res.json({
+      success: true,
+      message: 'Insights processados com sucesso'
+    });
+
+  } catch (error: any) {
+    console.error('Error processing insights:', error);
+    res.status(500).json({
+      message: 'Failed to process insights',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Buscar insights de uma loja
+ */
+router.get('/stores/:storeId/insights', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const userId = (req.user as any).claims.sub;
+
+    // Verificar se a loja existe e pertence ao usuário
+    const store = await storage.getStoreById(parseInt(storeId));
+
+    if (!store) {
+      return res.status(404).json({ message: 'Store not found' });
+    }
+
+    if (store.userId !== userId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Gerar insights
+    const { aiInsights } = await import('../ai/insights');
+    const [productInsights, storeInsights] = await Promise.all([
+      aiInsights.generateProductInsights(store.id),
+      aiInsights.generateStoreInsights(store.id)
+    ]);
+
+    res.json({
+      productInsights,
+      storeInsights,
+      summary: {
+        totalInsights: productInsights.length + storeInsights.length,
+        highPriority: productInsights.filter(i => i.severity === 'high').length,
+        actionRequired: productInsights.filter(i => i.actionSuggestion).length
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Error fetching insights:', error);
+    res.status(500).json({
+      message: 'Failed to fetch insights',
+      error: error.message
+    });
+  }
+});
+
+/**
  * Aplicar otimizações de preço
  */
 router.post('/stores/:storeId/inventory/apply-optimizations', isAuthenticated, async (req: Request, res: Response) => {
