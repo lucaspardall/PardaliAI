@@ -11,7 +11,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { formatDate } from '@/lib/utils/formatters';
 import { useAuth } from '@/hooks/useAuth';
 import SidebarLayout from '@/components/layout/SidebarLayout';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
 interface CreditHistoryItem {
