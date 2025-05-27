@@ -1,3 +1,4 @@
+
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -15,8 +16,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   await setupAuth(app);
 
-
-
   // Register Shopee routes
   app.use('/api/shopee', shopeeRoutes);
   app.use('/api/webhook', webhookRoutes);
@@ -26,22 +25,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.use('/api/test', webhookTestRoutes);
   }
 
-  // Auth endpoints
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
-
   // Store endpoints
   app.get('/api/stores', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.auth.userId;
       const stores = await storage.getStoresByUserId(userId);
       res.json(stores);
     } catch (error) {
@@ -60,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      if (store.userId !== req.user.claims.sub) {
+      if (store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to access this store" });
       }
 
@@ -73,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/stores', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.auth.userId;
       const userData = await storage.getUser(userId);
 
       // Check store limit
@@ -117,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      if (store.userId !== req.user.claims.sub) {
+      if (store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to update this store" });
       }
 
@@ -139,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      if (store.userId !== req.user.claims.sub) {
+      if (store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to delete this store" });
       }
 
@@ -162,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      if (store.userId !== req.user.claims.sub) {
+      if (store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to access this store's products" });
       }
 
@@ -188,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== req.user.claims.sub) {
+      if (!store || store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to access this product" });
       }
 
@@ -209,7 +196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      if (store.userId !== req.user.claims.sub) {
+      if (store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to add products to this store" });
       }
 
@@ -251,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== req.user.claims.sub) {
+      if (!store || store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to update this product" });
       }
 
@@ -274,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== req.user.claims.sub) {
+      if (!store || store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to delete this product" });
       }
 
@@ -295,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Optimization endpoints
   app.post('/api/products/:id/optimize', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.auth.userId;
       const productId = parseInt(req.params.id);
 
       // Check user AI credits
@@ -361,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== req.user.claims.sub) {
+      if (!store || store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to access this product's optimizations" });
       }
 
@@ -376,7 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all optimizations for user
   app.get('/api/optimizations', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.auth.userId;
       const optimizations = await storage.getAllOptimizationsByUserId(userId);
       res.json(optimizations);
     } catch (error) {
@@ -388,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get AI credits history
   app.get('/api/ai-credits/history', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.auth.userId;
       const limit = req.query.limit ? parseInt(req.query.limit) : 50;
       const offset = req.query.offset ? parseInt(req.query.offset) : 0;
 
@@ -403,7 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get AI usage analytics
   app.get('/api/ai-credits/analytics', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.auth.userId;
       const days = req.query.days ? parseInt(req.query.days) : 30;
 
       const analytics = await storage.getAiUsageAnalytics(userId, days);
@@ -417,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get reports data
   app.get('/api/reports', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.auth.userId;
       const range = req.query.range || '30d';
 
       // For now, return mock data - in real implementation, this would query actual analytics
@@ -440,7 +427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Export reports
   app.get('/api/reports/export', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.auth.userId;
       const format = req.query.format || 'csv';
       const range = req.query.range || '30d';
 
@@ -482,7 +469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== req.user.claims.sub) {
+      if (!store || store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to update this optimization" });
       }
 
@@ -527,7 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      if (store.userId !== req.user.claims.sub) {
+      if (store.userId !== req.auth.userId) {
         return res.status(403).json({ message: "Not authorized to access this store's metrics" });
       }
 
@@ -549,7 +536,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User subscription endpoint
   app.put('/api/users/plan', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.auth.userId;
       const { plan } = req.body;
 
       if (!plan || !['free', 'starter', 'pro', 'enterprise'].includes(plan)) {
@@ -600,7 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notification endpoints
   app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.auth.userId;
       const limit = req.query.limit ? parseInt(req.query.limit) : 10;
 
       const notifications = await storage.getNotificationsByUserId(userId, limit);
@@ -630,11 +617,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.use('/api/auth', authRouter);
 
-  // Shopee routes (já configurado acima)
-  // app.use('/api/shopee', shopeeRoutes);
-
   // Payment routes
   app.use('/api/payments', paymentsRouter);
+  
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;

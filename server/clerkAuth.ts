@@ -4,6 +4,10 @@ import type { Express, RequestHandler } from "express";
 import { storage } from "./storage";
 import { User } from "@shared/schema";
 
+export function setupAuth(app: Express) {
+  return setupClerkAuth(app);
+}
+
 export function setupClerkAuth(app: Express) {
   // Middleware do Clerk
   app.use(clerkMiddleware({
