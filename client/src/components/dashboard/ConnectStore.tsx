@@ -1,7 +1,4 @@
-The user wants to add a test button for production connections if stores are already connected, modifying the ConnectStore component.
-```
 
-```replit_final_file
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -197,6 +194,41 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
           </div>
         </div>
 
+        {/* Test production connection button for existing stores */}
+        <div className="mt-6">
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <i className="ri-test-tube-line text-blue-600"></i>
+                Testar Conexão de Produção
+              </CardTitle>
+              <CardDescription>
+                Teste a conexão real com a API da Shopee usando credenciais de produção.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => handleConnectOAuth('production')} 
+                disabled={isConnecting || connectStoreMutation.isPending}
+                className="w-full"
+                variant="outline"
+              >
+                {(isConnecting || connectStoreMutation.isPending) ? (
+                  <>
+                    <i className="ri-loader-2-line animate-spin mr-2"></i>
+                    Testando conexão...
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-shopee-line mr-2"></i>
+                    Testar Conexão de Produção
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Add more stores if limit not reached */}
         {!hasReachedStoreLimit && (
           <div className="mt-6">
@@ -389,5 +421,3 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
     </Card>
   );
 }
-```The user wants to add a test button for production connections if stores are already connected, modifying the ConnectStore component.
-`
