@@ -64,13 +64,17 @@ export class ShopeeAuthManager {
    * Troca código de autorização por tokens de acesso
    */
   async getAccessToken(code: string, shopId: string): Promise<ShopeeAuthTokens> {
+    console.log(`[getAccessToken] Iniciando troca de código por tokens...`);
+    console.log(`[getAccessToken] Shop ID: ${shopId}`);
+    console.log(`[getAccessToken] Code: ${code.substring(0, 10)}...`);
+
     const timestamp = getTimestamp();
     const baseUrl = getApiBaseUrl(this.config.region);
     const path = '/api/v2/auth/token/get';
 
-    // Dados para troca de tokens
+    // Dados da requisição
     const requestBody = {
-      code,
+      code: code,
       shop_id: parseInt(shopId),
       partner_id: parseInt(this.config.partnerId)
     };
@@ -199,8 +203,95 @@ export function getAuthorizationUrl(config: ShopeeAuthConfig): string {
  * Função de conveniência para obter tokens de acesso
  */
 export async function getAccessToken(config: ShopeeAuthConfig, code: string, shopId: string): Promise<ShopeeAuthTokens> {
-  const authManager = new ShopeeAuthManager(config);
-  return authManager.getAccessToken(code, shopId);
+  console.log(`[getAccessToken] Iniciando troca de código por tokens...`);
+  console.log(`[getAccessToken] Shop ID: ${shopId}`);
+  console.log(`[getAccessToken] Code: ${code.substring(0, 10)}...`);
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const path = '/api/v2/auth/token/get';
+
+  // Dados da requisição
+  const requestData = {
+    code: code,
+    shop_id: parseInt(shopId),
+    partner_id: parseInt(config.partnerId)
+  };
+
+  // String base para assinatura (sem access_token na primeira chamada)
+  const baseString = `${config.partnerId}${path}${timestamp}`;
+  console.log(`[getAccessToken] Base string: ${baseString}`);
+
+  // Gerar assinatura
+  const signature = crypto.createHmac('sha256', this.config.partnerKey).update(baseString).digest('hex');
+  console.log(`[getAccessToken] Signature gerada`);
+
+  // Parâmetros da query
+  const queryParams = new URLSearchParams({
+    partner_id: this.config.partnerId,
+    timestamp: timestamp.toString(),
+    sign: signature
+  });
+
+  const fullUrl = `https://partner.shopeemobile.com${path}?${queryParams.toString()}`;
+  console.log(`[getAccessToken] URL: ${fullUrl}`);
+
+  try {
+    console.log(`[getAccessToken] Enviando requisição...`);
+
+    // Usar fetch para evitar problemas de referência circular
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'CIP-Shopee-Auth/1.0'
+      },
+      body: JSON.stringify(requestData)
+    });
+
+    console.log(`[getAccessToken] Status: ${response.status}`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[getAccessToken] HTTP Error:`, {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    const responseData = await response.json();
+
+    console.log(`[getAccessToken] Resposta recebida:`, {
+      hasAccessToken: !!responseData.access_token,
+      hasRefreshToken: !!responseData.refresh_token,
+      expiresIn: responseData.expire_in
+    });
+
+    if (responseData.error) {
+      throw new Error(`Shopee API Error: ${responseData.error} - ${responseData.message || 'Unknown error'}`);
+    }
+
+    if (!responseData.access_token) {
+      throw new Error('Access token not received from Shopee API');
+    }
+
+    // Calcular data de expiração
+    const expiresIn = responseData.expire_in || 3600; // 1 hora por padrão
+    const expiresAt = new Date(Date.now() + expiresIn * 1000);
+
+    console.log(`[getAccessToken] ✅ Tokens obtidos com sucesso!`);
+
+    return {
+      accessToken: responseData.access_token,
+      refreshToken: responseData.refresh_token || '',
+      expiresAt
+    };
+
+  } catch (error: any) {
+    console.error(`[getAccessToken] ❌ Erro:`, error.message);
+    throw error;
+  }
 }
 
 /**
