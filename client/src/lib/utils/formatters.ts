@@ -1,45 +1,75 @@
 /**
  * Format number as currency
  */
-export function formatCurrency(value: number): string {
+export const formatCurrency = (value: number | string | null | undefined): string => {
+  if (value === null || value === undefined || value === '') return 'R$ 0,00';
+
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(numValue)) return 'R$ 0,00';
+
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: 'BRL'
-  }).format(value);
-}
+    currency: 'BRL',
+  }).format(numValue);
+};
 
 /**
  * Format number with thousand separators
  */
-export function formatNumber(value: number): string {
-  return new Intl.NumberFormat('pt-BR').format(value);
-}
+export const formatNumber = (value: number | string | null | undefined): string => {
+  if (value === null || value === undefined || value === '') return '0';
+
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(numValue)) return '0';
+
+  return new Intl.NumberFormat('pt-BR').format(numValue);
+};
 
 /**
  * Format percentage
  */
-export function formatPercentage(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'percent',
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1
-  }).format(value / 100);
-}
+export const formatPercentage = (value: number | string | null | undefined): string => {
+  if (value === null || value === undefined || value === '') return '0%';
+
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(numValue)) return '0%';
+
+  return `${numValue.toFixed(1)}%`;
+};
 
 /**
  * Format CTR (click-through rate)
  */
-export function formatCTR(value: number | null | undefined): string {
-  if (value === null || value === undefined) return '-';
-  return `${value.toFixed(1)}%`;
-}
+export const formatCTR = (value: number | string | null | undefined): string => {
+  if (value === null || value === undefined || value === '') return '0,00%';
+
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(numValue)) return '0,00%';
+
+  return `${numValue.toFixed(2).replace('.', ',')}%`;
+};
 
 /**
  * Format date
  */
-export function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('pt-BR');
-}
+export const formatDate = (date: string | Date | null | undefined): string => {
+  if (!date) return 'Data não disponível';
+
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) return 'Data inválida';
+
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(dateObj);
+  } catch {
+    return 'Data inválida';
+  }
+};
 
 /**
  * Format date with time

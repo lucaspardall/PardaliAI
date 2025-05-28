@@ -1,4 +1,3 @@
-
 import { clerkMiddleware, requireAuth } from '@clerk/express';
 import type { Express, RequestHandler } from "express";
 import { storage } from "./storage";
@@ -31,7 +30,7 @@ export function setupClerkAuth(app: Express) {
   app.get('/api/auth/user', requireAuth(), async (req: any, res) => {
     try {
       const { userId } = req.auth;
-      
+
       if (!userId) {
         return res.status(401).json({ 
           error: 'User not authenticated',
@@ -50,7 +49,7 @@ export function setupClerkAuth(app: Express) {
 
       // Buscar ou criar usuário no banco
       let user = await storage.getUser(userId);
-      
+
       if (!user) {
         // Criar novo usuário baseado nos dados do Clerk
         await storage.upsertUser({
@@ -65,7 +64,7 @@ export function setupClerkAuth(app: Express) {
           aiCreditsLeft: 10,
           storeLimit: 1
         });
-        
+
         user = await storage.getUser(userId);
       }
 

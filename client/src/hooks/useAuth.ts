@@ -29,8 +29,7 @@ export function useAuth() {
 
         return response.json();
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        // Não exibir toast aqui para evitar spam de erros
+        // Silenciar erro de fetch do usuário para evitar spam
         return null;
       }
     },

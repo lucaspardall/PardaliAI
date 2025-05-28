@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCTR, formatCurrency, formatNumber } from "@/lib/utils/formatters";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 
 export default function OptimizeProduct() {
   const { id } = useParams();
@@ -178,7 +178,7 @@ export default function OptimizeProduct() {
         return `<span class="bg-yellow-100 dark:bg-yellow-900/30 px-1">${word}</span>`;
       }
       return word;
-    }).join(' '); ');
+    }).join(' ');
     
     return result;
   };
