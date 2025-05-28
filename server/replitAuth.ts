@@ -182,7 +182,7 @@ export async function setupAuth(app: Express) {
       } else {
         // Autenticação por Replit
         userId = req.user.claims.sub;
-        
+
         try {
           user = await storage.getUser(userId);
         } catch (error) {
@@ -288,7 +288,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     // Verificar autenticação Replit
     if (!req.user || !req.user.claims || !req.user.claims.sub) {
       console.log('❌ Usuário não autenticado tentando acessar:', req.path);
-      
+
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({ 
           message: 'Não autorizado',
@@ -303,7 +303,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     // Verificar se o token Replit não expirou
     if (req.user.expires_at && new Date() > new Date(req.user.expires_at * 1000)) {
       console.log('⏰ Token Replit expirado para usuário:', req.user.claims.sub);
-      
+
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({ 
           message: 'Token expirado',
@@ -318,7 +318,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('❌ Erro no middleware de autenticação:', error);
-    
+
     if (req.path.startsWith('/api/')) {
       return res.status(500).json({ 
         message: 'Erro interno do servidor',
@@ -329,4 +329,3 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.redirect('/login');
   }
 };
-

@@ -25,44 +25,62 @@ export default function ReplitLoginPage() {
     setIsLoading(true);
     setLoginStep('opening');
 
+    // Toast mais discreto
     toast({
-      title: "🚀 Iniciando autenticação",
-      description: "Abrindo janela segura do Replit...",
+      title: "🔐 Autenticando...",
+      description: "Abrindo popup seguro",
     });
 
     window.addEventListener("message", authComplete);
-    const h = 650;
-    const w = 450;
+    
+    // Popup otimizado - menor e mais centrado
+    const h = 500;
+    const w = 400;
     const left = window.screen.width / 2 - w / 2;
     const top = window.screen.height / 2 - h / 2;
 
     const authWindow = window.open(
       "/api/login",
-      "_blank",
-      "modal=yes, toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=" +
-        w +
-        ", height=" +
-        h +
-        ", top=" +
-        top +
-        ", left=" +
-        left
+      "replitAuth",
+      `modal=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no,copyhistory=no,width=${w},height=${h},top=${top},left=${left}`
     );
 
     if (!authWindow) {
       setIsLoading(false);
       setLoginStep('idle');
       toast({
-        title: "❌ Popup bloqueado",
-        description: "Permita popups para este site e tente novamente.",
+        title: "🚫 Popup bloqueado",
+        description: "Permita popups e tente novamente",
         variant: "destructive"
       });
       return;
     }
 
+    // Feedback visual imediato
     setLoginStep('authenticating');
 
+    // Monitorar se popup foi fechado manualmente
+    const checkClosed = setInterval(() => {
+      if (authWindow.closed) {
+        clearInterval(checkClosed);
+        setIsLoading(false);
+        setLoginStep('idle');
+        window.removeEventListener("message", authComplete);
+        
+        // Não mostrar erro se user fechou intencionalmente
+        if (loginStep === 'authenticating') {
+          toast({
+            title: "⚠️ Login cancelado",
+            description: "Popup foi fechado",
+            variant: "default"
+          });
+        }
+      }
+    }, 1000);
+
+    // Timeout mais longo para Replit
     const timeoutId = setTimeout(() => {
+      clearInterval(checkClosed);
       if (authWindow && !authWindow.closed) {
         authWindow.close();
       }
@@ -70,11 +88,11 @@ export default function ReplitLoginPage() {
       setLoginStep('idle');
       window.removeEventListener("message", authComplete);
       toast({
-        title: "⏰ Tempo limite excedido",
-        description: "Tente fazer login novamente.",
+        title: "⏰ Tempo esgotado",
+        description: "Login demorou muito, tente novamente",
         variant: "destructive"
       });
-    }, 45000);
+    }, 60000); // 1 minuto
 
     function authComplete(e: MessageEvent) {
       if (e.data !== "auth_complete") {
@@ -82,6 +100,7 @@ export default function ReplitLoginPage() {
       }
 
       clearTimeout(timeoutId);
+      clearInterval(checkClosed);
       setLoginStep('redirecting');
       window.removeEventListener("message", authComplete);
 
@@ -89,14 +108,16 @@ export default function ReplitLoginPage() {
         authWindow.close();
       }
 
+      // Feedback de sucesso mais rápido
       toast({
-        title: "✅ Autenticação realizada!",
-        description: "Redirecionando para o dashboard...",
+        title: "✅ Login realizado!",
+        description: "Bem-vindo ao CIP Shopee",
       });
 
+      // Redirecionamento mais rápido
       setTimeout(() => {
         window.location.href = "/dashboard";
-      }, 1500);
+      }, 800);
     }
   };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Link } from 'wouter';
+import ReplitPopupLogin from "@/components/ReplitPopupLogin";
 
 export default function HeroSection() {
   return (
