@@ -211,12 +211,19 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
   try {
     console.log(`==== RECEBENDO CALLBACK DA SHOPEE ====`);
     console.log(`Parâmetros recebidos:`, req.query);
+    console.log(`Headers recebidos:`, req.headers);
+    console.log(`URL completa:`, req.url);
+    console.log(`Método:`, req.method);
 
-    // Validar o state para proteção contra CSRF
+    // Validar o state para proteção contra CSRF (opcional - Shopee nem sempre envia)
     const receivedState = req.query.state as string;
-    if (!receivedState || !receivedState.startsWith('cipshopee_')) {
-      console.error('State inválido ou ausente na resposta:', receivedState);
+    if (receivedState && !receivedState.startsWith('cipshopee_')) {
+      console.error('State inválido na resposta:', receivedState);
       return res.redirect('/dashboard?status=error&message=' + encodeURIComponent('Erro de segurança: State inválido'));
+    }
+    
+    if (!receivedState) {
+      console.warn('⚠️ State não fornecido pela Shopee - continuando sem validação CSRF');
     }
 
     // Verificar se há erro retornado pela Shopee
