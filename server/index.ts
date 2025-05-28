@@ -101,12 +101,28 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // Configuração simplificada de porta para deployment
-    const port = parseInt(process.env.PORT || '5000', 10);
+    // Configuração de porta com fallback automático
+    const basePort = parseInt(process.env.PORT || '5000', 10);
+    let port = basePort;
 
-    server.listen(port, '0.0.0.0', () => {
-      log(`Server running on port ${port}`);
-    });
+    const startServer = (attemptPort: number) => {
+      server.listen(attemptPort, '0.0.0.0', () => {
+        log(`✅ Server running on port ${attemptPort}`);
+        if (attemptPort !== basePort) {
+          log(`⚠️ Porta ${basePort} estava ocupada, usando porta ${attemptPort}`);
+        }
+      }).on('error', (err: any) => {
+        if (err.code === 'EADDRINUSE') {
+          log(`❌ Porta ${attemptPort} já está em uso, tentando ${attemptPort + 1}...`);
+          startServer(attemptPort + 1);
+        } else {
+          console.error('Erro ao iniciar servidor:', err);
+          process.exit(1);
+        }
+      });
+    };
+
+    startServer(port);
   } catch (err) {
     console.error("Erro na inicialização do servidor:", err);
     process.exit(1);
