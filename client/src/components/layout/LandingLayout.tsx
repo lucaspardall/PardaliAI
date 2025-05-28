@@ -68,7 +68,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               </Button>
             ) : (
               <Button asChild>
-                <a href="/api/login">Comece grátis</a>
+                <Link href="/">Comece grátis</Link>
               </Button>
             )}
           </div>

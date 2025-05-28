@@ -30,7 +30,7 @@ export default function CTASection() {
               {isAuthenticated ? (
                 <a href="/dashboard">Acessar Dashboard</a>
               ) : (
-                <a href="/api/login">Começar agora</a>
+                <a href="/">Começar agora</a>
               )}
             </Button>
           </div>
