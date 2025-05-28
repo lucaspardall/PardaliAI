@@ -21,6 +21,12 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Senha é obrigatória')
 });
 
+const updateProfileSchema = z.object({
+  firstName: z.string().min(1, 'Nome é obrigatório'),
+  lastName: z.string().min(1, 'Sobrenome é obrigatório'),
+  email: z.string().email('Email inválido')
+});
+
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
 
 /**
@@ -239,6 +245,89 @@ router.post('/refresh', isAuthenticated, async (req: Request, res: Response) => 
     console.error('Erro ao renovar sessão:', error);
     res.status(500).json({
       message: 'Erro ao renovar sessão'
+    });
+  }
+});
+
+/**
+ * Rota para atualizar perfil do usuário
+ */
+router.put('/profile', async (req: Request, res: Response) => {
+  try {
+    // Verificar autenticação
+    let userId: string | null = null;
+    
+    // Verificar token JWT
+    if (req.cookies.auth_token) {
+      try {
+        const decoded = jwt.verify(req.cookies.auth_token, JWT_SECRET) as any;
+        userId = decoded.userId;
+      } catch (error) {
+        // Token inválido
+      }
+    }
+    
+    // Verificar autenticação Replit
+    if (!userId && req.user && req.user.claims && req.user.claims.sub) {
+      userId = req.user.claims.sub;
+    }
+    
+    if (!userId) {
+      return res.status(401).json({
+        message: 'Não autorizado'
+      });
+    }
+
+    // Validar dados
+    const result = updateProfileSchema.safeParse(req.body);
+    
+    if (!result.success) {
+      return res.status(400).json({
+        message: 'Dados inválidos',
+        errors: result.error.errors
+      });
+    }
+
+    const { firstName, lastName, email } = result.data;
+
+    // Verificar se email já está em uso por outro usuário
+    const existingUser = await storage.getUserByEmail(email);
+    if (existingUser && existingUser.id !== userId) {
+      return res.status(400).json({
+        message: 'Este email já está em uso por outro usuário'
+      });
+    }
+
+    // Buscar usuário atual
+    const currentUser = await storage.getUser(userId);
+    if (!currentUser) {
+      return res.status(404).json({
+        message: 'Usuário não encontrado'
+      });
+    }
+
+    // Atualizar usuário
+    await storage.upsertUser({
+      ...currentUser,
+      firstName,
+      lastName,
+      email
+    });
+
+    res.json({
+      message: 'Perfil atualizado com sucesso',
+      user: {
+        id: userId,
+        firstName,
+        lastName,
+        email
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro ao atualizar perfil:', error);
+    res.status(500).json({
+      message: 'Erro interno do servidor'
     });
   }
 });

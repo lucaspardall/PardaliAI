@@ -629,6 +629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Auth routes
   app.use('/api/auth', authRouter);
+  app.use('/api', authRouter); // Para acessar /api/profile
 
   // Shopee routes (já configurado acima)
   // app.use('/api/shopee', shopeeRoutes);

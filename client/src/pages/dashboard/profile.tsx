@@ -3,6 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import SidebarLayout from "@/components/layout/SidebarLayout";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Card, 
   CardContent, 
@@ -41,6 +44,12 @@ export default function Profile() {
   const { user, isLoading: userLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: ''
+  });
   
   // Fetch user's stores
   const { data: stores, isLoading: storesLoading } = useQuery({
@@ -75,6 +84,29 @@ export default function Profile() {
     },
   });
 
+  // Update profile mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: { firstName: string; lastName: string; email: string }) => {
+      return apiRequest("PUT", "/api/profile", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setEditModalOpen(false);
+      toast({
+        title: "Sucesso",
+        description: "Perfil atualizado com sucesso!",
+        variant: "default",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível atualizar o perfil.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Get plan expiration message
   const getPlanExpirationMessage = () => {
     if (!user || !user.planExpiresAt || user.plan === 'free') return null;
@@ -102,6 +134,30 @@ export default function Profile() {
   };
   
   const planExpiration = getPlanExpirationMessage();
+
+  // Open edit modal and populate form
+  const openEditModal = () => {
+    setEditForm({
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      email: user?.email || ''
+    });
+    setEditModalOpen(true);
+  };
+
+  // Handle form submission
+  const handleUpdateProfile = () => {
+    if (!editForm.firstName.trim() || !editForm.lastName.trim() || !editForm.email.trim()) {
+      toast({
+        title: "Erro",
+        description: "Todos os campos são obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateProfileMutation.mutate(editForm);
+  };
 
   if (userLoading) {
     return (
@@ -212,7 +268,7 @@ export default function Profile() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-between border-t pt-6">
-            <Button variant="outline" disabled>
+            <Button variant="outline" onClick={openEditModal}>
               <i className="ri-edit-line mr-2"></i>
               Editar Perfil
             </Button>
@@ -504,6 +560,79 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Edit Profile Modal */}
+        <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Editar Perfil</DialogTitle>
+              <DialogDescription>
+                Atualize suas informações pessoais aqui.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="firstName" className="text-right">
+                  Nome
+                </Label>
+                <Input
+                  id="firstName"
+                  value={editForm.firstName}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, firstName: e.target.value }))}
+                  className="col-span-3"
+                  placeholder="Seu nome"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="lastName" className="text-right">
+                  Sobrenome
+                </Label>
+                <Input
+                  id="lastName"
+                  value={editForm.lastName}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, lastName: e.target.value }))}
+                  className="col-span-3"
+                  placeholder="Seu sobrenome"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="col-span-3"
+                  placeholder="seu@email.com"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setEditModalOpen(false)}
+                disabled={updateProfileMutation.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleUpdateProfile}
+                disabled={updateProfileMutation.isPending}
+              >
+                {updateProfileMutation.isPending ? (
+                  <>
+                    <i className="ri-loader-2-line animate-spin mr-2"></i>
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar alterações'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarLayout>
   );
