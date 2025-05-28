@@ -1,3 +1,6 @@
+The code changes the query key and adds error handling, stale time, and retry options to the product fetching query.
+```
+```replit_final_file
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import SidebarLayout from "@/components/layout/SidebarLayout";
@@ -47,16 +50,22 @@ export default function Products() {
   }
 
   // Fetch products for active store
-  const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: [`/api/stores/${activeStore}/products`],
+  const { data: products = [], isLoading: productsLoading, refetch: refetchProducts } = useQuery({
+    queryKey: ['products', activeStore],
     queryFn: async () => {
-      const response = await fetch(`/api/stores/${activeStore}/products`, { credentials: 'include' });
+      if (!activeStore) return [];
+
+      const response = await fetch(`/api/products?storeId=${activeStore}`, {
+        credentials: 'include'
+      });
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`Failed to fetch products: ${response.status}`);
       }
       return response.json();
     },
     enabled: !!activeStore,
+    staleTime: 5 * 60 * 1000,
+    retry: 2
   });
 
   // Filter products by search term

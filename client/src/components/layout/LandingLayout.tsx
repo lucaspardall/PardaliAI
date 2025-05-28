@@ -1,15 +1,27 @@
 import { Link } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ui/theme-provider";
 import { useState, useEffect } from "react";
+import React from 'react';
 
 interface LandingLayoutProps {
   children: React.ReactNode;
 }
 
 export default function LandingLayout({ children }: LandingLayoutProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/user', { credentials: 'include' });
+        setIsAuthenticated(response.ok);
+      } catch {
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuth();
+  }, []);
   const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -50,9 +62,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               )}
             </Button>
 
-            {isLoading ? (
-              <div className="h-10 w-24 bg-muted animate-pulse rounded-lg"></div>
-            ) : isAuthenticated ? (
+            {isAuthenticated ? (
               <Button asChild>
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
@@ -111,9 +121,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
                 Planos
               </a>
 
-              {isLoading ? (
-                <div className="h-10 bg-muted animate-pulse rounded-lg"></div>
-              ) : isAuthenticated ? (
+              {isAuthenticated ? (
                 <div className="space-y-2">
                   <Button asChild className="w-full">
                     <Link href="/dashboard">

@@ -1,4 +1,3 @@
-
 import { Request, Response, NextFunction } from 'express';
 import { storage } from './storage';
 
@@ -24,34 +23,27 @@ export const isAuthenticated = async (
   try {
     // 1. Verificar Replit Auth (prioritário - já configurado)
     if (req.user && req.user.claims && req.user.claims.sub) {
-      // Usuário autenticado via Replit
       return next();
     }
 
-    // 2. Verificar Email/Senha session (futuro)
-    if (req.session && (req.session as any).userId) {
+    // 2. Verificar token no cookie/header (futuro: email/senha)
+    const token = req.cookies?.auth_token || req.headers.authorization?.replace('Bearer ', '');
+
+    if (token) {
       try {
-        const user = await storage.getUser((req.session as any).userId);
-        if (user && user.authProvider === 'email') {
-          req.user = {
-            claims: {
-              sub: user.id,
-              email: user.email || undefined,
-              first_name: user.firstName || undefined,
-              last_name: user.lastName || undefined,
-            }
-          };
-          console.log('✅ Usuário autenticado via email/senha:', user);
+        const user = await storage.getUserByToken(token);
+        if (user) {
+          (req as AuthenticatedRequest).user = user;
           return next();
         }
       } catch (error) {
-        console.error('Erro ao verificar sessão email/senha:', error);
+        // Token inválido, continuar para não autenticado
       }
     }
 
     // 3. Não autenticado
     return handleUnauthenticated(req, res);
-    
+
   } catch (error) {
     console.error('Erro no middleware de autenticação:', error);
     return res.status(500).json({ 
