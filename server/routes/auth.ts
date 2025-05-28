@@ -185,23 +185,36 @@ router.post('/logout', (req: Request, res: Response) => {
  * Rota GET para logout completo (Replit + JWT)
  */
 router.get('/logout', (req: Request, res: Response) => {
+  console.log('🔄 Iniciando processo de logout...');
+  
   // Limpar cookie JWT se existir
-  res.clearCookie('auth_token');
+  res.clearCookie('auth_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/'
+  });
+  
+  console.log('🧹 Cookie JWT limpo');
   
   // Verificar se é autenticação Replit
   if (req.user && req.user.claims && req.user.claims.sub) {
+    console.log('👤 Usuário Replit detectado, fazendo logout...');
     // Logout do Replit via middleware
     if (req.logout) {
       return req.logout((err: any) => {
         if (err) {
-          console.error('Erro no logout Replit:', err);
+          console.error('❌ Erro no logout Replit:', err);
+          return res.redirect('/landing');
         }
+        console.log('✅ Logout Replit realizado, redirecionando para /landing');
         res.redirect('/landing');
       });
     }
   }
   
-  // Logout simples para JWT
+  // Logout simples para JWT ou usuário não autenticado
+  console.log('✅ Logout simples realizado, redirecionando para /landing');
   res.redirect('/landing');
 });
 

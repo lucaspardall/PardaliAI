@@ -65,18 +65,34 @@ function DirectLogin() {
 
   // Modal unificado com as duas opções
   return (
-    <Card className="w-full max-w-md mx-auto mt-8">
-      <CardHeader>
-        <CardTitle className="text-2xl text-center">Entre no CIP Shopee</CardTitle>
-        <CardDescription className="text-center">
-          {authMethod === 'email' ? 'Entre com seu email e senha' : 'Escolha sua forma preferida de entrar'}
-        </CardDescription>
-        <div className="text-center pt-2">
-          <a href="/landing" className="text-sm text-muted-foreground hover:text-primary">
-            ← Voltar para a página inicial
-          </a>
-        </div>
-      </CardHeader>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20 p-4">
+      <Card className="w-full max-w-md shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
+        <CardHeader className="space-y-6 pb-8">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="h-16 w-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg">
+                <i className="ri-shopping-bag-3-line text-primary-foreground text-2xl"></i>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                Entre no CIP Shopee
+              </CardTitle>
+              <CardDescription className="text-muted-foreground text-base">
+                {authMethod === 'email' ? 'Entre com seu email e senha' : 'Escolha sua forma preferida de entrar'}
+              </CardDescription>
+            </div>
+          </div>
+          <div className="text-center">
+            <a 
+              href="/landing" 
+              className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors duration-200 group"
+            >
+              <i className="ri-arrow-left-line mr-2 group-hover:-translate-x-1 transition-transform duration-200"></i>
+              Voltar para a página inicial
+            </a>
+          </div>
+        </CardHeader>
 
       {authMethod === 'email' ? (
         // Formulário de email/senha
@@ -98,43 +114,44 @@ function DirectLogin() {
       ) : (
         // Tela principal com opções
         <>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6 px-8 pb-8">
             {/* Opção 1: Entrar com Gmail (Replit Auth por trás) */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <Button 
                 onClick={() => window.location.href = "/api/login"}
-                className="w-full h-12 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg"
+                className="w-full h-14 bg-gradient-to-r from-red-500 via-red-600 to-red-700 hover:from-red-600 hover:via-red-700 hover:to-red-800 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]"
                 size="lg"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-                    Conectando...
+                    <span className="font-semibold">Conectando...</span>
                   </>
                 ) : (
                   <>
-                    <i className="ri-google-fill mr-3 text-lg"></i>
+                    <i className="ri-google-fill mr-4 text-xl"></i>
                     <div className="flex flex-col items-start">
-                      <span className="font-semibold">Continuar com Google</span>
-                      <span className="text-xs opacity-90">Login rápido e seguro</span>
+                      <span className="font-bold text-base">Continuar com Google</span>
+                      <span className="text-xs opacity-90 font-medium">Login rápido e seguro</span>
                     </div>
                   </>
                 )}
               </Button>
-              <p className="text-xs text-center text-muted-foreground">
-                🚀 Método mais rápido • Sem senhas • Recomendado
-              </p>
+              <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground bg-muted/30 rounded-lg py-3 px-4">
+                <i className="ri-rocket-line text-primary"></i>
+                <span>Método mais rápido • Sem senhas • Recomendado</span>
+              </div>
             </div>
 
-            {/* Divisor */}
-            <div className="relative my-6">
+            {/* Divisor elegante */}
+            <div className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+                <span className="w-full border-t border-border/60" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-3 text-muted-foreground font-medium">
-                  ou use
+              <div className="relative flex justify-center">
+                <span className="bg-card px-4 py-1 text-xs uppercase font-semibold text-muted-foreground tracking-wider border border-border/40 rounded-full">
+                  ou continue com
                 </span>
               </div>
             </div>
@@ -143,23 +160,23 @@ function DirectLogin() {
             <Button 
               onClick={() => setAuthMethod('email')}
               variant="outline"
-              className="w-full h-12 border-2 hover:bg-gray-50"
+              className="w-full h-14 border-2 border-border/60 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
               disabled={isLoading}
             >
-              <i className="ri-mail-line mr-3 text-lg"></i>
+              <i className="ri-mail-line mr-4 text-xl text-primary"></i>
               <div className="flex flex-col items-start">
-                <span className="font-semibold">Email e Senha</span>
-                <span className="text-xs text-muted-foreground">Login tradicional</span>
+                <span className="font-bold text-base">Email e Senha</span>
+                <span className="text-xs text-muted-foreground font-medium">Login tradicional</span>
               </div>
             </Button>
           </CardContent>
 
-          <CardFooter className="bg-gray-50/50 rounded-b-lg">
+          <CardFooter className="bg-muted/30 rounded-b-lg px-8 py-6 border-t border-border/30">
             <div className="w-full text-center">
-              <p className="text-xs text-muted-foreground">
-                <i className="ri-shield-check-line mr-1"></i>
-                Seus dados estão protegidos e criptografados
-              </p>
+              <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
+                <i className="ri-shield-check-line text-green-600"></i>
+                <span className="font-medium">Seus dados estão protegidos e criptografados</span>
+              </div>
             </div>
           </CardFooter>
         </>
