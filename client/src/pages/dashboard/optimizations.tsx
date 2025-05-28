@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,11 +70,12 @@ export default function OptimizationsPage() {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Filtros</span>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant={statusFilter === 'all' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setStatusFilter('all')}
+                className="text-xs md:text-sm"
               >
                 Todas
               </Button>
@@ -83,6 +83,7 @@ export default function OptimizationsPage() {
                 variant={statusFilter === 'pending' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setStatusFilter('pending')}
+                className="text-xs md:text-sm"
               >
                 Pendentes
               </Button>
@@ -90,6 +91,7 @@ export default function OptimizationsPage() {
                 variant={statusFilter === 'applied' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setStatusFilter('applied')}
+                className="text-xs md:text-sm"
               >
                 Aplicadas
               </Button>
@@ -97,6 +99,7 @@ export default function OptimizationsPage() {
                 variant={statusFilter === 'ignored' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setStatusFilter('ignored')}
+                className="text-xs md:text-sm"
               >
                 Ignoradas
               </Button>
@@ -124,24 +127,21 @@ export default function OptimizationsPage() {
           ))}
         </div>
       ) : filteredOptimizations.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <i className="ri-ai-generate text-4xl text-muted-foreground mb-3"></i>
-            <h3 className="text-lg font-medium mb-2">
-              {statusFilter === 'all' 
-                ? 'Nenhuma otimização encontrada' 
-                : `Nenhuma otimização ${statusFilter === 'pending' ? 'pendente' : statusFilter === 'applied' ? 'aplicada' : 'ignorada'} encontrada`}
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Comece otimizando seus produtos para ver resultados aqui.
-            </p>
-            <Button asChild>
-              <Link href="/dashboard/products">
+        <Card className="text-center py-8 md:py-12">
+            <CardContent className="px-4">
+              <div className="mx-auto w-16 h-16 md:w-24 md:h-24 bg-muted rounded-full flex items-center justify-center mb-4">
+                <i className="ri-search-line text-xl md:text-2xl text-muted-foreground"></i>
+              </div>
+              <h3 className="text-base md:text-lg font-medium mb-2">Nenhuma otimização encontrada</h3>
+              <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
+                Comece otimizando seus produtos para ver resultados aqui.
+              </p>
+              <Button onClick={() => window.location.href = '/dashboard/products'} size="sm" className="md:size-default">
+                <i className="ri-shopping-bag-3-line mr-2"></i>
                 Ver produtos
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+              </Button>
+            </CardContent>
+          </Card>
       ) : (
         <div className="space-y-4">
           {filteredOptimizations.map((optimization: Optimization) => (
@@ -155,7 +155,7 @@ export default function OptimizationsPage() {
                       className="h-16 w-16 rounded-md object-cover"
                     />
                   )}
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-2">
                       <div>
@@ -186,7 +186,7 @@ export default function OptimizationsPage() {
                           <p className="text-sm line-clamp-2">{optimization.suggestedTitle}</p>
                         </div>
                       )}
-                      
+
                       {optimization.reasoningNotes && (
                         <div>
                           <p className="text-xs font-medium text-muted-foreground mb-1">Análise da IA:</p>

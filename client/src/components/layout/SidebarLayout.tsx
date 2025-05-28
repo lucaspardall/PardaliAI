@@ -189,7 +189,7 @@ export default function SidebarLayout({
       )}
 
       {/* Sidebar - Mobile */}
-      <aside className={`fixed inset-y-0 left-0 w-64 bg-secondary border-r border-sidebar-border z-30 transform ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out md:hidden`}>
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-secondary border-r border-sidebar-border z-30 transform ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out md:hidden flex flex-col`}>
         <div className="p-4 border-b border-sidebar-border flex items-center">
           <i className="ri-bird-fill text-primary text-2xl mr-2"></i>
           <h1 className="text-xl font-bold text-white font-heading">CIP Shopee</h1>
@@ -201,7 +201,7 @@ export default function SidebarLayout({
           </button>
         </div>
 
-        <div className="px-3 py-4 h-[calc(100%-64px-72px)] overflow-y-auto">
+        <div className="px-3 py-4 flex-1 overflow-y-auto">
           <div className="space-y-1">
             {navItems.map((item) => (
               <NavItem 
@@ -258,7 +258,7 @@ export default function SidebarLayout({
           </div>
         </div>
 
-        <div className="absolute bottom-0 w-full border-t border-sidebar-border p-4">
+        <div className="border-t border-sidebar-border p-4 flex-shrink-0">
           <div className="flex items-center">
             <Avatar className="h-10 w-10 mr-3">
               {user?.profileImageUrl ? (
