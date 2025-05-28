@@ -304,11 +304,11 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Opção 1: Login Rápido (Replit) */}
+              {/* Opção 1: Entrar com Gmail (Replit Auth por trás) */}
               <div className="space-y-3">
                 <Button 
                   onClick={() => window.location.href = "/api/login"}
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg"
+                  className="w-full h-12 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg"
                   size="lg"
                   disabled={isLoading}
                 >
@@ -319,16 +319,16 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
                     </>
                   ) : (
                     <>
-                      <i className="ri-flash-line mr-3 text-lg"></i>
+                      <i className="ri-google-fill mr-3 text-lg"></i>
                       <div className="flex flex-col items-start">
-                        <span className="font-semibold">Login Rápido</span>
-                        <span className="text-xs opacity-90">Sem precisar criar senha</span>
+                        <span className="font-semibold">Continuar com Google</span>
+                        <span className="text-xs opacity-90">Login rápido e seguro</span>
                       </div>
                     </>
                   )}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
-                  Entrada instantânea e segura • Recomendado
+                  🚀 Método mais rápido • Sem senhas • Recomendado
                 </p>
               </div>
 
