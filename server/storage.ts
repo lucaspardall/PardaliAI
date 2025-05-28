@@ -649,13 +649,33 @@ export class DatabaseStorage implements IStorage {
     return result[0] || null;
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
+  async getUserByEmail(email: string): Promise<User | null> {
     try {
-      const [user] = await db.select().from(users).where(eq(users.email, email));
-      return user;
+      const result = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      return result[0] || null;
     } catch (error) {
-      console.error('Error getting user by email:', error);
-      return undefined;
+      console.error('Erro ao buscar usuário por email:', error);
+      return null;
+    }
+  }
+
+  async getUserByUsername(username: string): Promise<User | null> {
+    try {
+      const result = await this.db
+        .select()
+        .from(users)
+        .where(eq(users.username, username))
+        .limit(1);
+
+      return result[0] || null;
+    } catch (error) {
+      console.error('Erro ao buscar usuário por username:', error);
+      return null;
     }
   }
 
@@ -922,7 +942,7 @@ export class MemStorage implements IStorage {
         metric.storeId === storeId && metric.date >= startDate
       )
       .sort((a, b) => a.date.getTime() - b.date.getTime());
-  }
+      
 
   async createStoreMetric(metric: InsertStoreMetric): Promise<StoreMetric> {
     const id = this.metricIdCounter++;

@@ -18,6 +18,7 @@ export default function EmailAuth({ onSuccess }: EmailAuthProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
+    username: '',
     password: '',
     firstName: '',
     lastName: ''
@@ -117,12 +118,25 @@ export default function EmailAuth({ onSuccess }: EmailAuthProps) {
             </>
           )}
           
+          {!isLogin && (
+            <div className="space-y-2">
+              <Label htmlFor="username">Nome de usuário</Label>
+              <Input
+                id="username"
+                placeholder="Seu nome de usuário"
+                value={formData.username}
+                onChange={(e) => handleInputChange('username', e.target.value)}
+                required={!isLogin}
+              />
+            </div>
+          )}
+          
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{isLogin ? 'Email ou nome de usuário' : 'Email'}</Label>
             <Input
               id="email"
-              type="email"
-              placeholder="seu@email.com"
+              type={isLogin ? "text" : "email"}
+              placeholder={isLogin ? "seu@email.com ou seu_usuario" : "seu@email.com"}
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
               required

@@ -11,13 +11,14 @@ const router = Router();
 // Schemas de validação
 const registerSchema = z.object({
   email: z.string().email('Email inválido'),
+  username: z.string().min(3, 'Username deve ter pelo menos 3 caracteres').regex(/^[a-zA-Z0-9_]+$/, 'Username pode conter apenas letras, números e underscore'),
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   firstName: z.string().min(1, 'Nome é obrigatório'),
   lastName: z.string().min(1, 'Sobrenome é obrigatório')
 });
 
 const loginSchema = z.object({
-  email: z.string().email('Email inválido'),
+  email: z.string().min(1, 'Email ou username é obrigatório'),
   password: z.string().min(1, 'Senha é obrigatória')
 });
 
@@ -43,13 +44,21 @@ router.post('/register', async (req: Request, res: Response) => {
       });
     }
 
-    const { email, password, firstName, lastName } = result.data;
+    const { email, username, password, firstName, lastName } = result.data;
 
-    // Verificar se usuário já existe
+    // Verificar se email já existe
     const existingUser = await storage.getUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({
         message: 'Email já está em uso'
+      });
+    }
+
+    // Verificar se username já existe
+    const existingUsername = await storage.getUserByUsername(username);
+    if (existingUsername) {
+      return res.status(400).json({
+        message: 'Nome de usuário já está em uso'
       });
     }
 
@@ -62,6 +71,7 @@ router.post('/register', async (req: Request, res: Response) => {
     await storage.upsertUser({
       id: userId,
       email,
+      username,
       firstName,
       lastName,
       passwordHash,
@@ -121,13 +131,17 @@ router.post('/login', async (req: Request, res: Response) => {
       });
     }
 
-    const { email, password } = result.data;
+    const { email: emailOrUsername, password } = result.data;
 
-    // Buscar usuário
-    const user = await storage.getUserByEmail(email);
+    // Buscar usuário por email ou username
+    let user = await storage.getUserByEmail(emailOrUsername);
+    if (!user) {
+      user = await storage.getUserByUsername(emailOrUsername);
+    }
+    
     if (!user || user.authProvider !== 'email' || !user.passwordHash) {
       return res.status(401).json({
-        message: 'Email ou senha incorretos'
+        message: 'Email/username ou senha incorretos'
       });
     }
 
