@@ -1,29 +1,75 @@
 
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" preserveAspectRatio="xMidYMid meet">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <linearGradient id="cipGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    <!-- Gradiente principal azul -->
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
     </linearGradient>
+    
+    <!-- Gradiente laranja Shopee -->
+    <linearGradient id="shopeeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f7931e;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Sombra -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+    
+    <!-- Brilho interno -->
+    <filter id="innerGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Fundo circular -->
-  <circle cx="50" cy="50" r="45" fill="url(#cipGradient)" stroke="#1e3a8a" stroke-width="2"/>
+  <!-- Fundo circular principal com sombra -->
+  <circle cx="60" cy="60" r="50" fill="url(#mainGradient)" filter="url(#shadow)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
   
-  <!-- Texto CIP -->
-  <text x="50" y="35" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">CIP</text>
+  <!-- Círculo interno para profundidade -->
+  <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
   
-  <!-- Ícone Shopee (carrinho simplificado) -->
-  <g transform="translate(50, 55)">
-    <rect x="-12" y="-5" width="24" height="8" rx="2" fill="white" opacity="0.9"/>
-    <circle cx="-6" cy="8" r="3" fill="white" opacity="0.9"/>
-    <circle cx="6" cy="8" r="3" fill="white" opacity="0.9"/>
-    <path d="M-10 -5 L-8 -10 L8 -10 L10 -5" fill="white" opacity="0.7"/>
+  <!-- Texto CIP estilizado -->
+  <g filter="url(#innerGlow)">
+    <text x="60" y="45" font-family="Arial, sans-serif" font-size="24" font-weight="900" fill="white" text-anchor="middle" letter-spacing="1px">CIP</text>
   </g>
   
-  <!-- Elementos decorativos -->
-  <circle cx="25" cy="25" r="2" fill="#fb7c00" opacity="0.8"/>
-  <circle cx="75" cy="75" r="2" fill="#fb7c00" opacity="0.8"/>
-  <circle cx="75" cy="25" r="1.5" fill="white" opacity="0.6"/>
-  <circle cx="25" cy="75" r="1.5" fill="white" opacity="0.6"/>
+  <!-- Ícone Shopee modernizado -->
+  <g transform="translate(60, 75)">
+    <!-- Sacola de compras -->
+    <path d="M-15 -8 L-12 -15 L12 -15 L15 -8 L15 8 C15 10 13 12 11 12 L-11 12 C-13 12 -15 10 -15 8 Z" 
+          fill="url(#shopeeGradient)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+    
+    <!-- Alças da sacola -->
+    <path d="M-8 -15 Q-8 -20 -2 -20 Q4 -20 4 -15" 
+          fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <path d="M8 -15 Q8 -20 14 -20 Q20 -20 20 -15" 
+          fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Detalhes da sacola -->
+    <circle cx="-6" cy="-2" r="1.5" fill="white" opacity="0.8"/>
+    <circle cx="0" cy="-2" r="1.5" fill="white" opacity="0.8"/>
+    <circle cx="6" cy="-2" r="1.5" fill="white" opacity="0.8"/>
+  </g>
+  
+  <!-- Elementos decorativos com brilho -->
+  <g opacity="0.8">
+    <circle cx="25" cy="25" r="3" fill="#f7931e">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="95" cy="95" r="3" fill="#f7931e">
+      <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="95" cy="25" r="2" fill="rgba(255,255,255,0.6)"/>
+    <circle cx="25" cy="95" r="2" fill="rgba(255,255,255,0.6)"/>
+  </g>
+  
+  <!-- Highlight superior para efeito 3D -->
+  <ellipse cx="60" cy="35" rx="25" ry="8" fill="rgba(255,255,255,0.1)"/>
 </svg>
