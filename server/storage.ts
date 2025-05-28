@@ -88,6 +88,43 @@ export interface IStorage {
   getProductByStoreIdAndProductId(storeId: number, productId: string): Promise<any>;
 }
 
+export async function getUserByEmail(email: string) {
+  try {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error('Erro ao buscar usuário por email:', error);
+    return null;
+  }
+}
+
+export async function createUser(userData: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  replitId?: string;
+}) {
+  try {
+    const [user] = await db.insert(users).values({
+      email: userData.email,
+      password: userData.password,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      replitId: userData.replitId,
+      plan: 'free',
+      planStatus: 'active',
+      aiCreditsLeft: 10,
+      storeLimit: 1,
+    }).returning();
+
+    return user;
+  } catch (error) {
+    console.error('Erro ao criar usuário:', error);
+    throw error;
+  }
+}
+
 export class DatabaseStorage implements IStorage {
   private db: PostgresJsDatabase<typeof schema> | null = null;
 
@@ -906,7 +943,7 @@ export class MemStorage implements IStorage {
   // AI Request operations
   async getAiRequestsByUserId(userId: string): Promise<AiRequest[]> {
     return Array.from(this.aiRequests.values())
-      .filter(request => request.userId === userId)
+Adding functions for user retrieval by email, creation with password, and updating user details.      .filter(request => request.userId === userId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
