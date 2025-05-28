@@ -1,5 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Redirect } from 'wouter';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,7 +22,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // Redirect to home if not signed in
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Redirect to="/" />;
   }
 
   return <>{children}</>;
