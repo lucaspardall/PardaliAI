@@ -1,0 +1,106 @@
+🚨 ERRO FRONTEND CLERK + REACT NO REPLIT
+O erro está no frontend React, não no backend Express. Vamos resolver:
+🔍 DIAGNÓSTICO
+
+Clerk não está conseguindo carregar no ambiente Replit
+Problema comum com URLs e domínios no Replit
+
+🛠️ SOLUÇÕES
+1️⃣ VERIFICAR CONFIGURAÇÃO DO CLERK NO FRONTEND
+client/.env ou .env
+env# Use a chave PÚBLICA (pk_) no frontend
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+client/src/main.tsx ou App.tsx
+jsximport { ClerkProvider } from '@clerk/clerk-react'
+
+// IMPORTANTE: No Replit, precisa configurar o domain
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
+export default function App() {
+  return (
+    <ClerkProvider 
+      publishableKey={clerkPubKey}
+      // CRÍTICO para Replit:
+      afterSignInUrl="/"
+      afterSignUpUrl="/"
+    >
+      {/* Seu app */}
+    </ClerkProvider>
+  )
+}
+2️⃣ SOLUÇÃO ESPECÍFICA PARA REPLIT
+Adicione no ClerkProvider:
+jsx<ClerkProvider 
+  publishableKey={clerkPubKey}
+  // Configurações especiais para Replit
+  clerkJSUrl="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+  telemetry={false}
+>
+3️⃣ VERIFICAR DOMÍNIO NO CLERK DASHBOARD
+
+Vá ao Clerk Dashboard
+Domains → Adicione o domínio do Replit:
+*.replit.dev
+*.repl.co
+
+
+4️⃣ CONFIGURAÇÃO VITE + REPLIT
+vite.config.js
+javascriptimport { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    hmr: {
+      clientPort: 443
+    }
+  },
+  // Importante para Replit
+  base: '/',
+  define: {
+    global: 'window',
+  }
+})
+5️⃣ SOLUÇÃO ALTERNATIVA - MODO DESENVOLVIMENTO
+Se continuar com erro, use o modo de desenvolvimento:
+jsximport { ClerkProvider } from '@clerk/clerk-react'
+
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
+// Detectar se está no Replit
+const isReplit = window.location.hostname.includes('replit')
+
+export default function App() {
+  if (!clerkPubKey) {
+    console.error('⚠️ Clerk Publishable Key não encontrada!')
+    return <div>Erro: Configure VITE_CLERK_PUBLISHABLE_KEY</div>
+  }
+
+  return (
+    <ClerkProvider 
+      publishableKey={clerkPubKey}
+      // Configuração para desenvolvimento
+      {...(isReplit && {
+        clerkJSUrl: "https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js",
+        telemetry: false
+      })}
+    >
+      {/* Seu app */}
+    </ClerkProvider>
+  )
+}
+6️⃣ DEBUG RÁPIDO
+Adicione este código para debug:
+jsx// No início do App.tsx
+console.log('🔑 Clerk Key:', import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.substring(0, 10) + '...')
+console.log('🌍 Hostname:', window.location.hostname)
+🚀 CHECKLIST RÁPIDO
+
+✅ Usar VITE_CLERK_PUBLISHABLE_KEY (com prefixo VITE_)
+✅ Adicionar domínio Replit no Clerk Dashboard
+✅ Configurar clerkJSUrl se necessário
+✅ Verificar se a chave é pública (pk_ não sk_)
+✅ Reiniciar o servidor Vite após mudanças no .env
