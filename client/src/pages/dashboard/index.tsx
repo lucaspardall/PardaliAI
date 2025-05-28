@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import SidebarLayout from "@/components/layout/SidebarLayout";
 import { Button } from "@/components/ui/button";
 import StoreStats from "@/components/dashboard/StoreStats";
@@ -22,8 +22,38 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [activeStore, setActiveStore] = useState<number | null>(null);
   const [period, setPeriod] = useState<string>('7');
+  const [location] = useLocation();
 
   const queryClient = useQueryClient();
+
+  // Detectar se acabou de conectar uma loja Shopee
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shopeeConnected = urlParams.get('shopeeConnected');
+    const storeId = urlParams.get('storeId');
+
+    if (shopeeConnected === 'true') {
+      console.log('🎉 Shopee conectado com sucesso! Atualizando dados...');
+      
+      // Invalidar todas as queries relacionadas a stores
+      queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/shopee/status"] });
+      
+      // Se tivermos storeId, definir como loja ativa
+      if (storeId) {
+        setActiveStore(parseInt(storeId));
+      }
+
+      // Mostrar toast de sucesso
+      toast({
+        title: "🎉 Shopee conectado!",
+        description: "Sua loja foi conectada com sucesso. Carregando dados...",
+      });
+
+      // Limpar parâmetros da URL
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, [location, queryClient]);
 
   // Fetch user's stores
   const { 
@@ -36,7 +66,9 @@ export default function Dashboard() {
       const response = await fetch('/api/stores', { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch stores');
       return response.json();
-    }
+    },
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 
   const syncStoreMutation = useMutation({

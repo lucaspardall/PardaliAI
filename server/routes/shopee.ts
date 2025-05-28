@@ -315,7 +315,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         });
 
         console.log(`Redirecionando para dashboard após reconexão`);
-        return res.redirect('/dashboard?status=success&message=' + encodeURIComponent('Loja reconectada com sucesso'));
+        return res.redirect('/dashboard?shopeeConnected=true&storeId=' + existingStore.id);
       } else {
         console.log(`Criando nova loja no banco...`);
         // Criar nova loja
@@ -346,7 +346,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
         });
 
         console.log(`Redirecionando para dashboard após criação da nova loja`);
-        return res.redirect('/dashboard?status=success&message=' + encodeURIComponent('Loja conectada com sucesso'));
+        return res.redirect('/dashboard?shopeeConnected=true&storeId=' + newStore.id);
       }
 
     } catch (tokenError: any) {
