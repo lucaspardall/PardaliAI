@@ -1,4 +1,3 @@
-
 import { Route, Switch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -59,68 +58,68 @@ function App() {
               <Route path="/login" component={LoginPage} />
               <Route path="/signup" component={SignUpPage} />
               <Route path="/shopee-connect" component={ShopeeConnectPage} />
-              
+
               {/* Protected Dashboard Routes */}
               <Route path="/dashboard">
                 <ProtectedRoute>
                   <DashboardHome />
                 </ProtectedRoute>
               </Route>
-              
+
               <Route path="/dashboard/products">
                 <ProtectedRoute>
                   <Products />
                 </ProtectedRoute>
               </Route>
-              
+
               <Route path="/dashboard/optimizations">
                 <ProtectedRoute>
                   <Optimizations />
                 </ProtectedRoute>
               </Route>
-              
+
               <Route path="/dashboard/reports">
                 <ProtectedRoute>
                   <Reports />
                 </ProtectedRoute>
               </Route>
-              
+
               <Route path="/dashboard/profile">
                 <ProtectedRoute>
                   <Profile />
                 </ProtectedRoute>
               </Route>
-              
+
               <Route path="/dashboard/subscription">
                 <ProtectedRoute>
                   <Subscription />
                 </ProtectedRoute>
               </Route>
-              
+
               <Route path="/dashboard/ai-credits">
                 <ProtectedRoute>
                   <AiCredits />
                 </ProtectedRoute>
               </Route>
-              
+
               <Route path="/dashboard/bulk-optimize">
                 <ProtectedRoute>
                   <BulkOptimize />
                 </ProtectedRoute>
               </Route>
-              
+
               <Route path="/dashboard/optimize/:id">
                 <ProtectedRoute>
                   <OptimizePage />
                 </ProtectedRoute>
               </Route>
-              
+
               <Route path="/dashboard/product/:id">
                 <ProtectedRoute>
                   <ProductPage />
                 </ProtectedRoute>
               </Route>
-              
+
               <Route path="/dashboard/store/connect">
                 <ProtectedRoute>
                   <ConnectStorePage />

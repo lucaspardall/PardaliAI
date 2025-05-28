@@ -20,7 +20,18 @@ import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isLoading: userLoading, isAuthenticated } = useAuth();
+
+  if (!isAuthenticated && !userLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Acesso negado</h2>
+          <p className="text-muted-foreground">Faça login para acessar o dashboard.</p>
+        </div>
+      </div>
+    );
+  }
   const [activeStore, setActiveStore] = useState<number | null>(null);
   const [period, setPeriod] = useState<string>('7');
 
