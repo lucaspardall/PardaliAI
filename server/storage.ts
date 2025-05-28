@@ -942,7 +942,7 @@ export class MemStorage implements IStorage {
         metric.storeId === storeId && metric.date >= startDate
       )
       .sort((a, b) => a.date.getTime() - b.date.getTime());
-      
+  }
 
   async createStoreMetric(metric: InsertStoreMetric): Promise<StoreMetric> {
     const id = this.metricIdCounter++;
