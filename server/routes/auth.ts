@@ -1,8 +1,179 @@
 
 import { Router, Request, Response } from 'express';
 import { isAuthenticated } from '../replitAuth';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { storage } from '../storage';
+import { z } from 'zod';
 
 const router = Router();
+
+// Schemas de validação
+const registerSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  firstName: z.string().min(1, 'Nome é obrigatório'),
+  lastName: z.string().min(1, 'Sobrenome é obrigatório')
+});
+
+const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(1, 'Senha é obrigatória')
+});
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+
+/**
+ * Rota para registro de usuário
+ */
+router.post('/register', async (req: Request, res: Response) => {
+  try {
+    const result = registerSchema.safeParse(req.body);
+    
+    if (!result.success) {
+      return res.status(400).json({
+        message: 'Dados inválidos',
+        errors: result.error.errors
+      });
+    }
+
+    const { email, password, firstName, lastName } = result.data;
+
+    // Verificar se usuário já existe
+    const existingUser = await storage.getUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({
+        message: 'Email já está em uso'
+      });
+    }
+
+    // Hash da senha
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Criar usuário
+    const userId = `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    await storage.upsertUser({
+      id: userId,
+      email,
+      firstName,
+      lastName,
+      passwordHash,
+      emailVerified: false,
+      authProvider: 'email',
+      plan: 'free',
+      planStatus: 'active',
+      aiCreditsLeft: 10,
+      storeLimit: 1
+    });
+
+    // Gerar token JWT
+    const token = jwt.sign(
+      { userId, email, authProvider: 'email' },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Configurar cookie
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 dias
+    });
+
+    res.status(201).json({
+      message: 'Usuário criado com sucesso',
+      user: {
+        id: userId,
+        email,
+        firstName,
+        lastName,
+        authProvider: 'email'
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro no registro:', error);
+    res.status(500).json({
+      message: 'Erro interno do servidor'
+    });
+  }
+});
+
+/**
+ * Rota para login de usuário
+ */
+router.post('/login', async (req: Request, res: Response) => {
+  try {
+    const result = loginSchema.safeParse(req.body);
+    
+    if (!result.success) {
+      return res.status(400).json({
+        message: 'Dados inválidos',
+        errors: result.error.errors
+      });
+    }
+
+    const { email, password } = result.data;
+
+    // Buscar usuário
+    const user = await storage.getUserByEmail(email);
+    if (!user || user.authProvider !== 'email' || !user.passwordHash) {
+      return res.status(401).json({
+        message: 'Email ou senha incorretos'
+      });
+    }
+
+    // Verificar senha
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!isValidPassword) {
+      return res.status(401).json({
+        message: 'Email ou senha incorretos'
+      });
+    }
+
+    // Gerar token JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, authProvider: 'email' },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Configurar cookie
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 dias
+    });
+
+    res.json({
+      message: 'Login realizado com sucesso',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        authProvider: user.authProvider
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro no login:', error);
+    res.status(500).json({
+      message: 'Erro interno do servidor'
+    });
+  }
+});
+
+/**
+ * Rota para logout
+ */
+router.post('/logout', (req: Request, res: Response) => {
+  res.clearCookie('auth_token');
+  res.json({ message: 'Logout realizado com sucesso' });
+});
 
 /**
  * Rota para verificar status de autenticação

@@ -3,10 +3,12 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import EmailAuth from './auth/EmailAuth';
 
 export default function DirectLogin() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [authMethod, setAuthMethod] = useState<'replit' | 'email'>('replit');
 
   const handleLoginWithReplit = () => {
     setIsLoading(true);
@@ -78,12 +80,33 @@ export default function DirectLogin() {
     window.location.href = '/api/login';
   };
 
+  // Renderizar EmailAuth se selecionado
+  if (authMethod === 'email') {
+    return (
+      <div className="w-full max-w-md mx-auto mt-8 space-y-4">
+        <EmailAuth />
+        <Card>
+          <CardContent className="pt-6">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setAuthMethod('replit')}
+            >
+              <i className="ri-arrow-left-line mr-2"></i>
+              Voltar para login Replit
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <Card className="w-full max-w-md mx-auto mt-8">
       <CardHeader>
         <CardTitle className="text-2xl">Entrar no CIP Shopee</CardTitle>
         <CardDescription>
-          Faça login para acessar a plataforma e integrar sua loja Shopee.
+          Escolha como você quer fazer login na plataforma.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col space-y-4">
@@ -122,6 +145,27 @@ export default function DirectLogin() {
           <i className="ri-login-box-line mr-2"></i>
           Login Direto
         </Button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Ou
+            </span>
+          </div>
+        </div>
+
+        <Button
+          variant="secondary"
+          className="w-full"
+          onClick={() => setAuthMethod('email')}
+          disabled={isLoading}
+        >
+          <i className="ri-mail-line mr-2"></i>
+          Entrar com Email/Senha
+        </Button>ton>
 
         <p className="text-xs text-muted-foreground text-center">
           Problemas com pop-ups? Use o "Login Direto" acima.

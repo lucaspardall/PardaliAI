@@ -86,6 +86,9 @@ export interface IStorage {
   getOrderByOrderSn(orderSn: string): Promise<any>;
   getOrdersByStoreId(storeId: number, limit: number, offset: number, status?: string): Promise<any[]>;
   getProductByStoreIdAndProductId(storeId: number, productId: string): Promise<any>;
+
+    getUserByEmail(email: string): Promise<User | undefined>;
+    getUserByToken(token: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -645,6 +648,40 @@ export class DatabaseStorage implements IStorage {
     const result = await db.select().from(users).where(eq(users.stripeCustomerId, customerId)).limit(1);
     return result[0] || null;
   }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    try {
+      const [user] = await this.db.select().from(users).where(eq(users.email, email));
+      return user || null;
+    } catch (error) {
+      console.error('Error getting user by email:', error);
+      throw error;
+    }
+  }
+
+  async getUserByToken(token: string): Promise<{ claims: { sub: string; email?: string; first_name?: string; last_name?: string } } | null> {
+    try {
+      const jwt = require('jsonwebtoken');
+      const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+
+      const user = await this.getUser(decoded.userId);
+      if (!user) return null;
+
+      return {
+        claims: {
+          sub: user.id,
+          email: user.email || '',
+          first_name: user.firstName || '',
+          last_name: user.lastName || ''
+        }
+      };
+    } catch (error) {
+      console.error('Error verifying token:', error);
+      return null;
+    }
+  }
 }
 
 // In-memory storage for development or testing
@@ -981,6 +1018,30 @@ export class MemStorage implements IStorage {
   async getUserByStripeCustomerId(customerId: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(user => user.stripeCustomerId === customerId);
   }
+  async getUserByEmail(email: string): Promise<User | undefined> {
+        return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  async getUserByToken(token: string): Promise<any> {
+        const jwt = require('jsonwebtoken');
+        const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET) as any;
+            const user = this.users.get(decoded.userId);
+            if (!user) return null;
+            return {
+                claims: {
+                    sub: user.id,
+                    email: user.email || '',
+                    first_name: user.firstName || '',
+                    last_name: user.lastName || ''
+                }
+            };
+        } catch (error) {
+            console.error('Error verifying token:', error);
+            return null;
+        }
+    }
 }
 
 // Use in-memory storage for development and DB storage for production
