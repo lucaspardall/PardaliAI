@@ -28,9 +28,8 @@ import ShopeeConnectPage from "@/pages/shopee-connect";
 // Components
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-// Auth listener component (assuming it exists and handles session expiration)
-import AuthListener from "@/components/AuthListener";
 import { useEffect } from "react";
+import AuthListener from "@/components/AuthListener";
 
 // Create a new React Query client
 const queryClient = new QueryClient({

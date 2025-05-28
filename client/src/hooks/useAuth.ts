@@ -104,8 +104,8 @@ export function useAuth(): AuthState {
 
     checkAuth();
 
-    // Auto-refresh mais frequente para evitar expiração
-    const interval = setInterval(checkAuth, 2 * 60 * 1000); // 2 minutos
+    // Polling menos frequente para reduzir carga
+    const interval = setInterval(checkAuth, 5 * 60 * 1000); // 5 minutos
 
     // Listener para detectar quando a página volta ao foco
     const handleFocus = () => {
