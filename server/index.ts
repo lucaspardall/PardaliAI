@@ -10,8 +10,10 @@ const app = express();
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://cipshopee.replit.app'] 
-    : ['http://localhost:5000', 'http://localhost:3000'],
-  credentials: true
+    : ['http://localhost:5000', 'http://localhost:3000', 'http://0.0.0.0:5000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: '50mb' }));

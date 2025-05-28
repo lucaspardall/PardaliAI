@@ -18,9 +18,9 @@ const rawSql = neon(connectionString, neonOptions);
 const checkConnection = async (): Promise<boolean> => {
   try {
     console.log("Verificando conexão com banco de dados...");
-    await rawSql("SELECT 1");
+    const result = await sql`SELECT 1 as test`;
     console.log("Conexão com banco de dados estabelecida com sucesso");
-    return true;
+    return result && result.length > 0;
   } catch (err) {
     console.error("Erro de conexão com banco de dados:", err);
     return false;

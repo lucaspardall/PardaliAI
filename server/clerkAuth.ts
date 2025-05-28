@@ -39,7 +39,14 @@ export function setupClerkAuth(app: Express) {
         });
       }
 
-      const clerkUser = await req.auth().user;
+      const clerkUser = req.auth.user;
+
+      if (!clerkUser) {
+        return res.status(401).json({ 
+          error: 'Clerk user data not available',
+          authenticated: false 
+        });
+      }
 
       // Buscar ou criar usuário no banco
       let user = await storage.getUser(userId);
@@ -48,7 +55,7 @@ export function setupClerkAuth(app: Express) {
         // Criar novo usuário baseado nos dados do Clerk
         await storage.upsertUser({
           id: userId,
-          email: clerkUser.emailAddresses[0]?.emailAddress || '',
+          email: clerkUser.emailAddresses?.[0]?.emailAddress || '',
           firstName: clerkUser.firstName || '',
           lastName: clerkUser.lastName || '',
           profileImageUrl: clerkUser.imageUrl || '',

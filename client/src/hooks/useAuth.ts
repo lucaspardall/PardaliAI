@@ -1,4 +1,3 @@
-
 import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -11,7 +10,7 @@ export function useAuth() {
     queryKey: ['user', clerkUser?.id],
     queryFn: async () => {
       if (!clerkUser?.id) return null;
-      
+
       try {
         const token = await getToken();
         const response = await fetch('/api/auth/user', {
@@ -19,11 +18,15 @@ export function useAuth() {
             'Authorization': `Bearer ${token}`,
           },
         });
-        
+
         if (!response.ok) {
-          throw new Error('Failed to fetch user data');
+          if (response.status === 401) {
+            // Usuário não autenticado, isso é normal
+            return null;
+          }
+          throw new Error(`HTTP ${response.status}`);
         }
-        
+
         return response.json();
       } catch (error) {
         console.error('Error fetching user data:', error);

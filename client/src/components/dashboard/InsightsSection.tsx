@@ -189,7 +189,7 @@ export default function InsightsSection({ storeId }: InsightsSectionProps) {
                     <p className="text-sm font-medium truncate">
                       {insight.message}
                     </p>
-                    {'severity' in insight && (
+                    {'severity' in insight && insight.severity && (
                       <Badge 
                         variant={getSeverityColor(insight.severity)}
                         className="ml-2 text-xs"
@@ -199,7 +199,7 @@ export default function InsightsSection({ storeId }: InsightsSectionProps) {
                       </Badge>
                     )}
                   </div>
-                  {insight.actionSuggestion && (
+                  {insight.actionSuggestion && (ggestion && (
                     <p className="text-xs text-muted-foreground">
                       💡 {insight.actionSuggestion}
                     </p>

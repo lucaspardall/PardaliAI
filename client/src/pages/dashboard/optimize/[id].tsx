@@ -178,7 +178,7 @@ export default function OptimizeProduct() {
         return `<span class="bg-yellow-100 dark:bg-yellow-900/30 px-1">${word}</span>`;
       }
       return word;
-    }).join(' ');
+    }).join(' '); ');
     
     return result;
   };
