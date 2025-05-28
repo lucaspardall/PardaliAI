@@ -33,7 +33,12 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!CLERK_PUBLISHABLE_KEY) {
-  throw new Error('Missing Publishable Key');
+  console.error('❌ VITE_CLERK_PUBLISHABLE_KEY não configurado nos Secrets');
+  console.error('Configure em: https://dashboard.clerk.com');
+}
+
+if (CLERK_PUBLISHABLE_KEY === 'pk_test_your_publishable_key_here') {
+  console.error('❌ Configure uma chave Clerk válida nos Secrets');
 }
 
 const queryClient = new QueryClient({

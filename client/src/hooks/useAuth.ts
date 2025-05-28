@@ -13,23 +13,35 @@ export function useAuth() {
 
       try {
         const token = await getToken();
+        
+        if (!token) {
+          console.warn('⚠️ Token Clerk não disponível');
+          return null;
+        }
+
         const response = await fetch('/api/auth/user', {
           headers: {
             'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
+          credentials: 'include',
         });
 
         if (!response.ok) {
           if (response.status === 401) {
-            // Usuário não autenticado, isso é normal
+            console.warn('⚠️ Usuário não autenticado no backend');
             return null;
           }
+          const errorText = await response.text();
+          console.error(`❌ Erro auth: ${response.status} - ${errorText}`);
           throw new Error(`HTTP ${response.status}`);
         }
 
-        return response.json();
+        const userData = await response.json();
+        console.log('✅ Usuário autenticado:', userData?.email);
+        return userData;
       } catch (error) {
-        // Silenciar erro de fetch do usuário para evitar spam
+        console.error('❌ Erro ao buscar dados do usuário:', error);
         return null;
       }
     },

@@ -65,7 +65,7 @@ router.post('/portal', isAuthenticated, async (req: Request, res: Response) => {
  */
 router.get('/subscription', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const { userId } = req.auth;
+    const { userId } = req.auth();
 
     const subscriptionInfo = await PaymentService.getSubscriptionInfo(userId);
     const currentPlan = PAYMENT_PLANS[subscriptionInfo.plan] || PAYMENT_PLANS.free;

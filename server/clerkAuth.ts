@@ -26,10 +26,26 @@ export function setupClerkAuth(app: Express) {
     publishableKey: process.env.VITE_CLERK_PUBLISHABLE_KEY,
   }));
 
+  // Middleware de debug para auth
+  app.use('/api/*', (req: any, res, next) => {
+    try {
+      const auth = req.auth ? req.auth() : null;
+      if (auth?.userId) {
+        console.log(`🔐 Auth OK: ${req.method} ${req.path} - User: ${auth.userId.slice(0, 8)}...`);
+      } else {
+        console.log(`⚠️ No Auth: ${req.method} ${req.path}`);
+      }
+    } catch (error) {
+      console.log(`❌ Auth Error: ${req.method} ${req.path} - ${error}`);
+    }
+    next();
+  });
+
   // Rota para obter dados do usuário
   app.get('/api/auth/user', requireAuth(), async (req: any, res) => {
     try {
-      const { userId } = req.auth;
+      const auth = req.auth();
+      const { userId } = auth;
 
       if (!userId) {
         return res.status(401).json({ 
@@ -38,7 +54,7 @@ export function setupClerkAuth(app: Express) {
         });
       }
 
-      const clerkUser = req.auth.user;
+      const clerkUser = auth.user;
 
       if (!clerkUser) {
         return res.status(401).json({ 

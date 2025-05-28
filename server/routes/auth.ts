@@ -39,9 +39,13 @@ router.get('/status', async (req: Request, res: Response) => {
  */
 router.post('/refresh', isAuthenticated, async (req: Request, res: Response) => {
   try {
+    const auth = (req as any).auth();
+    console.log('🔄 Refresh session for user:', auth?.userId?.slice(0, 8));
+    
     res.json({
       message: 'Sessão renovada com sucesso',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      userId: auth?.userId
     });
   } catch (error) {
     console.error('Erro ao renovar sessão:', error);
