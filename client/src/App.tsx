@@ -88,7 +88,14 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <ErrorBoundary>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+      <ClerkProvider 
+        publishableKey={CLERK_PUBLISHABLE_KEY}
+        navigate={(to) => window.location.href = to}
+        afterSignInUrl="/dashboard"
+        afterSignUpUrl="/dashboard"
+        signInUrl="/login"
+        signUpUrl="/signup"
+      >
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <HelmetProvider>
