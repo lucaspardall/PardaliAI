@@ -1,0 +1,128 @@
+2025-05-28 17:04:59.89
+9abd3d39
+User
+data: {
+2025-05-28 17:04:59.89
+9abd3d39
+User
+completed_scenario: '',
+2025-05-28 17:04:59.89
+9abd3d39
+User
+items: [],
+2025-05-28 17:04:59.89
+9abd3d39
+User
+ordersn: '2505294PNM8RJV',
+2025-05-28 17:04:59.89
+9abd3d39
+User
+status: 'READY_TO_SHIP',
+2025-05-28 17:04:59.89
+9abd3d39
+User
+update_time: 1748462692
+2025-05-28 17:04:59.89
+9abd3d39
+User
+},
+2025-05-28 17:04:59.89
+9abd3d39
+User
+shop_id: 404065079,
+2025-05-28 17:04:59.89
+9abd3d39
+User
+code: 3,
+2025-05-28 17:04:59.89
+9abd3d39
+User
+timestamp: 1748462693
+2025-05-28 17:04:59.89
+9abd3d39
+User
+}
+2025-05-28 17:04:59.89
+9abd3d39
+User
+[Webhook] Validando assinatura: {
+2025-05-28 17:04:59.89
+9abd3d39
+User
+url: 'https://cipshopee.replit.app/api/shopee/webhook',
+2025-05-28 17:04:59.89
+9abd3d39
+User
+bodyLength: 218,
+2025-05-28 17:04:59.89
+9abd3d39
+User
+baseStringLength: 266,
+2025-05-28 17:04:59.89
+9abd3d39
+User
+received: '715021879f4f82f11b21...',
+2025-05-28 17:04:59.89
+9abd3d39
+User
+calculated: 'caf8324d85cdd70f7fe3...',
+2025-05-28 17:04:59.89
+9abd3d39
+User
+match: false
+2025-05-28 17:04:59.89
+9abd3d39
+User
+}
+2025-05-28 17:04:59.89
+9abd3d39
+User
+[Routes] Erro no processamento do webhook: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+2025-05-28 17:04:59.89
+9abd3d39
+User
+at ServerResponse.setHeader (node:_http_outgoing:655:11)
+2025-05-28 17:04:59.89
+9abd3d39
+User
+at ServerResponse.header (/home/runner/workspace/node_modules/express/lib/response.js:794:10)
+2025-05-28 17:04:59.89
+9abd3d39
+User
+at ServerResponse.send (/home/runner/workspace/node_modules/express/lib/response.js:174:12)
+2025-05-28 17:04:59.89
+9abd3d39
+User
+at ServerResponse.json (/home/runner/workspace/node_modules/express/lib/response.js:278:15)
+2025-05-28 17:04:59.89
+9abd3d39
+User
+at res.json (file:///home/runner/workspace/dist/index.js:7033:28)
+2025-05-28 17:04:59.89
+9abd3d39
+User
+at handleShopeeWebhook (file:///home/runner/workspace/dist/index.js:3151:21)
+2025-05-28 17:04:59.89
+9abd3d39
+User
+at Immediate. (file:///home/runner/workspace/dist/index.js:4981:7)
+2025-05-28 17:04:59.89
+9abd3d39
+User
+at process.processImmediate (node:internal/timers:483:21) {
+2025-05-28 17:04:59.89
+9abd3d39
+User
+code: 'ERR_HTTP_HEADERS_SENT'
+2025-05-28 17:04:59.89
+9abd3d39
+User
+}
+2025-05-28 17:05:14.21
+9abd3d39
+User
+🔌 Verificando conexão com banco...
+2025-05-28 17:05:14.76
+9abd3d39
+User
+✅ Conexão com banco estabelecida
