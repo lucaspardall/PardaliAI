@@ -1,0 +1,228 @@
+🌍 Hostname: 73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev
+🔧 Ambiente Replit: true
+🚀 [ClerkLoader] Iniciando no Replit...
+Failed to fetch
+Failed to fetch
+Failed to fetch
+Failed to fetch
+⚠️ [ClerkLoader] Clerk não carregou, ativando modo de recuperação...
+Failed to fetch
+Failed to fetch
+🔄 [ClerkLoader] Prosseguindo com aplicação (modo fallback)
+Failed to fetch
+Failed to fetch
+at window.fetch (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218642) at s.retryImmediately (https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js:5:20516) at o (https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js:7:43658) at async Object.l [as request] (https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js:5:20497) at async c._baseFetch (https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js:2:5757) at async l.execute (https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js:2:4733) at async s._baseGet (https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js:3:567) at async Promise.all (index 0) at async #S (https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js:5:51597) at async ew.load (https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js:5:21894)EditarDiagnosed Clerk API connection issues in Replit environment.8 sO erro mostra que o Clerk está tentando fazer fetch para alguma API mas está falhando. O problema é que está no Replit e está tendo problemas de CORS ou de conexão. Vejo que está usando o CDN do jsdelivr para carregar o Clerk.
+Os erros "Failed to fetch" sugerem que:
+
+O Clerk está tentando se conectar ao backend da Clerk
+Mas está falhando por algum motivo (CORS, firewall do Replit, etc)
+
+Preciso fornecer soluções específicas para o Replit.🚨 PROBLEMA: CLERK COM CORS/FETCH NO REPLIT
+O Clerk está carregando mas não consegue se conectar ao backend. Vamos resolver:
+🛠️ SOLUÇÃO COMPLETA PARA REPLIT
+1️⃣ CRIAR PROXY PARA O CLERK
+client/src/App.tsx
+jsximport { ClerkProvider } from '@clerk/clerk-react'
+import { useEffect, useState } from 'react'
+
+const CLERK_FRONTEND_API = 'https://api.clerk.com'
+
+export default function App() {
+  const [isClerkReady, setIsClerkReady] = useState(false)
+  const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
+  useEffect(() => {
+    // Forçar configuração do Clerk no Replit
+    window.__clerk_frontend_api = CLERK_FRONTEND_API
+    setIsClerkReady(true)
+  }, [])
+
+  if (!publishableKey) {
+    return <div>Configure VITE_CLERK_PUBLISHABLE_KEY</div>
+  }
+
+  if (!isClerkReady) {
+    return <div>Carregando...</div>
+  }
+
+  return (
+    <ClerkProvider
+      publishableKey={publishableKey}
+      // Configurações críticas para Replit
+      frontendApi={CLERK_FRONTEND_API}
+      clerkJSUrl="https://unpkg.com/@clerk/clerk-js@4/dist/clerk.browser.js"
+      telemetry={false}
+      // Retry configuration
+      appearance={{
+        baseTheme: undefined
+      }}
+    >
+      <ClerkProviderWithFallback>
+        {/* Seu app aqui */}
+      </ClerkProviderWithFallback>
+    </ClerkProvider>
+  )
+}
+
+// Componente com fallback
+function ClerkProviderWithFallback({ children }) {
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    // Timeout para detectar falha
+    const timeout = setTimeout(() => {
+      if (!window.Clerk) {
+        setError(true)
+      }
+    }, 5000)
+
+    return () => clearTimeout(timeout)
+  }, [])
+
+  if (error) {
+    return (
+      <div style={{ padding: 20 }}>
+        <h2>⚠️ Erro ao carregar autenticação</h2>
+        <p>Modo offline ativado. Funcionalidades limitadas.</p>
+        {children}
+      </div>
+    )
+  }
+
+  return children
+}
+2️⃣ CONFIGURAR VITE PARA REPLIT
+vite.config.js
+javascriptimport { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    host: '0.0.0.0',
+    port: 5173,
+    hmr: {
+      protocol: 'wss',
+      clientPort: 443
+    },
+    // Proxy para evitar CORS
+    proxy: {
+      '/v1': {
+        target: 'https://api.clerk.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path
+      }
+    }
+  },
+  define: {
+    global: 'window',
+  },
+  optimizeDeps: {
+    include: ['@clerk/clerk-react']
+  }
+})
+3️⃣ SOLUÇÃO ALTERNATIVA - MOCK LOCAL
+Se o Clerk continuar falhando, crie um modo desenvolvimento:
+client/src/contexts/AuthContext.tsx
+jsximport { createContext, useContext, useState, useEffect } from 'react'
+import { useClerk, useUser } from '@clerk/clerk-react'
+
+const AuthContext = createContext({})
+
+export function AuthProvider({ children }) {
+  const { user, isLoaded: clerkLoaded } = useUser()
+  const [mockMode, setMockMode] = useState(false)
+  const [mockUser, setMockUser] = useState(null)
+
+  useEffect(() => {
+    // Ativar mock se Clerk falhar
+    const timer = setTimeout(() => {
+      if (!clerkLoaded && window.location.hostname.includes('replit')) {
+        console.log('🔄 Ativando modo mock para desenvolvimento')
+        setMockMode(true)
+        setMockUser({
+          id: 'mock_user_dev',
+          email: 'dev@example.com',
+          firstName: 'Dev',
+          lastName: 'User'
+        })
+      }
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [clerkLoaded])
+
+  const currentUser = mockMode ? mockUser : user
+  const isAuthenticated = mockMode ? !!mockUser : !!user
+
+  return (
+    <AuthContext.Provider value={{
+      user: currentUser,
+      isAuthenticated,
+      mockMode,
+      signIn: mockMode ? 
+        () => setMockUser({ id: 'mock', email: 'test@test.com' }) : 
+        undefined,
+      signOut: mockMode ? 
+        () => setMockUser(null) : 
+        undefined
+    }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export const useAuth = () => useContext(AuthContext)
+4️⃣ CONFIGURAÇÃO NO CLERK DASHBOARD
+
+Acesse dashboard.clerk.com
+Paths → Configure:
+Sign-in URL: /sign-in
+Sign-up URL: /sign-up
+After sign-in URL: /dashboard
+After sign-up URL: /dashboard
+
+Domains → Adicione TODOS estes:
+*.replit.dev
+*.repl.co
+*.replit.app
+localhost:5173
+
+
+5️⃣ VARIÁVEIS DE AMBIENTE NO REPLIT
+Use Secrets no Replit (não .env):
+
+Clique em 🔒 Secrets
+Adicione:
+
+Key: VITE_CLERK_PUBLISHABLE_KEY
+Value: pk_test_... (sua chave)
+
+
+
+6️⃣ TESTE RÁPIDO
+Crie este componente para testar:
+jsx// TestAuth.jsx
+import { SignIn, useUser } from '@clerk/clerk-react'
+
+export function TestAuth() {
+  const { user, isLoaded } = useUser()
+
+  return (
+    <div>
+      <h2>Status da Autenticação</h2>
+      <p>Carregado: {isLoaded ? '✅' : '⏳'}</p>
+      <p>Usuário: {user ? user.email : 'Não autenticado'}</p>
+      
+      {!user && <SignIn />}
+    </div>
+  )
+}
+🚀 SOLUÇÃO DEFINITIVA
+Se nada funcionar, use autenticação customizada temporariamente:
+bash# No terminal do Replit
+curl -X POST https://api.clerk.com/v1/client/handshake \
+  -H "Origin: https://seu-app.replit.dev"
+Se retornar erro de CORS, você precisará usar um backend proxy.
+Qual dessas soluções você quer tentar primeiro?
