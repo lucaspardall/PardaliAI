@@ -135,6 +135,11 @@ export default function DirectLogin() {
         <CardDescription>
           Escolha como você quer fazer login na plataforma.
         </CardDescription>
+        <div className="text-center pt-2">
+          <a href="/landing" className="text-sm text-muted-foreground hover:text-primary">
+            ← Voltar para a página inicial
+          </a>
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col space-y-4">
         <div className="text-center">

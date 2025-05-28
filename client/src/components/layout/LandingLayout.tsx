@@ -64,11 +64,11 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
 
             {isAuthenticated ? (
               <Button asChild>
-                <Link href="/dashboard">Dashboard</Link>
+                <a href="/dashboard">Dashboard</a>
               </Button>
             ) : (
               <Button asChild>
-                <Link href="/">Comece grátis</Link>
+                <a href="/">Comece grátis</a>
               </Button>
             )}
           </div>
@@ -136,16 +136,16 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               ) : (
                 <div className="space-y-2">
                   <Button asChild className="w-full">
-                    <Link href="/">
+                    <a href="/">
                       <i className="ri-rocket-line mr-2"></i>
                       Comece grátis
-                    </Link>
+                    </a>
                   </Button>
                   <Button asChild variant="outline" className="w-full">
-                    <Link href="/">
+                    <a href="/">
                       <i className="ri-login-box-line mr-2"></i>
                       Já tenho conta
-                    </Link>
+                    </a>
                   </Button>
                 </div>
               )}

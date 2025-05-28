@@ -113,8 +113,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function Router() {
   return (
     <Switch>
-      {/* Public route */}
-      <Route path="/" component={Landing} />
+      {/* Public routes */}
+      <Route path="/landing" component={Landing} />
+      <Route path="/" component={DirectLogin} />
 
       {/* Protected dashboard routes */}
       <Route path="/dashboard">
