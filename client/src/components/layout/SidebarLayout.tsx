@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -40,7 +39,6 @@ export default function SidebarLayout({
 }: SidebarLayoutProps) {
   const { user, isLoading, logout } = useAuth();
   const [location] = useLocation();
-  const authContext = useAuth();
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -49,17 +47,31 @@ export default function SidebarLayout({
     return typeof window !== 'undefined' && window.innerWidth < 768 ? true : false;
   });
 
-  const { user } = useAuth();
-
   // Fetch data from API
   const { data: stores } = useQuery({
     queryKey: ["/api/stores"],
-    queryFn: () => apiRequest('GET', '/api/stores').then(res => res.json()),
+    queryFn: async () => {
+      const response = await fetch('/api/stores', {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!response.ok) throw new Error('Failed to fetch stores');
+      return response.json();
+    },
+    enabled: !!user, // Só executa se user estiver logado
   });
 
   const { data: notifications } = useQuery({
     queryKey: ["/api/notifications"],
-    queryFn: () => apiRequest('GET', '/api/notifications').then(res => res.json()),
+    queryFn: async () => {
+      const response = await fetch('/api/notifications', {
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+      return response.json();
+    },
+    enabled: !!user, // Só executa se user estiver logado
   });
 
   // Base paths for links based on mode
@@ -98,11 +110,30 @@ export default function SidebarLayout({
   }, [location]);
 
   const handleLogout = async () => {
-    if (logout) {
-      await logout();
-    } else {
-      // Fallback se logout não estiver disponível
-      window.location.href = '/';
+    try {
+      console.log('🚪 Iniciando logout...');
+      
+      if (logout) {
+        await logout();
+        toast({
+          title: "Logout realizado",
+          description: "Você foi desconectado com sucesso",
+        });
+      } else {
+        console.warn('⚠️ Função logout não disponível, redirecionando...');
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('❌ Erro no logout:', error);
+      toast({
+        title: "Erro no logout",
+        description: "Houve um problema ao fazer logout. Redirecionando...",
+        variant: "destructive",
+      });
+      // Forçar redirecionamento mesmo com erro
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
     }
   };
 
