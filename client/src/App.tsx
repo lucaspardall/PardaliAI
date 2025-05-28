@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ClerkProvider } from '@clerk/clerk-react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { HelmetProvider } from 'react-helmet-async';
+import { ClerkLoader } from '@/components/ClerkLoader';
 
 // Pages
 import LandingPage from "@/pages/landing";
@@ -95,10 +96,19 @@ function App() {
         afterSignUpUrl="/dashboard"
         signInUrl="/login"
         signUpUrl="/signup"
+        appearance={{
+          variables: {
+            colorPrimary: "#f97316"
+          }
+        }}
+        localization={{
+          locale: "pt-BR"
+        }}
       >
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <HelmetProvider>
+        <ClerkLoader>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+              <HelmetProvider>
               <Switch>
                 {/* Public Routes */}
                 <Route path="/" component={LandingPage} />
@@ -177,9 +187,10 @@ function App() {
               <Route component={NotFoundPage} />
             </Switch>
             <Toaster />
-            </HelmetProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
+              </HelmetProvider>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </ClerkLoader>
       </ClerkProvider>
     </ErrorBoundary>
   );
