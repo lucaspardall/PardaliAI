@@ -47,29 +47,6 @@ const queryClient = new QueryClient({
   },
 });
 
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-if (!CLERK_PUBLISHABLE_KEY) {
-  throw new Error("Missing Publishable Key. Please set VITE_CLERK_PUBLISHABLE_KEY in your environment variables.")
-}
-
-function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center p-8">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">Algo deu errado</h2>
-        <p className="text-gray-600 mb-4">Ocorreu um erro inesperado. Tente novamente.</p>
-        <button 
-          onClick={resetErrorBoundary}
-          className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
-        >
-          Tentar Novamente
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function App() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} onError={(error) => console.error('App Error:', error)}>
@@ -153,20 +130,6 @@ function App() {
               {/* 404 Route */}
               <Route component={NotFoundPage} />
             </Switch>
-            <Toaster />
-          </ThemeProvider>
-        </QueryClientProvider>
-      </ClerkProvider>
-    </ErrorBoundary>
-  );
-}
-
-export default App;
-
-              {/* 404 Page */}
-              <Route component={NotFoundPage} />
-            </Switch>
-            
             <Toaster />
           </ThemeProvider>
         </QueryClientProvider>
