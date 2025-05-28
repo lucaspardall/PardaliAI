@@ -6,36 +6,131 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Shield, Zap, TrendingUp, CheckCircle, AlertCircle, Mail, Lock } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Shield } from 'lucide-react';
 import { Link } from 'wouter';
 
-export default function ReplitLoginPage() {
+export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [loginStep, setLoginStep] = useState<'idle' | 'opening' | 'authenticating' | 'redirecting'>('idle');
-  const [loginMethod, setLoginMethod] = useState<'replit' | 'email'>('email'); // Email como padrão
+  const [loginMethod, setLoginMethod] = useState<'email' | 'replit'>('email');
   
-  // Estado para login com email
+  // Estados para login por email
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  
+  // Estados para login Replit
+  const [replitStep, setReplitStep] = useState<'idle' | 'opening' | 'authenticating' | 'success'>('idle');
 
-  const handleLoginWithReplit = () => {
+  // Validações em tempo real
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) return 'Email é obrigatório';
+    if (!emailRegex.test(email)) return 'Email inválido';
+    return '';
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) return 'Senha é obrigatória';
+    if (password.length < 6) return 'Senha deve ter pelo menos 6 caracteres';
+    return '';
+  };
+
+  useEffect(() => {
+    if (email) setEmailError(validateEmail(email));
+  }, [email]);
+
+  useEffect(() => {
+    if (password) setPasswordError(validatePassword(password));
+  }, [password]);
+
+  // Login por Email/Senha
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const emailErr = validateEmail(email);
+    const passwordErr = validatePassword(password);
+    
+    if (emailErr || passwordErr) {
+      setEmailError(emailErr);
+      setPasswordError(passwordErr);
+      return;
+    }
+
+    if (isRegisterMode && password !== confirmPassword) {
+      toast({
+        title: "❌ Senhas não coincidem",
+        description: "Verifique se as senhas são iguais",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
-    setLoginStep('opening');
 
-    // Toast mais discreto
+    try {
+      const endpoint = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
+      const body = isRegisterMode 
+        ? { email, password, confirmPassword }
+        : { email, password };
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "✅ Sucesso!",
+          description: isRegisterMode ? "Conta criada com sucesso!" : "Login realizado com sucesso!",
+        });
+
+        // Redirecionamento suave
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1000);
+      } else {
+        toast({
+          title: "❌ Erro",
+          description: data.message || 'Erro desconhecido',
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Erro no login:', error);
+      toast({
+        title: "❌ Erro de conexão",
+        description: "Verifique sua conexão e tente novamente",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Login com Replit
+  const handleReplitLogin = () => {
+    setIsLoading(true);
+    setReplitStep('opening');
+
     toast({
-      title: "🔐 Autenticando...",
-      description: "Abrindo popup seguro",
+      title: "🚀 Abrindo Replit...",
+      description: "Janela de autenticação segura",
     });
 
-    window.addEventListener("message", authComplete);
+    window.addEventListener("message", handleReplitCallback);
     
-    // Popup otimizado - menor e mais centrado
-    const h = 500;
-    const w = 400;
+    const h = 550;
+    const w = 450;
     const left = window.screen.width / 2 - w / 2;
     const top = window.screen.height / 2 - h / 2;
 
@@ -47,7 +142,7 @@ export default function ReplitLoginPage() {
 
     if (!authWindow) {
       setIsLoading(false);
-      setLoginStep('idle');
+      setReplitStep('idle');
       toast({
         title: "🚫 Popup bloqueado",
         description: "Permita popups e tente novamente",
@@ -56,234 +151,114 @@ export default function ReplitLoginPage() {
       return;
     }
 
-    // Feedback visual imediato
-    setLoginStep('authenticating');
+    setReplitStep('authenticating');
 
-    // Monitorar se popup foi fechado manualmente
+    // Monitorar fechamento da janela
     const checkClosed = setInterval(() => {
       if (authWindow.closed) {
         clearInterval(checkClosed);
-        setIsLoading(false);
-        setLoginStep('idle');
-        window.removeEventListener("message", authComplete);
-        
-        // Não mostrar erro se user fechou intencionalmente
-        if (loginStep === 'authenticating') {
+        cleanupReplitLogin();
+        if (replitStep === 'authenticating') {
           toast({
             title: "⚠️ Login cancelado",
-            description: "Popup foi fechado",
+            description: "Janela foi fechada",
             variant: "default"
           });
         }
       }
     }, 1000);
 
-    // Timeout mais longo para Replit
-    const timeoutId = setTimeout(() => {
+    // Timeout de segurança
+    setTimeout(() => {
       clearInterval(checkClosed);
       if (authWindow && !authWindow.closed) {
         authWindow.close();
       }
-      setIsLoading(false);
-      setLoginStep('idle');
-      window.removeEventListener("message", authComplete);
-      toast({
-        title: "⏰ Tempo esgotado",
-        description: "Login demorou muito, tente novamente",
-        variant: "destructive"
-      });
-    }, 60000); // 1 minuto
-
-    function authComplete(e: MessageEvent) {
-      if (e.data !== "auth_complete") {
-        return;
-      }
-
-      clearTimeout(timeoutId);
-      clearInterval(checkClosed);
-      setLoginStep('redirecting');
-      window.removeEventListener("message", authComplete);
-
-      if (authWindow) {
-        authWindow.close();
-      }
-
-      // Feedback de sucesso mais rápido
-      toast({
-        title: "✅ Login realizado!",
-        description: "Bem-vindo ao CIP Shopee",
-      });
-
-      // Redirecionamento mais rápido
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 800);
-    }
+      cleanupReplitLogin();
+    }, 60000);
   };
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleReplitCallback = (e: MessageEvent) => {
+    if (e.data !== "auth_complete") return;
     
-    // Validações client-side
-    if (!email.trim()) {
-      toast({
-        title: "⚠️ Campo obrigatório",
-        description: "Por favor, insira seu email.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!password.trim()) {
-      toast({
-        title: "⚠️ Campo obrigatório", 
-        description: "Por favor, insira sua senha.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (isRegisterMode && password !== confirmPassword) {
-      toast({
-        title: "❌ Senhas não coincidem",
-        description: "As senhas digitadas são diferentes.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (isRegisterMode && password.length < 6) {
-      toast({
-        title: "❌ Senha muito curta",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Toast de início
+    setReplitStep('success');
+    cleanupReplitLogin();
+    
     toast({
-      title: "🔐 Processando...",
-      description: isRegisterMode ? "Criando sua conta..." : "Validando credenciais...",
+      title: "✅ Login Replit concluído!",
+      description: "Redirecionando para o dashboard...",
     });
 
-    try {
-      const endpoint = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
-      const body: any = { email: email.trim(), password };
-      
-      if (isRegisterMode) {
-        body.confirmPassword = confirmPassword;
-      }
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "✅ Sucesso!",
-          description: isRegisterMode ? "Conta criada! Redirecionando..." : "Login realizado! Bem-vindo de volta!",
-        });
-
-        // Redirecionamento mais rápido
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 1000);
-      } else {
-        let errorMessage = "Erro desconhecido.";
-        
-        if (response.status === 401) {
-          errorMessage = "Email ou senha incorretos.";
-        } else if (response.status === 409) {
-          errorMessage = "Este email já possui uma conta.";
-        } else if (data.message) {
-          errorMessage = data.message;
-        }
-
-        toast({
-          title: "❌ Falha no " + (isRegisterMode ? "cadastro" : "login"),
-          description: errorMessage,
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Erro na requisição:", error);
-      toast({
-        title: "❌ Erro de conexão",
-        description: "Verifique sua internet e tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 1200);
   };
 
-  const getStepIcon = () => {
-    switch (loginStep) {
-      case 'opening':
-        return <Loader2 className="h-5 w-5 animate-spin text-blue-500" />;
-      case 'authenticating':
-        return <Shield className="h-5 w-5 animate-pulse text-orange-500" />;
-      case 'redirecting':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      default:
-        return <Shield className="h-5 w-5 text-gray-400" />;
-    }
+  const cleanupReplitLogin = () => {
+    setIsLoading(false);
+    setReplitStep('idle');
+    window.removeEventListener("message", handleReplitCallback);
   };
 
-  const getStepText = () => {
-    switch (loginStep) {
+  const getReplitButtonContent = () => {
+    switch (replitStep) {
       case 'opening':
-        return "Abrindo janela de autenticação...";
+        return (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Abrindo janela...
+          </>
+        );
       case 'authenticating':
-        return "Aguardando confirmação no Replit...";
-      case 'redirecting':
-        return "Login realizado! Redirecionando...";
+        return (
+          <>
+            <Shield className="mr-2 h-4 w-4 animate-pulse" />
+            Aguardando login...
+          </>
+        );
+      case 'success':
+        return (
+          <>
+            <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+            Sucesso! Redirecionando...
+          </>
+        );
       default:
-        return "Pronto para fazer login";
+        return (
+          <>
+            <i className="ri-replit-fill mr-2"></i>
+            Entrar com Replit
+          </>
+        );
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        
-        {/* Logo e Header */}
-        <div className="text-center space-y-2">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
-            <i className="ri-bird-fill text-white text-2xl"></i>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">
+            <i className="ri-shopping-bag-3-line text-5xl mb-2 block"></i>
+            <h1 className="text-3xl font-bold">CIP Shopee</h1>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-            CIP Shopee
-          </h1>
-          <p className="text-gray-600">Entre na sua conta para continuar</p>
+          <p className="text-gray-600 mt-2">Entre na sua conta para continuar</p>
         </div>
 
-        {/* Card Principal */}
-        <Card className="border-0 shadow-xl">
-          <CardHeader className="text-center pb-4">
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="text-center">
             <CardTitle className="text-xl">Fazer Login</CardTitle>
             <CardDescription>
-              Escolha como deseja acessar sua conta
+              Escolha seu método de autenticação preferido
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-6">
-            
-            <Tabs value={loginMethod} onValueChange={(value) => setLoginMethod(value as 'replit' | 'email')}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="email" className="flex items-center gap-2 font-semibold">
+          <CardContent>
+            <Tabs value={loginMethod} onValueChange={(value) => setLoginMethod(value as 'email' | 'replit')}>
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="email" className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
-                  Email & Senha ⭐
+                  Email & Senha
                 </TabsTrigger>
                 <TabsTrigger value="replit" className="flex items-center gap-2">
                   <i className="ri-replit-fill text-sm"></i>
@@ -291,171 +266,164 @@ export default function ReplitLoginPage() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="replit" className="space-y-4">
-                {/* Status do Login Replit */}
-                <div className="flex items-center justify-center space-x-3 p-4 bg-gradient-to-r from-blue-50 to-orange-50 rounded-lg border border-orange-200">
-                  {getStepIcon()}
-                  <span className="text-sm font-medium text-gray-700">
-                    {getStepText()}
-                  </span>
-                </div>
-
-                {/* Dica visual */}
-                <div className="text-center text-xs text-gray-500 bg-orange-50 p-2 rounded">
-                  💡 <strong>Mais rápido:</strong> Login instantâneo com sua conta Replit
-                </div>
-
-                {/* Botão Replit */}
-                <Button 
-                  onClick={handleLoginWithReplit}
-                  disabled={isLoading}
-                  className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      {loginStep === 'redirecting' ? 'Redirecionando...' : 'Autenticando...'}
-                    </>
-                  ) : (
-                    <>
-                      <i className="ri-replit-fill mr-2 text-lg"></i>
-                      Entrar com Replit
-                    </>
-                  )}
-                </Button>
-              </TabsContent>
-
+              {/* Login por Email */}
               <TabsContent value="email" className="space-y-4">
-                {/* Dica de destaque */}
-                <div className="text-center text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
-                  🚀 <strong>Método recomendado:</strong> Rápido e seguro
-                </div>
-                
-                <form onSubmit={handleEmailLogin} className="space-y-4">
+                <form onSubmit={handleEmailAuth} className="space-y-4">
+                  {/* Campo Email */}
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Digite seu email (ex: usuario@gmail.com)"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      disabled={isLoading}
-                      className="h-11 border-2 focus:border-blue-500"
-                    />
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className={`pl-10 ${emailError ? 'border-red-500' : ''}`}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    {emailError && (
+                      <p className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {emailError}
+                      </p>
+                    )}
                   </div>
 
+                  {/* Campo Senha */}
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder={isRegisterMode ? "Crie uma senha (mín. 6 caracteres)" : "Digite sua senha"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                      className="h-11 border-2 focus:border-blue-500"
-                      minLength={isRegisterMode ? 6 : 1}
-                    />
+                    <Label htmlFor="password">Senha</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className={`pl-10 pr-10 ${passwordError ? 'border-red-500' : ''}`}
+                        disabled={isLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                        disabled={isLoading}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {passwordError && (
+                      <p className="text-sm text-red-500 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {passwordError}
+                      </p>
+                    )}
                   </div>
 
+                  {/* Confirmar Senha (apenas no registro) */}
                   {isRegisterMode && (
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirmar Senha</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="Digite a senha novamente"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        disabled={isLoading}
-                        className="h-11 border-2 focus:border-blue-500"
-                        minLength={6}
-                      />
-                      {confirmPassword && password && password !== confirmPassword && (
-                        <p className="text-xs text-red-500 mt-1">⚠️ As senhas não coincidem</p>
-                      )}
+                      <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="confirmPassword"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="pl-10"
+                          disabled={isLoading}
+                        />
+                      </div>
                     </div>
                   )}
 
+                  {/* Botão Submit */}
                   <Button 
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full h-12 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium"
+                    disabled={isLoading || !!emailError || !!passwordError}
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         {isRegisterMode ? 'Criando conta...' : 'Entrando...'}
                       </>
                     ) : (
                       <>
-                        <Lock className="mr-2 h-5 w-5" />
+                        <Mail className="mr-2 h-4 w-4" />
                         {isRegisterMode ? 'Criar Conta' : 'Entrar'}
                       </>
                     )}
                   </Button>
 
+                  {/* Toggle Login/Registro */}
                   <div className="text-center">
                     <button
                       type="button"
-                      onClick={() => setIsRegisterMode(!isRegisterMode)}
-                      className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                      onClick={() => {
+                        setIsRegisterMode(!isRegisterMode);
+                        setPassword('');
+                        setConfirmPassword('');
+                        setEmailError('');
+                        setPasswordError('');
+                      }}
+                      className="text-sm text-blue-600 hover:text-blue-800 underline"
                       disabled={isLoading}
                     >
                       {isRegisterMode 
                         ? 'Já tem uma conta? Faça login' 
-                        : 'Não tem conta? Crie uma agora'
-                      }
+                        : 'Não tem conta? Criar uma nova'}
                     </button>
                   </div>
                 </form>
               </TabsContent>
-            </Tabs>
 
-            {/* Informações de Segurança */}
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Shield className="h-4 w-4 text-green-500" />
-                <span>Autenticação 100% segura</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Zap className="h-4 w-4 text-blue-500" />
-                <span>Acesso instantâneo ao dashboard</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <TrendingUp className="h-4 w-4 text-purple-500" />
-                <span>Otimize produtos com IA</span>
-              </div>
-            </div>
+              {/* Login com Replit */}
+              <TabsContent value="replit" className="space-y-4">
+                <div className="text-center space-y-4">
+                  <div className="p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+                    <i className="ri-replit-fill text-3xl text-orange-600 mb-2 block"></i>
+                    <p className="text-sm text-gray-700">
+                      Login rápido e seguro com sua conta Replit
+                    </p>
+                  </div>
+
+                  <Button 
+                    onClick={handleReplitLogin}
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium h-12 text-base shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    {getReplitButtonContent()}
+                  </Button>
+
+                  <p className="text-xs text-gray-500">
+                    💡 O login abrirá uma janela popup segura do Replit
+                  </p>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
 
-          <CardFooter className="pt-4 border-t">
-            <div className="w-full text-center">
-              <Link href="/" className="text-sm text-gray-500 hover:text-orange-600 transition-colors">
+          <CardFooter className="flex flex-col space-y-2">
+            <div className="text-center">
+              <Link href="/" className="text-sm text-gray-500 hover:text-gray-700 underline">
                 ← Voltar para página inicial
               </Link>
             </div>
           </CardFooter>
         </Card>
 
-        {/* Dicas de Uso */}
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-4">
-            <div className="flex items-start space-x-3">
-              <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="space-y-1">
-                <h4 className="text-sm font-medium text-blue-900">Primeira vez aqui?</h4>
-                <p className="text-xs text-blue-700">
-                  Após o login, você poderá conectar sua loja Shopee e começar a otimizar produtos imediatamente.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Rodapé */}
+        <div className="text-center mt-6">
+          <p className="text-xs text-gray-500">
+            Ao fazer login, você concorda com nossos termos de uso
+          </p>
+        </div>
       </div>
     </div>
   );

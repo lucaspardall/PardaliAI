@@ -47,7 +47,7 @@ export default function SidebarLayout({
     return typeof window !== 'undefined' && window.innerWidth < 768 ? true : false;
   });
 
-  // Fetch data from API
+  // Fetch data from API apenas quando usuário estiver autenticado
   const { data: stores } = useQuery({
     queryKey: ["/api/stores"],
     queryFn: async () => {
@@ -58,7 +58,7 @@ export default function SidebarLayout({
       if (!response.ok) throw new Error('Failed to fetch stores');
       return response.json();
     },
-    enabled: !!user, // Só executa se user estiver logado
+    enabled: !!user && !isLoading, // Só executa se user estiver logado
   });
 
   const { data: notifications } = useQuery({
@@ -71,7 +71,7 @@ export default function SidebarLayout({
       if (!response.ok) throw new Error('Failed to fetch notifications');
       return response.json();
     },
-    enabled: !!user, // Só executa se user estiver logado
+    enabled: !!user && !isLoading, // Só executa se user estiver logado
   });
 
   // Base paths for links based on mode
@@ -112,7 +112,7 @@ export default function SidebarLayout({
   const handleLogout = async () => {
     try {
       console.log('🚪 Iniciando logout...');
-      
+
       if (logout) {
         await logout();
         toast({
