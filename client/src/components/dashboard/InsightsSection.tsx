@@ -199,7 +199,7 @@ export default function InsightsSection({ storeId }: InsightsSectionProps) {
                       </Badge>
                     )}
                   </div>
-                  {insight.actionSuggestion && (ggestion && (
+                  {insight.actionSuggestion && (
                     <p className="text-xs text-muted-foreground">
                       💡 {insight.actionSuggestion}
                     </p>
