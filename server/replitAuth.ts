@@ -241,10 +241,30 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       return next();
     }
 
+    // Log apenas em desenvolvimento para evitar spam
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Verificando autenticação...');
+    }
+
+    if (req.user && req.user.claims && req.user.claims.sub) {
+      const user = await storage.getUser(req.user.claims.sub);
+      if (user) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ Usuário autenticado:', { id: user.id, email: user.email });
+        }
+        return next();
+      }
+    }
+
+    // Log apenas quando necessário
+    if (process.env.NODE_ENV === 'development' && req.path !== '/api/auth/user') {
+      console.log('❌ Usuário não autenticado tentando acessar:', req.path);
+    }
+
     // Verifica se o usuário está autenticado
     if (!req.user || !req.user.claims || !req.user.claims.sub) {
       console.log('Usuário não autenticado tentando acessar:', req.path);
-      
+
       // Para APIs, retornar 401
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({ 
@@ -261,7 +281,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     // Verificar se o token não expirou
     if (req.user.expires_at && new Date() > new Date(req.user.expires_at * 1000)) {
       console.log('Token expirado para usuário:', req.user.claims.sub);
-      
+
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({ 
           message: 'Token expirado',
@@ -276,7 +296,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Erro no middleware de autenticação:', error);
-    
+
     if (req.path.startsWith('/api/')) {
       return res.status(500).json({ 
         message: 'Erro interno do servidor',

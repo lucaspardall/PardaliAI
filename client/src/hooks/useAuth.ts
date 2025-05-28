@@ -26,7 +26,8 @@ async function fetchUser(): Promise<User | null> {
     });
 
     if (response.status === 401) {
-      return null; // Usuário não autenticado
+      // Silencioso para não spammar console com usuário não autenticado
+      return null;
     }
 
     if (!response.ok) {
@@ -36,7 +37,10 @@ async function fetchUser(): Promise<User | null> {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Erro ao buscar dados do usuário:', error);
+    // Apenas log em caso de erro real (não 401)
+    if (error instanceof Error && !error.message.includes('401')) {
+      console.error('❌ Erro ao buscar dados do usuário:', error);
+    }
     return null;
   }
 }

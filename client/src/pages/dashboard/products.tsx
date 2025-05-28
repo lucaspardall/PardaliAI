@@ -32,6 +32,13 @@ export default function Products() {
   // Fetch user's stores
   const { data: stores, isLoading: storesLoading } = useQuery({
     queryKey: ["/api/stores"],
+    queryFn: async () => {
+      const response = await fetch('/api/stores', { credentials: 'include' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
   });
   
   // Set active store when stores are loaded
@@ -41,7 +48,14 @@ export default function Products() {
   
   // Fetch products for active store
   const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: [activeStore ? `/api/stores/${activeStore}/products` : null],
+    queryKey: [`/api/stores/${activeStore}/products`],
+    queryFn: async () => {
+      const response = await fetch(`/api/stores/${activeStore}/products`, { credentials: 'include' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    },
     enabled: !!activeStore,
   });
 

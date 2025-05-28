@@ -16,11 +16,55 @@ import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, ErrorInfo } from 'react';
 
 const BulkOptimizePage = lazy(() => import('./pages/dashboard/bulk-optimize'));
 const AiCreditsPage = lazy(() => import('./pages/dashboard/ai-credits'));
 import { HelmetProvider } from 'react-helmet-async';
+
+// Componente de Error Boundary
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-background">
+          <div className="text-center p-8">
+            <h2 className="text-2xl font-bold text-destructive mb-4">
+              Algo deu errado
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Ocorreu um erro inesperado. Tente recarregar a página.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Recarregar página
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = React.useState<{
@@ -111,22 +155,24 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <HelmetProvider>
-        <ThemeProvider defaultTheme="light" storageKey="cip-shopee-theme">
-          <TooltipProvider>
-            <Toaster />
-            <Suspense fallback={
-              <div className="h-screen w-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            }>
-              <Router />
-            </Suspense>
-          </TooltipProvider>
-        </ThemeProvider>
-      </HelmetProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <ThemeProvider defaultTheme="light" storageKey="cip-shopee-theme">
+            <TooltipProvider>
+              <Toaster />
+              <Suspense fallback={
+                <div className="h-screen w-full flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                </div>
+              }>
+                <Router />
+              </Suspense>
+            </TooltipProvider>
+          </ThemeProvider>
+        </HelmetProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

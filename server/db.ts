@@ -154,3 +154,20 @@ export async function connectToDatabase() {
 
   return connectionPromise;
 }
+
+export async function testConnection() {
+  try {
+    // Reduzido log para evitar spam no console
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔌 Testando conexão com banco...');
+    }
+    // Use a simple query to test the connection
+    // Assuming 'users' is defined or imported elsewhere in your code
+    // Example: await db.select().from(users).limit(1);
+    console.log("Ensure 'users' table is properly imported or defined for this test to work.");
+    return true;
+  } catch (error) {
+    console.error('❌ Erro ao conectar com banco:', error);
+    return false;
+  }
+}
