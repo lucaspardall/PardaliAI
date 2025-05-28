@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import EmailAuth from './auth/EmailAuth';
 
 export default function DirectLogin() {
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
+  const { user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [authMethod, setAuthMethod] = useState<'replit' | 'email'>('replit');
+
+  // Redirecionar se já estiver autenticado
+  useEffect(() => {
+    if (!authLoading && user) {
+      console.log('Usuário já autenticado, redirecionando para dashboard...');
+      setLocation('/dashboard');
+    }
+  }, [user, authLoading, setLocation]);
 
   const handleLoginWithReplit = () => {
     setIsLoading(true);
@@ -44,41 +57,54 @@ export default function DirectLogin() {
         authWindow.close();
       }
 
-      // Aguardar um pouco antes de redirecionar para garantir que a sessão foi criada
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1000);
-
       toast({
         title: "Login realizado com sucesso!",
         description: "Redirecionando para o dashboard...",
-        variant: "default",
       });
+
+      // Pequeno delay para mostrar o toast
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1000);
     }
-
-    // Timeout de segurança caso a janela seja fechada manualmente
-    setTimeout(() => {
-      if (authWindow && !authWindow.closed) {
-        authWindow.close();
-      }
-      setIsLoading(false);
-      window.removeEventListener("message", authComplete);
-    }, 60000); // 1 minuto
-
-    // Verificar se a janela foi fechada manualmente
-    const checkClosed = setInterval(() => {
-      if (authWindow?.closed) {
-        clearInterval(checkClosed);
-        setIsLoading(false);
-        window.removeEventListener("message", authComplete);
-      }
-    }, 1000);
   };
 
   const handleSimpleLogin = () => {
-    // Redirecionamento direto para a rota de login do servidor
-    window.location.href = '/api/login';
+    window.location.href = "/api/login";
   };
+
+  // Loading state enquanto verifica autenticação
+  if (authLoading) {
+    return (
+      <Card className="w-full max-w-md mx-auto mt-8">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center space-x-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Verificando autenticação...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Se usuário já está autenticado, não mostrar login
+  if (user) {
+    return (
+      <Card className="w-full max-w-md mx-auto mt-8">
+        <CardContent className="pt-6">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Redirecionando...</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Você já está logado como {user.firstName}. Redirecionando para o dashboard...
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Renderizar EmailAuth se selecionado
   if (authMethod === 'email') {
@@ -101,6 +127,7 @@ export default function DirectLogin() {
     );
   }
 
+  // Tela de login padrão
   return (
     <Card className="w-full max-w-md mx-auto mt-8">
       <CardHeader>
@@ -151,25 +178,19 @@ export default function DirectLogin() {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Ou
-            </span>
+            <span className="bg-background px-2 text-muted-foreground">ou</span>
           </div>
         </div>
 
-        <Button
-          variant="secondary"
-          className="w-full"
+        <Button 
           onClick={() => setAuthMethod('email')}
+          variant="outline"
+          className="w-full"
           disabled={isLoading}
         >
           <i className="ri-mail-line mr-2"></i>
-          Entrar com Email/Senha
-        </Button>ton>
-
-        <p className="text-xs text-muted-foreground text-center">
-          Problemas com pop-ups? Use o "Login Direto" acima.
-        </p>
+          Entrar com Email
+        </Button>
       </CardFooter>
     </Card>
   );
