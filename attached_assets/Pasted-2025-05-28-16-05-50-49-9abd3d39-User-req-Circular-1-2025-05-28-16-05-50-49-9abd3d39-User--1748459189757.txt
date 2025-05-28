@@ -1,0 +1,201 @@
+2025-05-28 16:05:50.49
+9abd3d39
+User
+req: [Circular *1],
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_eventsCount: 4,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+responseUrl: 'https://partner.shopeemobile.com/api/v2/auth/token/get?partner_id=2011285×tamp=1748459149&sign=a6edd60de2bc6e1ec1436bca7eafa938eb4600daafdbce7a464343e1ea6506d4',
+2025-05-28 16:05:50.49
+9abd3d39
+User
+redirects: [],
+2025-05-28 16:05:50.49
+9abd3d39
+User
+[Symbol(shapeMode)]: true,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+[Symbol(kCapture)]: false,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+[Symbol(kHeaders)]: [Object],
+2025-05-28 16:05:50.49
+9abd3d39
+User
+[Symbol(kHeadersCount)]: 28,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+[Symbol(kTrailers)]: null,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+[Symbol(kTrailersCount)]: 0
+2025-05-28 16:05:50.49
+9abd3d39
+User
+},
+2025-05-28 16:05:50.49
+9abd3d39
+User
+aborted: false,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+timeoutCb: null,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+upgradeOrConnect: false,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+parser: null,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+maxHeadersCount: null,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+reusedSocket: false,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+host: 'partner.shopeemobile.com',
+2025-05-28 16:05:50.49
+9abd3d39
+User
+protocol: 'https:',
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_redirectable: Writable {
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_events: [Object],
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_writableState: [WritableState],
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_maxListeners: undefined,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_options: [Object],
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_ending: true,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_requestBodyLength: 84,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_onNativeResponse: [Function (anonymous)],
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_currentRequest: [Circular *1],
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_currentUrl: 'https://partner.shopeemobile.com/api/v2/auth/token/get?partner_id=2011285×tamp=1748459149&sign=a6edd60de2bc6e1ec1436bca7eafa938eb4600daafdbce7a464343e1ea6506d4',
+2025-05-28 16:05:50.49
+9abd3d39
+User
+_timeout: null,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+[Symbol(kCapture)]: false
+2025-05-28 16:05:50.49
+9abd3d39
+User
+},
+2025-05-28 16:05:50.49
+9abd3d39
+User
+[Symbol(kBytesWritten)]: 0,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+[Symbol(corked)]: 0,
+2025-05-28 16:05:50.49
+9abd3d39
+User
+'content-length': [Array],
+2025-05-28 16:05:50.49
+9abd3d39
+User
+'accept-encoding': [Array],
+2025-05-28 16:05:50.49
+9abd3d39
+User
+host: [Array]
+
+Wrap
+
+Colors
+Remote Updates
+origin/main•upstream
+last fetched 36 min ago
+66 commits to push
+Commit
+Summary of your commit...
+1 changed file
+shopee_auth_url.txt
+Modified
+Committing will automatically stage your changes.
+Users
+Search users
+User ID	Email	Name	Last logged in	
+42686052	marilualingerie@gmail.com	
+MA
+
+marilualingerie
+marilualingerie
+3 minutes ago
+41750934	llouback4@gmail.com	
+LU
+
+Lucas
+Lucas
+13 minutes ago
+42614523	lalingerieoficial04@gmail.com	
+LA
+
+La
+La
+22 minutes ago
+43045577	llouback04@gmail.com	
+LL
+
+llouback04
+llouback04
+5 days ago
+42894239	delicatomodasoficial@gmail.com	
+DE
+
+delicatomodasof
+delicatomodasof
+5 days ago
+42692877	lystoreoficial@gmail.com	
+LY
+
+lystoreoficial
+lystoreoficial
+7 days ago
