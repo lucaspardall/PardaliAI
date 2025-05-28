@@ -28,6 +28,11 @@ export default function Dashboard() {
   // Fetch user's stores
   const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
     queryKey: ["/api/stores"],
+    queryFn: async () => {
+      const response = await fetch('/api/stores', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch stores');
+      return response.json();
+    }
   });
 
   const syncStoreMutation = useMutation({
@@ -76,12 +81,24 @@ export default function Dashboard() {
   // Fetch store metrics if a store is selected
   const { data: storeMetrics, isLoading: metricsLoading } = useQuery({
     queryKey: [activeStore ? `/api/stores/${activeStore}/metrics?days=${period}` : null],
+    queryFn: async () => {
+      if (!activeStore) return null;
+      const response = await fetch(`/api/stores/${activeStore}/metrics?days=${period}`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch metrics');
+      return response.json();
+    },
     enabled: !!activeStore,
   });
 
   // Fetch products for active store
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: [activeStore ? `/api/stores/${activeStore}/products?limit=5` : null],
+    queryFn: async () => {
+      if (!activeStore) return null;
+      const response = await fetch(`/api/stores/${activeStore}/products?limit=5`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch products');
+      return response.json();
+    },
     enabled: !!activeStore,
   });
 

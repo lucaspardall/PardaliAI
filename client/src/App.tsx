@@ -21,6 +21,8 @@ import React, { Suspense, lazy, ErrorInfo, Component } from 'react';
 const BulkOptimizePage = lazy(() => import('./pages/dashboard/bulk-optimize'));
 const AiCreditsPage = lazy(() => import('./pages/dashboard/ai-credits'));
 import { HelmetProvider } from 'react-helmet-async';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Componente de Error Boundary
 interface ErrorBoundaryState {
