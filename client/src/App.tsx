@@ -168,7 +168,7 @@ function Router() {
 
 function App() {
   return (
-    <ErrorBoundary>
+    <ErrorBoundary key={Date.now()}>
       <QueryClientProvider client={queryClient}>
         <HelmetProvider>
           <ThemeProvider defaultTheme="light" storageKey="cip-shopee-theme">
