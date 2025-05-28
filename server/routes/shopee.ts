@@ -1,4 +1,3 @@
-
 import { Router, Request, Response } from 'express';
 import { isAuthenticated } from '../replitAuth';
 import { createClient, loadClientForStore } from '../shopee';
@@ -25,7 +24,7 @@ router.get('/authorize', isAuthenticated, async (req: any, res: Response) => {
     const userId = req.user?.claims?.sub;
     const client = createClient();
     const authUrl = client.getAuthorizationUrl();
-    
+
     res.json({
       message: 'Authorization URL generated',
       userId,
@@ -43,7 +42,7 @@ router.get('/authorize', isAuthenticated, async (req: any, res: Response) => {
 router.get('/callback', async (req: Request, res: Response) => {
   try {
     const { code, shop_id } = req.query;
-    
+
     if (!code || !shop_id) {
       return res.status(400).json({ 
         message: 'Missing required parameters: code and shop_id' 
@@ -52,7 +51,7 @@ router.get('/callback', async (req: Request, res: Response) => {
 
     const client = createClient();
     const tokens = await client.connect(code as string, shop_id as string);
-    
+
     res.json({
       message: 'Authorization successful',
       shopId: tokens.shopId,
@@ -71,9 +70,9 @@ router.post('/sync/:storeId', isAuthenticated, async (req: any, res: Response) =
   try {
     const { storeId } = req.params;
     const userId = req.user?.claims?.sub;
-    
+
     const result = await syncStore(storeId);
-    
+
     res.json({
       message: 'Sync completed',
       storeId,
@@ -93,14 +92,14 @@ router.get('/status/:storeId', isAuthenticated, async (req: any, res: Response) 
   try {
     const { storeId } = req.params;
     const client = await loadClientForStore(storeId);
-    
+
     if (!client) {
       return res.json({ connected: false, message: 'Store not found or not connected' });
     }
-    
+
     const status = client.getConnectionStatus();
     const isValid = await client.validateConnection();
-    
+
     res.json({
       ...status,
       validated: isValid

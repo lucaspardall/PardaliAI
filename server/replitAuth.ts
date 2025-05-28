@@ -222,6 +222,32 @@ export async function setupAuth(app: Express) {
   });
 }
 
+// Interface para requisições autenticadas
+export interface AuthenticatedRequest extends Request {
+  user?: {
+    claims: {
+      sub: string;
+      email?: string;
+      first_name?: string;
+      last_name?: string;
+      profile_image_url?: string;
+      exp?: number;
+    };
+    access_token?: string;
+    refresh_token?: string;
+    expires_at?: number;
+  };
+}
+
+/**
+ * Função auxiliar para extrair dados de autenticação da requisição
+ */
+export function getAuth(req: AuthenticatedRequest) {
+  return {
+    userId: req.user?.claims?.sub
+  };
+}
+
 /**
  * Middleware para verificar autenticação Replit Auth
  */
