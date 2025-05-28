@@ -24,7 +24,7 @@ export const WEBHOOK_CODES = {
  * Valida a assinatura do webhook da Shopee
  * A Shopee usa formato: URL|BODY para gerar a assinatura
  */
-function validateWebhookSignature(req: Request, partnerKey: string): boolean {
+async function validateWebhookSignature(req: Request, partnerKey: string): Promise<boolean> {
   try {
     const receivedSignature = req.headers['authorization'];
 
@@ -280,7 +280,7 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
  */
 async function logWebhookEvent(event: WebhookEvent, rawBody: string, signature: string): Promise<void> {
   try {
-    // Criar uma tabela de logs de webhook se não existir
+    // Criar uma tabela de logs de webhook si não existir
     // Por enquanto, apenas log no console
     console.log(`[Webhook] Evento registrado:`, {
       code: event.code,

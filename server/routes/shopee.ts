@@ -31,7 +31,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     const config = {
       partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
-      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4761',
+      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
       redirectUrl: redirectUrl,
       region: 'BR'  // Região brasileira para produção
     };
@@ -191,7 +191,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log(`🚀 Redirecionando para autorização OAuth da Shopee...`);
     console.log(`📋 URL completa: ${authUrl}`);
     console.log(`ℹ️  NOTA: Status 302 é normal - indica redirecionamento para login da Shopee`);
-    
+
     return res.redirect(authUrl);
 
   } catch (error: any) {
@@ -221,7 +221,7 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
       console.error('State inválido na resposta:', receivedState);
       return res.redirect('/dashboard?status=error&message=' + encodeURIComponent('Erro de segurança: State inválido'));
     }
-    
+
     if (!receivedState) {
       console.warn('⚠️ State não fornecido pela Shopee - continuando sem validação CSRF');
     }
@@ -491,7 +491,7 @@ import { storage } from '../storage';
 
 // Defina as variáveis de ambiente
 const SHOPEE_PARTNER_ID = process.env.SHOPEE_PARTNER_ID || '2011285';
-const SHOPEE_PARTNER_KEY = process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661';
+const SHOPEE_PARTNER_KEY = process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634A69536e4661';
 const SHOPEE_REDIRECT_URL = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
 const SHOPEE_REGION = process.env.SHOPEE_REGION || 'BR';
 
@@ -597,7 +597,7 @@ router.post('/sync/:storeId', isAuthenticated, async (req: Request, res: Respons
 router.get('/production/validate', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any).claims.sub;
-    
+
     // Verificar se as configurações de produção estão corretas
     const config = {
       partnerId: process.env.SHOPEE_PARTNER_ID,
@@ -665,7 +665,7 @@ router.post('/stores/:storeId/test-production', isAuthenticated, async (req: Req
 
     if (result.success) {
       console.log(`[Production Test] ✅ Conexão bem-sucedida:`, result.data);
-      
+
       // Criar notificação de sucesso
       await storage.createNotification({
         userId,
@@ -677,7 +677,7 @@ router.post('/stores/:storeId/test-production', isAuthenticated, async (req: Req
       });
     } else {
       console.error(`[Production Test] ❌ Falha na conexão:`, result.error);
-      
+
       // Criar notificação de erro
       await storage.createNotification({
         userId,
@@ -1276,7 +1276,7 @@ router.post('/stores/:storeId/inventory/apply-optimizations', isAuthenticated, a
 
     const { InventoryManager } = await import('../shopee/inventory');
     const inventoryManager = new InventoryManager(client, store.id);
-    
+
     const result = await inventoryManager.applyPriceOptimizations(optimizations);
 
     res.json({
@@ -1293,6 +1293,138 @@ router.post('/stores/:storeId/inventory/apply-optimizations', isAuthenticated, a
       message: 'Failed to apply optimizations',
       error: error.message
     });
+  }
+});
+
+/**
+ * Webhook da Shopee para receber notificações
+ */
+router.post('/webhook', async (req: Request, res: Response) => {
+  let responseSent = false;
+
+  try {
+    console.log('==== RECEBENDO WEBHOOK DA SHOPEE ====');
+
+    const rawBody = (req as any).rawBody;
+    const signature = req.get('Authorization');
+
+    if (!signature) {
+      console.log('[Webhook] Assinatura ausente');
+      if (!responseSent) {
+        responseSent = true;
+        return res.status(401).json({ message: 'Signature missing' });
+      }
+      return;
+    }
+
+    // Parse do corpo como JSON
+    let body;
+    try {
+      body = JSON.parse(rawBody.toString());
+    } catch (parseError) {
+      console.error('[Webhook] Erro ao analisar o corpo JSON:', parseError);
+      if (!responseSent) {
+        responseSent = true;
+        return res.status(400).json({ message: 'Invalid JSON body' });
+      }
+      return;
+    }
+    console.log('Webhook payload:', JSON.stringify(body, null, 2));
+
+    // Validar assinatura
+    const { validateSignature } = await import('../shopee/webhooks');
+    const isValid = await validateSignature(req.url, rawBody, signature);
+
+    if (!isValid) {
+      console.log('[Webhook] Assinatura inválida');
+      if (!responseSent) {
+        responseSent = true;
+        return res.status(401).json({ message: 'Invalid signature' });
+      }
+      return;
+    }
+
+    // Responder imediatamente
+    if (!responseSent) {
+      responseSent = true;
+      res.status(200).json({ success: true, message: 'Webhook received' });
+    }
+
+    // Processar webhook em background APÓS responder
+    const { handleShopeeWebhook } = await import('../shopee/webhooks');
+    setImmediate(() => {
+      handleShopeeWebhook(req, res).catch(error => {
+        console.error('[Webhook] Erro no processamento em background:', error);
+      });
+    });
+
+  } catch (error: any) {
+    console.error('[Routes] Erro no processamento do webhook:', error);
+    if (!responseSent && !res.headersSent) {
+      responseSent = true;
+      res.status(500).json({
+        message: 'Webhook processing failed',
+        error: error.message
+      });
+    }
+  }
+});
+
+/**
+ * Callback de autorização da Shopee
+ */
+router.get('/auth/callback', async (req: Request, res: Response) => {
+  try {
+    const { code, state, shop_id } = req.query;
+
+    console.log('==== RECEBENDO CALLBACK DA SHOPEE ====');
+    console.log('Parâmetros recebidos:', { code, shop_id, state });
+
+    if (!state || typeof state !== 'string') {
+      console.log('State inválido ou ausente na resposta:', state);
+      return res.redirect('/dashboard?error=invalid_state');
+    }
+
+    // Recuperar state do storage
+    const storedState = await storage.getShopeeAuthState(state);
+    if (!storedState) {
+      console.log('State não encontrado no storage:', state);
+      // Tentar recuperar estados disponíveis para debug
+      const availableStates = await storage.getAvailableAuthStates();
+      console.log('States disponíveis:', availableStates);
+      return res.redirect('/dashboard?error=state_not_found');
+    }
+
+    if (!code || typeof code !== 'string') {
+      console.log('Código de autorização ausente');
+      return res.redirect('/dashboard?error=no_code');
+    }
+
+    if (!shop_id || typeof shop_id !== 'string') {
+      console.log('Shop ID ausente');
+      return res.redirect('/dashboard?error=no_shop_id');
+    }
+
+    console.log('✅ Validações OK, iniciando autenticação...');
+
+    // Trocar código por token
+    const { authenticateStore } = await import('../shopee/auth');
+    const result = await authenticateStore(code, shop_id, storedState.userId);
+
+    if (!result.success) {
+      console.log('❌ Falha na autenticação:', result.error);
+      return res.redirect(`/dashboard?error=auth_failed&message=${encodeURIComponent(result.error)}`);
+    }
+
+    // Limpar state do storage
+    await storage.clearShopeeAuthState(state);
+
+    console.log('✅ Loja conectada com sucesso!');
+    res.redirect('/dashboard?success=store_connected');
+
+  } catch (error: any) {
+    console.error('❌ Erro no callback de autenticação:', error);
+    res.redirect(`/dashboard?error=callback_error&message=${encodeURIComponent(error.message)}`);
   }
 });
 
