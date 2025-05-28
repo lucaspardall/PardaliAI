@@ -13,7 +13,7 @@ export default function ReplitLoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [loginStep, setLoginStep] = useState<'idle' | 'opening' | 'authenticating' | 'redirecting'>('idle');
-  const [loginMethod, setLoginMethod] = useState<'replit' | 'email'>('replit');
+  const [loginMethod, setLoginMethod] = useState<'replit' | 'email'>('email'); // Email como padrão
   
   // Estado para login com email
   const [email, setEmail] = useState('');
@@ -123,22 +123,57 @@ export default function ReplitLoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validações client-side
+    if (!email.trim()) {
+      toast({
+        title: "⚠️ Campo obrigatório",
+        description: "Por favor, insira seu email.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!password.trim()) {
+      toast({
+        title: "⚠️ Campo obrigatório", 
+        description: "Por favor, insira sua senha.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isRegisterMode && password !== confirmPassword) {
+      toast({
+        title: "❌ Senhas não coincidem",
+        description: "As senhas digitadas são diferentes.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isRegisterMode && password.length < 6) {
+      toast({
+        title: "❌ Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
+
+    // Toast de início
+    toast({
+      title: "🔐 Processando...",
+      description: isRegisterMode ? "Criando sua conta..." : "Validando credenciais...",
+    });
 
     try {
       const endpoint = isRegisterMode ? '/api/auth/register' : '/api/auth/login';
-      const body: any = { email, password };
+      const body: any = { email: email.trim(), password };
       
       if (isRegisterMode) {
-        if (password !== confirmPassword) {
-          toast({
-            title: "❌ Erro de validação",
-            description: "As senhas não coincidem.",
-            variant: "destructive"
-          });
-          setIsLoading(false);
-          return;
-        }
         body.confirmPassword = confirmPassword;
       }
 
@@ -155,24 +190,36 @@ export default function ReplitLoginPage() {
 
       if (response.ok) {
         toast({
-          title: "✅ Login realizado!",
-          description: isRegisterMode ? "Conta criada com sucesso!" : "Bem-vindo de volta!",
+          title: "✅ Sucesso!",
+          description: isRegisterMode ? "Conta criada! Redirecionando..." : "Login realizado! Bem-vindo de volta!",
         });
 
+        // Redirecionamento mais rápido
         setTimeout(() => {
           window.location.href = "/dashboard";
-        }, 1500);
+        }, 1000);
       } else {
+        let errorMessage = "Erro desconhecido.";
+        
+        if (response.status === 401) {
+          errorMessage = "Email ou senha incorretos.";
+        } else if (response.status === 409) {
+          errorMessage = "Este email já possui uma conta.";
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+
         toast({
-          title: "❌ Erro no login",
-          description: data.message || "Credenciais inválidas.",
+          title: "❌ Falha no " + (isRegisterMode ? "cadastro" : "login"),
+          description: errorMessage,
           variant: "destructive"
         });
       }
     } catch (error) {
+      console.error("Erro na requisição:", error);
       toast({
         title: "❌ Erro de conexão",
-        description: "Não foi possível conectar ao servidor.",
+        description: "Verifique sua internet e tente novamente.",
         variant: "destructive"
       });
     } finally {
@@ -234,13 +281,13 @@ export default function ReplitLoginPage() {
             
             <Tabs value={loginMethod} onValueChange={(value) => setLoginMethod(value as 'replit' | 'email')}>
               <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="email" className="flex items-center gap-2 font-semibold">
+                  <Mail className="h-4 w-4" />
+                  Email & Senha ⭐
+                </TabsTrigger>
                 <TabsTrigger value="replit" className="flex items-center gap-2">
                   <i className="ri-replit-fill text-sm"></i>
-                  Replit (Recomendado)
-                </TabsTrigger>
-                <TabsTrigger value="email" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email
+                  Replit
                 </TabsTrigger>
               </TabsList>
 
@@ -279,45 +326,58 @@ export default function ReplitLoginPage() {
               </TabsContent>
 
               <TabsContent value="email" className="space-y-4">
+                {/* Dica de destaque */}
+                <div className="text-center text-xs text-green-700 bg-green-50 p-2 rounded border border-green-200">
+                  🚀 <strong>Método recomendado:</strong> Rápido e seguro
+                </div>
+                
                 <form onSubmit={handleEmailLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                     <Input
                       id="email"
                       type="email"
-                      placeholder="seu@email.com"
+                      placeholder="Digite seu email (ex: usuario@gmail.com)"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={isLoading}
+                      className="h-11 border-2 focus:border-blue-500"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
+                    <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Sua senha"
+                      placeholder={isRegisterMode ? "Crie uma senha (mín. 6 caracteres)" : "Digite sua senha"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={isLoading}
+                      className="h-11 border-2 focus:border-blue-500"
+                      minLength={isRegisterMode ? 6 : 1}
                     />
                   </div>
 
                   {isRegisterMode && (
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                      <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirmar Senha</Label>
                       <Input
                         id="confirmPassword"
                         type="password"
-                        placeholder="Confirme sua senha"
+                        placeholder="Digite a senha novamente"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
                         disabled={isLoading}
+                        className="h-11 border-2 focus:border-blue-500"
+                        minLength={6}
                       />
+                      {confirmPassword && password && password !== confirmPassword && (
+                        <p className="text-xs text-red-500 mt-1">⚠️ As senhas não coincidem</p>
+                      )}
                     </div>
                   )}
 
