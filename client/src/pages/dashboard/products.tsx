@@ -257,24 +257,111 @@ export default function Products() {
                 )}
               </div>
             ) : (
-              // Products table
-              <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
-                <Table className="min-w-[600px] md:min-w-full">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12"></TableHead>
-                      <TableHead className="min-w-[200px]">Produto</TableHead>
-                      <TableHead className="min-w-[80px]">Preço</TableHead>
-                      <TableHead className="min-w-[80px]">Estoque</TableHead>
-                      <TableHead className="min-w-[100px]">Status</TableHead>
-                      <TableHead className="text-right min-w-[120px]">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedProducts.map((product: Product) => (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
+              // Products table - Mobile responsive layout
+              <div className="space-y-4 md:space-y-0">
+                {/* Mobile Cards Layout */}
+                <div className="block md:hidden space-y-3">
+                  {sortedProducts.map((product: Product) => (
+                    <Card key={product.id} className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Avatar className="h-12 w-12 rounded-md flex-shrink-0">
+                          {getProductImage(product) ? (
+                            <AvatarImage 
+                              src={getProductImage(product)!} 
+                              alt={product.name} 
+                              className="object-cover"
+                            />
+                          ) : (
+                            <AvatarFallback className="rounded-md bg-muted">
+                              <i className="ri-shopping-bag-line text-muted-foreground"></i>
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <Link href={`/dashboard/product/${product.id}`}>
+                                <a className="font-medium hover:underline line-clamp-2 text-sm">
+                                  {product.name}
+                                </a>
+                              </Link>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                ID: {product.productId.substring(0, 10)}...
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-1 flex-shrink-0">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-8 w-8"
+                                asChild
+                              >
+                                <Link href={`/dashboard/product/${product.id}`}>
+                                  <i className="ri-eye-line text-sm"></i>
+                                </Link>
+                              </Button>
+                              <Button 
+                                variant="default" 
+                                size="icon"
+                                className="h-8 w-8"
+                                asChild
+                              >
+                                <Link href={`/dashboard/optimize/${product.id}`}>
+                                  <i className="ri-ai-generate text-sm"></i>
+                                </Link>
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-4 mt-3 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">Status:</span>
+                              <Badge variant={product.status === 'active' ? 'success' : 'secondary'} className="text-xs">
+                                <i className={`${getStatusIcon(product.status)} mr-1`}></i>
+                                {product.status === 'active' ? 'Ativo' : product.status === 'inactive' ? 'Inativo' : 'Excluído'}
+                              </Badge>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">CTR:</span>
+                              <Badge variant={getCtrBadgeVariant(product.ctr)} className="text-xs">
+                                {formatCTR(product.ctr)}
+                              </Badge>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between mt-2 text-sm">
+                            <span className="font-medium">{formatCurrency(product.price)}</span>
+                            <span className="text-muted-foreground">Estoque: {product.stock}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12"></TableHead>
+                        <TableHead>Produto</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Preço</TableHead>
+                        <TableHead>Estoque</TableHead>
+                        <TableHead className="text-center">CTR</TableHead>
+                        <TableHead className="text-center">Views</TableHead>
+                        <TableHead className="text-center">Vendas</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sortedProducts.map((product: Product) => (
+                        <TableRow key={product.id}>
+                          <TableCell>
                             <Avatar className="h-10 w-10 rounded-md">
                               {getProductImage(product) ? (
                                 <AvatarImage 
@@ -288,6 +375,8 @@ export default function Products() {
                                 </AvatarFallback>
                               )}
                             </Avatar>
+                          </TableCell>
+                          <TableCell>
                             <div>
                               <Link href={`/dashboard/product/${product.id}`}>
                                 <a className="font-medium hover:underline line-clamp-1 max-w-xs">
@@ -298,53 +387,53 @@ export default function Products() {
                                 ID: {product.productId.substring(0, 10)}...
                               </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={product.status === 'active' ? 'success' : 'secondary'}>
-                            <i className={`${getStatusIcon(product.status)} mr-1`}></i>
-                            {product.status === 'active' ? 'Ativo' : product.status === 'inactive' ? 'Inativo' : 'Excluído'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{formatCurrency(product.price)}</TableCell>
-                        <TableCell>{product.stock}</TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant={getCtrBadgeVariant(product.ctr)}>
-                            {formatCTR(product.ctr)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {product.views ? formatCurrency(product.views).replace('R$', '') : '-'}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {product.sales ? formatCurrency(product.sales).replace('R$', '') : '-'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end space-x-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              asChild
-                            >
-                              <Link href={`/dashboard/product/${product.id}`}>
-                                <i className="ri-eye-line"></i>
-                              </Link>
-                            </Button>
-                            <Button 
-                              variant="default" 
-                              size="icon"
-                              asChild
-                            >
-                              <Link href={`/dashboard/optimize/${product.id}`}>
-                                <i className="ri-ai-generate"></i>
-                              </Link>
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={product.status === 'active' ? 'success' : 'secondary'}>
+                              <i className={`${getStatusIcon(product.status)} mr-1`}></i>
+                              {product.status === 'active' ? 'Ativo' : product.status === 'inactive' ? 'Inativo' : 'Excluído'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{formatCurrency(product.price)}</TableCell>
+                          <TableCell>{product.stock}</TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant={getCtrBadgeVariant(product.ctr)}>
+                              {formatCTR(product.ctr)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {product.views ? formatCurrency(product.views).replace('R$', '') : '-'}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {product.sales ? formatCurrency(product.sales).replace('R$', '') : '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                asChild
+                              >
+                                <Link href={`/dashboard/product/${product.id}`}>
+                                  <i className="ri-eye-line"></i>
+                                </Link>
+                              </Button>
+                              <Button 
+                                variant="default" 
+                                size="icon"
+                                asChild
+                              >
+                                <Link href={`/dashboard/optimize/${product.id}`}>
+                                  <i className="ri-ai-generate"></i>
+                                </Link>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             )}
           </CardContent>
