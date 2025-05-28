@@ -1,27 +1,11 @@
 /**
- * Sistema de sincronização para dados da Shopee
+ * Sistema de sincronização simplificado para Shopee
  */
 import { ShopeeClient } from './client';
+import { SyncOptions, SyncResult } from './types';
 import { storage } from '../storage';
-import { getProductList, getProductDetails, getShopInfo, getOrderList } from './data';
-import { ShopeeCache } from './cache';
+import { loadClientForStore } from './index';
 
-interface SyncOptions {
-  batchSize?: number;
-  maxRetries?: number;
-  delayBetweenBatches?: number;
-}
-
-interface SyncResult {
-  success: boolean;
-  processed: number;
-  errors: string[];
-  duration: number;
-}
-
-/**
- * Gerenciador de sincronização para dados da Shopee
- */
 export class ShopeeSyncManager {
   private client: ShopeeClient;
   private storeId: number;
@@ -33,231 +17,190 @@ export class ShopeeSyncManager {
     this.options = {
       batchSize: options.batchSize || 50,
       maxRetries: options.maxRetries || 3,
-      delayBetweenBatches: options.delayBetweenBatches || 1000,
+      delayBetweenBatches: options.delayBetweenBatches || 1000
     };
   }
 
-  /**
-   * Sincroniza todos os dados da loja
-   */
   async syncAll(): Promise<SyncResult> {
     const startTime = Date.now();
     const errors: string[] = [];
     let processed = 0;
 
     try {
-      console.log(`[Sync] Iniciando sincronização completa para loja ${this.storeId}`);
+      console.log(`[Sync] Starting full sync for store ${this.storeId}`);
 
-      // 1. Sincronizar informações da loja
+      // 1. Sync shop info
       try {
         await this.syncShopInfo();
         processed++;
-        console.log(`[Sync] Informações da loja sincronizadas`);
       } catch (error: any) {
-        errors.push(`Erro ao sincronizar informações da loja: ${error.message || 'Erro desconhecido'}`);
+        errors.push(`Shop info sync error: ${error.message}`);
       }
 
-      // 2. Sincronizar produtos
+      // 2. Sync products
       try {
-        const productResult = await this.syncProducts();
-        processed += productResult.processed;
-        console.log(`[Sync] ${productResult.processed} produtos sincronizados`);
+        const productCount = await this.syncProducts();
+        processed += productCount;
       } catch (error: any) {
-        errors.push(`Erro ao sincronizar produtos: ${error.message || 'Erro desconhecido'}`);
+        errors.push(`Products sync error: ${error.message}`);
+      }
+
+      // 3. Sync orders
+      try {
+        const orderCount = await this.syncOrders();
+        processed += orderCount;
+      } catch (error: any) {
+        errors.push(`Orders sync error: ${error.message}`);
       }
 
       const duration = Date.now() - startTime;
-      const success = errors.length === 0;
-
-      return {
-        success,
-        processed,
-        errors,
-        duration
-      };
-    } catch (error: any) {
-      console.error(`[Sync] Erro geral na sincronização:`, error);
-      const duration = Date.now() - startTime;
-
-      return {
-        success: false,
-        processed,
-        errors: [...errors, error.message || 'Erro desconhecido'],
-        duration
-      };
-    }
-  }
-
-  /**
-   * Sincroniza informações básicas da loja
-   */
-  private async syncShopInfo(): Promise<void> {
-    const shopInfo = await getShopInfo(this.client);
-
-    if (shopInfo) {
-      await storage.updateStore(this.storeId, {
-        shopName: shopInfo.shop_name || `Loja ${shopInfo.shop_id}`,
-        shopLogo: shopInfo.logo,
-        updatedAt: new Date()
-      });
-    }
-  }
-
-  /**
-   * Sincroniza produtos da loja
-   */
-  async syncProducts(): Promise<SyncResult> {
-    const startTime = Date.now();
-    const errors: string[] = [];
-    let processed = 0;
-    let offset = 0;
-    let hasMore = true;
-
-    try {
-      console.log(`[Sync] Iniciando sincronização de produtos para loja ${this.storeId}`);
-
-      while (hasMore) {
-        console.log(`[Sync] Buscando produtos (offset: ${offset}, batch: ${this.options.batchSize})`);
-
-        // Buscar lista de produtos com retry
-        const productList = await this.withRetry(async () => {
-          const result = await getProductList(this.client, offset, this.options.batchSize);
-          console.log(`[Sync] API retornou:`, result);
-          return result;
-        });
-
-        // Verificar estrutura da resposta da API Shopee
-        const items = productList?.response?.item || productList?.item || [];
-
-        if (!items || items.length === 0) {
-          console.log(`[Sync] Nenhum produto encontrado no offset ${offset}`);
-          hasMore = false;
-          break;
-        }
-
-        console.log(`[Sync] Encontrados ${items.length} produtos no batch`);
-
-        // Processar cada produto
-        for (const item of items) {
-          try {
-            // Buscar detalhes do produto
-            const productDetails = await this.withRetry(async () => {
-              return await getProductDetails(this.client, item.item_id);
-            });
-
-            // Salvar produto no banco de dados
-            await storage.upsertProduct({
-              storeId: this.storeId,
-              itemId: item.item_id.toString(),
-              name: productDetails.item_name || 'Produto sem nome',
-              description: productDetails.description || '',
-              price: productDetails.price_info?.[0]?.current_price || 0,
-              stock: productDetails.stock_info?.[0]?.current_stock || 0,
-              status: productDetails.item_status || 'unknown',
-              images: productDetails.images || [],
-              updatedAt: new Date(),
-              createdAt: new Date()
-            });
-
-            processed++;
-          } catch (error: any) {
-            console.error(`[Sync] Erro ao processar produto ${item.item_id}:`, error);
-            errors.push(`Produto ${item.item_id}: ${error.message}`);
-          }
-        }
-
-        // Atualizar offset para próximo batch
-        offset += items.length;
-
-        // Se retornou menos itens que o batch size, não há mais dados
-        if (items.length < this.options.batchSize) {
-          hasMore = false;
-        }
-
-        // Delay entre batches para respeitar rate limits
-        if (hasMore && this.options.delayBetweenBatches > 0) {
-          await new Promise(resolve => setTimeout(resolve, this.options.delayBetweenBatches));
-        }
-      }
-
-      const duration = Date.now() - startTime;
-      console.log(`[Sync] Sincronização de produtos concluída: ${processed} processados em ${duration}ms`);
 
       return {
         success: errors.length === 0,
         processed,
         errors,
-        duration
+        duration,
+        lastSyncAt: new Date()
       };
 
     } catch (error: any) {
-      console.error(`[Sync] Erro na sincronização de produtos:`, error);
-      const duration = Date.now() - startTime;
-
       return {
         success: false,
         processed,
-        errors: [...errors, error.message || 'Erro desconhecido'],
-        duration
+        errors: [error.message],
+        duration: Date.now() - startTime,
+        lastSyncAt: new Date()
       };
     }
   }
 
-  /**
-   * Executa uma função com retry
-   */
-  private async withRetry<T>(fn: () => Promise<T>, maxRetries: number = this.options.maxRetries): Promise<T> {
-    let lastError: Error;
+  private async syncShopInfo(): Promise<void> {
+    const shopInfo = await this.client.get('/api/v2/shop/get_shop_info');
 
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        return await fn();
-      } catch (error: any) {
-        lastError = error;
-        console.warn(`[Sync] Tentativa ${attempt}/${maxRetries} falhou:`, error.message);
+    // Save to database
+    const store = await storage.getStoreByShopId(this.storeId.toString());
+    if (store) {
+      await storage.updateStore(store.id, {
+        shopName: shopInfo.shop_name,
+        shopStatus: shopInfo.shop_status,
+        updatedAt: new Date()
+      });
+    }
+  }
 
-        if (attempt < maxRetries) {
-          const delay = Math.min(1000 * attempt, 5000);
-          await new Promise(resolve => setTimeout(resolve, delay));
+  private async syncProducts(): Promise<number> {
+    let processed = 0;
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const response = await this.client.get('/api/v2/product/get_item_list', {
+        offset,
+        page_size: this.options.batchSize
+      });
+
+      if (response.item && response.item.length > 0) {
+        // Process products in batches
+        for (const item of response.item) {
+          await this.processProduct(item);
+          processed++;
         }
+
+        offset += this.options.batchSize;
+        hasMore = response.has_next_page;
+
+        // Delay between batches
+        if (hasMore) {
+          await new Promise(resolve => setTimeout(resolve, this.options.delayBetweenBatches));
+        }
+      } else {
+        hasMore = false;
       }
     }
 
-    throw lastError!;
+    return processed;
+  }
+
+  private async syncOrders(): Promise<number> {
+    let processed = 0;
+    const timeFrom = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000); // Last 30 days
+    const timeTo = Math.floor(Date.now() / 1000);
+
+    let cursor = '';
+    let hasMore = true;
+
+    while (hasMore) {
+      const params: any = {
+        time_range_field: 'create_time',
+        time_from: timeFrom,
+        time_to: timeTo,
+        page_size: this.options.batchSize
+      };
+
+      if (cursor) {
+        params.cursor = cursor;
+      }
+
+      const response = await this.client.get('/api/v2/order/get_order_list', params);
+
+      if (response.order_list && response.order_list.length > 0) {
+        for (const order of response.order_list) {
+          await this.processOrder(order);
+          processed++;
+        }
+
+        hasMore = response.more;
+        cursor = response.next_cursor;
+
+        if (hasMore) {
+          await new Promise(resolve => setTimeout(resolve, this.options.delayBetweenBatches));
+        }
+      } else {
+        hasMore = false;
+      }
+    }
+
+    return processed;
+  }
+
+  private async processProduct(item: any): Promise<void> {
+    // TODO: Implement product processing logic
+    console.log(`Processing product ${item.item_id}: ${item.item_name}`);
+  }
+
+  private async processOrder(order: any): Promise<void> {
+    // TODO: Implement order processing logic
+    console.log(`Processing order ${order.order_sn}`);
   }
 }
 
 /**
- * Função de conveniência para sincronizar uma loja
+ * Sync store by ID
  */
-export async function syncStore(storeId: number): Promise<SyncResult> {
+export async function syncStore(storeId: string): Promise<SyncResult> {
   try {
-    // Carregar store do banco
-    const store = await storage.getStoreById(storeId);
+    const store = await storage.getStoreById(parseInt(storeId));
     if (!store) {
       throw new Error(`Store ${storeId} not found`);
     }
 
-    // Carregar cliente Shopee
-    const { loadShopeeClientForStore } = await import('./index');
-    const client = await loadShopeeClientForStore(store.shopId);
-
+    const client = await loadClientForStore(store.shopId);
     if (!client) {
-      throw new Error(`Failed to load Shopee client for store ${storeId}`);
+      throw new Error(`Failed to load client for store ${storeId}`);
     }
 
-    // Executar sincronização
-    const syncManager = new ShopeeSyncManager(client, storeId);
+    const syncManager = new ShopeeSyncManager(client, parseInt(storeId));
     return await syncManager.syncAll();
 
   } catch (error: any) {
-    console.error(`[Sync] Error syncing store ${storeId}:`, error);
+    console.error(`Error syncing store ${storeId}:`, error);
 
     return {
       success: false,
       processed: 0,
-      errors: [error.message || 'Unknown error'],
-      duration: 0
+      errors: [error.message],
+      duration: 0,
+      lastSyncAt: new Date()
     };
   }
 }

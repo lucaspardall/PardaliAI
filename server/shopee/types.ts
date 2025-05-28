@@ -1,11 +1,9 @@
 /**
- * Tipos de dados para a API da Shopee
+ * Tipos completos para API Shopee
  */
 
-// Regiões suportadas pela API da Shopee
 export type ShopeeRegion = 'SG' | 'MY' | 'TH' | 'TW' | 'ID' | 'VN' | 'PH' | 'BR' | 'MX' | 'CO' | 'CL' | 'PL' | 'ES' | 'FR';
 
-// Configuração para autenticação com a API da Shopee
 export interface ShopeeAuthConfig {
   partnerId: string;
   partnerKey: string;
@@ -13,7 +11,6 @@ export interface ShopeeAuthConfig {
   region: ShopeeRegion;
 }
 
-// Tokens de autenticação da API da Shopee
 export interface ShopeeAuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -21,7 +18,6 @@ export interface ShopeeAuthTokens {
   shopId: string;
 }
 
-// Formato padrão de resposta da API da Shopee
 export interface ShopeeApiResponse<T = any> {
   request_id?: string;
   error?: string;
@@ -29,7 +25,6 @@ export interface ShopeeApiResponse<T = any> {
   response: T;
 }
 
-// Erro da API da Shopee
 export interface ShopeeApiError {
   error: string;
   message: string;
@@ -37,7 +32,6 @@ export interface ShopeeApiError {
   response?: any;
 }
 
-// Informações básicas de uma loja Shopee
 export interface ShopeeShopInfo {
   shop_id: number;
   shop_name: string;
@@ -45,55 +39,54 @@ export interface ShopeeShopInfo {
   is_cb: boolean;
   description: string;
   images: string[];
-  disable_make_offer: number;
-  enable_display_unitno: boolean;
-  item_limit: number;
   logo: string;
   region: string;
   country: string;
+  item_limit: number;
+  disable_make_offer: number;
+  enable_display_unitno: boolean;
 }
 
-// Informações de produto da Shopee
-export interface ShopeeProduct {
+export interface ShopeeProductItem {
   item_id: number;
+  category_id: number;
   item_name: string;
-  item_status: string;
+  description: string;
+  item_sku: string;
   create_time: number;
   update_time: number;
-  description: string;
   price_info: {
-    current_price: number;
+    currency: string;
     original_price: number;
-    inflated_price_of_current_price: number;
-    inflated_price_of_original_price: number;
+    current_price: number;
   };
   stock_info: {
+    stock_type: number;
     current_stock: number;
     normal_stock: number;
     reserved_stock: number;
   };
-  category_id: number;
-  brand: {
-    brand_id: number;
-    original_brand_name: string;
+  image: {
+    image_url_list: string[];
   };
-  weight: number;
+  weight: string;
   dimension: {
     package_length: number;
     package_width: number;
     package_height: number;
   };
+  status: string;
+  has_model: boolean;
+  condition: string;
 }
 
-// Resposta da lista de produtos
 export interface ShopeeProductListResponse {
-  item: ShopeeProduct[];
+  item: ShopeeProductItem[];
   total_count: number;
   has_next_page: boolean;
-  next_offset: string;
+  next_offset: number;
 }
 
-// Informações de pedido da Shopee
 export interface ShopeeOrder {
   order_sn: string;
   order_status: string;
@@ -107,13 +100,12 @@ export interface ShopeeOrder {
   recipient_address: {
     name: string;
     phone: string;
-    town: string;
+    full_address: string;
     district: string;
     city: string;
     state: string;
     region: string;
     zipcode: string;
-    full_address: string;
   };
   actual_shipping_fee: number;
   goods_to_declare: boolean;
@@ -173,23 +165,16 @@ export interface ShopeeOrder {
     products_total_value: number;
     tax_total_value: number;
   };
+  checkout_shipping_carrier: string;
+  reverse_shipping_fee: number;
+  order_chargeable_weight_gram: number;
 }
 
-// Resposta da lista de pedidos
 export interface ShopeeOrderListResponse {
   more: boolean;
   order_list: ShopeeOrder[];
 }
 
-// Webhook da Shopee
-export interface ShopeeWebhookEvent {
-  code: number;
-  shop_id: number;
-  timestamp: number;
-  data: any;
-}
-
-// Categorias da Shopee
 export interface ShopeeCategory {
   category_id: number;
   parent_category_id: number;
@@ -198,49 +183,13 @@ export interface ShopeeCategory {
   has_children: boolean;
 }
 
-// Informações de um produto na Shopee
-export interface ShopeeProductItem {
-  item_id: number;
-  category_id: number;
-  item_name: string;
-  description: string;
-  item_sku: string;
-  create_time: number;
-  update_time: number;
-  price_info: {
-    currency: string;
-    original_price: number;
-    current_price: number;
-  };
-  stock_info: {
-    stock_type: number;
-    current_stock: number;
-    normal_stock: number;
-    reserved_stock: number;
-  };
-  image: {
-    image_url_list: string[];
-  };
-  weight: string;
-  dimension: {
-    package_length: number;
-    package_width: number;
-    package_height: number;
-  };
-  status: string;
-  has_model: boolean;
-  condition: string;
+export interface ShopeeWebhookEvent {
+  code: number;
+  shop_id: number;
+  timestamp: number;
+  data: any;
 }
 
-// Resposta da listagem de produtos
-export interface ShopeeProductListResponse {
-  item: ShopeeProductItem[];
-  total_count: number;
-  has_next_page: boolean;
-  next_offset: number;
-}
-
-// Métricas de desempenho de uma loja
 export interface ShopeeShopPerformance {
   shop_performance: {
     listing_rate: {
@@ -272,16 +221,6 @@ export interface ShopeeShopPerformance {
   };
 }
 
-// Evento de webhook da Shopee
-export interface WebhookEvent {
-  code: number;
-  data: any;
-  shop_id: number;
-  timestamp: number;
-  msg_id?: string;
-}
-
-// Métricas de desempenho de um produto
 export interface ShopeeProductPerformance {
   item_id: number;
   views: number;
@@ -292,5 +231,27 @@ export interface ShopeeProductPerformance {
   add_to_cart_percentage: number;
   conversion_rate: number;
   sales_30_days: number;
-  revenue_30_days: number;days: number;
+  revenue_30_days: number;
+}
+
+// Interfaces para sincronização
+export interface SyncOptions {
+  batchSize?: number;
+  maxRetries?: number;
+  delayBetweenBatches?: number;
+}
+
+export interface SyncResult {
+  success: boolean;
+  processed: number;
+  errors: string[];
+  duration: number;
+  lastSyncAt: Date;
+}
+
+// Interfaces para webhooks
+export interface WebhookValidationResult {
+  isValid: boolean;
+  error?: string;
+  event?: ShopeeWebhookEvent;
 }

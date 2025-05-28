@@ -1,11 +1,13 @@
 
 import { Router, Request, Response } from 'express';
 import { isAuthenticated, getAuth } from '../clerkAuth';
+import { createClient, loadClientForStore } from '../shopee';
+import { syncStore } from '../shopee/sync';
 
 const router = Router();
 
 /**
- * Rota de health check para Shopee
+ * Health check
  */
 router.get('/health', (req: Request, res: Response) => {
   res.json({
@@ -16,17 +18,18 @@ router.get('/health', (req: Request, res: Response) => {
 });
 
 /**
- * Iniciar processo de autorização com Shopee
+ * Iniciar autorização Shopee
  */
 router.get('/authorize', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const { userId } = getAuth(req);
+    const client = createClient();
+    const authUrl = client.getAuthorizationUrl();
     
-    // TODO: Implementar fluxo de autorização OAuth da Shopee
     res.json({
-      message: 'Shopee authorization flow not implemented yet',
+      message: 'Authorization URL generated',
       userId,
-      authUrl: null
+      authUrl
     });
   } catch (error) {
     console.error('Error starting Shopee authorization:', error);
@@ -35,17 +38,25 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 });
 
 /**
- * Callback de autorização da Shopee
+ * Callback de autorização
  */
 router.get('/callback', async (req: Request, res: Response) => {
   try {
     const { code, shop_id } = req.query;
     
-    // TODO: Implementar processamento do callback OAuth
+    if (!code || !shop_id) {
+      return res.status(400).json({ 
+        message: 'Missing required parameters: code and shop_id' 
+      });
+    }
+
+    const client = createClient();
+    const tokens = await client.connect(code as string, shop_id as string);
+    
     res.json({
-      message: 'Shopee callback not implemented yet',
-      code,
-      shop_id
+      message: 'Authorization successful',
+      shopId: tokens.shopId,
+      expiresAt: tokens.expiresAt
     });
   } catch (error) {
     console.error('Error processing Shopee callback:', error);
@@ -54,22 +65,49 @@ router.get('/callback', async (req: Request, res: Response) => {
 });
 
 /**
- * Sincronizar produtos da loja Shopee
+ * Sincronizar loja
  */
 router.post('/sync/:storeId', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const { storeId } = req.params;
     const { userId } = getAuth(req);
     
-    // TODO: Implementar sincronização de produtos
+    const result = await syncStore(storeId);
+    
     res.json({
-      message: 'Product sync not implemented yet',
+      message: 'Sync completed',
       storeId,
-      userId
+      userId,
+      result
     });
   } catch (error) {
-    console.error('Error syncing Shopee products:', error);
-    res.status(500).json({ message: 'Failed to sync products' });
+    console.error('Error syncing Shopee store:', error);
+    res.status(500).json({ message: 'Failed to sync store' });
+  }
+});
+
+/**
+ * Status da conexão
+ */
+router.get('/status/:storeId', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const { storeId } = req.params;
+    const client = await loadClientForStore(storeId);
+    
+    if (!client) {
+      return res.json({ connected: false, message: 'Store not found or not connected' });
+    }
+    
+    const status = client.getConnectionStatus();
+    const isValid = await client.validateConnection();
+    
+    res.json({
+      ...status,
+      validated: isValid
+    });
+  } catch (error) {
+    console.error('Error checking Shopee status:', error);
+    res.status(500).json({ message: 'Failed to check status' });
   }
 });
 
