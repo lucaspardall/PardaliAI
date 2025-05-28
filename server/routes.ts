@@ -22,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Get user's stores
-  app.get('/api/stores', (req: any, res) => {
+  app.get('/api/stores', async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) {
@@ -37,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/stores/:id', (req: any, res) => {
+  app.get('/api/stores/:id', async (req: any, res) => {
     try {
       const storeId = parseInt(req.params.id);
       const store = await storage.getStoreById(storeId);

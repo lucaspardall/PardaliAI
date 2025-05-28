@@ -25,7 +25,7 @@ export default function HeroSection() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             {!isAuthenticated ? (
-              
+
               <Button 
                 onClick={() => window.location.href = '/login'}
                 size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg"
@@ -33,7 +33,7 @@ export default function HeroSection() {
                 <i className="ri-rocket-line mr-2"></i>
                 Começar Grátis
               </Button>
-              
+
             ) : (
               <Link href="/dashboard">
                 <Button size="lg" className="text-lg px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-lg">

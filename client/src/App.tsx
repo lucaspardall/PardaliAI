@@ -27,9 +27,7 @@ import ShopeeConnectPage from "@/pages/shopee-connect";
 // Components
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-console.log('🌍 Hostname:', window.location.hostname);
-console.log('🔧 Ambiente Replit:', true);
-console.log('🔐 Usando Replit Auth nativo');
+// Usando Replit Auth nativo
 
 // Create a new React Query client
 const queryClient = new QueryClient({

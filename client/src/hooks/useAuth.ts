@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 interface ReplitUser {
@@ -25,26 +24,12 @@ export function useAuth(): AuthState {
 
   useEffect(() => {
     let mounted = true;
-    
+
     const checkAuth = async () => {
       try {
-        // Verificar se estamos no Replit
-        const hostname = window.location.hostname;
-        const isReplit = hostname.includes('replit.dev') || hostname.includes('repl.co');
-        
-        if (!isReplit) {
-          console.log('🔧 Ambiente não-Replit detectado, usando modo desenvolvimento');
-          if (mounted) {
-            setState({
-              isAuthenticated: false,
-              isLoading: false,
-              user: null
-            });
-          }
-          return;
-        }
+        console.log('🔍 Verificando autenticação Replit...');
 
-        // Buscar dados do usuário Replit via endpoint interno
+        // Buscar dados do usuário Replit via endpoint nativo
         const response = await fetch('/__replauthuser', {
           credentials: 'include',
           headers: {
@@ -54,30 +39,17 @@ export function useAuth(): AuthState {
 
         if (response.ok) {
           const userData = await response.json();
-          
-          if (mounted && userData && userData.id) {
+          console.log('✅ Usuário Replit autenticado:', userData);
+
+          if (mounted) {
             setState({
               isAuthenticated: true,
               isLoading: false,
-              user: {
-                id: userData.id,
-                name: userData.name || 'Usuário',
-                email: userData.name + '@replit.user', // Replit não expõe email
-                profileImage: userData.profileImage,
-                bio: userData.bio,
-                url: userData.url
-              }
+              user: userData
             });
-          } else {
-            if (mounted) {
-              setState({
-                isAuthenticated: false,
-                isLoading: false,
-                user: null
-              });
-            }
           }
         } else {
+          console.log('❌ Usuário não autenticado no Replit');
           if (mounted) {
             setState({
               isAuthenticated: false,
@@ -87,7 +59,7 @@ export function useAuth(): AuthState {
           }
         }
       } catch (error) {
-        console.error('🔥 Erro na verificação de auth:', error);
+        console.error('❌ Erro ao verificar autenticação:', error);
         if (mounted) {
           setState({
             isAuthenticated: false,
@@ -99,7 +71,7 @@ export function useAuth(): AuthState {
     };
 
     checkAuth();
-    
+
     return () => {
       mounted = false;
     };

@@ -1,7 +1,5 @@
-
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { SignInButton } from '@clerk/clerk-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'wouter';
 
@@ -37,7 +35,7 @@ export default function CTASection() {
           <p className="text-xl text-orange-100 mb-8 max-w-2xl mx-auto">
             Junte-se a milhares de vendedores que já estão usando nossa IA para aumentar suas vendas no Shopee.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {isAuthenticated ? (
               <Link href="/dashboard">
@@ -50,17 +48,16 @@ export default function CTASection() {
                 </Button>
               </Link>
             ) : (
-              <SignInButton mode="modal">
-                <Button 
-                  size="lg" 
-                  className="bg-white text-orange-600 hover:bg-orange-50 px-8 py-3 text-lg"
-                >
-                  <i className="ri-rocket-line mr-2"></i>
-                  Começar Grátis
-                </Button>
-              </SignInButton>
+              <Button 
+                size="lg" 
+                className="bg-white text-orange-600 hover:bg-orange-50 px-8 py-3 text-lg"
+                onClick={() => window.location.href = '/login'}
+              >
+                <i className="ri-rocket-line mr-2"></i>
+                Começar Grátis
+              </Button>
             )}
-            
+
             <Link href="#features">
               <Button 
                 variant="outline" 
