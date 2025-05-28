@@ -63,33 +63,70 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             <h1 className="text-2xl font-bold text-foreground font-heading">CIP Shopee</h1>
           </div>
 
-          {isAuthenticated ? (
-                <div className="hidden md:flex items-center space-x-4">
-                  <Button variant="ghost" onClick={openLoginModal}>
-                    Entrar
-                  </Button>
-                  <Button onClick={openLoginModal}>
-                    Comece grátis
-                  </Button>
-                </div>
-              ) : (
-                <div className="hidden md:flex items-center space-x-4">
-                  <Button variant="ghost" onClick={openLoginModal}>
-                    Entrar
-                  </Button>
-                  <Button onClick={openLoginModal}>
-                    Comece grátis
-                  </Button>
-                </div>
-              )}
-
-          {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <a 
+              href="#features" 
+              className="text-foreground/70 hover:text-foreground transition-colors font-medium"
+            >
+              Recursos
+            </a>
+            <a 
+              href="#pricing" 
+              className="text-foreground/70 hover:text-foreground transition-colors font-medium"
+            >
+              Planos
+            </a>
+            <a 
+              href="#" 
+              className="text-foreground/70 hover:text-foreground transition-colors font-medium"
+            >
+              Suporte
+            </a>
+            
+            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="mr-2 border-primary hover:bg-primary/10"
+              className="border-primary/20 hover:bg-primary/10"
+            >
+              {theme === "dark" ? (
+                <i className="ri-sun-line text-xl text-primary"></i>
+              ) : (
+                <i className="ri-moon-line text-xl text-primary"></i>
+              )}
+            </Button>
+
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-3">
+                <Button asChild variant="ghost">
+                  <Link href="/dashboard">
+                    <i className="ri-dashboard-line mr-2"></i>
+                    Dashboard
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Button variant="ghost" onClick={openLoginModal}>
+                  Entrar
+                </Button>
+                <Button onClick={openLoginModal} className="bg-primary hover:bg-primary/90">
+                  <i className="ri-rocket-line mr-2"></i>
+                  Comece grátis
+                </Button>
+              </div>
+            )}
+          </nav>
+
+          {/* Mobile menu button */}
+          <div className="flex items-center md:hidden space-x-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="border-primary/20 hover:bg-primary/10"
             >
               {theme === "dark" ? (
                 <i className="ri-sun-line text-xl text-primary"></i>
@@ -114,42 +151,68 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-background border-t border-border mt-4 py-4">
-            <div className="container mx-auto px-4 space-y-4 flex flex-col">
-              <a 
-                href="#features" 
-                className="text-foreground py-2 px-4 rounded-md hover:bg-muted transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Recursos
-              </a>
-              <a 
-                href="#pricing" 
-                className="text-foreground py-2 px-4 rounded-md hover:bg-muted transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Planos
-              </a>
+          <div className="md:hidden bg-background border-t border-border mt-4 py-6">
+            <div className="container mx-auto px-4 space-y-6 flex flex-col">
+              {/* Navigation Links */}
+              <div className="space-y-1">
+                <a 
+                  href="#features" 
+                  className="flex items-center text-foreground py-3 px-4 rounded-lg hover:bg-muted transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <i className="ri-star-line mr-3 text-primary"></i>
+                  Recursos
+                </a>
+                <a 
+                  href="#pricing" 
+                  className="flex items-center text-foreground py-3 px-4 rounded-lg hover:bg-muted transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <i className="ri-price-tag-3-line mr-3 text-primary"></i>
+                  Planos
+                </a>
+                <a 
+                  href="#" 
+                  className="flex items-center text-foreground py-3 px-4 rounded-lg hover:bg-muted transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <i className="ri-customer-service-2-line mr-3 text-primary"></i>
+                  Suporte
+                </a>
+              </div>
 
+              {/* Divider */}
+              <div className="border-t border-border"></div>
+
+              {/* Auth Actions */}
               {isAuthenticated ? (
-                <div className="space-y-2">
-                  <Button asChild className="w-full">
+                <div className="space-y-3">
+                  <Button asChild className="w-full bg-primary hover:bg-primary/90" size="lg">
                     <Link href="/dashboard">
                       <i className="ri-dashboard-line mr-2"></i>
-                      Ir para Dashboard
+                      Acessar Dashboard
                     </Link>
                   </Button>
-                  <p className="text-xs text-center text-muted-foreground">
-                    Bem-vindo de volta!
+                  <p className="text-sm text-center text-muted-foreground">
+                    👋 Bem-vindo de volta!
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Button className="w-full" onClick={() => { openLoginModal(); setMobileMenuOpen(false); }}>
+                <div className="space-y-3">
+                  <Button 
+                    className="w-full bg-primary hover:bg-primary/90" 
+                    size="lg"
+                    onClick={() => { openLoginModal(); setMobileMenuOpen(false); }}
+                  >
                     <i className="ri-rocket-line mr-2"></i>
                     Comece grátis
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={() => { openLoginModal(); setMobileMenuOpen(false); }}>
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => { openLoginModal(); setMobileMenuOpen(false); }}
+                  >
                     <i className="ri-login-box-line mr-2"></i>
                     Já tenho conta
                   </Button>
