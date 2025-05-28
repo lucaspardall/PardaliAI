@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ClerkProvider } from '@clerk/clerk-react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { HelmetProvider } from 'react-helmet-async';
-import { ClerkLoader } from '@/components/ClerkLoader';
 
 // Pages
 import LandingPage from "@/pages/landing";
@@ -33,55 +32,19 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 // Get Clerk publishable key from environment
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-console.log('🔑 Clerk Key detectada:', CLERK_PUBLISHABLE_KEY);
-console.log('🔍 Variáveis de ambiente:', {
-  VITE_CLERK_PUBLISHABLE_KEY: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-  NODE_ENV: import.meta.env.NODE_ENV,
-  MODE: import.meta.env.MODE
-});
+console.log('🔑 Clerk Key detectada:', CLERK_PUBLISHABLE_KEY ? 'OK' : 'MISSING');
 
 if (!CLERK_PUBLISHABLE_KEY) {
-  console.error('❌ VITE_CLERK_PUBLISHABLE_KEY não configurado nos Secrets');
-  throw new Error('Clerk key missing - Configure nos Secrets do Replit');
+  console.error('❌ VITE_CLERK_PUBLISHABLE_KEY não configurado');
+  throw new Error('Clerk key missing');
 }
 
-// Validar formato da chave
-if (!CLERK_PUBLISHABLE_KEY.startsWith('pk_')) {
-  console.error('❌ Chave Clerk inválida - deve começar com pk_');
-  throw new Error('Invalid Clerk publishable key format');
-}
-
+// Create a new React Query client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
-      queryFn: async ({ queryKey }) => {
-        const url = queryKey[0] as string;
-        if (!url) {
-          console.warn('⚠️ Invalid query key:', queryKey);
-          throw new Error('Invalid query key');
-        }
-
-        // Ignorar queries com null ou undefined
-        if (url === null || url === undefined) {
-          return null;
-        }
-        
-        const response = await fetch(url, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        return response.json();
-      },
+      staleTime: 60 * 1000, // 1 minute
+      retry: 2,
     },
   },
 });
@@ -96,101 +59,91 @@ function App() {
         afterSignUpUrl="/dashboard"
         signInUrl="/login"
         signUpUrl="/signup"
-        appearance={{
-          variables: {
-            colorPrimary: "#f97316"
-          }
-        }}
-        localization={{
-          locale: "pt-BR"
-        }}
       >
-        <ClerkLoader>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider>
-              <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <HelmetProvider>
               <Switch>
                 {/* Public Routes */}
                 <Route path="/" component={LandingPage} />
-              <Route path="/login" component={LoginPage} />
-              <Route path="/signup" component={SignUpPage} />
-              <Route path="/shopee-connect" component={ShopeeConnectPage} />
+                <Route path="/login" component={LoginPage} />
+                <Route path="/signup" component={SignUpPage} />
+                <Route path="/shopee-connect" component={ShopeeConnectPage} />
 
-              {/* Protected Dashboard Routes */}
-              <Route path="/dashboard">
-                <ProtectedRoute>
-                  <DashboardHome />
-                </ProtectedRoute>
-              </Route>
+                {/* Protected Dashboard Routes */}
+                <Route path="/dashboard">
+                  <ProtectedRoute>
+                    <DashboardHome />
+                  </ProtectedRoute>
+                </Route>
 
-              <Route path="/dashboard/products">
-                <ProtectedRoute>
-                  <Products />
-                </ProtectedRoute>
-              </Route>
+                <Route path="/dashboard/products">
+                  <ProtectedRoute>
+                    <Products />
+                  </ProtectedRoute>
+                </Route>
 
-              <Route path="/dashboard/optimizations">
-                <ProtectedRoute>
-                  <Optimizations />
-                </ProtectedRoute>
-              </Route>
+                <Route path="/dashboard/optimizations">
+                  <ProtectedRoute>
+                    <Optimizations />
+                  </ProtectedRoute>
+                </Route>
 
-              <Route path="/dashboard/reports">
-                <ProtectedRoute>
-                  <Reports />
-                </ProtectedRoute>
-              </Route>
+                <Route path="/dashboard/reports">
+                  <ProtectedRoute>
+                    <Reports />
+                  </ProtectedRoute>
+                </Route>
 
-              <Route path="/dashboard/profile">
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              </Route>
+                <Route path="/dashboard/profile">
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                </Route>
 
-              <Route path="/dashboard/subscription">
-                <ProtectedRoute>
-                  <Subscription />
-                </ProtectedRoute>
-              </Route>
+                <Route path="/dashboard/subscription">
+                  <ProtectedRoute>
+                    <Subscription />
+                  </ProtectedRoute>
+                </Route>
 
-              <Route path="/dashboard/ai-credits">
-                <ProtectedRoute>
-                  <AiCredits />
-                </ProtectedRoute>
-              </Route>
+                <Route path="/dashboard/ai-credits">
+                  <ProtectedRoute>
+                    <AiCredits />
+                  </ProtectedRoute>
+                </Route>
 
-              <Route path="/dashboard/bulk-optimize">
-                <ProtectedRoute>
-                  <BulkOptimize />
-                </ProtectedRoute>
-              </Route>
+                <Route path="/dashboard/bulk-optimize">
+                  <ProtectedRoute>
+                    <BulkOptimize />
+                  </ProtectedRoute>
+                </Route>
 
-              <Route path="/dashboard/optimize/:id">
-                <ProtectedRoute>
-                  <OptimizePage />
-                </ProtectedRoute>
-              </Route>
+                <Route path="/dashboard/optimize/:id">
+                  <ProtectedRoute>
+                    <OptimizePage />
+                  </ProtectedRoute>
+                </Route>
 
-              <Route path="/dashboard/product/:id">
-                <ProtectedRoute>
-                  <ProductPage />
-                </ProtectedRoute>
-              </Route>
+                <Route path="/dashboard/product/:id">
+                  <ProtectedRoute>
+                    <ProductPage />
+                  </ProtectedRoute>
+                </Route>
 
-              <Route path="/dashboard/store/connect">
-                <ProtectedRoute>
-                  <ConnectStorePage />
-                </ProtectedRoute>
-              </Route>
+                <Route path="/dashboard/store/connect">
+                  <ProtectedRoute>
+                    <ConnectStorePage />
+                  </ProtectedRoute>
+                </Route>
 
-              {/* 404 Route */}
-              <Route component={NotFoundPage} />
-            </Switch>
-            <Toaster />
-              </HelmetProvider>
-            </ThemeProvider>
-          </QueryClientProvider>
-        </ClerkLoader>
+                {/* 404 Route */}
+                <Route component={NotFoundPage} />
+              </Switch>
+              <Toaster />
+            </HelmetProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
       </ClerkProvider>
     </ErrorBoundary>
   );
