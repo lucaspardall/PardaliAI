@@ -62,6 +62,11 @@ app.use((req, res, next) => {
       console.error("Erro de conexão com o banco:", dbErr);
     }
 
+    // Configurar Replit Auth
+    const { setupAuth } = await import('./replitAuth');
+    await setupAuth(app);
+    log("Replit Auth configurado com sucesso");
+
     const server = await registerRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

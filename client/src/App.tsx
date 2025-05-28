@@ -27,8 +27,6 @@ import ShopeeConnectPage from "@/pages/shopee-connect";
 // Components
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-// Usando Replit Auth nativo
-
 // Create a new React Query client
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,6 +1,6 @@
 
 import { Router, Request, Response } from 'express';
-import { isAuthenticated, getAuth } from '../clerkAuth';
+import { isAuthenticated } from '../replitAuth';
 import { createClient, loadClientForStore } from '../shopee';
 import { syncStore } from '../shopee/sync';
 
@@ -20,9 +20,9 @@ router.get('/health', (req: Request, res: Response) => {
 /**
  * Iniciar autorização Shopee
  */
-router.get('/authorize', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/authorize', isAuthenticated, async (req: any, res: Response) => {
   try {
-    const { userId } = getAuth(req);
+    const userId = req.user?.claims?.sub;
     const client = createClient();
     const authUrl = client.getAuthorizationUrl();
     
@@ -67,10 +67,10 @@ router.get('/callback', async (req: Request, res: Response) => {
 /**
  * Sincronizar loja
  */
-router.post('/sync/:storeId', isAuthenticated, async (req: Request, res: Response) => {
+router.post('/sync/:storeId', isAuthenticated, async (req: any, res: Response) => {
   try {
     const { storeId } = req.params;
-    const { userId } = getAuth(req);
+    const userId = req.user?.claims?.sub;
     
     const result = await syncStore(storeId);
     
@@ -89,7 +89,7 @@ router.post('/sync/:storeId', isAuthenticated, async (req: Request, res: Respons
 /**
  * Status da conexão
  */
-router.get('/status/:storeId', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/status/:storeId', isAuthenticated, async (req: any, res: Response) => {
   try {
     const { storeId } = req.params;
     const client = await loadClientForStore(storeId);

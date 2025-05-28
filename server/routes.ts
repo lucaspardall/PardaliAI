@@ -695,11 +695,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payment routes
   app.use('/api/payments', paymentsRouter);
 
-  // Redirecionar login para home com modal do Clerk
-  app.get('/api/login', (req, res) => {
-    res.redirect('/');
-  });
-
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;

@@ -29,13 +29,23 @@ export function useAuth(): AuthState {
       try {
         console.log('🔍 Verificando autenticação Replit...');
 
-        // Buscar dados do usuário Replit via endpoint nativo
-        const response = await fetch('/__replauthuser', {
+        // Primeiro tenta o endpoint do nosso servidor
+        let response = await fetch('/api/auth/user', {
           credentials: 'include',
           headers: {
             'Accept': 'application/json'
           }
         });
+
+        // Se falhar, tenta o endpoint nativo do Replit
+        if (!response.ok) {
+          response = await fetch('/__replauthuser', {
+            credentials: 'include',
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+        }
 
         if (response.ok) {
           const userData = await response.json();
