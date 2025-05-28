@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ClerkProvider } from '@clerk/clerk-react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { HelmetProvider } from 'react-helmet-async';
+import { ClerkLoader } from '@/components/ClerkLoader';
 
 // Pages
 import LandingPage from "@/pages/landing";
@@ -32,7 +33,12 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 // Get Clerk publishable key from environment
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
+// Detectar se está no Replit
+const isReplit = window.location.hostname.includes('replit');
+
 console.log('🔑 Clerk Key detectada:', CLERK_PUBLISHABLE_KEY ? 'OK' : 'MISSING');
+console.log('🌍 Hostname:', window.location.hostname);
+console.log('🔧 Ambiente Replit:', isReplit);
 
 if (!CLERK_PUBLISHABLE_KEY) {
   console.error('❌ VITE_CLERK_PUBLISHABLE_KEY não configurado');
@@ -59,8 +65,18 @@ function App() {
         afterSignUpUrl="/dashboard"
         signInUrl="/login"
         signUpUrl="/signup"
+        {...(isReplit && {
+          clerkJSUrl: "https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js",
+          telemetry: false
+        })}
+        appearance={{
+          variables: {
+            colorPrimary: "#f97316"
+          }
+        }}
       >
-        <QueryClientProvider client={queryClient}>
+        <ClerkLoader>
+          <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <HelmetProvider>
               <Switch>
@@ -144,6 +160,7 @@ function App() {
             </HelmetProvider>
           </ThemeProvider>
         </QueryClientProvider>
+        </ClerkLoader>
       </ClerkProvider>
     </ErrorBoundary>
   );
