@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./clerkAuth";
+import { setupClerkAuth, isAuthenticated, getAuth } from "./clerkAuth";
 import { aiService } from "./ai";
 import { z } from "zod";
 import { insertShopeeStoreSchema, insertProductSchema } from "@shared/schema";
@@ -13,7 +13,7 @@ import paymentsRouter from './routes/payments';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
-  await setupAuth(app);
+  await setupClerkAuth(app);
 
   // Register Shopee routes
   app.use('/api/shopee', shopeeRoutes);
@@ -27,7 +27,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's stores
   app.get('/api/stores', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.auth.userId;
+      const { userId } = getAuth(req);
       if (!userId) {
         return res.status(401).json({ message: "User not authenticated" });
       }
@@ -50,7 +50,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      if (store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to access this store" });
       }
 
@@ -63,7 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/stores', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.auth.userId;
+      const { userId } = getAuth(req);
       const userData = await storage.getUser(userId);
 
       // Check store limit
@@ -107,7 +108,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      if (store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to update this store" });
       }
 
@@ -129,7 +131,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      if (store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to delete this store" });
       }
 
@@ -154,7 +157,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const store = await storage.getStoreById(storeId);
-      if (!store || store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (!store || store.userId !== userId) {
         return res.status(404).json({ message: "Store not found" });
       }
 
@@ -177,7 +181,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (!store || store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to access this product" });
       }
 
@@ -198,7 +203,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      if (store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to add products to this store" });
       }
 
@@ -240,7 +246,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (!store || store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to update this product" });
       }
 
@@ -263,7 +270,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (!store || store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to delete this product" });
       }
 
@@ -284,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Optimization endpoints
   app.post('/api/products/:id/optimize', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.auth.userId;
+      const { userId } = getAuth(req);
       const productId = parseInt(req.params.id);
 
       // Check user AI credits
@@ -303,7 +311,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== userId) {
+      const { userId: storeUserId } = getAuth(req);
+      if (!store || store.userId !== storeUserId) {
         return res.status(403).json({ message: "Not authorized to optimize this product" });
       }
 
@@ -350,7 +359,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (!store || store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to access this product's optimizations" });
       }
 
@@ -365,7 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all optimizations for user
   app.get('/api/optimizations', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.auth.userId;
+      const { userId } = getAuth(req);
       const optimizations = await storage.getAllOptimizationsByUserId(userId);
       res.json(optimizations);
     } catch (error) {
@@ -377,7 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Credits endpoints
   app.get('/api/ai-credits/history', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.auth?.userId;
+      const { userId } = getAuth(req);
       const days = parseInt(req.query.days as string) || 30;
 
       // Mock data for now
@@ -415,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/ai-credits/stats', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.auth?.userId;
+      const { userId } = getAuth(req);
       const user = await storage.getUser(userId);
 
       if (!user) {
@@ -437,7 +447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/ai/insights/:storeId', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.auth.userId;
+      const { userId } = getAuth(req);
       const storeId = parseInt(req.params.storeId);
 
       if (isNaN(storeId)) {
@@ -464,7 +474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get AI usage analytics
   app.get('/api/ai-credits/analytics', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.auth.userId;
+      const { userId } = getAuth(req);
       const days = req.query.days ? parseInt(req.query.days) : 30;
 
       const analytics = await storage.getAiUsageAnalytics(userId, days);
@@ -478,7 +488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get reports data
   app.get('/api/reports', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.auth.userId;
+      const { userId } = getAuth(req);
       const range = req.query.range || '30d';
 
       // For now, return mock data - in real implementation, this would query actual analytics
@@ -501,7 +511,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Export reports
   app.get('/api/reports/export', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.auth.userId;
+      const { userId } = getAuth(req);
       const format = req.query.format || 'csv';
       const range = req.query.range || '30d';
 
@@ -543,7 +553,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const store = await storage.getStoreById(product.storeId);
-      if (!store || store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (!store || store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to update this optimization" });
       }
 
@@ -587,7 +598,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const store = await storage.getStoreById(storeId);
-      if (!store || store.userId !== req.auth.userId) {
+      const { userId } = getAuth(req);
+      if (!store || store.userId !== userId) {
         return res.status(404).json({ message: "Store not found" });
       }
 
@@ -602,7 +614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User subscription endpoint
   app.put('/api/users/plan', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.auth.userId;
+      const { userId } = getAuth(req);
       const { plan } = req.body;
 
       if (!plan || !['free', 'starter', 'pro', 'enterprise'].includes(plan)) {
@@ -653,7 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notification endpoints
   app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.auth.userId;
+      const { userId } = getAuth(req);
       const limit = req.query.limit ? parseInt(req.query.limit) : 10;
 
       const notifications = await storage.getNotificationsByUserId(userId, limit);
