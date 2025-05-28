@@ -220,6 +220,18 @@ export default function SidebarLayout({
             </h3>
             <div className="mt-2 space-y-1">
               <a
+                href="/dashboard/profile"
+                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location === '/dashboard/profile'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <i className="ri-user-settings-line mr-3"></i>
+                Perfil
+              </a>
+
+              <a
                 href="/dashboard/ai-credits"
                 className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   location === '/dashboard/ai-credits'
