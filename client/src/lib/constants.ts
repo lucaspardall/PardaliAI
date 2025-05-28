@@ -124,3 +124,39 @@ export const EMPTY_STATES = {
     description: "Conecte sua loja Shopee para começar."
   }
 };
+
+import LandingPage from '@/pages/landing';
+import ReplitLoginPage from '@/pages/replit-login';
+import DashboardPage from '@/pages/dashboard';
+import ProductsPage from '@/pages/dashboard/products';
+import OptimizationsPage from '@/pages/dashboard/optimizations';
+import ReportsPage from '@/pages/dashboard/reports';
+import SubscriptionPage from '@/pages/dashboard/subscription';
+import ProfilePage from '@/pages/dashboard/profile';
+import AiCreditsPage from '@/pages/dashboard/ai-credits';
+import BulkOptimizePage from '@/pages/dashboard/bulk-optimize';
+import ConnectStorePage from '@/pages/dashboard/store/connect';
+import ProductDetailPage from '@/pages/dashboard/product/[id]';
+import OptimizeProductPage from '@/pages/dashboard/optimize/[id]';
+import ShopeeConnectPage from '@/pages/shopee-connect';
+import NotFoundPage from '@/pages/not-found';
+
+const routesConfig = [
+  { path: '/', component: LandingPage, layout: 'landing', protected: false },
+  { path: '/login', component: ReplitLoginPage, layout: 'none', protected: false },
+  { path: '/dashboard', component: DashboardPage, layout: 'dashboard', protected: true },
+  { path: '/dashboard/products', component: ProductsPage, layout: 'dashboard', protected: true },
+  { path: '/dashboard/optimizations', component: OptimizationsPage, layout: 'dashboard', protected: true },
+  { path: '/dashboard/reports', component: ReportsPage, layout: 'dashboard', protected: true },
+  { path: '/dashboard/subscription', component: SubscriptionPage, layout: 'dashboard', protected: true },
+  { path: '/dashboard/profile', component: ProfilePage, layout: 'dashboard', protected: true },
+  { path: '/dashboard/ai-credits', component: AiCreditsPage, layout: 'dashboard', protected: true },
+  { path: '/dashboard/bulk-optimize', component: BulkOptimizePage, layout: 'dashboard', protected: true },
+  { path: '/dashboard/store/connect', component: ConnectStorePage, layout: 'dashboard', protected: true },
+  { path: '/dashboard/product/:id', component: ProductDetailPage, layout: 'dashboard', protected: true },
+  { path: '/dashboard/optimize/:id', component: OptimizeProductPage, layout: 'dashboard', protected: true },
+  { path: '/shopee-connect', component: ShopeeConnectPage, layout: 'none', protected: true },
+  { path: '*', component: NotFoundPage, layout: 'none', protected: false }
+];
+
+export default routesConfig;

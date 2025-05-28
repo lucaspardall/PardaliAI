@@ -1,68 +1,67 @@
-import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
-import { useQuery } from '@tanstack/react-query';
+
+import { useState, useEffect } from 'react';
+
+interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  profileImageUrl?: string;
+}
 
 export function useAuth() {
-  const { user: clerkUser, isLoaded, isSignedIn } = useUser();
-  const { getToken } = useClerkAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Buscar dados do usuário do nosso backend
-  const { data: userData, isLoading: userLoading } = useQuery({
-    queryKey: ['user', clerkUser?.id],
-    queryFn: async () => {
-      if (!clerkUser?.id) return null;
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
 
-      try {
-        const token = await getToken();
+  const checkAuthStatus = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Verificar se está autenticado via Replit Auth
+      const response = await fetch('/api/auth/status');
+      
+      if (response.ok) {
+        const data = await response.json();
         
-        if (!token) {
-          console.warn('⚠️ Token Clerk não disponível');
-          return null;
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+          setIsAuthenticated(true);
+        } else {
+          setUser(null);
+          setIsAuthenticated(false);
         }
-
-        const response = await fetch('/api/auth/user', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.warn('⚠️ Usuário não autenticado no backend');
-            return null;
-          }
-          const errorText = await response.text();
-          console.error(`❌ Erro auth: ${response.status} - ${errorText}`);
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const userData = await response.json();
-        console.log('✅ Usuário autenticado:', userData?.email);
-        return userData;
-      } catch (error) {
-        console.error('❌ Erro ao buscar dados do usuário:', error);
-        return null;
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
       }
-    },
-    enabled: !!clerkUser?.id && isSignedIn,
-    retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+    } catch (error) {
+      console.error('Erro ao verificar autenticação:', error);
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const user = userData || {
-    id: clerkUser?.id,
-    email: clerkUser?.emailAddresses?.[0]?.emailAddress,
-    name: clerkUser?.fullName || clerkUser?.firstName,
-    plan: 'free',
-    aiCreditsLeft: 10,
-    storeLimit: 1,
+  const login = () => {
+    window.location.href = '/login';
+  };
+
+  const logout = () => {
+    window.location.href = '/api/logout';
   };
 
   return {
-    user: isSignedIn ? user : null,
-    isAuthenticated: isSignedIn,
-    isLoading: !isLoaded || (isSignedIn && userLoading),
-    getToken,
+    user,
+    isLoading,
+    isAuthenticated,
+    login,
+    logout,
+    checkAuthStatus
   };
 }
