@@ -160,12 +160,12 @@ export async function setupAuth(app: Express) {
   app.get("/api/logout", (req, res) => {
     // Limpar cookie JWT se existir
     res.clearCookie('auth_token');
-    
+
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
           client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+          post_logout_redirect_uri: `${req.protocol}://${req.hostname}/landing`,
         }).href
       );
     });
