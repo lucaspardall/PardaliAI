@@ -26,52 +26,6 @@ function DirectLogin() {
     }
   }, [user, authLoading, setLocation]);
 
-  const handleLoginWithReplit = () => {
-    setIsLoading(true);
-
-    window.addEventListener("message", authComplete);
-    const h = 500;
-    const w = 350;
-    const left = window.screen.width / 2 - w / 2;
-    const top = window.screen.height / 2 - h / 2;
-
-    const authWindow = window.open(
-      "https://replit.com/auth_with_repl_site?domain=" + location.host,
-      "_blank",
-      "modal=yes, toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=" +
-        w +
-        ", height=" +
-        h +
-        ", top=" +
-        top +
-        ", left=" +
-        left
-    );
-
-    function authComplete(e: MessageEvent) {
-      if (e.data !== "auth_complete") {
-        return;
-      }
-
-      setIsLoading(false);
-      window.removeEventListener("message", authComplete);
-
-      if (authWindow) {
-        authWindow.close();
-      }
-
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Redirecionando para o dashboard...",
-      });
-
-      // Pequeno delay para mostrar o toast
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1000);
-    }
-  };
-
   const handleSimpleLogin = () => {
     setAuthMethod('email');
   };
@@ -152,15 +106,12 @@ function DirectLogin() {
           </p>
         </div>
       </CardContent>
-      <CardFooter className="flex flex-col space-y-3">
-        <div className="text-xs text-center text-muted-foreground mb-2">
-          <strong>Opção 1:</strong> Login com Replit
-        </div>
-        
+      <CardFooter className="flex flex-col space-y-4">
         <Button 
-          onClick={handleLoginWithReplit} 
-          disabled={isLoading}
+          onClick={() => window.location.href = "/api/login"}
           className="w-full bg-[#0E1525] hover:bg-[#1C2333] text-white"
+          size="lg"
+          disabled={isLoading}
         >
           {isLoading ? (
             <>
@@ -170,19 +121,9 @@ function DirectLogin() {
           ) : (
             <>
               <i className="ri-replit-line mr-2"></i>
-              Replit (Pop-up)
+              Entrar com Replit
             </>
           )}
-        </Button>
-
-        <Button 
-          onClick={() => window.location.href = "/api/login"}
-          variant="outline"
-          className="w-full"
-          disabled={isLoading}
-        >
-          <i className="ri-replit-fill mr-2"></i>
-          Replit (Redirecionamento)
         </Button>
 
         <div className="relative my-4">
@@ -191,10 +132,10 @@ function DirectLogin() {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-background px-2 text-muted-foreground">
-              <strong>Opção 2:</strong> Login tradicional
+              ou
             </span>
           </div>
-        </div>
+        </div></div>
 
         <Button 
           onClick={() => setAuthMethod('email')}

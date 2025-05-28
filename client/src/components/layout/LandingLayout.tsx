@@ -19,11 +19,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
   const [authMethod, setAuthMethod] = React.useState<'replit' | 'email'>('replit');
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleLoginWithReplit = async () => {
-    setIsLoading(true);
-    window.open('/api/login', '_blank', 'width=600,height=600');
-    setIsLoading(false);
-  };
+  
 
   const openLoginModal = () => {
     setLoginModalOpen(true);
@@ -317,36 +313,24 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
                     Rápido, seguro e sem necessidade de criar nova senha
                   </p>
 
-                  <div className="space-y-3">
-                    <Button 
-                      onClick={handleLoginWithReplit} 
-                      disabled={isLoading}
-                      className="w-full bg-[#0E1525] hover:bg-[#1C2333] text-white"
-                      size="lg"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Conectando...
-                        </>
-                      ) : (
-                        <>
-                          <i className="ri-replit-line mr-2"></i>
-                          Replit (Pop-up)
-                        </>
-                      )}
-                    </Button>
-
-                    <Button 
-                      onClick={() => window.location.href = "/api/login"}
-                      variant="outline"
-                      className="w-full"
-                      disabled={isLoading}
-                    >
-                      <i className="ri-replit-fill mr-2"></i>
-                      Replit (Redirecionamento)
-                    </Button>
-                  </div>
+                  <Button 
+                    onClick={() => window.location.href = "/api/login"}
+                    className="w-full bg-[#0E1525] hover:bg-[#1C2333] text-white"
+                    size="lg"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Conectando...
+                      </>
+                    ) : (
+                      <>
+                        <i className="ri-replit-line mr-2"></i>
+                        Entrar com Replit
+                      </>
+                    )}
+                  </Button>
                 </div>
 
                 {/* Divisor */}
