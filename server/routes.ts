@@ -694,6 +694,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Payment routes
   app.use('/api/payments', paymentsRouter);
+
+  app.get('/api/auth/user', async (req, res) => {
+    try {
+      // Verificar sessão primeiro
+      if (req.session && req.session.userId) {
+        const user = await storage.getUser(req.session.userId);
+        if (user) {
+          return res.json(user);
+        }
+      }
+
+      // Fallback para auth Replit
+      const auth = typeof (req as any).auth === 'function' ? (req as any).auth() : (req as any).auth;
+
+      if (!auth?.userId) {
+        return res.status(401).json({ message: 'Não autenticado' });
+      }
+
+      const user = await storage.getUser(auth.userId);
+      if (!user) {
+        return res.status(401).json({ message: 'Usuário não encontrado' });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error('❌ Erro ao buscar usuário:', error);
+      res.status(500).json({ message: 'Erro interno' });
+    }
+  });
+
     // Rota de login
   app.get('/login', (req, res) => {
     res.sendFile(join(__dirname, "../client/dist/index.html"));

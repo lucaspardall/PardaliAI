@@ -36,8 +36,9 @@ const NavItem = ({ href, icon, label, isActive }: { href: string; icon: string; 
 
 export default function SidebarLayout({ 
   children, 
-  title = "Dashboard"
+  title = "Dashboard" 
 }: SidebarLayoutProps) {
+  const { user, isLoading, logout } = useAuth();
   const [location] = useLocation();
   const authContext = useAuth();
   const { theme, setTheme } = useTheme();
@@ -97,13 +98,12 @@ export default function SidebarLayout({
   }, [location]);
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+    if (logout) {
+      await logout();
+    } else {
+      // Fallback se logout não estiver disponível
       window.location.href = '/';
-    } catch (error) {
-      console.error('Erro no logout:', error);
-      window.location.href = '/';
-    };
+    }
   };
 
   return (

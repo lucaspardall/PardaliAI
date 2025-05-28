@@ -38,10 +38,14 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
 
   // Fetch user's stores
-  const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
-    queryKey: ["/api/stores"],
-    queryFn: () => apiRequest('GET', '/api/stores').then(res => res.json()),
-    retry: 2,
+  const {
+    data: stores,
+    isLoading: storesLoading,
+    error: storesError,
+  } = useQuery({
+    queryKey: ['/api/stores'],
+    queryFn: () => fetch('/api/stores', { credentials: 'include' }).then(res => res.json()),
+    enabled: isAuthenticated,
   });
 
   const syncStoreMutation = useMutation({

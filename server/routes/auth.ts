@@ -180,6 +180,38 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 /**
+ * Rota para logout
+ */
+router.post('/logout', async (req: Request, res: Response) => {
+  try {
+    console.log('🚪 Logout solicitado');
+    
+    // Limpar sessão
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Erro ao destruir sessão:', err);
+        return res.status(500).json({
+          message: 'Erro ao fazer logout'
+        });
+      }
+
+      // Limpar cookie de sessão
+      res.clearCookie('connect.sid');
+      
+      console.log('✅ Logout realizado com sucesso');
+      res.json({
+        message: 'Logout realizado com sucesso'
+      });
+    });
+  } catch (error) {
+    console.error('Erro no logout:', error);
+    res.status(500).json({
+      message: 'Erro interno do servidor'
+    });
+  }
+});
+
+/**
  * Rota de health check para autenticação
  */
 router.get('/health', (req: Request, res: Response) => {
