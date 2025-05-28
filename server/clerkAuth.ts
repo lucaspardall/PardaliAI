@@ -1,22 +1,21 @@
 
-import { ClerkExpressWithAuth } from '@clerk/express';
+import { ClerkExpressRequireAuth, clerkMiddleware } from '@clerk/express';
 import { Request, Response, NextFunction, Application } from 'express';
 
 // Setup principal do Clerk para Express
 const setupClerkAuth = (app: Application) => {
   console.log("🔐 Configurando Clerk auth para Express");
-  app.use(ClerkExpressWithAuth());
+  app.use(clerkMiddleware());
 };
 
 // Middleware de autenticação para uso nas rotas
 const isAuthenticated = (req: any, res: any, next: any) => {
   try {
-    const auth = req.auth();
-    if (!auth?.userId) {
+    if (!req.auth?.userId) {
       console.log('❌ Usuário não autenticado tentando acessar:', req.path);
       return res.status(401).json({ error: 'User not authenticated' });
     }
-    console.log('✅ Auth OK para rota:', req.path, '- User:', auth.userId.slice(0, 8) + '...');
+    console.log('✅ Auth OK para rota:', req.path, '- User:', req.auth.userId.slice(0, 8) + '...');
     next();
   } catch (error) {
     console.log('❌ Erro de autenticação:', error);
@@ -24,19 +23,9 @@ const isAuthenticated = (req: any, res: any, next: any) => {
   }
 };
 
-// Middleware opcional para casos específicos
+// Middleware opcional usando o ClerkExpressRequireAuth oficial
 const requireAuth = () => {
-  return (req: any, res: Response, next: NextFunction) => {
-    try {
-      const auth = req.auth();
-      if (!auth?.userId) {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-      next();
-    } catch (error) {
-      return res.status(401).json({ message: 'Authentication failed' });
-    }
-  };
+  return ClerkExpressRequireAuth();
 };
 
 export { setupClerkAuth, isAuthenticated, requireAuth };
