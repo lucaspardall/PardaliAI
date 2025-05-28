@@ -1,6 +1,6 @@
 
 import { Router, Request, Response } from 'express';
-import { isAuthenticated } from '../clerkAuth';
+import { isAuthenticated } from '../replitAuth';
 
 const router = Router();
 
