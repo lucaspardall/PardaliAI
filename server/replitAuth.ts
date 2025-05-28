@@ -222,9 +222,8 @@ export async function setupAuth(app: Express) {
   });
 }
 
-// Importar middleware unificado
+// Middleware unificado de autenticação
 import { Request, Response, NextFunction } from 'express';
-import fetch from 'node-fetch';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
@@ -242,7 +241,12 @@ export interface AuthenticatedRequest extends Request {
 
 export async function isAuthenticated(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
-    // 1. Verificar token JWT primeiro (email/senha)
+    // 1. Verificar se já está autenticado via Replit (sessão)
+    if (req.user && req.user.claims && req.user.claims.sub) {
+      return next();
+    }
+
+    // 2. Verificar token JWT (email/senha)
     const authToken = req.cookies?.auth_token;
 
     if (authToken) {
@@ -266,27 +270,27 @@ export async function isAuthenticated(req: AuthenticatedRequest, res: Response, 
       }
     }
 
-    // 2. Fallback para autenticação Replit
+    // 3. Verificar headers Replit (ambiente de desenvolvimento)
     const replitUserId = req.headers['x-replit-user-id'];
 
-    if (!replitUserId) {
-      return res.status(401).json({ 
-        message: "Não autorizado",
-        code: "UNAUTHORIZED"
-      });
+    if (replitUserId) {
+      req.user = {
+        claims: {
+          sub: replitUserId as string,
+          email: req.headers['x-replit-user-email'] as string || '',
+          first_name: req.headers['x-replit-user-name'] as string || '',
+          last_name: ''
+        }
+      };
+      return next();
     }
 
-    // Para ambiente Replit, confiamos nos headers
-    req.user = {
-      claims: {
-        sub: req.headers['x-replit-user-id'] as string,
-        email: req.headers['x-replit-user-email'] as string,
-        first_name: req.headers['x-replit-user-name'] as string,
-        last_name: ''
-      }
-    };
+    // 4. Não autenticado
+    return res.status(401).json({ 
+      message: "Não autorizado",
+      code: "UNAUTHORIZED"
+    });
 
-    next();
   } catch (error) {
     console.error('Authentication error:', error);
     return res.status(401).json({ 
@@ -295,5 +299,3 @@ export async function isAuthenticated(req: AuthenticatedRequest, res: Response, 
     });
   }
 }
-// Exportar o middleware unificado
-export { isAuthenticated };
