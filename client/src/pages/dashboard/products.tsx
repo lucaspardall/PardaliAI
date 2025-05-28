@@ -1,6 +1,4 @@
-The code changes the query key and adds error handling, stale time, and retry options to the product fetching query.
-```
-```replit_final_file
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import SidebarLayout from "@/components/layout/SidebarLayout";
