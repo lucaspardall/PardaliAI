@@ -1,96 +1,4 @@
-
-<old_str>import { useState, useEffect } from 'react';
-
-interface ReplitUser {
-  id: string;
-  name: string;
-  email: string;
-  profileImage?: string;
-  bio?: string;
-  url?: string;
-}
-
-interface AuthState {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: ReplitUser | null;
-}
-
-export function useAuth(): AuthState {
-  const [state, setState] = useState<AuthState>({
-    isAuthenticated: false,
-    isLoading: true,
-    user: null
-  });
-
-  useEffect(() => {
-    let mounted = true;
-
-    const checkAuth = async () => {
-      try {
-        console.log('🔍 Verificando autenticação Replit...');
-
-        // Primeiro tenta o endpoint do nosso servidor
-        let response = await fetch('/api/auth/user', {
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-
-        // Se falhar, tenta o endpoint nativo do Replit
-        if (!response.ok) {
-          response = await fetch('/__replauthuser', {
-            credentials: 'include',
-            headers: {
-              'Accept': 'application/json'
-            }
-          });
-        }
-
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('✅ Usuário Replit autenticado:', userData);
-
-          if (mounted) {
-            setState({
-              isAuthenticated: true,
-              isLoading: false,
-              user: userData
-            });
-          }
-        } else {
-          console.log('❌ Usuário não autenticado no Replit');
-          if (mounted) {
-            setState({
-              isAuthenticated: false,
-              isLoading: false,
-              user: null
-            });
-          }
-        }
-      } catch (error) {
-        console.error('❌ Erro ao verificar autenticação:', error);
-        if (mounted) {
-          setState({
-            isAuthenticated: false,
-            isLoading: false,
-            user: null
-          });
-        }
-      }
-    };
-
-    checkAuth();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  return state;
-}</old_str>
-<new_str>import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ReplitUser {
   id: string;
@@ -126,7 +34,6 @@ export function useAuth(): AuthState {
       try {
         console.log('🔍 Verificando autenticação Replit...');
 
-        // Tenta nosso endpoint primeiro
         const response = await fetch('/api/auth/user', {
           credentials: 'include',
           headers: {
@@ -155,7 +62,6 @@ export function useAuth(): AuthState {
             });
           }
         } else if (response.status === 401) {
-          // Token expirado ou usuário não autenticado
           console.log('🔄 Token expirado, redirecionando para login...');
           if (mounted) {
             setState({
@@ -169,8 +75,7 @@ export function useAuth(): AuthState {
         }
       } catch (error) {
         console.error('❌ Erro ao verificar autenticação:', error);
-        
-        // Retry logic
+
         if (retryCount < maxRetries) {
           retryCount++;
           console.log(`🔄 Tentativa ${retryCount}/${maxRetries}...`);
@@ -190,8 +95,7 @@ export function useAuth(): AuthState {
 
     checkAuth();
 
-    // Refresh auth periodically
-    const interval = setInterval(checkAuth, 5 * 60 * 1000); // 5 minutos
+    const interval = setInterval(checkAuth, 5 * 60 * 1000);
 
     return () => {
       mounted = false;
@@ -200,4 +104,4 @@ export function useAuth(): AuthState {
   }, []);
 
   return state;
-}</new_str>
+}
