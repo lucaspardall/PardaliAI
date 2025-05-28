@@ -31,11 +31,16 @@ export default function Logo({
 }: LogoProps) {
   return (
     <div className={cn("flex items-center", className)}>
-      <img 
-        src="/logo.svg" 
-        alt="CIP Shopee" 
-        className={cn(sizeClasses[size], "w-auto mr-2 object-contain")}
-      />
+      <div className={cn(
+        "flex-shrink-0 mr-2",
+        sizeClasses[size]
+      )}>
+        <img 
+          src="/logo.svg" 
+          alt="CIP Shopee" 
+          className="w-full h-full object-contain"
+        />
+      </div>
       {showText && (
         <h1 className={cn(
           "font-bold text-foreground font-heading",
