@@ -1,135 +1,132 @@
-import { Route, Switch } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { useToast } from "@/hooks/use-toast";
 import { ThemeProvider } from "@/components/ui/theme-provider";
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { HelmetProvider } from 'react-helmet-async';
-
-// Pages
-import LandingPage from "@/pages/landing";
-import ReplitLoginPage from "@/pages/replit-login";
-import NotFoundPage from "@/pages/not-found";
-
-// Dashboard Pages
-import DashboardHome from "@/pages/dashboard/index";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import NotFound from "@/pages/not-found";
+import Landing from "@/pages/landing";
+import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/dashboard/products";
-import Optimizations from "@/pages/dashboard/optimizations";
-import Reports from "@/pages/dashboard/reports";
+import ProductDetail from "@/pages/dashboard/product/[id]";
+import OptimizeProduct from "@/pages/dashboard/optimize/[id]";
+import ConnectStore from "@/pages/dashboard/store/connect";
+import ShopeeConnect from "@/pages/shopee-connect";
 import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
-import AiCredits from "@/pages/dashboard/ai-credits";
-import BulkOptimize from "@/pages/dashboard/bulk-optimize";
-import OptimizePage from "@/pages/dashboard/optimize/[id]";
-import ProductPage from "@/pages/dashboard/product/[id]";
-import ConnectStorePage from "@/pages/dashboard/store/connect";
-import ShopeeConnectPage from "@/pages/shopee-connect";
+import Optimizations from "@/pages/dashboard/optimizations";
+import Reports from "@/pages/dashboard/reports";
+import React, { Suspense, lazy } from 'react';
 
-// Components
-import ProtectedRoute from "@/components/ProtectedRoute";
+const BulkOptimizePage = lazy(() => import('./pages/dashboard/bulk-optimize'));
+const AiCreditsPage = lazy(() => import('./pages/dashboard/ai-credits'));
+import { HelmetProvider } from 'react-helmet-async';
 
-import { useEffect } from "react";
-import AuthListener from "@/components/AuthListener";
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const [authState, setAuthState] = React.useState<{
+    isChecking: boolean;
+    isAuthed: boolean;
+  }>({
+    isChecking: true,
+    isAuthed: false
+  });
 
-// Create a new React Query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000, // 1 minute
-      retry: 2,
-    },
-  },
-});
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/user');
+        if (response.ok) {
+          setAuthState({ isChecking: false, isAuthed: true });
+        } else {
+          window.location.href = '/';
+        }
+      } catch (error) {
+        window.location.href = '/';
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  if (authState.isChecking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  return authState.isAuthed ? <>{children}</> : null;
+}
+
+function Router() {
+  return (
+    <Switch>
+      {/* Public route */}
+      <Route path="/" component={Landing} />
+
+      {/* Protected dashboard routes */}
+      <Route path="/dashboard">
+        {() => <ProtectedRoute><Dashboard /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/products">
+        {() => <ProtectedRoute><Products /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/product/:id">
+        {(params) => <ProtectedRoute><ProductDetail id={params.id} /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/optimize/:id">
+        {(params) => <ProtectedRoute><OptimizeProduct id={params.id} /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/optimizations">
+        {() => <ProtectedRoute><Optimizations /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/bulk-optimize">
+        {() => <ProtectedRoute><BulkOptimizePage /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/reports">
+        {() => <ProtectedRoute><Reports /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/store/connect">
+        {() => <ProtectedRoute><ConnectStore /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/profile">
+        {() => <ProtectedRoute><Profile /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/subscription">
+        {() => <ProtectedRoute><Subscription /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/ai-credits">
+        {() => <ProtectedRoute><AiCreditsPage /></ProtectedRoute>}
+      </Route>
+      <Route path="/dashboard/shopee-connect">
+        {() => <ProtectedRoute><ShopeeConnect /></ProtectedRoute>}
+      </Route>
+
+      {/* Fallback to 404 */}
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
 
 function App() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <HelmetProvider>
-            <AuthListener />
-            <Switch>
-              {/* Public Routes */}
-              <Route path="/" component={LandingPage} />
-              <Route path="/login" component={ReplitLoginPage} />
-              <Route path="/signup" component={ReplitLoginPage} />
-              <Route path="/shopee-connect" component={ShopeeConnectPage} />
-
-              {/* Protected Dashboard Routes */}
-              <Route path="/dashboard">
-                <ProtectedRoute>
-                  <DashboardHome />
-                </ProtectedRoute>
-              </Route>
-
-              <Route path="/dashboard/products">
-                <ProtectedRoute>
-                  <Products />
-                </ProtectedRoute>
-              </Route>
-
-              <Route path="/dashboard/optimizations">
-                <ProtectedRoute>
-                  <Optimizations />
-                </ProtectedRoute>
-              </Route>
-
-              <Route path="/dashboard/reports">
-                <ProtectedRoute>
-                  <Reports />
-                </ProtectedRoute>
-              </Route>
-
-              <Route path="/dashboard/profile">
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              </Route>
-
-              <Route path="/dashboard/subscription">
-                <ProtectedRoute>
-                  <Subscription />
-                </ProtectedRoute>
-              </Route>
-
-              <Route path="/dashboard/ai-credits">
-                <ProtectedRoute>
-                  <AiCredits />
-                </ProtectedRoute>
-              </Route>
-
-              <Route path="/dashboard/bulk-optimize">
-                <ProtectedRoute>
-                  <BulkOptimize />
-                </ProtectedRoute>
-              </Route>
-
-              <Route path="/dashboard/optimize/:id">
-                <ProtectedRoute>
-                  <OptimizePage />
-                </ProtectedRoute>
-              </Route>
-
-              <Route path="/dashboard/product/:id">
-                <ProtectedRoute>
-                  <ProductPage />
-                </ProtectedRoute>
-              </Route>
-
-              <Route path="/dashboard/store/connect">
-                <ProtectedRoute>
-                  <ConnectStorePage />
-                </ProtectedRoute>
-              </Route>
-
-              {/* 404 Route */}
-              <Route component={NotFoundPage} />
-            </Switch>
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <ThemeProvider defaultTheme="light" storageKey="cip-shopee-theme">
+          <TooltipProvider>
             <Toaster />
-          </HelmetProvider>
+            <Suspense fallback={
+              <div className="h-screen w-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            }>
+              <Router />
+            </Suspense>
+          </TooltipProvider>
         </ThemeProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+      </HelmetProvider>
+    </QueryClientProvider>
   );
 }
 

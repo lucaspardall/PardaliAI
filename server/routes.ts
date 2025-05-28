@@ -1,8 +1,8 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { aiService } from "./ai";
-import { isAuthenticated, getAuth, type AuthenticatedRequest } from "./replitAuth";
 import { z } from "zod";
 import { insertShopeeStoreSchema, insertProductSchema } from "@shared/schema";
 import shopeeRoutes from './routes/shopee';
@@ -12,6 +12,11 @@ import authRouter from './routes/auth';
 import paymentsRouter from './routes/payments';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication
+  await setupAuth(app);
+
+
+
   // Register Shopee routes
   app.use('/api/shopee', shopeeRoutes);
   app.use('/api/webhook', webhookRoutes);
@@ -21,23 +26,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.use('/api/test', webhookTestRoutes);
   }
 
-  // Get user's stores
-  app.get('/api/stores', async (req: any, res) => {
+  // Auth endpoints
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
 
+  // Store endpoints
+  app.get('/api/stores', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
       const stores = await storage.getStoresByUserId(userId);
-      res.json(stores || []);
+      res.json(stores);
     } catch (error) {
       console.error("Error fetching stores:", error);
       res.status(500).json({ message: "Failed to fetch stores" });
     }
   });
 
-  app.get('/api/stores/:id', async (req: any, res) => {
+  app.get('/api/stores/:id', isAuthenticated, async (req: any, res) => {
     try {
       const storeId = parseInt(req.params.id);
       const store = await storage.getStoreById(storeId);
@@ -47,8 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      const userId = req.user?.claims?.sub;
-      if (store.userId !== userId) {
+      if (store.userId !== req.user.claims.sub) {
         return res.status(403).json({ message: "Not authorized to access this store" });
       }
 
@@ -59,9 +71,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/stores', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+  app.post('/api/stores', isAuthenticated, async (req: any, res) => {
     try {
-      const { userId } = getAuth(req);
+      const userId = req.user.claims.sub;
       const userData = await storage.getUser(userId);
 
       // Check store limit
@@ -105,8 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      const { userId } = getAuth(req);
-      if (store.userId !== userId) {
+      if (store.userId !== req.user.claims.sub) {
         return res.status(403).json({ message: "Not authorized to update this store" });
       }
 
@@ -128,8 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      const { userId } = getAuth(req);
-      if (store.userId !== userId) {
+      if (store.userId !== req.user.claims.sub) {
         return res.status(403).json({ message: "Not authorized to delete this store" });
       }
 
@@ -141,26 +151,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get products for a store
-  app.get('/api/stores/:id/products', isAuthenticated, async (req: any, res) => {
+  // Product endpoints
+  app.get('/api/stores/:storeId/products', isAuthenticated, async (req: any, res) => {
     try {
-      const storeId = parseInt(req.params.id);
-      const limit = parseInt(req.query.limit || '20');
-      const offset = parseInt(req.query.offset || '0');
-      const search = req.query.search || '';
-
-      if (isNaN(storeId)) {
-        return res.status(400).json({ message: "Invalid store ID" });
-      }
-
+      const storeId = parseInt(req.params.storeId);
       const store = await storage.getStoreById(storeId);
-      const { userId } = getAuth(req);
-      if (!store || store.userId !== userId) {
+
+      if (!store) {
         return res.status(404).json({ message: "Store not found" });
       }
 
-      const products = await storage.getProductsByStoreId(storeId, { limit, offset, search });
-      res.json(products || []);
+      // Check if user owns the store
+      if (store.userId !== req.user.claims.sub) {
+        return res.status(403).json({ message: "Not authorized to access this store's products" });
+      }
+
+      const limit = req.query.limit ? parseInt(req.query.limit) : 100;
+      const offset = req.query.offset ? parseInt(req.query.offset) : 0;
+
+      const products = await storage.getProductsByStoreId(storeId, limit, offset);
+      res.json(products);
     } catch (error) {
       console.error("Error fetching products:", error);
       res.status(500).json({ message: "Failed to fetch products" });
@@ -178,8 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      const { userId } = getAuth(req);
-      if (!store || store.userId !== userId) {
+      if (!store || store.userId !== req.user.claims.sub) {
         return res.status(403).json({ message: "Not authorized to access this product" });
       }
 
@@ -200,8 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      const { userId } = getAuth(req);
-      if (store.userId !== userId) {
+      if (store.userId !== req.user.claims.sub) {
         return res.status(403).json({ message: "Not authorized to add products to this store" });
       }
 
@@ -243,8 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      const { userId } = getAuth(req);
-      if (!store || store.userId !== userId) {
+      if (!store || store.userId !== req.user.claims.sub) {
         return res.status(403).json({ message: "Not authorized to update this product" });
       }
 
@@ -267,8 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      const { userId } = getAuth(req);
-      if (!store || store.userId !== userId) {
+      if (!store || store.userId !== req.user.claims.sub) {
         return res.status(403).json({ message: "Not authorized to delete this product" });
       }
 
@@ -289,7 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Optimization endpoints
   app.post('/api/products/:id/optimize', isAuthenticated, async (req: any, res) => {
     try {
-      const { userId } = getAuth(req);
+      const userId = req.user.claims.sub;
       const productId = parseInt(req.params.id);
 
       // Check user AI credits
@@ -308,8 +314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      const { userId: storeUserId } = getAuth(req);
-      if (!store || store.userId !== storeUserId) {
+      if (!store || store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to optimize this product" });
       }
 
@@ -356,8 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if user has access to this product's store
       const store = await storage.getStoreById(product.storeId);
-      const { userId } = getAuth(req);
-      if (!store || store.userId !== userId) {
+      if (!store || store.userId !== req.user.claims.sub) {
         return res.status(403).json({ message: "Not authorized to access this product's optimizations" });
       }
 
@@ -372,7 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all optimizations for user
   app.get('/api/optimizations', isAuthenticated, async (req: any, res) => {
     try {
-      const { userId } = getAuth(req);
+      const userId = req.user.claims.sub;
       const optimizations = await storage.getAllOptimizationsByUserId(userId);
       res.json(optimizations);
     } catch (error) {
@@ -381,97 +385,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Credits endpoints
-  app.get('/api/ai-credits/history', isAuthenticated, async (req, res) => {
+  // Get AI credits history
+  app.get('/api/ai-credits/history', isAuthenticated, async (req: any, res) => {
     try {
-      const { userId } = getAuth(req);
-      const days = parseInt(req.query.days as string) || 30;
+      const userId = req.user.claims.sub;
+      const limit = req.query.limit ? parseInt(req.query.limit) : 50;
+      const offset = req.query.offset ? parseInt(req.query.offset) : 0;
 
-      // Mock data for now
-      const transactions = [
-        {
-          createdAt: new Date().toISOString(),
-          type: 'used',
-          description: 'Otimização de produto',
-          amount: 1
-        },
-        {
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          type: 'gained',
-          description: 'Créditos mensais',
-          amount: 10
-        }
-      ];
-
-      const dailyUsage = Array.from({ length: Math.min(days, 30) }, (_, i) => ({
-        date: new Date(Date.now() - (days - 1 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR', { 
-          month: 'short', 
-          day: 'numeric' 
-        }),
-        remaining: Math.max(0, 100 - i * 2),
-        used: Math.min(100, i * 2),
-        gained: i % 7 === 0 ? 10 : 0
-      }));
-
-      res.json({ transactions, dailyUsage });
+      const history = await storage.getAiCreditsHistory(userId, limit, offset);
+      res.json(history);
     } catch (error) {
-      console.error('Erro ao buscar histórico de créditos:', error);
-      res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-  });
-
-  app.get('/api/ai-credits/stats', isAuthenticated, async (req, res) => {
-    try {
-      const { userId } = getAuth(req);
-      const user = await storage.getUser(userId);
-
-      if (!user) {
-        return res.status(404).json({ error: 'Usuário não encontrado' });
-      }
-
-      const stats = {
-        used30Days: 15,
-        optimizationsCount: 8,
-        dailyAverage: 0.5
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error('Erro ao buscar estatísticas de créditos:', error);
-      res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-  });
-
-  app.get('/api/ai/insights/:storeId', isAuthenticated, async (req, res) => {
-    try {
-      const { userId } = getAuth(req);
-      const storeId = parseInt(req.params.storeId);
-
-      if (isNaN(storeId)) {
-        return res.status(400).json({ message: "Invalid store ID" });
-      }
-
-      const store = await storage.getStoreById(storeId);
-      if (!store || store.userId !== userId) {
-        return res.status(404).json({ message: "Store not found" });
-      }
-
-      const insights = {
-        productCount: 48,
-        potentialImprovement: 15
-      };
-
-      res.json(insights);
-    } catch (error) {
-      console.error("Error fetching AI insights:", error);
-      res.status(500).json({ message: "Failed to fetch AI insights" });
+      console.error("Error fetching AI credits history:", error);
+      res.status(500).json({ message: "Failed to fetch AI credits history" });
     }
   });
 
   // Get AI usage analytics
   app.get('/api/ai-credits/analytics', isAuthenticated, async (req: any, res) => {
     try {
-      const { userId } = getAuth(req);
+      const userId = req.user.claims.sub;
       const days = req.query.days ? parseInt(req.query.days) : 30;
 
       const analytics = await storage.getAiUsageAnalytics(userId, days);
@@ -485,7 +417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get reports data
   app.get('/api/reports', isAuthenticated, async (req: any, res) => {
     try {
-      const { userId } = getAuth(req);
+      const userId = req.user.claims.sub;
       const range = req.query.range || '30d';
 
       // For now, return mock data - in real implementation, this would query actual analytics
@@ -508,7 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Export reports
   app.get('/api/reports/export', isAuthenticated, async (req: any, res) => {
     try {
-      const { userId } = getAuth(req);
+      const userId = req.user.claims.sub;
       const format = req.query.format || 'csv';
       const range = req.query.range || '30d';
 
@@ -550,8 +482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const store = await storage.getStoreById(product.storeId);
-      const { userId } = getAuth(req);
-      if (!store || store.userId !== userId) {
+      if (!store || store.userId !== req.user.claims.sub) {
         return res.status(403).json({ message: "Not authorized to update this optimization" });
       }
 
@@ -584,34 +515,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get store metrics
+  // Store metrics endpoints
   app.get('/api/stores/:id/metrics', isAuthenticated, async (req: any, res) => {
     try {
       const storeId = parseInt(req.params.id);
-      const days = parseInt(req.query.days || '7');
-
-      if (isNaN(storeId)) {
-        return res.status(400).json({ message: "Invalid store ID" });
-      }
+      const days = req.query.days ? parseInt(req.query.days) : 7;
 
       const store = await storage.getStoreById(storeId);
-      const { userId } = getAuth(req);
-      if (!store || store.userId !== userId) {
+      if (!store) {
         return res.status(404).json({ message: "Store not found" });
       }
 
+      // Check if user owns the store
+      if (store.userId !== req.user.claims.sub) {
+        return res.status(403).json({ message: "Not authorized to access this store's metrics" });
+      }
+
       const metrics = await storage.getStoreMetrics(storeId, days);
-      res.json(metrics || []);
+
+      // If no metrics are found, generate sample data for the demo
+      if (metrics.length === 0) {
+        const sampleMetrics = generateSampleMetrics(storeId, days);
+        res.json(sampleMetrics);
+      } else {
+        res.json(metrics);
+      }
     } catch (error) {
-      console.error("Error fetching store metrics:", error);
-      res.status(500).json({ message: "Failed to fetch store metrics" });
+      console.error("Error fetching metrics:", error);
+      res.status(500).json({ message: "Failed to fetch metrics" });
     }
   });
 
   // User subscription endpoint
   app.put('/api/users/plan', isAuthenticated, async (req: any, res) => {
     try {
-      const { userId } = getAuth(req);
+      const userId = req.user.claims.sub;
       const { plan } = req.body;
 
       if (!plan || !['free', 'starter', 'pro', 'enterprise'].includes(plan)) {
@@ -662,7 +600,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notification endpoints
   app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
     try {
-      const { userId } = getAuth(req);
+      const userId = req.user.claims.sub;
       const limit = req.query.limit ? parseInt(req.query.limit) : 10;
 
       const notifications = await storage.getNotificationsByUserId(userId, limit);
@@ -692,43 +630,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.use('/api/auth', authRouter);
 
+  // Shopee routes (já configurado acima)
+  // app.use('/api/shopee', shopeeRoutes);
+
   // Payment routes
   app.use('/api/payments', paymentsRouter);
-
-  app.get('/api/auth/user', async (req, res) => {
-    try {
-      // Verificar sessão primeiro
-      if (req.session && req.session.userId) {
-        const user = await storage.getUser(req.session.userId);
-        if (user) {
-          return res.json(user);
-        }
-      }
-
-      // Fallback para auth Replit
-      const auth = typeof (req as any).auth === 'function' ? (req as any).auth() : (req as any).auth;
-
-      if (!auth?.userId) {
-        return res.status(401).json({ message: 'Não autenticado' });
-      }
-
-      const user = await storage.getUser(auth.userId);
-      if (!user) {
-        return res.status(401).json({ message: 'Usuário não encontrado' });
-      }
-
-      res.json(user);
-    } catch (error) {
-      console.error('❌ Erro ao buscar usuário:', error);
-      res.status(500).json({ message: 'Erro interno' });
-    }
-  });
-
-    // Rota de login
-  app.get('/login', (req, res) => {
-    res.sendFile(join(__dirname, "../client/dist/index.html"));
-  });
-
   // Create HTTP server
   const httpServer = createServer(app);
   return httpServer;
@@ -773,5 +679,3 @@ function generateSampleMetrics(storeId: number, days: number): any[] {
 
   return metrics;
 }
-import express from "express";
-import { join } from "path";

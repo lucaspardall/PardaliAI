@@ -1,268 +1,107 @@
-/**
- * Testes para webhooks da Shopee em desenvolvimento
- */
-// import { handleShopeeWebhook } from './webhooks'; // Removed: Não existe
-import { createClient } from './index'; // Fixed: Importa de index.ts
 
 /**
- * Simula dados de teste para webhooks
+ * Utilitário para testar webhooks da Shopee localmente
  */
-const mockWebhookData = {
-  connection: {
-    code: 0,
-    data: { test: true },
-    shop_id: 404065079,
-    timestamp: Math.floor(Date.now() / 1000),
-    msg_id: `test_${Date.now()}`
-  },
+import crypto from 'crypto';
+import axios from 'axios';
 
-  authorization: {
-    code: 3,
-    data: { 
-      shop_id: 404065079,
-      status: 'authorized',
-      authorized_at: Math.floor(Date.now() / 1000)
-    },
-    shop_id: 404065079,
-    timestamp: Math.floor(Date.now() / 1000),
-    msg_id: `auth_${Date.now()}`
-  },
-
-  order: {
-    code: 4,
-    data: {
-      ordersn: `TEST${Date.now()}`,
-      forder_id: `F${Date.now()}`,
-      package_number: `PKG${Date.now()}`,
-      tracking_no: `TRK${Date.now()}`,
-      status: 'shipped'
-    },
-    shop_id: 404065079,
-    timestamp: Math.floor(Date.now() / 1000),
-    msg_id: `order_${Date.now()}`
-  },
-
-  deauthorization: {
-    code: 5,
-    data: {
-      shop_id: 404065079,
-      deauthorized_at: Math.floor(Date.now() / 1000)
-    },
-    shop_id: 404065079,
-    timestamp: Math.floor(Date.now() / 1000),
-    msg_id: `deauth_${Date.now()}`
-  }
-};
-
-/**
- * Simula uma requisição de webhook
- */
-function createMockRequest(webhookData: any) {
-  return {
-    headers: {
-      'content-type': 'application/json',
-      'authorization': 'mock_signature_for_testing',
-      'x-forwarded-proto': 'https',
-      'x-forwarded-host': 'localhost:5000',
-      host: 'localhost:5000'
-    },
-    originalUrl: '/webhook/shopee',
-    body: webhookData,
-    on: () => {},
-    method: 'POST'
-  } as any;
+interface WebhookTestData {
+  code: number;
+  shop_id: number;
+  data?: any;
 }
 
 /**
- * Simula uma resposta de webhook
+ * Envia um webhook de teste
  */
-function createMockResponse() {
-  const response = {
-    statusCode: 200,
-    responseData: null,
-    status: function(code: number) {
-      this.statusCode = code;
-      return this;
-    },
-    json: function(data: any) {
-      this.responseData = data;
-      return this;
-    }
+export async function sendTestWebhook(testData: WebhookTestData, webhookUrl: string = 'https://cipshopee.replit.app/api/webhook/shopee/webhook') {
+  const partnerKey = process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661';
+  
+  // Construir payload do webhook
+  const payload = {
+    msg_id: `test_${Date.now()}`,
+    code: testData.code,
+    shop_id: testData.shop_id,
+    timestamp: Math.floor(Date.now() / 1000),
+    data: testData.data || {}
   };
 
-  return response as any;
+  const bodyString = JSON.stringify(payload);
+
+  // Calcular assinatura HMAC-SHA256
+  const signature = crypto
+    .createHmac('sha256', partnerKey)
+    .update(bodyString)
+    .digest('hex');
+
+  console.log('[Webhook Test] Enviando webhook:', {
+    url: webhookUrl,
+    code: testData.code,
+    shop_id: testData.shop_id,
+    signature: signature.substring(0, 20) + '...'
+  });
+
+  try {
+    const response = await axios.post(webhookUrl, bodyString, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': signature
+      },
+      timeout: 10000
+    });
+
+    console.log('[Webhook Test] Resposta:', response.status, response.data);
+    return { success: true, response: response.data };
+
+  } catch (error: any) {
+    console.error('[Webhook Test] Erro:', error.response?.data || error.message);
+    return { success: false, error: error.response?.data || error.message };
+  }
 }
 
 /**
- * Testes de webhook
+ * Testes de webhook específicos
  */
 export const webhookTests = {
-  /**
-   * Testa conexão básica do webhook
-   */
-  async testConnection(): Promise<any> {
-    try {
-      console.log('[WebhookTest] Testando conexão...');
-
-      const req = createMockRequest(mockWebhookData.connection);
-      const res = createMockResponse();
-
-      // await handleShopeeWebhook(req, res);
-      // Mock webhook handler para testes
-      res.status(200).json({ success: true, message: 'Webhook processado (mock)' });
-
-      return {
-        success: true,
-        message: 'Webhook de conexão processado',
-        statusCode: res.statusCode,
-        response: res.responseData
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: 'Erro no teste de conexão',
-        error: error.message
-      };
-    }
+  // Teste de conexão
+  async testConnection() {
+    return await sendTestWebhook({
+      code: 0, // TEST_PUSH
+      shop_id: 404065079
+    });
   },
 
-  /**
-   * Testa webhook de autorização de loja
-   */
-  async testShopAuthorization(shopId: number): Promise<any> {
-    try {
-      console.log(`[WebhookTest] Testando autorização da loja ${shopId}...`);
-
-      const data = {
-        ...mockWebhookData.authorization,
-        shop_id: shopId,
-        data: { ...mockWebhookData.authorization.data, shop_id: shopId }
-      };
-
-      const req = createMockRequest(data);
-      const res = createMockResponse();
-
-      // await handleShopeeWebhook(req, res);
-      // Mock webhook handler para testes
-      res.status(200).json({ success: true, message: 'Webhook processado (mock)' });
-
-      return {
-        success: true,
-        message: `Webhook de autorização processado para loja ${shopId}`,
-        statusCode: res.statusCode,
-        response: res.responseData,
-        shopId
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: 'Erro no teste de autorização',
-        error: error.message,
-        shopId
-      };
-    }
+  // Teste de autorização de loja
+  async testShopAuthorization(shopId: number) {
+    return await sendTestWebhook({
+      code: 3, // SHOP_AUTHORIZATION
+      shop_id: shopId,
+      data: {
+        shop_name: "Loja Teste",
+        shop_logo: "https://example.com/logo.png"
+      }
+    });
   },
 
-  /**
-   * Testa webhook de atualização de pedido
-   */
-  async testOrderUpdate(shopId: number): Promise<any> {
-    try {
-      console.log(`[WebhookTest] Testando atualização de pedido da loja ${shopId}...`);
-
-      const data = {
-        ...mockWebhookData.order,
-        shop_id: shopId
-      };
-
-      const req = createMockRequest(data);
-      const res = createMockResponse();
-
-      // await handleShopeeWebhook(req, res);
-      // Mock webhook handler para testes
-      res.status(200).json({ success: true, message: 'Webhook processado (mock)' });
-
-      return {
-        success: true,
-        message: `Webhook de pedido processado para loja ${shopId}`,
-        statusCode: res.statusCode,
-        response: res.responseData,
-        shopId,
-        orderData: data.data
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: 'Erro no teste de pedido',
-        error: error.message,
-        shopId
-      };
-    }
+  // Teste de atualização de pedido
+  async testOrderUpdate(shopId: number) {
+    return await sendTestWebhook({
+      code: 4, // ORDER_STATUS_UPDATE
+      shop_id: shopId,
+      data: {
+        ordersn: "25052703MJXT0P",
+        forder_id: "5705528466476546079",
+        package_number: "OFG202003912147986",
+        tracking_no: "BR2537042054364"
+      }
+    });
   },
 
-  /**
-   * Testa webhook de desautorização de loja
-   */
-  async testShopDeauthorization(shopId: number): Promise<any> {
-    try {
-      console.log(`[WebhookTest] Testando desautorização da loja ${shopId}...`);
-
-      const data = {
-        ...mockWebhookData.deauthorization,
-        shop_id: shopId,
-        data: { ...mockWebhookData.deauthorization.data, shop_id: shopId }
-      };
-
-      const req = createMockRequest(data);
-      const res = createMockResponse();
-
-      // await handleShopeeWebhook(req, res);
-      // Mock webhook handler para testes
-      res.status(200).json({ success: true, message: 'Webhook processado (mock)' });
-
-      return {
-        success: true,
-        message: `Webhook de desautorização processado para loja ${shopId}`,
-        statusCode: res.statusCode,
-        response: res.responseData,
-        shopId
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: 'Erro no teste de desautorização',
-        error: error.message,
-        shopId
-      };
-    }
-  },
-
-  /**
-   * Testa conectividade geral da API Shopee
-   */
-  async testApiConnection(): Promise<any> {
-    try {
-      console.log('[WebhookTest] Testando conectividade da API Shopee...');
-
-      const client = createClient();
-      const status = await client.getConnectionStatus(); // Changed: Await the promise
-
-      return {
-        success: true,
-        message: 'Cliente Shopee criado com sucesso',
-        status,
-        config: {
-          hasPartnerId: !!process.env.SHOPEE_PARTNER_ID,
-          hasPartnerKey: !!process.env.SHOPEE_PARTNER_KEY,
-          environment: process.env.NODE_ENV
-        }
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: 'Erro na conectividade da API',
-        error: error.message
-      };
-    }
+  // Teste de desautorização
+  async testShopDeauthorization(shopId: number) {
+    return await sendTestWebhook({
+      code: 5, // SHOP_DEAUTHORIZATION
+      shop_id: shopId
+    });
   }
 };

@@ -1,7 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency, formatNumber, formatPercentage } from "@/lib/utils/formatters";
-import { TrendingUp, TrendingDown, Package, DollarSign, Eye, MousePointer } from "lucide-react";
+import { formatCTR, formatNumber, formatCurrency, formatChange } from "@/lib/utils/formatters";
+import { Badge } from "@/components/ui/badge";
 
 interface StoreStatsProps {
   activeStore: number | null;
@@ -10,94 +10,89 @@ interface StoreStatsProps {
 }
 
 export default function StoreStats({ activeStore, storeMetrics, isLoading }: StoreStatsProps) {
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map(i => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16 mb-2" />
-              <Skeleton className="h-3 w-20" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  if (!activeStore || !storeMetrics) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground">Nenhuma loja selecionada</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Get the most recent metrics
+  const latestMetrics = storeMetrics && storeMetrics.length > 0 ? storeMetrics[storeMetrics.length - 1] : null;
+  const previousMetrics = storeMetrics && storeMetrics.length > 1 ? storeMetrics[storeMetrics.length - 2] : null;
+  
+  // Calculate changes
+  const calculateChange = (current: number | undefined, previous: number | undefined) => {
+    if (!current || !previous) return 0;
+    return ((current - previous) / previous) * 100;
+  };
+  
+  const ctrChange = calculateChange(latestMetrics?.averageCtr, previousMetrics?.averageCtr);
+  const viewsChange = calculateChange(latestMetrics?.totalViews, previousMetrics?.totalViews);
+  const salesChange = calculateChange(latestMetrics?.totalSales, previousMetrics?.totalSales);
+  const revenueChange = calculateChange(latestMetrics?.totalRevenue, previousMetrics?.totalRevenue);
 
   const stats = [
     {
-      title: "Vendas Totais",
-      value: formatCurrency(storeMetrics?.totalSales || 0),
-      change: storeMetrics?.salesChange || 0,
-      icon: DollarSign,
-      color: "text-green-600"
+      title: "CTR Médio",
+      value: latestMetrics?.averageCtr ? formatCTR(latestMetrics.averageCtr) : "-",
+      change: ctrChange,
+      comparison: "vs. semana passada",
+      icon: "ri-percentage-line"
     },
     {
-      title: "Produtos Ativos", 
-      value: formatNumber(storeMetrics?.activeProducts || 0),
-      change: storeMetrics?.productsChange || 0,
-      icon: Package,
-      color: "text-blue-600"
+      title: "Total de Produtos",
+      value: latestMetrics?.productCount ? formatNumber(latestMetrics.productCount) : "-",
+      icon: "ri-shopping-bag-3-line"
+    },
+    {
+      title: "Vendas (7 dias)",
+      value: latestMetrics?.totalSales ? formatNumber(latestMetrics.totalSales) : "-",
+      change: salesChange,
+      comparison: "vs. semana passada",
+      icon: "ri-shopping-cart-line"
     },
     {
       title: "Visualizações",
-      value: formatNumber(storeMetrics?.totalViews || 0),
-      change: storeMetrics?.viewsChange || 0,
-      icon: Eye,
-      color: "text-purple-600"
-    },
-    {
-      title: "CTR Médio",
-      value: formatPercentage(storeMetrics?.averageCtr || 0),
-      change: storeMetrics?.ctrChange || 0,
-      icon: MousePointer,
-      color: "text-orange-600"
+      value: latestMetrics?.totalViews ? formatNumber(latestMetrics.totalViews) : "-",
+      change: viewsChange,
+      comparison: "vs. semana passada",
+      icon: "ri-eye-line"
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat, index) => {
-        const Icon = stat.icon;
-        const isPositive = stat.change >= 0;
-        const ChangeIcon = isPositive ? TrendingUp : TrendingDown;
-
-        return (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <Icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <ChangeIcon className={`h-3 w-3 mr-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`} />
-                <span className={isPositive ? 'text-green-600' : 'text-red-600'}>
-                  {isPositive ? '+' : ''}{stat.change.toFixed(1)}%
-                </span>
-                <span className="ml-1">vs período anterior</span>
-              </p>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {isLoading ? (
+        // Loading skeletons
+        Array(4).fill(0).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-5">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-4 w-36" />
+              </div>
             </CardContent>
           </Card>
-        );
-      })}
+        ))
+      ) : (
+        // Actual stats
+        stats.map((stat, index) => (
+          <Card key={index}>
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground">{stat.title}</h3>
+                {stat.change !== undefined && (
+                  <Badge variant={stat.change >= 0 ? "success" : "destructive"} className="px-1.5 py-0.5 text-xs">
+                    <i className={stat.change >= 0 ? "ri-arrow-up-s-line mr-1" : "ri-arrow-down-s-line mr-1"}></i>
+                    {Math.abs(stat.change).toFixed(1)}%
+                  </Badge>
+                )}
+              </div>
+              <p className="text-2xl font-semibold">{stat.value}</p>
+              {stat.comparison && (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  <span>{stat.comparison}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))
+      )}
     </div>
   );
 }

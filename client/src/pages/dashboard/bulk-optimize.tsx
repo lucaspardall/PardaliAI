@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,7 +72,7 @@ export default function BulkOptimizePage() {
     if (selectedProducts.length === 0) return;
 
     setIsOptimizing(true);
-
+    
     // Inicializar progresso
     const initialProgress = selectedProducts.map(id => {
       const product = products?.find((p: Product) => p.id === id);
@@ -81,14 +82,14 @@ export default function BulkOptimizePage() {
         status: 'pending' as const
       };
     });
-
+    
     setOptimizationProgress(initialProgress);
 
     try {
       // Processar produtos em lotes de 3 para não sobrecarregar
       const batchSize = 3;
       const batches = [];
-
+      
       for (let i = 0; i < selectedProducts.length; i += batchSize) {
         batches.push(selectedProducts.slice(i, i + batchSize));
       }
@@ -107,7 +108,7 @@ export default function BulkOptimizePage() {
         const promises = batch.map(async (productId) => {
           try {
             await apiRequest('POST', `/api/products/${productId}/optimize`);
-
+            
             setOptimizationProgress(prev => 
               prev.map(item => 
                 item.productId === productId 
@@ -127,7 +128,7 @@ export default function BulkOptimizePage() {
         });
 
         await Promise.allSettled(promises);
-
+        
         // Pequena pausa entre lotes
         if (batches.indexOf(batch) < batches.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -137,7 +138,7 @@ export default function BulkOptimizePage() {
       // Atualizar dados
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/optimizations'] });
-
+      
     } catch (error) {
       console.error('Erro na otimização em lote:', error);
     } finally {
@@ -165,7 +166,7 @@ export default function BulkOptimizePage() {
       <Helmet>
         <title>Otimização em Lote | CIP Shopee</title>
       </Helmet>
-
+      
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
@@ -174,7 +175,7 @@ export default function BulkOptimizePage() {
               Otimize múltiplos produtos de uma vez com nossa IA
             </p>
           </div>
-
+          
           <div className="flex gap-2">
             <Button
               variant={filter === 'all' ? 'default' : 'outline'}
@@ -240,7 +241,7 @@ export default function BulkOptimizePage() {
                 </div>
               ))}
             </div>
-
+            
             <div className="mt-4">
               <Progress 
                 value={(optimizationProgress.filter(item => item.status === 'completed').length / optimizationProgress.length) * 100} 
@@ -265,14 +266,14 @@ export default function BulkOptimizePage() {
                 {selectedCount} de {filteredProducts.length} produto(s) selecionado(s)
               </span>
             </div>
-
+            
             <div className="flex items-center gap-4">
               {user?.plan === 'free' && (
                 <div className="text-sm text-muted-foreground">
                   Créditos necessários: {estimatedCredits} | Disponíveis: {user?.aiCreditsLeft || 0}
                 </div>
               )}
-
+              
               <Button
                 onClick={startBulkOptimization}
                 disabled={selectedCount === 0 || isOptimizing || !canOptimize}
@@ -292,7 +293,7 @@ export default function BulkOptimizePage() {
               </Button>
             </div>
           </div>
-
+          
           {!canOptimize && user?.plan === 'free' && (
             <Alert className="mt-4">
               <i className="ri-information-line"></i>
@@ -350,7 +351,7 @@ export default function BulkOptimizePage() {
                     onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
                     disabled={isOptimizing}
                   />
-
+                  
                   {product.image && (
                     <img
                       src={product.image}
@@ -358,7 +359,7 @@ export default function BulkOptimizePage() {
                       className="h-16 w-16 rounded-md object-cover"
                     />
                   )}
-
+                  
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium truncate">{product.name}</h4>
                     <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
@@ -369,7 +370,7 @@ export default function BulkOptimizePage() {
                       )}
                     </div>
                   </div>
-
+                  
                   <div className="flex flex-col items-end gap-1">
                     {product.ctr !== null && product.ctr < 1.5 && (
                       <Badge variant="destructive" className="text-xs">CTR Crítico</Badge>

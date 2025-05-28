@@ -5,21 +5,20 @@ import FeaturesSection from "@/components/landing/FeaturesSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import PricingSection from "@/components/landing/PricingSection";
 import CTASection from "@/components/landing/CTASection";
-import { Helmet } from "react-helmet-async";
+import { Helmet } from "react-helmet";
 
 export default function Landing() {
   return (
     <>
       <Helmet>
-        <title>CIP Shopee - Centro de Inteligência Pardal para Vendedores Shopee</title>
+        <title>CIP Shopee - Otimização Inteligente para Lojas Shopee</title>
         <meta 
           name="description" 
-          content="Transforme sua loja Shopee com o CIP Shopee! Nossa IA otimiza títulos, descrições e palavras-chave automaticamente. Aumente suas vendas e visibilidade na plataforma."
+          content="Impulsione suas vendas na Shopee com Inteligência Artificial. Otimize produtos e alcance mais clientes automaticamente."
         />
-        <meta property="og:title" content="CIP Shopee - Centro de Inteligência Pardal para Otimização Shopee" />
-        <meta property="og:description" content="Plataforma de IA que otimiza automaticamente seus produtos na Shopee. Aumente vendas, melhore rankings e maximize resultados." />
+        <meta property="og:title" content="CIP Shopee - Otimização para Lojas Shopee" />
+        <meta property="og:description" content="Impulsione suas vendas na Shopee com IA. Plataforma completa para análise e otimização de produtos." />
         <meta property="og:type" content="website" />
-        <meta name="keywords" content="shopee, otimização, IA, vendas, produtos, e-commerce, marketplace" />
       </Helmet>
       <LandingLayout>
         <HeroSection />

@@ -88,43 +88,6 @@ export interface IStorage {
   getProductByStoreIdAndProductId(storeId: number, productId: string): Promise<any>;
 }
 
-export async function getUserByEmail(email: string) {
-  try {
-    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-    return result[0] || null;
-  } catch (error) {
-    console.error('Erro ao buscar usuário por email:', error);
-    return null;
-  }
-}
-
-export async function createUser(userData: {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  replitId?: string;
-}) {
-  try {
-    const [user] = await db.insert(users).values({
-      email: userData.email,
-      password: userData.password,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      replitId: userData.replitId,
-      plan: 'free',
-      planStatus: 'active',
-      aiCreditsLeft: 10,
-      storeLimit: 1,
-    }).returning();
-
-    return user;
-  } catch (error) {
-    console.error('Erro ao criar usuário:', error);
-    throw error;
-  }
-}
-
 export class DatabaseStorage implements IStorage {
   private db: PostgresJsDatabase<typeof schema> | null = null;
 
@@ -682,11 +645,6 @@ export class DatabaseStorage implements IStorage {
     const result = await db.select().from(users).where(eq(users.stripeCustomerId, customerId)).limit(1);
     return result[0] || null;
   }
-
-  async getUserByEmail(email: string): Promise<User | null> {
-    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-    return result[0] || null;
-  }
 }
 
 // In-memory storage for development or testing
@@ -943,7 +901,7 @@ export class MemStorage implements IStorage {
   // AI Request operations
   async getAiRequestsByUserId(userId: string): Promise<AiRequest[]> {
     return Array.from(this.aiRequests.values())
-Adding functions for user retrieval by email, creation with password, and updating user details.      .filter(request => request.userId === userId)
+      .filter(request => request.userId === userId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
@@ -979,7 +937,7 @@ Adding functions for user retrieval by email, creation with password, and updati
   async getNotificationsByUserId(userId: string, limit = 10): Promise<Notification[]> {
     return Array.from(this.notifications.values())
       .filter(notification => notification.userId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
   }
 
@@ -996,7 +954,7 @@ Adding functions for user retrieval by email, creation with password, and updati
 
   async createNotification(notification: InsertNotification): Promise<Notification> {
     const id = this.notificationIdCounter++;
-    const newNotification: Notification = {
+    const newNotification:Notification = {
       ...notification,
       id,
       createdAt: new Date(),
@@ -1022,10 +980,6 @@ Adding functions for user retrieval by email, creation with password, and updati
 
   async getUserByStripeCustomerId(customerId: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(user => user.stripeCustomerId === customerId);
-  }
-
-  async getUserByEmail(email: string): Promise<User | null> {
-    return Array.from(this.users.values()).find(user => user.email === email) || null;
   }
 }
 

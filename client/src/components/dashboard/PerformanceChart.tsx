@@ -1,45 +1,34 @@
-import { useMemo } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useEffect, useState } from "react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency, formatPercentage } from "@/lib/utils/formatters";
+import { formatDate, formatCTR, formatNumber } from "@/lib/utils/formatters";
+import { ChartDataPoint } from "@/lib/types";
 
 interface PerformanceChartProps {
-  metrics: any;
+  metrics: any[];
   isLoading: boolean;
 }
 
 export default function PerformanceChart({ metrics, isLoading }: PerformanceChartProps) {
-  const chartData = useMemo(() => {
-    if (!metrics?.dailyStats) {
-      // Dados de exemplo para quando não há dados reais
-      return Array.from({ length: 7 }, (_, i) => ({
-        date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR', { 
-          month: 'short', 
-          day: 'numeric' 
-        }),
-        sales: Math.random() * 1000 + 500,
-        views: Math.random() * 100 + 50,
-        ctr: Math.random() * 5 + 1,
-        conversions: Math.random() * 10 + 5
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  
+  useEffect(() => {
+    if (metrics && metrics.length > 0) {
+      // Process metrics into chart data format
+      const data = metrics.map(metric => ({
+        date: formatDate(metric.date),
+        views: metric.totalViews,
+        sales: metric.totalSales,
+        ctr: metric.averageCtr,
+        revenue: metric.totalRevenue
       }));
+      
+      setChartData(data);
     }
-
-    return metrics.dailyStats.map((day: any) => ({
-      date: new Date(day.date).toLocaleDateString('pt-BR', { 
-        month: 'short', 
-        day: 'numeric' 
-      }),
-      sales: day.sales || 0,
-      views: day.views || 0,
-      ctr: day.ctr || 0,
-      conversions: day.conversions || 0
-    }));
   }, [metrics]);
-
-  if (isLoading) {
-    return <Skeleton className="h-64 w-full" />;
-  }
-
+  
+  // Custom tooltip for the chart
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -53,11 +42,9 @@ export default function PerformanceChart({ metrics, isLoading }: PerformanceChar
               />
               <span className="mr-2">{entry.name}:</span>
               <span className="font-medium">
-                {entry.dataKey === 'sales' 
-                  ? formatCurrency(entry.value)
-                  : entry.dataKey === 'ctr'
-                  ? formatPercentage(entry.value)
-                  : entry.value
+                {entry.name === 'CTR' 
+                  ? formatCTR(entry.value) 
+                  : formatNumber(entry.value)
                 }
               </span>
             </div>
@@ -68,48 +55,76 @@ export default function PerformanceChart({ metrics, isLoading }: PerformanceChar
     return null;
   };
 
+  if (isLoading) {
+    return (
+      <div className="w-full h-64">
+        <Skeleton className="w-full h-full" />
+      </div>
+    );
+  }
+
   return (
-    <div className="h-64">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis 
-            dataKey="date" 
-            className="text-muted-foreground"
-            fontSize={12}
-          />
-          <YAxis 
-            className="text-muted-foreground"
-            fontSize={12}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Line 
-            type="monotone" 
-            dataKey="sales" 
-            stroke="hsl(var(--primary))" 
-            strokeWidth={2}
-            name="Vendas"
-            dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6 }}
-          />
-          <Line 
-            type="monotone" 
-            dataKey="views" 
-            stroke="hsl(var(--chart-2))" 
-            strokeWidth={2}
-            name="Visualizações"
-            dot={{ fill: "hsl(var(--chart-2))", strokeWidth: 2, r: 4 }}
-          />
-          <Line 
-            type="monotone" 
-            dataKey="ctr" 
-            stroke="hsl(var(--chart-3))" 
-            strokeWidth={2}
-            name="CTR (%)"
-            dot={{ fill: "hsl(var(--chart-3))", strokeWidth: 2, r: 4 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="w-full h-64">
+      {chartData.length > 0 ? (
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={chartData}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis 
+              dataKey="date" 
+              stroke="hsl(var(--muted-foreground))" 
+              fontSize={12}
+              tickMargin={10}
+            />
+            <YAxis 
+              yAxisId="left" 
+              stroke="hsl(var(--muted-foreground))" 
+              fontSize={12}
+              tickMargin={10}
+            />
+            <YAxis 
+              yAxisId="right" 
+              orientation="right" 
+              stroke="hsl(var(--muted-foreground))" 
+              fontSize={12}
+              tickMargin={10}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="views"
+              name="Visualizações"
+              stroke="hsl(var(--chart-1))"
+              activeDot={{ r: 8 }}
+              strokeWidth={2}
+            />
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="sales"
+              name="Vendas"
+              stroke="hsl(var(--chart-2))"
+              strokeWidth={2}
+            />
+            <Line
+              yAxisId="right"
+              type="monotone"
+              dataKey="ctr"
+              name="CTR"
+              stroke="hsl(var(--chart-3))"
+              strokeWidth={2}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <p className="text-muted-foreground">Nenhum dado disponível para o período selecionado</p>
+        </div>
+      )}
     </div>
   );
 }

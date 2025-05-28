@@ -24,7 +24,7 @@ localPort = 5001
 externalPort = 3001
 
 [workflows]
-runButton = "Servidor CIP Shopee"
+runButton = "Run"
 
 [[workflows.workflow]]
 name = "Project"
@@ -55,51 +55,6 @@ args = "npm run dev"
 
 [[workflows.workflow]]
 name = "Run Application"
-author = 41750934
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-
-[[workflows.workflow]]
-name = "Start Dev Server"
-author = 41750934
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-
-[[workflows.workflow]]
-name = "Development Server"
-author = 41750934
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-
-[[workflows.workflow]]
-name = "Run API"
-author = 41750934
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-
-[[workflows.workflow]]
-name = "Dev Server com Auto-Restart"
-author = 41750934
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev"
-
-[[workflows.workflow]]
-name = "Servidor CIP Shopee"
 author = 41750934
 mode = "sequential"
 

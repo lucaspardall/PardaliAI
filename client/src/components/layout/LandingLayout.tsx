@@ -1,115 +1,153 @@
-import React, { useState, useEffect } from "react";
-import { useTheme } from "@/components/ui/theme-provider";
-import { Moon, Sun } from "lucide-react";
+import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Link } from 'wouter';
-import ReplitPopupLogin from "@/components/ReplitPopupLogin";
-
-function AuthNavigation() {
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  if (isLoading) {
-    return <div className="h-8 w-20 bg-white/20 rounded animate-pulse" />;
-  }
-
-  if (isAuthenticated && user) {
-    return (
-      <div className="flex items-center space-x-4">
-        <a href="/dashboard" className="text-white hover:text-orange-200 transition-colors">
-          Dashboard
-        </a>
-        <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-medium">
-              {user.name?.[0] || user.email[0].toUpperCase()}
-            </span>
-          </div>
-          <span className="text-white text-sm">{user.name || user.email}</span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center space-x-4">
-      <ReplitPopupLogin 
-        className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-medium"
-      >
-        Entrar
-      </ReplitPopupLogin>
-    </div>
-  );
-}
+import { useTheme } from "@/components/ui/theme-provider";
+import { useState, useEffect } from "react";
 
 interface LandingLayoutProps {
   children: React.ReactNode;
 }
 
 export default function LandingLayout({ children }: LandingLayoutProps) {
+  const { isAuthenticated, isLoading } = useAuth();
   const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 10);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-background/80 backdrop-blur-md border-b border-border' 
-          : 'bg-transparent'
-      }`}>
-        <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-              <i className="ri-bird-fill text-white text-sm"></i>
-            </div>
-            <span className="font-bold text-xl">CIP Shopee</span>
+    <div className="min-h-screen flex flex-col">
+      {/* Header/Navigation */}
+      <header className={`sticky top-0 z-50 ${isScrolled ? 'bg-background/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'} transition-all duration-200 py-4`}>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div className="flex items-center">
+            <i className="ri-bird-fill text-primary text-3xl mr-2"></i>
+            <h1 className="text-2xl font-bold text-foreground font-heading">CIP Shopee</h1>
           </div>
 
-          <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
-              Recursos
-            </a>
-            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
-              Preços
-            </a>
-            <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
-              Depoimentos
-            </a>
-            <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
-              Sobre
-            </a>
+          <div className="hidden md:flex items-center space-x-6">
+            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Recursos</a>
+            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Planos</a>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="mr-2 border-primary hover:bg-primary/10"
+            >
+              {theme === "dark" ? (
+                <i className="ri-sun-line text-xl text-primary"></i>
+              ) : (
+                <i className="ri-moon-line text-xl text-primary"></i>
+              )}
+            </Button>
+
+            {isLoading ? (
+              <div className="h-10 w-24 bg-muted animate-pulse rounded-lg"></div>
+            ) : isAuthenticated ? (
+              <Button asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <a href="/api/login">Comece grátis</a>
+              </Button>
+            )}
           </div>
 
-          <div className="flex items-center space-x-4">
+          {/* Mobile menu button */}
+          <div className="flex items-center md:hidden">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="rounded-full"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="mr-2 border-primary hover:bg-primary/10"
             >
-              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
+              {theme === "dark" ? (
+                <i className="ri-sun-line text-xl text-primary"></i>
+              ) : (
+                <i className="ri-moon-line text-xl text-primary"></i>
+              )}
             </Button>
 
-            <AuthNavigation />
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? (
+                <i className="ri-close-line text-xl"></i>
+              ) : (
+                <i className="ri-menu-line text-xl"></i>
+              )}
+            </Button>
           </div>
-        </nav>
+        </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-background border-t border-border mt-4 py-4">
+            <div className="container mx-auto px-4 space-y-4 flex flex-col">
+              <a 
+                href="#features" 
+                className="text-foreground py-2 px-4 rounded-md hover:bg-muted transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Recursos
+              </a>
+              <a 
+                href="#pricing" 
+                className="text-foreground py-2 px-4 rounded-md hover:bg-muted transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Planos
+              </a>
+
+              {isLoading ? (
+                <div className="h-10 bg-muted animate-pulse rounded-lg"></div>
+              ) : isAuthenticated ? (
+                <div className="space-y-2">
+                  <Button asChild className="w-full">
+                    <Link href="/dashboard">
+                      <i className="ri-dashboard-line mr-2"></i>
+                      Ir para Dashboard
+                    </Link>
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Bem-vindo de volta!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Button asChild className="w-full">
+                    <a href="/api/login">
+                      <i className="ri-rocket-line mr-2"></i>
+                      Comece grátis
+                    </a>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full">
+                    <a href="/api/login">
+                      <i className="ri-login-box-line mr-2"></i>
+                      Já tenho conta
+                    </a>
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
-      <main className="pt-20">
+      <main className="flex-grow">
         {children}
       </main>
 
@@ -119,12 +157,10 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
           <div className="flex flex-col md:flex-row justify-between">
             <div className="mb-8 md:mb-0">
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mr-2">
-                  <i className="ri-bird-fill text-white text-sm"></i>
-                </div>
+                <i className="ri-bird-fill text-primary text-2xl mr-2"></i>
                 <h2 className="text-xl font-bold text-white">CIP Shopee</h2>
               </div>
-              <p className="max-w-xs">Centro de Inteligência Pardal - Otimização inteligente para lojas Shopee com IA.</p>
+              <p className="max-w-xs">Otimização inteligente para lojas Shopee com tecnologia de IA.</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
               <div>

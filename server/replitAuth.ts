@@ -171,56 +171,44 @@ export async function setupAuth(app: Express) {
   // Rota modificada para pegar os dados do usuário considerando o fallback em memória
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      let userId: string;
+      const userId = req.user.claims.sub;
       let user;
 
-      // Verificar método de autenticação
-      if (req.session?.authMethod === 'email') {
-        // Autenticação por email
-        userId = req.session.userId;
+      try {
+        // Tenta buscar do banco de dados 
         user = await storage.getUser(userId);
-      } else {
-        // Autenticação por Replit
-        userId = req.user.claims.sub;
-
-        try {
-          user = await storage.getUser(userId);
-        } catch (error) {
-          console.log("Erro ao buscar usuário do banco, usando cache em memória:", error);
-          user = inMemoryUsers[userId];
-        }
-
-        if (!user) {
-          // Cria um usuário básico com dados do token se não encontrar
-          user = {
-            id: userId,
-            email: req.user.claims.email,
-            firstName: req.user.claims.first_name,
-            lastName: req.user.claims.last_name,
-            profileImageUrl: req.user.claims.profile_image_url,
-            plan: "free",
-            planStatus: "active",
-            planExpiresAt: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            aiCreditsLeft: 10,
-            storeLimit: 1
-          };
-
-          try {
-            await upsertUser(req.user.claims);
-          } catch (saveError) {
-            console.log("Erro ao salvar novo usuário no banco:", saveError);
-          }
-
-          inMemoryUsers[userId] = user;
-        }
+      } catch (error) {
+        console.log("Erro ao buscar usuário do banco, usando cache em memória:", error);
+        // Usa fallback em memória se falhar
+        user = inMemoryUsers[userId];
       }
 
       if (!user) {
-        return res.status(404).json({ 
-          message: "Usuário não encontrado"
-        });
+        // Cria um usuário básico com dados do token se não encontrar
+        user = {
+          id: userId,
+          email: req.user.claims.email,
+          firstName: req.user.claims.first_name,
+          lastName: req.user.claims.last_name,
+          profileImageUrl: req.user.claims.profile_image_url,
+          plan: "free",
+          planStatus: "active",
+          planExpiresAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          aiCreditsLeft: 10,
+          storeLimit: 1
+        };
+
+        // Tenta salvar no banco
+        try {
+          await upsertUser(req.user.claims);
+        } catch (saveError) {
+          console.log("Erro ao salvar novo usuário no banco:", saveError);
+        }
+
+        // Salva em memória como fallback
+        inMemoryUsers[userId] = user;
       }
 
       res.json(user);
@@ -232,32 +220,6 @@ export async function setupAuth(app: Express) {
       });
     }
   });
-}
-
-// Interface para requisições autenticadas
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    claims: {
-      sub: string;
-      email?: string;
-      first_name?: string;
-      last_name?: string;
-      profile_image_url?: string;
-      exp?: number;
-    };
-    access_token?: string;
-    refresh_token?: string;
-    expires_at?: number;
-  };
-}
-
-/**
- * Função auxiliar para extrair dados de autenticação da requisição
- */
-export function getAuth(req: AuthenticatedRequest) {
-  return {
-    userId: req.user?.claims?.sub
-  };
 }
 
 /**
@@ -279,46 +241,42 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       return next();
     }
 
-    // Verificar autenticação por sessão (email/senha)
-    if (req.session?.authMethod === 'email' && req.session?.userId) {
-      console.log('✅ Usuário autenticado via email:', req.session.userId.slice(0, 8));
-      return next();
-    }
-
-    // Verificar autenticação Replit
+    // Verifica se o usuário está autenticado
     if (!req.user || !req.user.claims || !req.user.claims.sub) {
-      console.log('❌ Usuário não autenticado tentando acessar:', req.path);
-
+      console.log('Usuário não autenticado tentando acessar:', req.path);
+      
+      // Para APIs, retornar 401
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({ 
           message: 'Não autorizado',
           code: 'UNAUTHORIZED',
-          redirectTo: '/login'
+          redirectTo: '/?login=required'
         });
       }
 
-      return res.redirect('/login');
+      // Para páginas, redirecionar para a página inicial com parâmetro de login
+      return res.redirect('/?login=required');
     }
 
-    // Verificar se o token Replit não expirou
+    // Verificar se o token não expirou
     if (req.user.expires_at && new Date() > new Date(req.user.expires_at * 1000)) {
-      console.log('⏰ Token Replit expirado para usuário:', req.user.claims.sub);
-
+      console.log('Token expirado para usuário:', req.user.claims.sub);
+      
       if (req.path.startsWith('/api/')) {
         return res.status(401).json({ 
           message: 'Token expirado',
           code: 'TOKEN_EXPIRED',
-          redirectTo: '/login'
+          redirectTo: '/api/login'
         });
       }
 
-      return res.redirect('/login');
+      return res.redirect('/api/login');
     }
 
     next();
   } catch (error) {
-    console.error('❌ Erro no middleware de autenticação:', error);
-
+    console.error('Erro no middleware de autenticação:', error);
+    
     if (req.path.startsWith('/api/')) {
       return res.status(500).json({ 
         message: 'Erro interno do servidor',
@@ -326,6 +284,6 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       });
     }
 
-    return res.redirect('/login');
+    return res.redirect('/?error=auth_error');
   }
 };

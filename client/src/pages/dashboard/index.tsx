@@ -12,45 +12,33 @@ import InsightsSection from "@/components/dashboard/InsightsSection";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Helmet } from "react-helmet-async";
+import { Helmet } from "react-helmet";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Building2, Package, TrendingUp, Users, ShoppingCart, DollarSign, RefreshCw, Plus, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
-  const { user, isLoading: userLoading, isAuthenticated } = useAuth();
-
-  if (!isAuthenticated && !userLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Acesso negado</h2>
-          <p className="text-muted-foreground">Faça login para acessar o dashboard.</p>
-        </div>
-      </div>
-    );
-  }
+  const { user } = useAuth();
   const [activeStore, setActiveStore] = useState<number | null>(null);
   const [period, setPeriod] = useState<string>('7');
 
   const queryClient = useQueryClient();
 
   // Fetch user's stores
-  const {
-    data: stores,
-    isLoading: storesLoading,
-    error: storesError,
-  } = useQuery({
-    queryKey: ['/api/stores'],
-    queryFn: () => fetch('/api/stores', { credentials: 'include' }).then(res => res.json()),
-    enabled: isAuthenticated,
+  const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
+    queryKey: ["/api/stores"],
   });
 
   const syncStoreMutation = useMutation({
     mutationFn: async (storeId: number) => {
-      const response = await apiRequest('POST', `/api/shopee/sync/${storeId}`);
+      const response = await fetch(`/api/shopee/sync/${storeId}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to sync store');
+      }
       return response.json();
     },
     onSuccess: (data, storeId) => {
@@ -88,17 +76,13 @@ export default function Dashboard() {
   // Fetch store metrics if a store is selected
   const { data: storeMetrics, isLoading: metricsLoading } = useQuery({
     queryKey: [activeStore ? `/api/stores/${activeStore}/metrics?days=${period}` : null],
-    queryFn: () => apiRequest('GET', `/api/stores/${activeStore}/metrics?days=${period}`).then(res => res.json()),
     enabled: !!activeStore,
-    retry: 2,
   });
 
   // Fetch products for active store
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: [activeStore ? `/api/stores/${activeStore}/products?limit=5` : null],
-    queryFn: () => apiRequest('GET', `/api/stores/${activeStore}/products?limit=5`).then(res => res.json()),
     enabled: !!activeStore,
-    retry: 2,
   });
 
   // Generate optimization opportunities (products with low CTR)
@@ -117,31 +101,6 @@ export default function Dashboard() {
         </Helmet>
         <div className="container mx-auto px-4 py-8">
           <ConnectStore />
-        </div>
-      </SidebarLayout>
-    );
-  }
-
-  // Handle errors
-  if (storesError) {
-    return (
-      <SidebarLayout title="Dashboard">
-        <Helmet>
-          <title>Dashboard | CIP Shopee</title>
-        </Helmet>
-        <div className="container mx-auto px-4 py-8">
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-              <h3 className="text-lg font-medium mb-2">Erro ao carregar lojas</h3>
-              <p className="text-muted-foreground mb-4">
-                Ocorreu um erro ao carregar suas lojas. Tente novamente.
-              </p>
-              <Button onClick={() => window.location.reload()}>
-                Tentar novamente
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </SidebarLayout>
     );

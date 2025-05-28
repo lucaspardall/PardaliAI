@@ -51,18 +51,18 @@ export default function SubscriptionPage() {
   // Fetch subscription info
   const { data: subscriptionInfo, isLoading } = useQuery<SubscriptionInfo>({
     queryKey: ['/api/payments/subscription'],
-    queryFn: () => apiRequest('GET', '/api/payments/subscription').then(res => res.json()),
+    queryFn: () => fetch('/api/payments/subscription', { credentials: 'include' }).then(res => res.json()),
   });
 
   // Fetch available plans
   const { data: plansData } = useQuery({
     queryKey: ['/api/payments/plans'],
-    queryFn: () => apiRequest('GET', '/api/payments/plans').then(res => res.json()),
+    queryFn: () => fetch('/api/payments/plans', { credentials: 'include' }).then(res => res.json()),
   });
 
   // Create checkout session mutation
   const checkoutMutation = useMutation({
-    mutationFn: async ({ planId }: { planId: string }) => {
+    mutationFn: async ({ planId, billingPeriod }: { planId: string; billingPeriod: 'monthly' | 'yearly' }) => {
       const response = await fetch('/api/payments/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -74,7 +74,6 @@ export default function SubscriptionPage() {
     },
     onSuccess: (data) => {
       window.location.href = data.url;
-      setIsProcessing(false);
     },
     onError: (error: any) => {
       toast({
@@ -82,17 +81,15 @@ export default function SubscriptionPage() {
         description: error.message || "Erro ao iniciar pagamento",
         variant: "destructive",
       });
-      setIsProcessing(false);
     },
   });
 
-  // Portal mutation for billing management
+  // Customer portal mutation
   const portalMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/payments/portal', {
+      const response = await fetch('/api/payments/customer-portal', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to create portal session');
       return response.json();
@@ -103,10 +100,9 @@ export default function SubscriptionPage() {
     onError: (error: any) => {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao acessar portal de pagamentos",
+        description: error.message || "Erro ao acessar portal",
         variant: "destructive",
       });
-      setIsProcessing(false);
     },
   });
 
@@ -163,7 +159,7 @@ export default function SubscriptionPage() {
 
   const handleUpgrade = (planId: string) => {
     setIsProcessing(true);
-    checkoutMutation.mutate({ planId });
+    checkoutMutation.mutate({ planId, billingPeriod });
   };
 
   const handleManageBilling = () => {

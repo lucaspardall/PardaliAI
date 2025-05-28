@@ -32,7 +32,6 @@ export default function Products() {
   // Fetch user's stores
   const { data: stores, isLoading: storesLoading } = useQuery({
     queryKey: ["/api/stores"],
-    queryFn: () => apiRequest('GET', '/api/stores').then(res => res.json()),
   });
   
   // Set active store when stores are loaded
@@ -43,7 +42,6 @@ export default function Products() {
   // Fetch products for active store
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: [activeStore ? `/api/stores/${activeStore}/products` : null],
-    queryFn: () => apiRequest('GET', `/api/stores/${activeStore}/products`).then(res => res.json()),
     enabled: !!activeStore,
   });
 

@@ -45,19 +45,16 @@ export default function Profile() {
   // Fetch user's stores
   const { data: stores, isLoading: storesLoading } = useQuery({
     queryKey: ["/api/stores"],
-    queryFn: () => apiRequest('GET', '/api/stores').then(res => res.json()),
   });
   
   // Fetch user's notifications
   const { data: notifications, isLoading: notificationsLoading } = useQuery({
     queryKey: ["/api/notifications"],
-    queryFn: () => apiRequest('GET', '/api/notifications').then(res => res.json()),
   });
   
   // Fetch user's AI requests
   const { data: aiRequests, isLoading: aiRequestsLoading } = useQuery({
     queryKey: ["/api/ai-requests"],
-    queryFn: () => apiRequest('GET', '/api/ai-requests').then(res => res.json()),
     enabled: false, // Disable for MVP since this endpoint isn't implemented yet
   });
   

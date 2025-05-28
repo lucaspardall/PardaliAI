@@ -9,10 +9,8 @@ const app = express();
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://cipshopee.replit.app'] 
-    : ['http://localhost:5000', 'http://localhost:3000', 'http://0.0.0.0:5000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+    : ['http://localhost:5000', 'http://localhost:3000'],
+  credentials: true
 }));
 
 app.use(express.json({ limit: '50mb' }));
@@ -62,11 +60,6 @@ app.use((req, res, next) => {
       console.error("Erro de conexão com o banco:", dbErr);
     }
 
-    // Configurar Replit Auth
-    const { setupAuth } = await import('./replitAuth');
-    await setupAuth(app);
-    log("Replit Auth configurado com sucesso");
-
     const server = await registerRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -80,21 +73,6 @@ app.use((req, res, next) => {
       console.error(err);
     });
 
-    // Middleware para garantir respostas JSON válidas
-    app.use('/api/*', (req, res, next) => {
-      res.setHeader('Content-Type', 'application/json');
-      next();
-    });
-
-    // Endpoint de configuração limpo
-    app.get('/api/config', (req, res) => {
-      res.json({
-        app: 'CIP Shopee',
-        version: '1.0.0',
-        auth: 'replit-native'
-      });
-    });
-
     // importantly only setup vite in development and after
     // setting up all the other routes so the catch-all route
     // doesn't interfere with the other routes
@@ -104,28 +82,12 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // Configuração de porta com fallback automático
-    const basePort = parseInt(process.env.PORT || '5000', 10);
-    let port = basePort;
+    // Configuração simplificada de porta para deployment
+    const port = parseInt(process.env.PORT || '5000', 10);
 
-    const startServer = (attemptPort: number) => {
-      server.listen(attemptPort, '0.0.0.0', () => {
-        log(`✅ Server running on port ${attemptPort}`);
-        if (attemptPort !== basePort) {
-          log(`⚠️ Porta ${basePort} estava ocupada, usando porta ${attemptPort}`);
-        }
-      }).on('error', (err: any) => {
-        if (err.code === 'EADDRINUSE') {
-          log(`❌ Porta ${attemptPort} já está em uso, tentando ${attemptPort + 1}...`);
-          startServer(attemptPort + 1);
-        } else {
-          console.error('Erro ao iniciar servidor:', err);
-          process.exit(1);
-        }
-      });
-    };
-
-    startServer(port);
+    server.listen(port, '0.0.0.0', () => {
+      log(`Server running on port ${port}`);
+    });
   } catch (err) {
     console.error("Erro na inicialização do servidor:", err);
     process.exit(1);

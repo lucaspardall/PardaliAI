@@ -31,12 +31,12 @@ import { Helmet } from "react-helmet";
 export default function ProductDetail() {
   const { id } = useParams();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
+  
   // Fetch product details
   const { data: product, isLoading: productLoading } = useQuery({
     queryKey: [`/api/products/${id}`],
   });
-
+  
   // Fetch product optimizations
   const { data: optimizations, isLoading: optimizationsLoading } = useQuery({
     queryKey: [`/api/products/${id}/optimizations`],
@@ -45,20 +45,20 @@ export default function ProductDetail() {
   // Generate sample performance data for the chart
   const generatePerformanceData = (product: Product) => {
     if (!product) return [];
-
+    
     const baseDate = new Date();
     const baseCtr = product.ctr || 2;
     const baseViews = product.views || 100;
     const baseSales = product.sales || 5;
-
+    
     return Array.from({ length: 7 }).map((_, i) => {
       const date = new Date(baseDate);
       date.setDate(date.getDate() - (6 - i));
-
+      
       // Add some randomness to create realistic looking data
       const randomFactor = 0.8 + (Math.random() * 0.4); // 0.8 to 1.2
       const trendFactor = 1 + (i * 0.02); // Slight upward trend
-
+      
       return {
         date: formatDate(date),
         ctr: parseFloat((baseCtr * randomFactor * trendFactor).toFixed(2)),
@@ -165,7 +165,7 @@ export default function ProductDetail() {
       <Helmet>
         <title>{product.name} | CIP Shopee</title>
       </Helmet>
-
+      
       <div className="mb-6">
         <Link href="/dashboard/products">
           <a className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
@@ -173,7 +173,7 @@ export default function ProductDetail() {
           </a>
         </Link>
       </div>
-
+      
       <div className="flex flex-col md:flex-row gap-6">
         {/* Product Images */}
         <div className="md:w-1/3 flex-shrink-0">
@@ -190,7 +190,7 @@ export default function ProductDetail() {
               </div>
             )}
           </div>
-
+          
           {/* Thumbnails */}
           {product.images && product.images.length > 0 && (
             <div className="mt-4 grid grid-cols-4 gap-2">
@@ -212,7 +212,7 @@ export default function ProductDetail() {
             </div>
           )}
         </div>
-
+        
         {/* Product Details */}
         <div className="md:w-2/3">
           <div className="flex justify-between items-start flex-wrap gap-4">
@@ -230,7 +230,7 @@ export default function ProductDetail() {
             </div>
             <span className="text-2xl font-bold">{formatCurrency(product.price)}</span>
           </div>
-
+          
           {/* Product Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6">
             <Card>
@@ -242,7 +242,7 @@ export default function ProductDetail() {
                 </Badge>
               </CardContent>
             </Card>
-
+            
             <Card>
               <CardContent className="pt-6">
                 <div className="text-sm text-muted-foreground">Visualizações</div>
@@ -250,7 +250,7 @@ export default function ProductDetail() {
                 <div className="text-xs text-muted-foreground mt-1">Últimos 30 dias</div>
               </CardContent>
             </Card>
-
+            
             <Card>
               <CardContent className="pt-6">
                 <div className="text-sm text-muted-foreground">Vendas</div>
@@ -258,7 +258,7 @@ export default function ProductDetail() {
                 <div className="text-xs text-muted-foreground mt-1">Últimos 30 dias</div>
               </CardContent>
             </Card>
-
+            
             <Card>
               <CardContent className="pt-6">
                 <div className="text-sm text-muted-foreground">Estoque</div>
@@ -269,7 +269,7 @@ export default function ProductDetail() {
               </CardContent>
             </Card>
           </div>
-
+          
           {/* Description */}
           <Card className="mb-6">
             <CardHeader className="pb-3">
@@ -281,7 +281,7 @@ export default function ProductDetail() {
               </div>
             </CardContent>
           </Card>
-
+          
           {/* Actions */}
           <div className="flex flex-wrap gap-3">
             <Button asChild>
@@ -298,7 +298,7 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-
+      
       {/* Tabs for metrics and optimizations */}
       <div className="mt-8">
         <Tabs defaultValue="performance">
@@ -311,7 +311,7 @@ export default function ProductDetail() {
               )}
             </TabsTrigger>
           </TabsList>
-
+          
           <TabsContent value="performance" className="mt-6">
             <Card>
               <CardHeader>
@@ -377,7 +377,7 @@ export default function ProductDetail() {
               </CardContent>
             </Card>
           </TabsContent>
-
+          
           <TabsContent value="optimizations" className="mt-6">
             <Card>
               <CardHeader>
@@ -433,14 +433,14 @@ export default function ProductDetail() {
                               : 'Pendente'}
                           </Badge>
                         </div>
-
+                        
                         <Tabs defaultValue="title">
                           <TabsList>
                             <TabsTrigger value="title">Título</TabsTrigger>
                             <TabsTrigger value="description">Descrição</TabsTrigger>
                             <TabsTrigger value="keywords">Palavras-chave</TabsTrigger>
                           </TabsList>
-
+                          
                           <TabsContent value="title" className="mt-4 space-y-4">
                             <div>
                               <p className="text-sm font-medium mb-1">Original:</p>
@@ -455,7 +455,7 @@ export default function ProductDetail() {
                               </div>
                             </div>
                           </TabsContent>
-
+                          
                           <TabsContent value="description" className="mt-4 space-y-4">
                             <div>
                               <p className="text-sm font-medium mb-1">Original:</p>
@@ -470,7 +470,7 @@ export default function ProductDetail() {
                               </div>
                             </div>
                           </TabsContent>
-
+                          
                           <TabsContent value="keywords" className="mt-4 space-y-4">
                             <div>
                               <p className="text-sm font-medium mb-1">Original:</p>
@@ -498,7 +498,7 @@ export default function ProductDetail() {
                             </div>
                           </TabsContent>
                         </Tabs>
-
+                        
                         {optimization.reasoningNotes && (
                           <div className="mt-4">
                             <p className="text-sm font-medium mb-1">Análise da IA:</p>
@@ -507,7 +507,7 @@ export default function ProductDetail() {
                             </div>
                           </div>
                         )}
-
+                        
                         {optimization.status === 'pending' && (
                           <div className="mt-4 flex gap-3">
                             <Button size="sm" className="w-full sm:w-auto">

@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, TrendingUp, CheckCircle, Lightbulb, RefreshCw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 
 interface InsightsSectionProps {
   storeId: number;
@@ -16,18 +15,21 @@ export default function InsightsSection({ storeId }: InsightsSectionProps) {
   const queryClient = useQueryClient();
 
   // Fetch insights
-  const { data: insights, isLoading, error, refetch } = useQuery({
+  const { data: insights, isLoading, refetch } = useQuery({
     queryKey: [`/api/shopee/stores/${storeId}/insights`],
-    queryFn: () => apiRequest('GET', `/api/shopee/stores/${storeId}/insights`).then(res => res.json()),
     enabled: !!storeId,
-    retry: 2,
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Process insights mutation
   const processInsightsMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('POST', `/api/shopee/stores/${storeId}/insights/process`);
+      const response = await fetch(`/api/shopee/stores/${storeId}/insights/process`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to process insights');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -84,27 +86,6 @@ export default function InsightsSection({ storeId }: InsightsSectionProps) {
               <Skeleton key={i} className="h-16 w-full" />
             ))}
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            Erro nos Insights
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-4">
-            Não foi possível carregar os insights da sua loja.
-          </p>
-          <Button variant="outline" onClick={() => refetch()}>
-            Tentar novamente
-          </Button>
         </CardContent>
       </Card>
     );
@@ -189,7 +170,7 @@ export default function InsightsSection({ storeId }: InsightsSectionProps) {
                     <p className="text-sm font-medium truncate">
                       {insight.message}
                     </p>
-                    {'severity' in insight && insight.severity && (
+                    {'severity' in insight && (
                       <Badge 
                         variant={getSeverityColor(insight.severity)}
                         className="ml-2 text-xs"

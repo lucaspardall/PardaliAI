@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCTR, formatCurrency, formatNumber } from "@/lib/utils/formatters";
-import { Helmet } from "react-helmet-async";
+import { Helmet } from "react-helmet";
 
 export default function OptimizeProduct() {
   const { id } = useParams();
