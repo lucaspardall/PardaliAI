@@ -70,7 +70,7 @@ export default function DirectLogin() {
   };
 
   const handleSimpleLogin = () => {
-    window.location.href = "/api/login";
+    setAuthMethod('email');
   };
 
   // Loading state enquanto verifica autenticação
@@ -145,6 +145,10 @@ export default function DirectLogin() {
         </div>
       </CardContent>
       <CardFooter className="flex flex-col space-y-3">
+        <div className="text-xs text-center text-muted-foreground mb-2">
+          <strong>Opção 1:</strong> Login com Replit
+        </div>
+        
         <Button 
           onClick={handleLoginWithReplit} 
           disabled={isLoading}
@@ -158,27 +162,29 @@ export default function DirectLogin() {
           ) : (
             <>
               <i className="ri-replit-line mr-2"></i>
-              Entrar com Replit (Pop-up)
+              Replit (Pop-up)
             </>
           )}
         </Button>
 
         <Button 
-          onClick={handleSimpleLogin}
+          onClick={() => window.location.href = "/api/login"}
           variant="outline"
           className="w-full"
           disabled={isLoading}
         >
-          <i className="ri-login-box-line mr-2"></i>
-          Login Direto
+          <i className="ri-replit-fill mr-2"></i>
+          Replit (Redirecionamento)
         </Button>
 
-        <div className="relative">
+        <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">ou</span>
+            <span className="bg-background px-2 text-muted-foreground">
+              <strong>Opção 2:</strong> Login tradicional
+            </span>
           </div>
         </div>
 
@@ -189,7 +195,7 @@ export default function DirectLogin() {
           disabled={isLoading}
         >
           <i className="ri-mail-line mr-2"></i>
-          Entrar com Email
+          Entrar com Email e Senha
         </Button>
       </CardFooter>
     </Card>
