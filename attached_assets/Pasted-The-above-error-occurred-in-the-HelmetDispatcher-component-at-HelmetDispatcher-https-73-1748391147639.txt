@@ -1,0 +1,79 @@
+The above error occurred in the <HelmetDispatcher> component:
+
+    at HelmetDispatcher (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-helmet-async.js?v=59060687:705:5)
+    at _a2 (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-helmet-async.js?v=59060687:754:21)
+    at div
+    at main
+    at div
+    at SidebarLayout (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/layout/SidebarLayout.tsx:56:3)
+    at Dashboard (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/pages/dashboard/index.tsx:38:20)
+    at ProtectedRoute (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/ProtectedRoute.tsx:22:42)
+    at Route (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=59060687:191:16)
+    at Switch (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=59060687:247:17)
+    at ThemeProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/ui/theme-provider.tsx:25:3)
+    at QueryClientProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=59060687:2805:3)
+    at SWRConfig (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:1129:11)
+    at OrganizationProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:2107:3)
+    at ClerkContextProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:5617:11)
+    at ClerkProviderBase (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:5701:11)
+    at Hoc (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:3587:5)
+    at ErrorBoundary (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-error-boundary.js?v=59060687:18:5)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+App Error: 
+TypeError {}
+
+Cannot read properties of undefined (reading 'add')
+Cannot read properties of undefined (reading 'add')
+The above error occurred in the <HelmetDispatcher> component:
+
+    at HelmetDispatcher (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-helmet-async.js?v=59060687:705:5)
+    at _a2 (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-helmet-async.js?v=59060687:754:21)
+    at div
+    at main
+    at div
+    at SidebarLayout (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/layout/SidebarLayout.tsx:56:3)
+    at Dashboard (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/pages/dashboard/index.tsx:38:20)
+    at ProtectedRoute (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/ProtectedRoute.tsx:22:42)
+    at Route (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=59060687:191:16)
+    at Switch (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=59060687:247:17)
+    at ThemeProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/ui/theme-provider.tsx:25:3)
+    at QueryClientProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=59060687:2805:3)
+    at SWRConfig (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:1129:11)
+    at OrganizationProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:2107:3)
+    at ClerkContextProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:5617:11)
+    at ClerkProviderBase (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:5701:11)
+    at Hoc (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:3587:5)
+    at ErrorBoundary (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-error-boundary.js?v=59060687:18:5)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+
+at HelmetDispatcher (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-helmet-async.js?v=59060687:705:5)
+at _a2 (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-helmet-async.js?v=59060687:754:21)
+at div
+at main
+at div
+at SidebarLayout (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/layout/SidebarLayout.tsx:56:3)
+at Dashboard (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/pages/dashboard/index.tsx:38:20)
+at ProtectedRoute (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/ProtectedRoute.tsx:22:42)
+at Route (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=59060687:191:16)
+at Switch (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=59060687:247:17)
+at ThemeProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/ui/theme-provider.tsx:25:3)
+at QueryClientProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=59060687:2805:3)
+at SWRConfig (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:1129:11)
+at OrganizationProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:2107:3)
+at ClerkContextProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:5617:11)
+at ClerkProviderBase (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:5701:11)
+at Hoc (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=59060687:3587:5)
+at ErrorBoundary (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-error-boundary.js?v=59060687:18:5)
+at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+at t.value (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+App Error: 
+TypeError {}
