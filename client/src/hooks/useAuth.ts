@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 
 interface ReplitUser {
@@ -28,11 +27,9 @@ interface AuthReturn extends AuthState {
 }
 
 export function useAuth(): AuthReturn {
-  const [state, setState] = useState<AuthState>({
-    isAuthenticated: false,
-    isLoading: true,
-    user: null
-  });
+  const [user, setUser] = useState<ReplitUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const checkAuth = useCallback(async () => {
     try {
@@ -48,6 +45,8 @@ export function useAuth(): AuthReturn {
       if (response.ok) {
         const userData = await response.json();
         console.log('✅ Usuário autenticado:', userData);
+
+        setUser(userData);
 
         setState({
           isAuthenticated: true,
@@ -82,7 +81,7 @@ export function useAuth(): AuthReturn {
   const logout = useCallback(async () => {
     try {
       console.log('🚪 Fazendo logout...');
-      
+
       // Chamar endpoint de logout no servidor
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
@@ -123,7 +122,9 @@ export function useAuth(): AuthReturn {
 
     const initAuth = async () => {
       if (mounted) {
+        setIsLoading(true);
         await checkAuth();
+        setIsLoading(false);
       }
     };
 
@@ -133,7 +134,7 @@ export function useAuth(): AuthReturn {
     // Verificação periódica apenas se autenticado (mais espaçada)
     const startPeriodicCheck = () => {
       timeoutId = setTimeout(() => {
-        if (mounted && state.isAuthenticated) {
+        if (mounted && user) {
           checkAuth().then(() => {
             if (mounted) startPeriodicCheck();
           });
@@ -142,7 +143,7 @@ export function useAuth(): AuthReturn {
     };
 
     // Só inicia verificação periódica se estiver autenticado
-    if (state.isAuthenticated) {
+    if (user) {
       startPeriodicCheck();
     }
 
@@ -150,11 +151,19 @@ export function useAuth(): AuthReturn {
       mounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [checkAuth, state.isAuthenticated]);
+  }, [checkAuth, user]);
+
+  const showLogin = () => {
+    setShowLoginModal(true);
+  };
 
   return {
-    ...state,
+    user,
+    isLoading,
+    isAuthenticated: !!user,
     logout,
-    refreshAuth
+    showLogin,
+    showLoginModal,
+    setShowLoginModal
   };
 }

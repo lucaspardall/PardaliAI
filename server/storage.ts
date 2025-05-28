@@ -938,10 +938,11 @@ export class MemStorage implements IStorage {
     return updatedRequest;
   }
 
-  // Notification operationsAdding getUserByEmail method to MemStorage for email-based user retrieval in development/testing.async getNotificationsByUserId(userId: string, limit = 10): Promise<Notification[]> {
+  // Notification operations
+  async getNotificationsByUserId(userId: string, limit = 10): Promise<Notification[]> {
     return Array.from(this.notifications.values())
       .filter(notification => notification.userId === userId)
-.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
   }
 
@@ -958,7 +959,7 @@ export class MemStorage implements IStorage {
 
   async createNotification(notification: InsertNotification): Promise<Notification> {
     const id = this.notificationIdCounter++;
-    const newNotification:Notification = {
+    const newNotification: Notification = {
       ...notification,
       id,
       createdAt: new Date(),
@@ -986,8 +987,8 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(user => user.stripeCustomerId === customerId);
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
+  async getUserByEmail(email: string): Promise<User | null> {
+    return Array.from(this.users.values()).find(user => user.email === email) || null;
   }
 }
 

@@ -1,10 +1,14 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from "@/hooks/useAuth";
+import { LoginModal } from "@/components/LoginModal";
 import { motion } from 'framer-motion';
 import { Link } from 'wouter';
 import ReplitPopupLogin from "@/components/ReplitPopupLogin";
 
 export default function HeroSection() {
+  const { isAuthenticated, showLogin, showLoginModal, setShowLoginModal } = useAuth();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-100">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDIwIDAgTCAwIDAgMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjU5ZTBiIiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC4xIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30"></div>
@@ -32,13 +36,13 @@ export default function HeroSection() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-            <ReplitPopupLogin 
+            <Button 
               size="lg" 
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg font-semibold"
+              onClick={showLogin}
             >
-              <i className="ri-rocket-line mr-2"></i>
-              Começar Agora - GRÁTIS
-            </ReplitPopupLogin>
+              Começar Agora - É Grátis
+            </Button>
 
             <Button asChild variant="outline" size="lg" className="border-2 border-orange-500 text-orange-600 hover:bg-orange-50 px-8 py-3 text-lg font-semibold transition-all duration-300">
               <Link href="#features">
@@ -64,6 +68,7 @@ export default function HeroSection() {
           </div>
         </motion.div>
       </div>
+      <LoginModal />
     </section>
   );
 }

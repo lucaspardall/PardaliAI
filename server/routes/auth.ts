@@ -1,8 +1,8 @@
-
 import { Router, Request, Response } from 'express';
 import { isAuthenticated } from '../replitAuth';
 import bcrypt from 'bcrypt';
 import { storage } from '../storage';
+import { randomUUID } from 'crypto';
 
 const router = Router();
 
@@ -43,7 +43,7 @@ router.post('/refresh', isAuthenticated, async (req: Request, res: Response) => 
   try {
     const auth = typeof (req as any).auth === 'function' ? (req as any).auth() : (req as any).auth;
     console.log('🔄 Refresh session for user:', auth?.userId?.slice(0, 8));
-    
+
     res.json({
       message: 'Sessão renovada com sucesso',
       timestamp: new Date().toISOString(),
@@ -185,7 +185,7 @@ router.post('/register', async (req: Request, res: Response) => {
 router.post('/logout', async (req: Request, res: Response) => {
   try {
     console.log('🚪 Logout solicitado');
-    
+
     // Limpar sessão
     req.session.destroy((err) => {
       if (err) {
@@ -197,7 +197,7 @@ router.post('/logout', async (req: Request, res: Response) => {
 
       // Limpar cookie de sessão
       res.clearCookie('connect.sid');
-      
+
       console.log('✅ Logout realizado com sucesso');
       res.json({
         message: 'Logout realizado com sucesso'
@@ -246,5 +246,106 @@ export async function createSystemInsight(userId: string, insight: string, actio
     'info'
   );
 }
+
+// Rota de registro com email e senha
+router.post('/register', async (req: Request, res: Response) => {
+  try {
+    const { email, password, firstName, lastName } = req.body;
+
+    if (!email || !password || !firstName || !lastName) {
+      return res.status(400).json({ message: 'Todos os campos são obrigatórios' });
+    }
+
+    // Verificar se usuário já existe
+    const existingUser = await storage.getUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email já está em uso' });
+    }
+
+    // Hash da senha
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Criar usuário
+    const user = await storage.upsertUser({
+      id: randomUUID(),
+      email,
+      firstName,
+      lastName,
+      password: hashedPassword,
+      plan: 'free',
+      planStatus: 'active',
+      aiCreditsLeft: 10,
+      storeLimit: 1
+    });
+
+    // Criar sessão simples
+    (req.session as any).userId = user.id;
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        plan: user.plan,
+        aiCreditsLeft: user.aiCreditsLeft
+      }
+    });
+  } catch (error) {
+    console.error('Erro no registro:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// Rota de login com email e senha
+router.post('/login', async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email e senha são obrigatórios' });
+    }
+
+    // Buscar usuário
+    const user = await storage.getUserByEmail(email);
+    if (!user || !user.password) {
+      return res.status(401).json({ message: 'Credenciais inválidas' });
+    }
+
+    // Verificar senha
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ message: 'Credenciais inválidas' });
+    }
+
+    // Criar sessão
+    (req.session as any).userId = user.id;
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        plan: user.plan,
+        aiCreditsLeft: user.aiCreditsLeft
+      }
+    });
+  } catch (error) {
+    console.error('Erro no login:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// Rota de logout
+router.post('/logout', (req: Request, res: Response) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ message: 'Erro ao fazer logout' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ message: 'Logout realizado com sucesso' });
+  });
+});
 
 export default router;
