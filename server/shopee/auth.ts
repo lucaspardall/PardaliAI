@@ -1,3 +1,4 @@
+
 /**
  * Gerenciador de autenticação para a API da Shopee
  */
@@ -112,17 +113,18 @@ export class ShopeeAuthManager {
         throw new Error(`Shopee API Error: ${response.data.message || response.data.error}`);
       }
 
-      const tokenData = response.data.response;
+      const data = response.data.response;
+      const expiresAt = new Date(Date.now() + (data.expire_in * 1000));
 
       return {
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token,
-        expiresAt: new Date(Date.now() + (tokenData.expire_in * 1000)),
-        shopId: shopId
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresAt,
+        shopId
       };
 
     } catch (error: any) {
-      console.error('Erro ao obter tokens:', error);
+      console.error('Error getting access token:', error);
       throw parseApiError(error);
     }
   }
@@ -137,8 +139,8 @@ export class ShopeeAuthManager {
 
     const requestBody = {
       refresh_token: refreshToken,
-      shop_id: parseInt(shopId),
-      partner_id: parseInt(this.config.partnerId)
+      partner_id: parseInt(this.config.partnerId),
+      shop_id: parseInt(shopId)
     };
 
     const signature = generateSignature(
@@ -168,45 +170,22 @@ export class ShopeeAuthManager {
       });
 
       if (response.data.error) {
-        throw new Error(`Shopee API Error: ${response.data.message || response.data.error}`);
+        throw new Error(`Token refresh failed: ${response.data.message || response.data.error}`);
       }
 
-      const tokenData = response.data.response;
+      const data = response.data.response;
+      const expiresAt = new Date(Date.now() + (data.expire_in * 1000));
 
       return {
-        accessToken: tokenData.access_token,
-        refreshToken: tokenData.refresh_token,
-        expiresAt: new Date(Date.now() + (tokenData.expire_in * 1000)),
-        shopId: shopId
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresAt,
+        shopId
       };
 
     } catch (error: any) {
-      console.error('Erro ao renovar tokens:', error);
+      console.error('Error refreshing token:', error);
       throw parseApiError(error);
     }
   }
-}
-
-/**
- * Função de conveniência para gerar URL de autorização
- */
-export function getAuthorizationUrl(config: ShopeeAuthConfig): string {
-  const authManager = new ShopeeAuthManager(config);
-  return authManager.getAuthorizationUrl();
-}
-
-/**
- * Função de conveniência para obter tokens de acesso
- */
-export async function getAccessToken(config: ShopeeAuthConfig, code: string, shopId: string): Promise<ShopeeAuthTokens> {
-  const authManager = new ShopeeAuthManager(config);
-  return authManager.getAccessToken(code, shopId);
-}
-
-/**
- * Função de conveniência para renovar tokens
- */
-export async function refreshAccessToken(config: ShopeeAuthConfig, refreshToken: string, shopId: string): Promise<ShopeeAuthTokens> {
-  const authManager = new ShopeeAuthManager(config);
-  return authManager.refreshAccessToken(refreshToken, shopId);
 }

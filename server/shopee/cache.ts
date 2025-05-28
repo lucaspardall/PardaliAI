@@ -191,3 +191,71 @@ export function getTokenCache() {
 }
 
 export default ShopeeCache;
+/**
+ * Sistema de cache para API Shopee
+ */
+interface CacheItem<T> {
+  data: T;
+  expiresAt: number;
+}
+
+/**
+ * Cache em memória para dados da Shopee
+ */
+export class ShopeeCache {
+  private static cache = new Map<string, CacheItem<any>>();
+
+  static TTL = {
+    SHOP_INFO: 60 * 60 * 1000,      // 1 hora
+    CATEGORIES: 24 * 60 * 60 * 1000, // 24 horas
+    PRODUCT_LIST: 10 * 60 * 1000,    // 10 minutos
+    PRODUCT_DETAIL: 5 * 60 * 1000,   // 5 minutos
+    ORDER_LIST: 2 * 60 * 1000,       // 2 minutos
+  };
+
+  static set<T>(key: string, data: T, ttl: number): void {
+    const expiresAt = Date.now() + ttl;
+    this.cache.set(key, { data, expiresAt });
+  }
+
+  static get<T>(key: string): T | null {
+    const item = this.cache.get(key);
+    
+    if (!item) return null;
+    
+    if (Date.now() > item.expiresAt) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return item.data;
+  }
+
+  static invalidate(key: string): void {
+    this.cache.delete(key);
+  }
+
+  static invalidateProductCache(shopId: string, itemId: number): void {
+    const keysToRemove: string[] = [];
+    
+    for (const [key] of this.cache) {
+      if (key.includes(`/product/`) && 
+          (key.includes(`shop_id=${shopId}`) || key.includes(`item_id=${itemId}`))) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    keysToRemove.forEach(key => this.cache.delete(key));
+  }
+
+  static clear(): void {
+    this.cache.clear();
+  }
+
+  static getStats(): { size: number; keys: string[] } {
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys())
+    };
+  }
+}
