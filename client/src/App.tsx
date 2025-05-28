@@ -32,13 +32,11 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 // Get Clerk publishable key from environment
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
+console.log('🔑 Clerk Key detectada:', CLERK_PUBLISHABLE_KEY ? 'OK' : 'MISSING');
+
 if (!CLERK_PUBLISHABLE_KEY) {
   console.error('❌ VITE_CLERK_PUBLISHABLE_KEY não configurado nos Secrets');
-  console.error('Configure em: https://dashboard.clerk.com');
-}
-
-if (CLERK_PUBLISHABLE_KEY === 'pk_test_your_publishable_key_here') {
-  console.error('❌ Configure uma chave Clerk válida nos Secrets');
+  throw new Error('Clerk key missing - Configure nos Secrets do Replit');
 }
 
 const queryClient = new QueryClient({

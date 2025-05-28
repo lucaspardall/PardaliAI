@@ -82,6 +82,13 @@ app.use((req, res, next) => {
       next();
     });
 
+    // Expor variáveis de ambiente para o frontend Vite
+    app.get('/api/config', (req, res) => {
+      res.json({
+        VITE_CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY
+      });
+    });
+
     // Setup Clerk authentication
     setupClerkAuth(app);
 
