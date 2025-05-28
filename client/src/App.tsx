@@ -115,8 +115,12 @@ function Router() {
   return (
     <Switch>
       {/* Public routes */}
-      <Route path="/landing" component={Landing} />
-      <Route path="/" component={DirectLogin} />
+      <Route path="/landing">
+        <Landing />
+      </Route>
+      <Route path="/">
+        <DirectLogin />
+      </Route>
 
       {/* Protected dashboard routes */}
       <Route path="/dashboard">
