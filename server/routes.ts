@@ -693,14 +693,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Proxy Clerk (DEVE VIR PRIMEIRO para interceptar todas as requisições)
+  app.use('/api/clerk', clerkProxyRouter);
+
   // Auth routes
   app.use('/api/auth', authRouter);
 
   // Payment routes
   app.use('/api/payments', paymentsRouter);
-
-    // Proxy Clerk (deve vir primeiro para interceptar requisições)
-  app.use('/api/clerk', clerkProxyRouter);
 
   // Redirecionar login para home com modal do Clerk
   app.get('/api/login', (req, res) => {
