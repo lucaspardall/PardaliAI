@@ -287,29 +287,4 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.redirect('/?error=auth_error');
   }
 };
-import { Request, Response, NextFunction } from 'express';
 
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    claims: {
-      sub: string;
-      email?: string;
-      first_name?: string;
-      last_name?: string;
-    };
-  };
-}
-
-export function isAuthenticated(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  if (req.user && req.user.claims && req.user.claims.sub) {
-    next();
-  } else {
-    res.status(401).json({ message: "User not authenticated" });
-  }
-}
-
-export function getAuth(req: AuthenticatedRequest) {
-  return {
-    userId: req.user?.claims?.sub
-  };
-}
