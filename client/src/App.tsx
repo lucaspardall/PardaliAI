@@ -67,12 +67,24 @@ function App() {
         signUpUrl="/signup"
         {...(isReplit && {
           clerkJSUrl: "https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js",
-          telemetry: false
+          telemetry: false,
+          standardBrowser: true,
+          touchSession: false,
+          allowedRedirectOrigins: [window.location.origin]
         })}
         appearance={{
           variables: {
             colorPrimary: "#f97316"
+          },
+          elements: {
+            rootBox: "w-full max-w-md mx-auto",
+            card: "bg-white shadow-lg rounded-lg border",
+            headerTitle: "text-xl font-bold text-gray-900",
+            headerSubtitle: "text-gray-600 text-sm"
           }
+        }}
+        options={{
+          standardBrowser: true
         }}
       >
         <ClerkLoader>
