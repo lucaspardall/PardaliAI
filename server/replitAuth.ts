@@ -223,7 +223,77 @@ export async function setupAuth(app: Express) {
 }
 
 // Importar middleware unificado
-import { isAuthenticated } from './auth-middleware';
+import { Request, Response, NextFunction } from 'express';
+import fetch from 'node-fetch';
+import jwt from 'jsonwebtoken';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+
+export interface AuthenticatedRequest extends Request {
+  user?: {
+    claims: {
+      sub: string;
+      email?: string;
+      first_name?: string;
+      last_name?: string;
+    };
+  };
+}
+
+export async function isAuthenticated(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    // 1. Verificar token JWT primeiro (email/senha)
+    const authToken = req.cookies?.auth_token;
+
+    if (authToken) {
+      try {
+        const decoded = jwt.verify(authToken, JWT_SECRET) as any;
+        const user = await storage.getUser(decoded.userId);
+
+        if (user) {
+          req.user = {
+            claims: {
+              sub: user.id,
+              email: user.email || '',
+              first_name: user.firstName || '',
+              last_name: user.lastName || ''
+            }
+          };
+          return next();
+        }
+      } catch (jwtError) {
+        console.log('JWT inválido, tentando autenticação Replit...');
+      }
+    }
+
+    // 2. Fallback para autenticação Replit
+    const replitUserId = req.headers['x-replit-user-id'];
+
+    if (!replitUserId) {
+      return res.status(401).json({ 
+        message: "Não autorizado",
+        code: "UNAUTHORIZED"
+      });
+    }
+
+    // Para ambiente Replit, confiamos nos headers
+    req.user = {
+      claims: {
+        sub: req.headers['x-replit-user-id'] as string,
+        email: req.headers['x-replit-user-email'] as string,
+        first_name: req.headers['x-replit-user-name'] as string,
+        last_name: ''
+      }
+    };
+
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(401).json({ 
+      message: "Erro de autenticação",
+      code: "AUTH_ERROR"
+    });
+  }
+}
 // Exportar o middleware unificado
 export { isAuthenticated };
