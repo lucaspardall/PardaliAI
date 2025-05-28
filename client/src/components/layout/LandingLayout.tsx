@@ -21,10 +21,10 @@ function AuthNavigation() {
         <div className="flex items-center space-x-2">
           <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center">
             <span className="text-white text-sm font-medium">
-              {user.firstName?.[0] || user.email[0].toUpperCase()}
+              {user.name?.[0] || user.email[0].toUpperCase()}
             </span>
           </div>
-          <span className="text-white text-sm">{user.firstName || user.email}</span>
+          <span className="text-white text-sm">{user.name || user.email}</span>
         </div>
       </div>
     );
@@ -103,15 +103,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               <span className="sr-only">Toggle theme</span>
             </Button>
 
-            {!isAuthenticated ? (
-              <AuthNavigation />
-            ) : (
-              <Link href="/dashboard">
-                <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-medium">
-                  Ir para Dashboard
-                </Button>
-              </Link>
-            )}
+            <AuthNavigation />
           </div>
         </nav>
       </header>

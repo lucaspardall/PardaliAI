@@ -96,10 +96,14 @@ export default function SidebarLayout({
     return () => window.removeEventListener('resize', handleResize);
   }, [location]);
 
-  const { signOut } = useClerk();
-
-  const handleLogout = () => {
-    signOut();
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      window.location.href = '/';
+    };
   };
 
   return (

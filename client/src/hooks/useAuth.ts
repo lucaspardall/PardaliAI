@@ -1,67 +1,109 @@
 
 import { useState, useEffect } from 'react';
 
-interface User {
+interface ReplitUser {
   id: string;
+  name: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  profileImageUrl?: string;
+  profileImage?: string;
+  bio?: string;
+  url?: string;
 }
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: ReplitUser | null;
+}
+
+export function useAuth(): AuthState {
+  const [state, setState] = useState<AuthState>({
+    isAuthenticated: false,
+    isLoading: true,
+    user: null
+  });
 
   useEffect(() => {
-    checkAuthStatus();
+    let mounted = true;
+    
+    const checkAuth = async () => {
+      try {
+        // Verificar se estamos no Replit
+        const hostname = window.location.hostname;
+        const isReplit = hostname.includes('replit.dev') || hostname.includes('repl.co');
+        
+        if (!isReplit) {
+          console.log('🔧 Ambiente não-Replit detectado, usando modo desenvolvimento');
+          if (mounted) {
+            setState({
+              isAuthenticated: false,
+              isLoading: false,
+              user: null
+            });
+          }
+          return;
+        }
+
+        // Buscar dados do usuário Replit via endpoint interno
+        const response = await fetch('/__replauthuser', {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          
+          if (mounted && userData && userData.id) {
+            setState({
+              isAuthenticated: true,
+              isLoading: false,
+              user: {
+                id: userData.id,
+                name: userData.name || 'Usuário',
+                email: userData.name + '@replit.user', // Replit não expõe email
+                profileImage: userData.profileImage,
+                bio: userData.bio,
+                url: userData.url
+              }
+            });
+          } else {
+            if (mounted) {
+              setState({
+                isAuthenticated: false,
+                isLoading: false,
+                user: null
+              });
+            }
+          }
+        } else {
+          if (mounted) {
+            setState({
+              isAuthenticated: false,
+              isLoading: false,
+              user: null
+            });
+          }
+        }
+      } catch (error) {
+        console.error('🔥 Erro na verificação de auth:', error);
+        if (mounted) {
+          setState({
+            isAuthenticated: false,
+            isLoading: false,
+            user: null
+          });
+        }
+      }
+    };
+
+    checkAuth();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const checkAuthStatus = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Verificar se está autenticado via Replit Auth
-      const response = await fetch('/api/auth/status');
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data.authenticated && data.user) {
-          setUser(data.user);
-          setIsAuthenticated(true);
-        } else {
-          setUser(null);
-          setIsAuthenticated(false);
-        }
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar autenticação:', error);
-      setUser(null);
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const login = () => {
-    window.location.href = '/login';
-  };
-
-  const logout = () => {
-    window.location.href = '/api/logout';
-  };
-
-  return {
-    user,
-    isLoading,
-    isAuthenticated,
-    login,
-    logout,
-    checkAuthStatus
-  };
+  return state;
 }

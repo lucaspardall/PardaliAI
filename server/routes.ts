@@ -10,7 +10,6 @@ import webhookRoutes from './routes/webhook';
 import webhookTestRoutes from './routes/webhookTest';
 import authRouter from './routes/auth';
 import paymentsRouter from './routes/payments';
-import clerkProxyRouter from "./routes/clerk-proxy";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -692,9 +691,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to mark notification as read" });
     }
   });
-
-  // Proxy Clerk (DEVE VIR PRIMEIRO para interceptar todas as requisições)
-  app.use('/api/clerk', clerkProxyRouter);
 
   // Auth routes
   app.use('/api/auth', authRouter);
