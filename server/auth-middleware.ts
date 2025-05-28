@@ -1,6 +1,6 @@
 
 import { Request, Response, NextFunction } from 'express';
-import * as storage from './storage';
+import { storage } from './storage';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -24,8 +24,7 @@ export const isAuthenticated = async (
   try {
     // 1. Verificar Replit Auth (prioritário - já configurado)
     if (req.user && req.user.claims && req.user.claims.sub) {
-      console.log('🔍 Verificando autenticação...');
-      console.log('✅ Usuário autenticado:', await getUserData(req.user.claims.sub));
+      // Usuário autenticado via Replit
       return next();
     }
 
@@ -51,7 +50,6 @@ export const isAuthenticated = async (
     }
 
     // 3. Não autenticado
-    console.log('❌ Usuário não autenticado');
     return handleUnauthenticated(req, res);
     
   } catch (error) {

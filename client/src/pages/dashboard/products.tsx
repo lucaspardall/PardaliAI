@@ -30,15 +30,15 @@ export default function Products() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   // Fetch user's stores
-  const { data: stores, isLoading: storesLoading } = useQuery({
-    queryKey: ["/api/stores"],
+  const { data: stores = [], isLoading: storesLoading } = useQuery({
+    queryKey: ['/api/stores'],
     queryFn: async () => {
-      const response = await fetch('/api/stores', { credentials: 'include' });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      const response = await fetch('/api/stores', {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch stores');
       return response.json();
-    },
+    }
   });
 
   // Set active store when stores are loaded
