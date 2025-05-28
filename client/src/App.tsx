@@ -17,13 +17,15 @@ import Subscription from "@/pages/dashboard/subscription";
 import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
 import React, { Suspense, lazy, ErrorInfo, Component } from 'react';
-
-const BulkOptimizePage = lazy(() => import('./pages/dashboard/bulk-optimize'));
-const AiCreditsPage = lazy(() => import('./pages/dashboard/ai-credits'));
 import { HelmetProvider } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+// Import do DirectLogin de forma mais explícita
 import DirectLogin from "@/components/DirectLogin";
+
+const BulkOptimizePage = lazy(() => import('./pages/dashboard/bulk-optimize'));
+const AiCreditsPage = lazy(() => import('./pages/dashboard/ai-credits'));
 
 // Componente de Error Boundary
 interface ErrorBoundaryState {
