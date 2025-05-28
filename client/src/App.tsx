@@ -16,13 +16,56 @@ import Profile from "@/pages/dashboard/profile";
 import Subscription from "@/pages/dashboard/subscription";
 import Optimizations from "@/pages/dashboard/optimizations";
 import Reports from "@/pages/dashboard/reports";
-import React, { Suspense, lazy, ErrorInfo } from 'react';
+import React, { Suspense, lazy, ErrorInfo, Component } from 'react';
 
 const BulkOptimizePage = lazy(() => import('./pages/dashboard/bulk-optimize'));
 const AiCreditsPage = lazy(() => import('./pages/dashboard/ai-credits'));
 import { HelmetProvider } from 'react-helmet-async';
 
 // Componente de Error Boundary
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ErrorBoundary extends Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-screen w-full flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Algo deu errado</h2>
+            <p className="text-gray-600 mb-4">Recarregue a página para tentar novamente</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Recarregar
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean; error?: Error }

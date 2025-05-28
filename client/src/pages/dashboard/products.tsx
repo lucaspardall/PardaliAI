@@ -28,7 +28,7 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState<string>("updatedAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  
+
   // Fetch user's stores
   const { data: stores, isLoading: storesLoading } = useQuery({
     queryKey: ["/api/stores"],
@@ -40,12 +40,12 @@ export default function Products() {
       return response.json();
     },
   });
-  
+
   // Set active store when stores are loaded
   if (stores?.length > 0 && !activeStore) {
     setActiveStore(stores[0].id);
   }
-  
+
   // Fetch products for active store
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: [`/api/stores/${activeStore}/products`],
@@ -65,7 +65,7 @@ export default function Products() {
     product.productId.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()))
   ) : [];
-  
+
   // Sort products
   const sortedProducts = filteredProducts ? [...filteredProducts].sort((a: Product, b: Product) => {
     // Helper for null/undefined values
@@ -74,7 +74,7 @@ export default function Products() {
       if (valB === null || valB === undefined) return sortDirection === "asc" ? 1 : -1;
       return sortDirection === "asc" ? valA - valB : valB - valA;
     };
-    
+
     switch (sortOption) {
       case "name":
         return sortDirection === "asc" 
@@ -126,7 +126,7 @@ export default function Products() {
       <Helmet>
         <title>Produtos | CIP Shopee</title>
       </Helmet>
-      
+
       <div className="flex flex-col gap-6">
         {/* Store selector if multiple stores */}
         {stores?.length > 1 && (
@@ -145,7 +145,7 @@ export default function Products() {
             </select>
           </div>
         )}
-        
+
         {/* Search and filters */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-grow">
@@ -157,7 +157,7 @@ export default function Products() {
             />
             <i className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"></i>
           </div>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="w-full sm:w-auto">
@@ -187,7 +187,7 @@ export default function Products() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        
+
         {/* Products table */}
         <Card>
           <CardHeader className="pb-3">

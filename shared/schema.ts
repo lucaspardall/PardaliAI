@@ -33,6 +33,13 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  // Campos para autenticação email/senha
+  passwordHash: varchar("password_hash"),
+  emailVerified: boolean("email_verified").default(false),
+  authProvider: varchar("auth_provider").default("replit").notNull(), // 'replit', 'email', 'google'
+  verificationToken: varchar("verification_token"),
+  resetToken: varchar("reset_token"),
+  resetTokenExpires: timestamp("reset_token_expires"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   // Added CIP Shopee specific user info

@@ -14,15 +14,42 @@ const neonOptions = {
 // Cria um cliente SQL raw do Neon com opções melhoradas
 const rawSql = neon(connectionString, neonOptions);
 
-// Verificar se a conexão está ativa
+// Cache de status da conexão para evitar verificações excessivas
+let connectionStatus: { isConnected: boolean; lastCheck: number } = {
+  isConnected: false,
+  lastCheck: 0
+};
+
+// Verificar se a conexão está ativa (com cache de 30 segundos)
 const checkConnection = async (): Promise<boolean> => {
+  const now = Date.now();
+  const cacheExpiry = 30000; // 30 segundos
+  
+  // Se verificou recentemente e estava conectado, retorna true
+  if (connectionStatus.isConnected && (now - connectionStatus.lastCheck) < cacheExpiry) {
+    return true;
+  }
+  
   try {
-    console.log("Verificando conexão com banco de dados...");
+    // Log apenas em desenvolvimento ou se passou muito tempo
+    const shouldLog = process.env.NODE_ENV === 'development' || (now - connectionStatus.lastCheck) > 60000;
+    
+    if (shouldLog) {
+      console.log("🔌 Verificando conexão com banco...");
+    }
+    
     await rawSql("SELECT 1");
-    console.log("Conexão com banco de dados estabelecida com sucesso");
+    
+    connectionStatus = { isConnected: true, lastCheck: now };
+    
+    if (shouldLog) {
+      console.log("✅ Conexão com banco estabelecida");
+    }
+    
     return true;
   } catch (err) {
-    console.error("Erro de conexão com banco de dados:", err);
+    connectionStatus = { isConnected: false, lastCheck: now };
+    console.error("❌ Erro de conexão com banco:", err);
     return false;
   }
 };
