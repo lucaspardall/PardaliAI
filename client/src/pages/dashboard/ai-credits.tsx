@@ -13,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import SidebarLayout from '@/components/layout/SidebarLayout';
 import { Helmet } from 'react-helmet-async';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { Link } from 'wouter';
 
 interface CreditHistoryItem {
   id: number;
@@ -42,12 +43,14 @@ export default function AiCreditsPage() {
   const { data: creditHistory, isLoading: historyLoading } = useQuery({
     queryKey: ['/api/ai-credits/history'],
     queryFn: () => apiRequest('GET', '/api/ai-credits/history?limit=100').then(res => res.json()),
+    retry: 2,
   });
 
   // Buscar analytics de uso
   const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['/api/ai-credits/analytics', analyticsRange],
     queryFn: () => apiRequest('GET', `/api/ai-credits/analytics?days=${analyticsRange}`).then(res => res.json()),
+    retry: 2,
   });
 
   const getActionIcon = (action: string) => {

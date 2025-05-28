@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, TrendingUp, CheckCircle, Lightbulb, RefreshCw } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface InsightsSectionProps {
   storeId: number;
@@ -17,6 +18,7 @@ export default function InsightsSection({ storeId }: InsightsSectionProps) {
   // Fetch insights
   const { data: insights, isLoading, error, refetch } = useQuery({
     queryKey: [`/api/shopee/stores/${storeId}/insights`],
+    queryFn: () => apiRequest('GET', `/api/shopee/stores/${storeId}/insights`).then(res => res.json()),
     enabled: !!storeId,
     retry: 2,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -25,13 +27,7 @@ export default function InsightsSection({ storeId }: InsightsSectionProps) {
   // Process insights mutation
   const processInsightsMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(`/api/shopee/stores/${storeId}/insights/process`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to process insights');
-      }
+      const response = await apiRequest('POST', `/api/shopee/stores/${storeId}/insights/process`);
       return response.json();
     },
     onSuccess: () => {

@@ -12,11 +12,12 @@ import InsightsSection from "@/components/dashboard/InsightsSection";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Building2, Package, TrendingUp, Users, ShoppingCart, DollarSign, RefreshCw, Plus, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -28,17 +29,13 @@ export default function Dashboard() {
   // Fetch user's stores
   const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
     queryKey: ["/api/stores"],
+    queryFn: () => apiRequest('GET', '/api/stores').then(res => res.json()),
+    retry: 2,
   });
 
   const syncStoreMutation = useMutation({
     mutationFn: async (storeId: number) => {
-      const response = await fetch(`/api/shopee/sync/${storeId}`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to sync store');
-      }
+      const response = await apiRequest('POST', `/api/shopee/sync/${storeId}`);
       return response.json();
     },
     onSuccess: (data, storeId) => {
@@ -76,13 +73,17 @@ export default function Dashboard() {
   // Fetch store metrics if a store is selected
   const { data: storeMetrics, isLoading: metricsLoading } = useQuery({
     queryKey: [activeStore ? `/api/stores/${activeStore}/metrics?days=${period}` : null],
+    queryFn: () => apiRequest('GET', `/api/stores/${activeStore}/metrics?days=${period}`).then(res => res.json()),
     enabled: !!activeStore,
+    retry: 2,
   });
 
   // Fetch products for active store
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: [activeStore ? `/api/stores/${activeStore}/products?limit=5` : null],
+    queryFn: () => apiRequest('GET', `/api/stores/${activeStore}/products?limit=5`).then(res => res.json()),
     enabled: !!activeStore,
+    retry: 2,
   });
 
   // Generate optimization opportunities (products with low CTR)

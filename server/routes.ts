@@ -24,12 +24,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     app.use('/api/test', webhookTestRoutes);
   }
 
-  // Store endpoints
+  // Get user's stores
   app.get('/api/stores', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.auth.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
       const stores = await storage.getStoresByUserId(userId);
-      res.json(stores);
+      res.json(stores || []);
     } catch (error) {
       console.error("Error fetching stores:", error);
       res.status(500).json({ message: "Failed to fetch stores" });
@@ -137,26 +141,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Product endpoints
-  app.get('/api/stores/:storeId/products', isAuthenticated, async (req: any, res) => {
+  // Get products for a store
+  app.get('/api/stores/:id/products', isAuthenticated, async (req: any, res) => {
     try {
-      const storeId = parseInt(req.params.storeId);
-      const store = await storage.getStoreById(storeId);
+      const storeId = parseInt(req.params.id);
+      const limit = parseInt(req.query.limit || '20');
+      const offset = parseInt(req.query.offset || '0');
+      const search = req.query.search || '';
 
-      if (!store) {
+      if (isNaN(storeId)) {
+        return res.status(400).json({ message: "Invalid store ID" });
+      }
+
+      const store = await storage.getStoreById(storeId);
+      if (!store || store.userId !== req.auth.userId) {
         return res.status(404).json({ message: "Store not found" });
       }
 
-      // Check if user owns the store
-      if (store.userId !== req.auth.userId) {
-        return res.status(403).json({ message: "Not authorized to access this store's products" });
-      }
-
-      const limit = req.query.limit ? parseInt(req.query.limit) : 100;
-      const offset = req.query.offset ? parseInt(req.query.offset) : 0;
-
-      const products = await storage.getProductsByStoreId(storeId, limit, offset);
-      res.json(products);
+      const products = await storage.getProductsByStoreId(storeId, { limit, offset, search });
+      res.json(products || []);
     } catch (error) {
       console.error("Error fetching products:", error);
       res.status(500).json({ message: "Failed to fetch products" });
@@ -501,34 +504,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Store metrics endpoints
+  // Get store metrics
   app.get('/api/stores/:id/metrics', isAuthenticated, async (req: any, res) => {
     try {
       const storeId = parseInt(req.params.id);
-      const days = req.query.days ? parseInt(req.query.days) : 7;
+      const days = parseInt(req.query.days || '7');
+
+      if (isNaN(storeId)) {
+        return res.status(400).json({ message: "Invalid store ID" });
+      }
 
       const store = await storage.getStoreById(storeId);
-      if (!store) {
+      if (!store || store.userId !== req.auth.userId) {
         return res.status(404).json({ message: "Store not found" });
       }
 
-      // Check if user owns the store
-      if (store.userId !== req.auth.userId) {
-        return res.status(403).json({ message: "Not authorized to access this store's metrics" });
-      }
-
       const metrics = await storage.getStoreMetrics(storeId, days);
-
-      // If no metrics are found, generate sample data for the demo
-      if (metrics.length === 0) {
-        const sampleMetrics = generateSampleMetrics(storeId, days);
-        res.json(sampleMetrics);
-      } else {
-        res.json(metrics);
-      }
+      res.json(metrics || []);
     } catch (error) {
-      console.error("Error fetching metrics:", error);
-      res.status(500).json({ message: "Failed to fetch metrics" });
+      console.error("Error fetching store metrics:", error);
+      res.status(500).json({ message: "Failed to fetch store metrics" });
     }
   });
 
