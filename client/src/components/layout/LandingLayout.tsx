@@ -136,16 +136,16 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
               ) : (
                 <div className="space-y-2">
                   <Button asChild className="w-full">
-                    <a href="/api/login">
+                    <Link href="/">
                       <i className="ri-rocket-line mr-2"></i>
                       Comece grátis
-                    </a>
+                    </Link>
                   </Button>
                   <Button asChild variant="outline" className="w-full">
-                    <a href="/api/login">
+                    <Link href="/">
                       <i className="ri-login-box-line mr-2"></i>
                       Já tenho conta
-                    </a>
+                    </Link>
                   </Button>
                 </div>
               )}
