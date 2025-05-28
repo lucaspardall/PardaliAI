@@ -5,67 +5,99 @@ import { useEffect, useState } from 'react';
 export function ClerkLoader({ children }: { children: React.ReactNode }) {
   const clerk = useClerk();
   const [isReady, setIsReady] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('Inicializando autenticação...');
+  const [loadingMessage, setLoadingMessage] = useState('Inicializando...');
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
+    let progressInterval: NodeJS.Timeout;
+    let finalTimeout: NodeJS.Timeout;
 
     const initializeClerk = async () => {
       try {
-        console.log('🔄 Inicializando Clerk no Replit...');
-        setLoadingMessage('Conectando com servidor de autenticação...');
+        console.log('🚀 [ClerkLoader] Iniciando no Replit...');
+        
+        // Animação de progresso
+        progressInterval = setInterval(() => {
+          setProgress(prev => {
+            if (prev >= 90) return prev;
+            return prev + Math.random() * 10;
+          });
+        }, 200);
 
-        // Aguardar um pouco para o Clerk tentar carregar
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
+        // Etapa 1: Verificação inicial
+        setLoadingMessage('Configurando autenticação...');
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
         if (!mounted) return;
 
-        // Verificar se o Clerk carregou
+        // Etapa 2: Verificar se Clerk carregou
+        setLoadingMessage('Conectando com Clerk...');
+        setProgress(30);
+        
         if (clerk.loaded) {
-          console.log('✅ Clerk carregado com sucesso!');
+          console.log('✅ [ClerkLoader] Clerk carregado imediatamente!');
           setLoadingMessage('Autenticação configurada!');
+          setProgress(100);
+          
           setTimeout(() => {
             if (mounted) setIsReady(true);
           }, 500);
           return;
         }
 
-        // Se não carregou, aguardar mais um pouco
+        // Etapa 3: Aguardar carregamento
         setLoadingMessage('Aguardando inicialização...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        setProgress(50);
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
         if (!mounted) return;
 
-        // Verificar novamente
         if (clerk.loaded) {
-          console.log('✅ Clerk carregado após espera!');
-          setIsReady(true);
+          console.log('✅ [ClerkLoader] Clerk carregado após espera!');
+          setLoadingMessage('Finalizando configuração...');
+          setProgress(100);
+          
+          setTimeout(() => {
+            if (mounted) setIsReady(true);
+          }, 300);
           return;
         }
 
-        // Se ainda não carregou, continuar mesmo assim
-        console.warn('⚠️ Clerk não carregou completamente, mas continuando...');
-        setLoadingMessage('Finalizando configuração...');
+        // Etapa 4: Modo de recuperação
+        console.warn('⚠️ [ClerkLoader] Clerk não carregou, ativando modo de recuperação...');
+        setLoadingMessage('Modo de compatibilidade ativado...');
+        setProgress(80);
         
-        // Timeout final de segurança
-        timeoutId = setTimeout(() => {
+        // Timeout final - sempre prosseguir
+        finalTimeout = setTimeout(() => {
           if (mounted) {
-            console.log('🚀 Prosseguindo com a aplicação (modo fallback)');
-            setIsReady(true);
+            console.log('🔄 [ClerkLoader] Prosseguindo com aplicação (modo fallback)');
+            setLoadingMessage('Carregamento concluído!');
+            setProgress(100);
+            
+            setTimeout(() => {
+              if (mounted) setIsReady(true);
+            }, 500);
           }
-        }, 2000);
+        }, 1000);
 
       } catch (error: any) {
-        console.error('❌ Erro durante inicialização do Clerk:', error);
-        console.log('🚀 Continuando mesmo com erro...');
+        console.error('❌ [ClerkLoader] Erro:', error);
         
         if (mounted) {
-          setLoadingMessage('Modo fallback ativado...');
+          setLoadingMessage('Recuperando de erro...');
+          setProgress(95);
+          
           setTimeout(() => {
-            if (mounted) setIsReady(true);
-          }, 1000);
+            if (mounted) {
+              console.log('🚀 [ClerkLoader] Continuando após erro');
+              setIsReady(true);
+            }
+          }, 800);
         }
+      } finally {
+        if (progressInterval) clearInterval(progressInterval);
       }
     };
 
@@ -73,22 +105,43 @@ export function ClerkLoader({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
-      if (timeoutId) clearTimeout(timeoutId);
+      if (progressInterval) clearInterval(progressInterval);
+      if (finalTimeout) clearTimeout(finalTimeout);
     };
   }, [clerk]);
 
   if (!isReady) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
-        <div className="text-center max-w-md">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-          <p className="mt-4 text-gray-700 font-medium">{loadingMessage}</p>
-          <p className="mt-2 text-sm text-gray-500">
-            Otimizando para ambiente Replit...
-          </p>
-          <div className="mt-4 w-full bg-gray-200 rounded-full h-1">
-            <div className="bg-orange-500 h-1 rounded-full animate-pulse w-3/4"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50">
+        <div className="text-center max-w-sm px-8">
+          {/* Spinner animado */}
+          <div className="relative mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-200 border-t-orange-500 mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-8 bg-orange-500 rounded-full animate-pulse"></div>
+            </div>
           </div>
+          
+          {/* Mensagem */}
+          <h2 className="text-lg font-semibold text-gray-800 mb-2">
+            CIP Shopee
+          </h2>
+          <p className="text-gray-600 mb-4 text-sm">
+            {loadingMessage}
+          </p>
+          
+          {/* Barra de progresso */}
+          <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+            <div 
+              className="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          
+          {/* Status */}
+          <p className="text-xs text-gray-500">
+            Otimizado para Replit • {Math.round(progress)}%
+          </p>
         </div>
       </div>
     );

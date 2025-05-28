@@ -1,3 +1,4 @@
+
 import { Route, Switch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -61,30 +62,45 @@ function App() {
       <ClerkProvider 
         publishableKey={CLERK_PUBLISHABLE_KEY}
         navigate={(to) => window.location.href = to}
-        afterSignInUrl="/dashboard"
-        afterSignUpUrl="/dashboard"
+        fallbackRedirectUrl="/dashboard"
+        signInFallbackRedirectUrl="/dashboard"
+        signUpFallbackRedirectUrl="/dashboard"
         signInUrl="/login"
         signUpUrl="/signup"
         {...(isReplit && {
-          clerkJSUrl: "https://unpkg.com/@clerk/clerk-js@latest/dist/clerk.browser.js",
-          telemetry: false,
-          standardBrowser: true,
-          touchSession: false,
-          allowedRedirectOrigins: [window.location.origin]
+          // Configurações específicas para Replit
+          allowedRedirectOrigins: [
+            window.location.origin,
+            'https://*.replit.dev',
+            'https://*.replit.co',
+            'https://*.replit.app'
+          ],
+          // Usar CDN mais estável
+          clerkJSUrl: "https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js",
+          // Configurações de compatibilidade
+          isSatellite: false,
+          domain: window.location.hostname,
+          proxyUrl: undefined,
+          telemetry: false
         })}
         appearance={{
           variables: {
-            colorPrimary: "#f97316"
+            colorPrimary: "#f97316",
+            colorBackground: "#ffffff",
+            colorText: "#1f2937"
           },
           elements: {
             rootBox: "w-full max-w-md mx-auto",
-            card: "bg-white shadow-lg rounded-lg border",
+            card: "bg-white shadow-lg rounded-lg border border-gray-200",
             headerTitle: "text-xl font-bold text-gray-900",
-            headerSubtitle: "text-gray-600 text-sm"
+            headerSubtitle: "text-gray-600 text-sm",
+            formButtonPrimary: "bg-orange-500 hover:bg-orange-600 text-white",
+            footerActionLink: "text-orange-600 hover:text-orange-700"
           }
         }}
         options={{
-          standardBrowser: true
+          standardBrowser: true,
+          touchSession: false
         }}
       >
         <ClerkLoader>
