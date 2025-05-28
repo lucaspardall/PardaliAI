@@ -94,94 +94,95 @@ function DirectLogin() {
           </div>
         </CardHeader>
 
-      {authMethod === 'email' ? (
-        // Formulário de email/senha
-        <div className="px-6 pb-6">
-          <EmailAuth onSuccess={() => {
-            setLocation('/dashboard');
-          }} />
-          <div className="mt-4">
-            <Button
-              variant="ghost"
-              className="w-full text-sm"
-              onClick={() => setAuthMethod('replit')}
-            >
-              <i className="ri-arrow-left-line mr-2"></i>
-              Outras opções de login
-            </Button>
+        {authMethod === 'email' ? (
+          // Formulário de email/senha
+          <div className="px-6 pb-6">
+            <EmailAuth onSuccess={() => {
+              setLocation('/dashboard');
+            }} />
+            <div className="mt-4">
+              <Button
+                variant="ghost"
+                className="w-full text-sm"
+                onClick={() => setAuthMethod('replit')}
+              >
+                <i className="ri-arrow-left-line mr-2"></i>
+                Outras opções de login
+              </Button>
+            </div>
           </div>
-        </div>
-      ) : (
-        // Tela principal com opções
-        <>
-          <CardContent className="space-y-6 px-8 pb-8">
-            {/* Opção 1: Entrar com Gmail (Replit Auth por trás) */}
-            <div className="space-y-4">
+        ) : (
+          // Tela principal com opções
+          <>
+            <CardContent className="space-y-6 px-8 pb-8">
+              {/* Opção 1: Entrar com Gmail (Replit Auth por trás) */}
+              <div className="space-y-4">
+                <Button 
+                  onClick={() => window.location.href = "/api/login"}
+                  className="w-full h-14 bg-gradient-to-r from-red-500 via-red-600 to-red-700 hover:from-red-600 hover:via-red-700 hover:to-red-800 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]"
+                  size="lg"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                      <span className="font-semibold">Conectando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="ri-google-fill mr-4 text-xl"></i>
+                      <div className="flex flex-col items-start">
+                        <span className="font-bold text-base">Continuar com Google</span>
+                        <span className="text-xs opacity-90 font-medium">Login rápido e seguro</span>
+                      </div>
+                    </>
+                  )}
+                </Button>
+                <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground bg-muted/30 rounded-lg py-3 px-4">
+                  <i className="ri-rocket-line text-primary"></i>
+                  <span>Método mais rápido • Sem senhas • Recomendado</span>
+                </div>
+              </div>
+
+              {/* Divisor elegante */}
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border/60" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-card px-4 py-1 text-xs uppercase font-semibold text-muted-foreground tracking-wider border border-border/40 rounded-full">
+                    ou continue com
+                  </span>
+                </div>
+              </div>
+
+              {/* Opção 2: Email/Senha */}
               <Button 
-                onClick={() => window.location.href = "/api/login"}
-                className="w-full h-14 bg-gradient-to-r from-red-500 via-red-600 to-red-700 hover:from-red-600 hover:via-red-700 hover:to-red-800 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02]"
-                size="lg"
+                onClick={() => setAuthMethod('email')}
+                variant="outline"
+                className="w-full h-14 border-2 border-border/60 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-                    <span className="font-semibold">Conectando...</span>
-                  </>
-                ) : (
-                  <>
-                    <i className="ri-google-fill mr-4 text-xl"></i>
-                    <div className="flex flex-col items-start">
-                      <span className="font-bold text-base">Continuar com Google</span>
-                      <span className="text-xs opacity-90 font-medium">Login rápido e seguro</span>
-                    </div>
-                  </>
-                )}
+                <i className="ri-mail-line mr-4 text-xl text-primary"></i>
+                <div className="flex flex-col items-start">
+                  <span className="font-bold text-base">Email e Senha</span>
+                  <span className="text-xs text-muted-foreground font-medium">Login tradicional</span>
+                </div>
               </Button>
-              <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground bg-muted/30 rounded-lg py-3 px-4">
-                <i className="ri-rocket-line text-primary"></i>
-                <span>Método mais rápido • Sem senhas • Recomendado</span>
-              </div>
-            </div>
+            </CardContent>
 
-            {/* Divisor elegante */}
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border/60" />
+            <CardFooter className="bg-muted/30 rounded-b-lg px-8 py-6 border-t border-border/30">
+              <div className="w-full text-center">
+                <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
+                  <i className="ri-shield-check-line text-green-600"></i>
+                  <span className="font-medium">Seus dados estão protegidos e criptografados</span>
+                </div>
               </div>
-              <div className="relative flex justify-center">
-                <span className="bg-card px-4 py-1 text-xs uppercase font-semibold text-muted-foreground tracking-wider border border-border/40 rounded-full">
-                  ou continue com
-                </span>
-              </div>
-            </div>
-
-            {/* Opção 2: Email/Senha */}
-            <Button 
-              onClick={() => setAuthMethod('email')}
-              variant="outline"
-              className="w-full h-14 border-2 border-border/60 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
-              disabled={isLoading}
-            >
-              <i className="ri-mail-line mr-4 text-xl text-primary"></i>
-              <div className="flex flex-col items-start">
-                <span className="font-bold text-base">Email e Senha</span>
-                <span className="text-xs text-muted-foreground font-medium">Login tradicional</span>
-              </div>
-            </Button>
-          </CardContent>
-
-          <CardFooter className="bg-muted/30 rounded-b-lg px-8 py-6 border-t border-border/30">
-            <div className="w-full text-center">
-              <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
-                <i className="ri-shield-check-line text-green-600"></i>
-                <span className="font-medium">Seus dados estão protegidos e criptografados</span>
-              </div>
-            </div>
-          </CardFooter>
-        </>
-      )}
-    </Card>
+            </CardFooter>
+          </>
+        )}
+      </Card>
+    </div>
   );
 }
 
