@@ -333,6 +333,70 @@ router.put('/profile', async (req: Request, res: Response) => {
 });
 
 /**
+ * Rota para atualizar foto de perfil
+ */
+router.put('/profile-image', async (req: Request, res: Response) => {
+  try {
+    // Verificar autenticação
+    let userId: string | null = null;
+    
+    // Verificar token JWT
+    if (req.cookies.auth_token) {
+      try {
+        const decoded = jwt.verify(req.cookies.auth_token, JWT_SECRET) as any;
+        userId = decoded.userId;
+      } catch (error) {
+        // Token inválido
+      }
+    }
+    
+    // Verificar autenticação Replit
+    if (!userId && req.user && req.user.claims && req.user.claims.sub) {
+      userId = req.user.claims.sub;
+    }
+    
+    if (!userId) {
+      return res.status(401).json({
+        message: 'Não autorizado'
+      });
+    }
+
+    const { profileImageUrl } = req.body;
+
+    if (!profileImageUrl) {
+      return res.status(400).json({
+        message: 'URL da imagem é obrigatória'
+      });
+    }
+
+    // Buscar usuário atual
+    const currentUser = await storage.getUser(userId);
+    if (!currentUser) {
+      return res.status(404).json({
+        message: 'Usuário não encontrado'
+      });
+    }
+
+    // Atualizar foto de perfil
+    await storage.upsertUser({
+      ...currentUser,
+      profileImageUrl
+    });
+
+    res.json({
+      message: 'Foto de perfil atualizada com sucesso',
+      profileImageUrl
+    });
+
+  } catch (error) {
+    console.error('Erro ao atualizar foto de perfil:', error);
+    res.status(500).json({
+      message: 'Erro interno do servidor'
+    });
+  }
+});
+
+/**
  * Rota de health check para autenticação
  */
 router.get('/health', (req: Request, res: Response) => {

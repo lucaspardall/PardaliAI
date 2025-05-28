@@ -45,6 +45,8 @@ export default function Profile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState('');
   const [editForm, setEditForm] = useState({
     firstName: '',
     lastName: '',
@@ -107,6 +109,30 @@ export default function Profile() {
     },
   });
 
+  // Update photo mutation
+  const updatePhotoMutation = useMutation({
+    mutationFn: async (profileImageUrl: string) => {
+      return apiRequest("PUT", "/api/profile-image", { profileImageUrl });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setPhotoModalOpen(false);
+      setPhotoUrl('');
+      toast({
+        title: "Sucesso",
+        description: "Foto de perfil atualizada com sucesso!",
+        variant: "default",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível atualizar a foto.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Get plan expiration message
   const getPlanExpirationMessage = () => {
     if (!user || !user.planExpiresAt || user.plan === 'free') return null;
@@ -159,6 +185,37 @@ export default function Profile() {
     updateProfileMutation.mutate(editForm);
   };
 
+  // Handle photo update
+  const handleUpdatePhoto = () => {
+    if (!photoUrl.trim()) {
+      toast({
+        title: "Erro",
+        description: "URL da imagem é obrigatória.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar se é uma URL válida
+    try {
+      new URL(photoUrl);
+    } catch {
+      toast({
+        title: "Erro",
+        description: "URL da imagem inválida.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updatePhotoMutation.mutate(photoUrl);
+  };
+
+  // Remove photo
+  const handleRemovePhoto = () => {
+    updatePhotoMutation.mutate('');
+  };
+
   if (userLoading) {
     return (
       <SidebarLayout title="Perfil">
@@ -187,15 +244,44 @@ export default function Profile() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row items-center gap-6">
-              <Avatar className="h-24 w-24">
-                {user?.profileImageUrl ? (
-                  <AvatarImage src={user.profileImageUrl} alt={user.firstName || "User"} />
-                ) : (
-                  <AvatarFallback className="text-2xl">
-                    {getInitials(user?.firstName, user?.lastName)}
-                  </AvatarFallback>
-                )}
-              </Avatar>
+              <div className="relative group">
+                <Avatar className="h-24 w-24">
+                  {user?.profileImageUrl ? (
+                    <AvatarImage src={user.profileImageUrl} alt={user.firstName || "User"} />
+                  ) : (
+                    <AvatarFallback className="text-2xl">
+                      {getInitials(user?.firstName, user?.lastName)}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                
+                {/* Overlay com botões ao passar o mouse */}
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 w-8 p-0"
+                      onClick={() => setPhotoModalOpen(true)}
+                      title="Alterar foto"
+                    >
+                      <i className="ri-camera-line text-sm"></i>
+                    </Button>
+                    {user?.profileImageUrl && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="h-8 w-8 p-0"
+                        onClick={handleRemovePhoto}
+                        title="Remover foto"
+                        disabled={updatePhotoMutation.isPending}
+                      >
+                        <i className="ri-delete-bin-line text-sm"></i>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
               
               <div className="space-y-1 text-center md:text-left">
                 <h3 className="text-xl font-bold">
@@ -212,6 +298,18 @@ export default function Profile() {
                       {planExpiration.message}
                     </Badge>
                   )}
+                </div>
+                
+                {/* Botão mobile para alterar foto */}
+                <div className="md:hidden mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPhotoModalOpen(true)}
+                  >
+                    <i className="ri-camera-line mr-2"></i>
+                    Alterar Foto
+                  </Button>
                 </div>
               </div>
             </div>
@@ -628,6 +726,97 @@ export default function Profile() {
                   </>
                 ) : (
                   'Salvar alterações'
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Photo Update Modal */}
+        <Dialog open={photoModalOpen} onOpenChange={setPhotoModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Alterar Foto de Perfil</DialogTitle>
+              <DialogDescription>
+                Cole a URL de uma imagem para usar como foto de perfil.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="photoUrl">URL da Imagem</Label>
+                <Input
+                  id="photoUrl"
+                  type="url"
+                  value={photoUrl}
+                  onChange={(e) => setPhotoUrl(e.target.value)}
+                  placeholder="https://exemplo.com/minha-foto.jpg"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use uma URL pública de uma imagem (JPG, PNG, GIF). Recomendamos imagens quadradas.
+                </p>
+              </div>
+              
+              {/* Preview da imagem */}
+              {photoUrl && (
+                <div className="flex justify-center">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20">
+                      <AvatarImage 
+                        src={photoUrl} 
+                        alt="Preview"
+                        onError={() => {
+                          toast({
+                            title: "Erro",
+                            description: "Não foi possível carregar a imagem desta URL.",
+                            variant: "destructive",
+                          });
+                        }}
+                      />
+                      <AvatarFallback>
+                        <i className="ri-image-line text-2xl text-muted-foreground"></i>
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-2 -right-2">
+                      <Badge variant="secondary" className="text-xs">
+                        Preview
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p className="font-medium">💡 Dicas para uma boa foto:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>Use uma imagem quadrada (1:1)</li>
+                  <li>Tamanho recomendado: 400x400px ou maior</li>
+                  <li>Certifique-se que a URL é pública</li>
+                  <li>Formatos suportados: JPG, PNG, GIF</li>
+                </ul>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setPhotoModalOpen(false);
+                  setPhotoUrl('');
+                }}
+                disabled={updatePhotoMutation.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleUpdatePhoto}
+                disabled={updatePhotoMutation.isPending || !photoUrl.trim()}
+              >
+                {updatePhotoMutation.isPending ? (
+                  <>
+                    <i className="ri-loader-2-line animate-spin mr-2"></i>
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar Foto'
                 )}
               </Button>
             </DialogFooter>
