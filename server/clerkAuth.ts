@@ -32,5 +32,5 @@ const requireClerkAuth = () => {
   return requireAuth();
 };
 
-export { setupClerkAuth, isAuthenticated, requireClerkAuth };
+export { setupClerkAuth, isAuthenticated, requireClerkAuth, getAuth };
 
