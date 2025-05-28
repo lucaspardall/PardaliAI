@@ -39,7 +39,7 @@ export function setupClerkAuth(app: Express) {
         });
       }
 
-      const clerkUser = req.auth.user;
+      const clerkUser = await req.auth().user;
 
       // Buscar ou criar usuário no banco
       let user = await storage.getUser(userId);

@@ -3,8 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ClerkProvider } from '@clerk/clerk-react';
-import { ErrorBoundary } from 'react-error-boundary';
-import { ErrorFallback } from '@/components/ErrorBoundary';
+import { ErrorBoundary, ErrorFallback } from '@/components/ErrorBoundary';
 
 // Pages
 import LandingPage from "@/pages/landing";
@@ -48,7 +47,7 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback} onError={(error) => console.error('App Error:', error)}>
+    <ErrorBoundary>
       <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
