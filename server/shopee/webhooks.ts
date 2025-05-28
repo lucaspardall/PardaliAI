@@ -168,6 +168,14 @@ async function handleShopDeauthorization(data: any, shopId: number): Promise<voi
  * Manipula webhooks recebidos da Shopee
  */
 export async function handleShopeeWebhook(req: Request, res: Response): Promise<void> {
+  const signature = req.headers['authorization'] as string;
+  const body = req.body;
+
+  // Log detalhado para debug
+  console.log('[Webhook] 📥 Processando webhook da Shopee');
+  console.log('[Webhook] Assinatura recebida:', signature);
+  console.log('[Webhook] Corpo da requisição:', JSON.stringify(body, null, 2));
+
   try {
     console.log('[Webhook] Recebendo webhook - Headers:', req.headers);
     console.log('[Webhook] Corpo do webhook:', req.body);
