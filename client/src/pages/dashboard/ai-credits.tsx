@@ -102,24 +102,24 @@ export default function AiCreditsPage() {
       </div>
 
       {/* Status Atual */}
-      <div className="grid gap-6 md:grid-cols-3 mb-6">
+      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 mb-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className="text-sm font-medium">Créditos Disponíveis</CardTitle>
-            <i className="ri-ai-generate text-muted-foreground"></i>
+            <i className="ri-ai-generate text-muted-foreground text-lg"></i>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="pb-4">
+            <div className="text-3xl md:text-2xl font-bold">
               {user?.plan === 'free' 
                 ? `${user?.aiCreditsLeft || 0}/10` 
                 : 'Ilimitado'}
             </div>
             {user?.plan === 'free' && (
-              <div className="mt-2">
-                <Progress value={getUsagePercentage()} className="h-2" />
+              <div className="mt-3">
+                <Progress value={getUsagePercentage()} className="h-3 md:h-2" />
               </div>
             )}
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-sm md:text-xs text-muted-foreground mt-2">
               {user?.plan === 'free' 
                 ? 'Plano gratuito'
                 : `Plano ${user?.plan?.toUpperCase()}`}

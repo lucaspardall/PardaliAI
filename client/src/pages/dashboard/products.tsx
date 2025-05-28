@@ -258,33 +258,16 @@ export default function Products() {
               </div>
             ) : (
               // Products table
-              <div className="overflow-x-auto">
-                <Table>
+              <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
+                <Table className="min-w-[600px] md:min-w-full">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Produto</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Preço</TableHead>
-                      <TableHead>Estoque</TableHead>
-                      <TableHead className="text-center cursor-pointer" onClick={() => toggleSort("ctr")}>
-                        <div className="flex items-center justify-center">
-                          CTR
-                          {sortOption === "ctr" && <i className={`ml-1 ri-arrow-${sortDirection === "asc" ? "up" : "down"}-s-line`}></i>}
-                        </div>
-                      </TableHead>
-                      <TableHead className="text-center cursor-pointer" onClick={() => toggleSort("views")}>
-                        <div className="flex items-center justify-center">
-                          Views
-                          {sortOption === "views" && <i className={`ml-1 ri-arrow-${sortDirection === "asc" ? "up" : "down"}-s-line`}></i>}
-                        </div>
-                      </TableHead>
-                      <TableHead className="text-center cursor-pointer" onClick={() => toggleSort("sales")}>
-                        <div className="flex items-center justify-center">
-                          Vendas
-                          {sortOption === "sales" && <i className={`ml-1 ri-arrow-${sortDirection === "asc" ? "up" : "down"}-s-line`}></i>}
-                        </div>
-                      </TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                      <TableHead className="min-w-[200px]">Produto</TableHead>
+                      <TableHead className="min-w-[80px]">Preço</TableHead>
+                      <TableHead className="min-w-[80px]">Estoque</TableHead>
+                      <TableHead className="min-w-[100px]">Status</TableHead>
+                      <TableHead className="text-right min-w-[120px]">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

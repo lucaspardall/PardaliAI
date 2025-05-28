@@ -34,11 +34,11 @@ export default function Dashboard() {
 
     if (shopeeConnected === 'true') {
       console.log('🎉 Shopee conectado com sucesso! Atualizando dados...');
-      
+
       // Invalidar todas as queries relacionadas a stores
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shopee/status"] });
-      
+
       // Se tivermos storeId, definir como loja ativa
       if (storeId) {
         setActiveStore(parseInt(storeId));

@@ -292,10 +292,10 @@ export default function SidebarLayout({
       {/* Main Content */}
       <main className="flex-1 overflow-auto bg-background">
         {/* Top Bar */}
-        <div className="bg-card shadow-sm px-6 py-3 flex items-center justify-between">
+        <div className="bg-card shadow-sm px-4 md:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center">
             <button 
-              className="md:hidden mr-4 text-muted-foreground"
+              className="md:hidden mr-3 text-muted-foreground p-1"
               onClick={() => setIsMobileSidebarOpen(true)}
             >
               <i className="ri-menu-line text-xl"></i>
@@ -306,14 +306,14 @@ export default function SidebarLayout({
             >
               <i className={`${isSidebarCollapsed ? 'ri-menu-unfold-line' : 'ri-menu-fold-line'} text-xl`}></i>
             </button>
-            <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+            <h1 className="text-base md:text-lg font-semibold text-foreground truncate">{title}</h1>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
-                  <i className="ri-notification-3-line text-xl"></i>
+                <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                  <i className="ri-notification-3-line text-lg md:text-xl"></i>
                   {notifications?.length > 0 && (
                     <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-destructive"></span>
                   )}
@@ -356,11 +356,11 @@ export default function SidebarLayout({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
                   {theme === 'light' || theme === 'system' ? (
-                    <i className="ri-moon-line text-xl"></i>
+                    <i className="ri-moon-line text-lg md:text-xl"></i>
                   ) : (
-                    <i className="ri-sun-line text-xl"></i>
+                    <i className="ri-sun-line text-lg md:text-xl"></i>
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -383,7 +383,7 @@ export default function SidebarLayout({
         </div>
 
         {/* Content Area */}
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {children}
         </div>
       </main>
