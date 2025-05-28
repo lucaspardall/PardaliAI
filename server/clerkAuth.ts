@@ -5,12 +5,12 @@ import { Request, Response, NextFunction, Application } from 'express';
 
 // Validação das chaves Clerk
 const validateClerkKeys = () => {
-  // Usar as variáveis corretas dos Secrets do Replit
-  const publishableKey = process.env.VITE_CLERK_PUBLISHABLE_KEY || process.env.CLERK_PUBLISHABLE_KEY;
+  // Usar as chaves configuradas nos Secrets do Replit
+  const publishableKey = process.env.CLERK_PUBLISHABLE_KEY;
   const secretKey = process.env.CLERK_SECRET_KEY;
   
   if (!publishableKey) {
-    throw new Error('❌ VITE_CLERK_PUBLISHABLE_KEY não configurada! Configure nos Secrets do Replit.');
+    throw new Error('❌ CLERK_PUBLISHABLE_KEY não configurada! Configure nos Secrets do Replit.');
   }
   
   if (!secretKey) {
@@ -18,7 +18,7 @@ const validateClerkKeys = () => {
   }
   
   if (publishableKey === 'pk_test_your_publishable_key_here') {
-    throw new Error('❌ Configure uma VITE_CLERK_PUBLISHABLE_KEY válida nos Secrets.');
+    throw new Error('❌ Configure uma CLERK_PUBLISHABLE_KEY válida nos Secrets.');
   }
   
   if (secretKey === 'sk_test_your_secret_key_here') {

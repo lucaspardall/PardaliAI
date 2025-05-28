@@ -30,7 +30,7 @@ import ShopeeConnectPage from "@/pages/shopee-connect";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Get Clerk publishable key from environment
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || 'pk_test_aHVtYW5lLWZsYW1pbmdvLTkyLmNsZXJrLmFjY291bnRzLmRldiQ';
 
 if (!CLERK_PUBLISHABLE_KEY) {
   console.error('❌ VITE_CLERK_PUBLISHABLE_KEY não configurado nos Secrets');
