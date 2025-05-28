@@ -1,16 +1,10 @@
-// server/clerkAuth.ts
 
-import { ClerkExpressWithAuth } from '@clerk/clerk-sdk/server';
-import { expressjwt } from 'express-jwt';
-import jwksRsa from 'jwks-rsa';
-import { Request, Response, NextFunction } from 'express';
-import express from 'express';
+import { ClerkExpressWithAuth } from '@clerk/express';
+import { Request, Response, NextFunction, Application } from 'express';
 
-const app = express();
-
-// Clerk setup
-const setupAuth = () => {
-  console.log("Clerk auth setup");
+// Setup principal do Clerk para Express
+const setupClerkAuth = (app: Application) => {
+  console.log("🔐 Configurando Clerk auth para Express");
   app.use(ClerkExpressWithAuth());
 };
 
@@ -30,19 +24,19 @@ const isAuthenticated = (req: any, res: any, next: any) => {
   }
 };
 
+// Middleware opcional para casos específicos
 const requireAuth = () => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.auth?.userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+  return (req: any, res: Response, next: NextFunction) => {
+    try {
+      const auth = req.auth();
+      if (!auth?.userId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      next();
+    } catch (error) {
+      return res.status(401).json({ message: 'Authentication failed' });
     }
-    next();
   };
 };
 
-// Rota para obter dados do usuário
-app.get('/api/auth/user', requireAuth(), async (req: any, res) => {
-  const userId = req.auth?.userId;
-  res.json({ userId: userId, message: 'User authenticated' });
-});
-
-export { setupAuth, isAuthenticated };
+export { setupClerkAuth, isAuthenticated, requireAuth };
