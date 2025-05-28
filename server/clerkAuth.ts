@@ -20,6 +20,12 @@ export function setupClerkAuth(app: Express) {
     return;
   }
 
+  // Verificar se estamos usando chaves de desenvolvimento
+  if (process.env.VITE_CLERK_PUBLISHABLE_KEY.startsWith('pk_test_')) {
+    console.warn('⚠️ USANDO CHAVES DE DESENVOLVIMENTO DO CLERK');
+    console.warn('Para produção, configure chaves pk_live_ no dashboard do Clerk');
+  }
+
   // Middleware do Clerk
   app.use(clerkMiddleware({
     secretKey: process.env.CLERK_SECRET_KEY,

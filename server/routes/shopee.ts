@@ -13,6 +13,8 @@ const router = Router();
  */
 router.get('/authorize', isAuthenticated, async (req: Request, res: Response) => {
   try {
+    const { userId } = req.auth();
+    console.log('Usuário autenticado tentando autorizar Shopee:', userId);
     console.log("======= INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE =======");
     console.log("Usuário autenticado:", req.user);
     console.log("Ambiente:", process.env.NODE_ENV);
@@ -189,7 +191,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log(`🚀 Redirecionando para autorização OAuth da Shopee...`);
     console.log(`📋 URL completa: ${authUrl}`);
     console.log(`ℹ️  NOTA: Status 302 é normal - indica redirecionamento para login da Shopee`);
-    
+
     return res.redirect(authUrl);
 
   } catch (error: any) {
@@ -609,7 +611,7 @@ router.post('/stores/:storeId/test-production', isAuthenticated, async (req: Req
 
     if (result.success) {
       console.log(`[Production Test] ✅ Conexão bem-sucedida:`, result.data);
-      
+
       // Criar notificação de sucesso
       await storage.createNotification({
         userId,
@@ -621,7 +623,7 @@ router.post('/stores/:storeId/test-production', isAuthenticated, async (req: Req
       });
     } else {
       console.error(`[Production Test] ❌ Falha na conexão:`, result.error);
-      
+
       // Criar notificação de erro
       await storage.createNotification({
         userId,
@@ -1154,7 +1156,7 @@ router.post('/stores/:storeId/inventory/apply-optimizations', isAuthenticated, a
 
     const { InventoryManager } = await import('../shopee/inventory');
     const inventoryManager = new InventoryManager(client, store.id);
-    
+
     const result = await inventoryManager.applyPriceOptimizations(optimizations);
 
     res.json({

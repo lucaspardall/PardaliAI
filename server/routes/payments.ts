@@ -19,7 +19,7 @@ router.get('/plans', (req: Request, res: Response) => {
 router.post('/checkout', isAuthenticated, async (req: Request, res: Response) => {
   try {
     const { planId } = req.body;
-    const { userId } = req.auth;
+    const { userId } = req.auth();
 
     if (!planId || !PAYMENT_PLANS[planId]) {
       return res.status(400).json({
@@ -45,11 +45,11 @@ router.post('/checkout', isAuthenticated, async (req: Request, res: Response) =>
  */
 router.post('/portal', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const { userId } = req.auth;
-    
+    const { userId } = req.auth();
+
     // Como estamos usando Clerk para pagamentos, redirecionar para o portal do usuário
     const portalUrl = `${process.env.CLERK_FRONTEND_API || 'https://clerk.com'}/user`;
-    
+
     res.json({ url: portalUrl });
   } catch (error) {
     console.error('Erro ao criar portal de pagamentos:', error);
@@ -99,6 +99,7 @@ router.get('/subscription', isAuthenticated, async (req: Request, res: Response)
 router.post('/webhook', async (req: Request, res: Response) => {
   try {
     const { type, data } = req.body;
+    const { userId } = req.auth();
 
     if (type === 'user.updated') {
       // O Clerk automaticamente atualiza os metadados do usuário

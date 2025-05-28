@@ -49,7 +49,15 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       queryFn: async ({ queryKey }) => {
         const url = queryKey[0] as string;
-        if (!url) throw new Error('Invalid query key');
+        if (!url) {
+          console.warn('⚠️ Invalid query key:', queryKey);
+          throw new Error('Invalid query key');
+        }
+
+        // Ignorar queries com null ou undefined
+        if (url === null || url === undefined) {
+          return null;
+        }
         
         const response = await fetch(url, {
           credentials: 'include',
