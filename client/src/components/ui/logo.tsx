@@ -10,10 +10,10 @@ interface LogoProps {
 }
 
 const sizeClasses = {
-  sm: 'h-6 w-6',
-  md: 'h-8 w-8', 
-  lg: 'h-10 w-10',
-  xl: 'h-12 w-12'
+  sm: 'h-6',
+  md: 'h-8', 
+  lg: 'h-10',
+  xl: 'h-12'
 };
 
 const textSizeClasses = {
@@ -34,7 +34,7 @@ export default function Logo({
       <img 
         src="/logo.svg" 
         alt="CIP Shopee" 
-        className={cn(sizeClasses[size], "mr-2")}
+        className={cn(sizeClasses[size], "w-auto mr-2 object-contain")}
       />
       {showText && (
         <h1 className={cn(
