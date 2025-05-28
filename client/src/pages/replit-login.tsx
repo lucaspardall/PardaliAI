@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,8 +61,8 @@ export default function ReplitLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-100/20 via-red-100/20 to-pink-100/20"></div>
-      
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-100/10 via-red-100/10 to-pink-100/10"></div>
+
       <div className="w-full max-w-md relative z-10">
         {/* Logo e Header */}
         <div className="text-center mb-8">

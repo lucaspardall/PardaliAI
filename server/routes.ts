@@ -1,8 +1,8 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupClerkAuth, isAuthenticated, getAuth } from "./clerkAuth";
 import { aiService } from "./ai";
+import { isAuthenticated, getAuth, type AuthenticatedRequest } from "./replitAuth";
 import { z } from "zod";
 import { insertShopeeStoreSchema, insertProductSchema } from "@shared/schema";
 import shopeeRoutes from './routes/shopee';
@@ -12,9 +12,6 @@ import authRouter from './routes/auth';
 import paymentsRouter from './routes/payments';
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication
-  await setupClerkAuth(app);
-
   // Register Shopee routes
   app.use('/api/shopee', shopeeRoutes);
   app.use('/api/webhook', webhookRoutes);
@@ -25,9 +22,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Get user's stores
-  app.get('/api/stores', isAuthenticated, async (req: any, res) => {
+  app.get('/api/stores', (req: any, res) => {
     try {
-      const { userId } = getAuth(req);
+      const userId = req.user?.claims?.sub;
       if (!userId) {
         return res.status(401).json({ message: "User not authenticated" });
       }
@@ -40,7 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/stores/:id', isAuthenticated, async (req: any, res) => {
+  app.get('/api/stores/:id', (req: any, res) => {
     try {
       const storeId = parseInt(req.params.id);
       const store = await storage.getStoreById(storeId);
@@ -50,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user owns the store
-      const { userId } = getAuth(req);
+      const userId = req.user?.claims?.sub;
       if (store.userId !== userId) {
         return res.status(403).json({ message: "Not authorized to access this store" });
       }
@@ -62,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/stores', isAuthenticated, async (req: any, res) => {
+  app.post('/api/stores', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
       const { userId } = getAuth(req);
       const userData = await storage.getUser(userId);
