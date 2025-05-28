@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet";
-import { TrendingUp, TrendingDown, Eye, ShoppingCart, Target, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, Eye, ShoppingCart, Target, BarChart3, DollarSign } from "lucide-react";
 
 interface ReportData {
   totalSales: number;
