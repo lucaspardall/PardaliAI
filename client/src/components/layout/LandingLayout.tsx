@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ui/theme-provider";
 import { useState, useEffect } from "react";
 import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import EmailAuth from "@/components/auth/EmailAuth";
 
 interface LandingLayoutProps {
   children: React.ReactNode;
@@ -10,6 +15,19 @@ interface LandingLayoutProps {
 
 export default function LandingLayout({ children }: LandingLayoutProps) {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [loginModalOpen, setLoginModalOpen] = React.useState(false);
+  const [authMethod, setAuthMethod] = React.useState<'replit' | 'email'>('replit');
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const handleLoginWithReplit = async () => {
+    setIsLoading(true);
+    window.open('/api/login', '_blank', 'width=600,height=600');
+    setIsLoading(false);
+  };
+
+  const openLoginModal = () => {
+    setLoginModalOpen(true);
+  };
 
   React.useEffect(() => {
     const checkAuth = async () => {
@@ -45,33 +63,25 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             <h1 className="text-2xl font-bold text-foreground font-heading">CIP Shopee</h1>
           </div>
 
-          <div className="hidden md:flex items-center space-x-6">
-            <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Recursos</a>
-            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Planos</a>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="mr-2 border-primary hover:bg-primary/10"
-            >
-              {theme === "dark" ? (
-                <i className="ri-sun-line text-xl text-primary"></i>
+          {isAuthenticated ? (
+                <div className="hidden md:flex items-center space-x-4">
+                  <Button variant="ghost" onClick={openLoginModal}>
+                    Entrar
+                  </Button>
+                  <Button onClick={openLoginModal}>
+                    Comece grátis
+                  </Button>
+                </div>
               ) : (
-                <i className="ri-moon-line text-xl text-primary"></i>
+                <div className="hidden md:flex items-center space-x-4">
+                  <Button variant="ghost" onClick={openLoginModal}>
+                    Entrar
+                  </Button>
+                  <Button onClick={openLoginModal}>
+                    Comece grátis
+                  </Button>
+                </div>
               )}
-            </Button>
-
-            {isAuthenticated ? (
-              <Button asChild>
-                <a href="/dashboard">Dashboard</a>
-              </Button>
-            ) : (
-              <Button asChild>
-                <a href="/">Comece grátis</a>
-              </Button>
-            )}
-          </div>
 
           {/* Mobile menu button */}
           <div className="flex items-center md:hidden">
@@ -135,17 +145,13 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Button asChild className="w-full">
-                    <a href="/">
-                      <i className="ri-rocket-line mr-2"></i>
-                      Comece grátis
-                    </a>
+                  <Button className="w-full" onClick={() => { openLoginModal(); setMobileMenuOpen(false); }}>
+                    <i className="ri-rocket-line mr-2"></i>
+                    Comece grátis
                   </Button>
-                  <Button asChild variant="outline" className="w-full">
-                    <a href="/">
-                      <i className="ri-login-box-line mr-2"></i>
-                      Já tenho conta
-                    </a>
+                  <Button variant="outline" className="w-full" onClick={() => { openLoginModal(); setMobileMenuOpen(false); }}>
+                    <i className="ri-login-box-line mr-2"></i>
+                    Já tenho conta
                   </Button>
                 </div>
               )}
@@ -156,7 +162,11 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
 
       {/* Main Content */}
       <main className="flex-grow">
-        {children}
+        {React.Children.map(children, child => 
+          React.isValidElement(child) 
+            ? React.cloneElement(child as React.ReactElement<any>, { onOpenLogin: openLoginModal })
+            : child
+        )}
       </main>
 
       {/* Footer */}
@@ -207,6 +217,103 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
           </div>
         </div>
       </footer>
+
+      {/* Modal de Login */}
+      <Dialog open={loginModalOpen} onOpenChange={setLoginModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-center">
+              <i className="ri-shopping-bag-3-line text-primary text-3xl mb-2 block"></i>
+              Entre no CIP Shopee
+            </DialogTitle>
+          </DialogHeader>
+
+          {authMethod === 'email' ? (
+            <div className="space-y-4">
+              <EmailAuth onSuccess={() => {
+                setLoginModalOpen(false);
+                window.location.href = "/dashboard";
+              }} />
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setAuthMethod('replit')}
+              >
+                <i className="ri-arrow-left-line mr-2"></i>
+                Voltar para login Replit
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Opção Replit */}
+              <div className="text-center space-y-4">
+                <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-6 rounded-xl border-2 border-dashed border-primary/20">
+                  <i className="ri-replit-line text-4xl text-primary mb-3 block"></i>
+                  <h3 className="font-semibold text-lg mb-2">Login com Replit</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Rápido, seguro e sem necessidade de criar nova senha
+                  </p>
+
+                  <div className="space-y-3">
+                    <Button 
+                      onClick={handleLoginWithReplit} 
+                      disabled={isLoading}
+                      className="w-full bg-[#0E1525] hover:bg-[#1C2333] text-white"
+                      size="lg"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Conectando...
+                        </>
+                      ) : (
+                        <>
+                          <i className="ri-replit-line mr-2"></i>
+                          Replit (Pop-up)
+                        </>
+                      )}
+                    </Button>
+
+                    <Button 
+                      onClick={() => window.location.href = "/api/login"}
+                      variant="outline"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      <i className="ri-replit-fill mr-2"></i>
+                      Replit (Redirecionamento)
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Divisor */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      ou
+                    </span>
+                  </div>
+                </div>
+
+                {/* Opção Email */}
+                <Button 
+                  onClick={() => setAuthMethod('email')}
+                  variant="outline"
+                  className="w-full"
+                  disabled={isLoading}
+                  size="lg"
+                >
+                  <i className="ri-mail-line mr-2"></i>
+                  Entrar com Email e Senha
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

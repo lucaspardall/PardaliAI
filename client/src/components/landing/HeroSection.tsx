@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  onOpenLogin?: () => void;
+}
+
+export default function HeroSection({ onOpenLogin }: HeroSectionProps) {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
@@ -32,10 +36,8 @@ export default function HeroSection() {
                   </Link>
                 </Button>
               ) : (
-                <Button asChild size="lg" className="shadow-lg">
-                  <a href="/">
-                    Comece grátis
-                  </a>
+                <Button size="lg" className="shadow-lg" onClick={onOpenLogin}>
+                  Comece grátis
                 </Button>
               )}
               <Button asChild variant="outline" size="lg" className="bg-white/10 border-white/20 hover:bg-white/20">

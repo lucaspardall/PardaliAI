@@ -7,7 +7,11 @@ import PricingSection from "@/components/landing/PricingSection";
 import CTASection from "@/components/landing/CTASection";
 import { Helmet } from "react-helmet";
 
-export default function Landing() {
+interface LandingProps {
+  onOpenLogin?: () => void;
+}
+
+export default function Landing({ onOpenLogin }: LandingProps) {
   return (
     <>
       <Helmet>
@@ -21,12 +25,12 @@ export default function Landing() {
         <meta property="og:type" content="website" />
       </Helmet>
       <LandingLayout>
-        <HeroSection />
+        <HeroSection onOpenLogin={onOpenLogin} />
         <StatsSection />
         <FeaturesSection />
         <TestimonialsSection />
         <PricingSection />
-        <CTASection />
+        <CTASection onOpenLogin={onOpenLogin} />
       </LandingLayout>
     </>
   );

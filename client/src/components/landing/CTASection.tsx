@@ -2,7 +2,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
-export default function CTASection() {
+interface CTASectionProps {
+  onOpenLogin?: () => void;
+}
+
+export default function CTASection({ onOpenLogin }: CTASectionProps) {
   const { isAuthenticated } = useAuth();
 
   return (
@@ -25,13 +29,9 @@ export default function CTASection() {
               size="lg" 
               variant="secondary" 
               className="bg-white text-primary hover:bg-primary-50 px-8"
-              asChild
+              onClick={isAuthenticated ? () => window.location.href = "/dashboard" : onOpenLogin}
             >
-              {isAuthenticated ? (
-                <a href="/dashboard">Acessar Dashboard</a>
-              ) : (
-                <a href="/">Começar agora</a>
-              )}
+              {isAuthenticated ? "Acessar Dashboard" : "Começar agora"}
             </Button>
           </div>
         </motion.div>
