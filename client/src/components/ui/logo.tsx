@@ -36,7 +36,7 @@ export default function Logo({
         sizeClasses[size]
       )} style={{ minWidth: 'auto', maxWidth: 'none' }}>
         <img 
-          src="/logo.svg" 
+          src="/logo.png" 
           alt="CIP Shopee" 
           className="w-full h-full object-contain"
           style={{ aspectRatio: '1/1' }}
