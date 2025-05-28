@@ -6,13 +6,13 @@ import { ShopeeAuthConfig, ShopeeAuthTokens } from './types';
 import { storage } from '../storage';
 import { ShopeeCache } from './cache';
 
-// Configuração padrão para ambiente de desenvolvimento
+// Configuração padrão para produção no Brasil
 const DEFAULT_CONFIG: ShopeeAuthConfig = {
   partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
   partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4761',
-  // Sempre usar o domínio de produção cipshopee.replit.app como URL de redirecionamento
+  // URL de produção para callback da Shopee
   redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
-  region: process.env.SHOPEE_REGION || 'SG'  // Alterado para SG (Singapura) como no Upseller
+  region: process.env.SHOPEE_REGION || 'BR'  // Brasil como região padrão para produção
 };
 
 /**
@@ -20,33 +20,46 @@ const DEFAULT_CONFIG: ShopeeAuthConfig = {
  * @param config Configuração opcional (usa valores padrão se não fornecida)
  */
 export function createClient(config?: Partial<ShopeeAuthConfig>): ShopeeClient {
-  // Usar região SG (Singapura) conforme exemplos encontrados no Upseller
-  const region = process.env.SHOPEE_REGION || 'SG'; 
+  // Produção: Usar região BR (Brasil) como padrão
+  const region = process.env.SHOPEE_REGION || 'BR'; 
 
-  // Usar sempre o domínio de produção para integrações Shopee
-  const currentUrl = 'https://cipshopee.replit.app';
-
-  // Configurar URL de redirecionamento garantindo formato correto e absoluto
-  // A URL de redirecionamento deve ser URL completa e absoluta conforme documentação
+  // URL de produção configurada
   const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
 
-  console.log(`[Shopee Client] Configurando cliente com redirectUrl: ${redirectUrl} e região: ${region}`);
+  // Log apenas em desenvolvimento
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Shopee Client] Configurando cliente com redirectUrl: ${redirectUrl} e região: ${region}`);
+  }
 
-  // Mesclar configurações com valores explícitos
+  // Configuração otimizada para produção
   const fullConfig: ShopeeAuthConfig = {
     ...DEFAULT_CONFIG,
     ...config,
-    redirectUrl,  // Usar sempre URL absoluta
-    region        // Usar a região configurada
+    redirectUrl,
+    region
   };
 
-  console.log(`[Shopee Client] Configuração final:`, {
-    partnerId: fullConfig.partnerId,
-    region: fullConfig.region,
-    redirectUrl: fullConfig.redirectUrl
-  });
+  // Log de configuração apenas em desenvolvimento
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Shopee Client] Configuração final:`, {
+      partnerId: fullConfig.partnerId,
+      region: fullConfig.region,
+      redirectUrl: fullConfig.redirectUrl
+    });
+  }
 
-  return new ShopeeClient(fullConfig);
+  const client = new ShopeeClient(fullConfig);
+  
+  // Configurar headers específicos para Brasil em produção
+  if (region === 'BR') {
+    client.setRequestHeaders({
+      'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+      'X-Shopee-Region': 'BR',
+      'X-Shopee-Country': 'BR'
+    });
+  }
+
+  return client;
 }
 
 /**

@@ -21,17 +21,19 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("URL de redirecionamento configurada:", process.env.SHOPEE_REDIRECT_URL);
     console.log("===================================================");
 
-    // Configuração da integração Shopee - sempre usar região 'BR' para o Brasil
-    // Usar exatamente a URL configurada no console da Shopee
+    // Configuração otimizada para produção brasileira
     const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
 
-    console.log("URL de redirecionamento que será usada:", redirectUrl);
+    // Log apenas em desenvolvimento
+    if (process.env.NODE_ENV === 'development') {
+      console.log("URL de redirecionamento que será usada:", redirectUrl);
+    }
 
     const config = {
       partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
-      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
-      redirectUrl: redirectUrl, // Usar a URL definida acima
-      region: 'BR'  // Configurado explicitamente para Brasil
+      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4761',
+      redirectUrl: redirectUrl,
+      region: 'BR'  // Região brasileira para produção
     };
 
     // Validar redirectUrl
@@ -577,6 +579,53 @@ router.post('/sync/:storeId', isAuthenticated, async (req: Request, res: Respons
     console.error('Error syncing Shopee store:', error);
     res.status(500).json({
       message: 'Failed to sync store',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Validar configuração de produção da API Shopee
+ */
+router.get('/production/validate', isAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as any).claims.sub;
+    
+    // Verificar se as configurações de produção estão corretas
+    const config = {
+      partnerId: process.env.SHOPEE_PARTNER_ID,
+      partnerKey: process.env.SHOPEE_PARTNER_KEY,
+      redirectUrl: process.env.SHOPEE_REDIRECT_URL,
+      region: 'BR'
+    };
+
+    const validation = {
+      partnerId: !!config.partnerId,
+      partnerKey: !!config.partnerKey,
+      redirectUrl: !!config.redirectUrl && config.redirectUrl.includes('https://'),
+      region: config.region === 'BR',
+      environment: process.env.NODE_ENV,
+      baseUrl: 'https://partner.shopeemobile.com'
+    };
+
+    const isValid = Object.values(validation).every(v => v === true);
+
+    res.json({
+      valid: isValid,
+      config: validation,
+      message: isValid ? 'Configuração de produção válida' : 'Configuração precisa de ajustes',
+      recommendations: !isValid ? [
+        !validation.partnerId && 'Configure SHOPEE_PARTNER_ID',
+        !validation.partnerKey && 'Configure SHOPEE_PARTNER_KEY', 
+        !validation.redirectUrl && 'Configure SHOPEE_REDIRECT_URL com HTTPS',
+        !validation.region && 'Região deve ser BR para Brasil'
+      ].filter(Boolean) : []
+    });
+
+  } catch (error: any) {
+    console.error('Error validating production config:', error);
+    res.status(500).json({
+      valid: false,
       error: error.message
     });
   }

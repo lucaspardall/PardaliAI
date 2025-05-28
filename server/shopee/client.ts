@@ -9,16 +9,16 @@ import { generateSignature, getTimestamp, getApiBaseUrl, parseApiError } from '.
 import { storage } from '../storage';
 import { ShopeeCache } from './cache';
 
-// Configurações de limitação de taxa padrão
+// Configurações de limitação de taxa otimizadas para produção
 const DEFAULT_RATE_LIMIT = {
-  maxConcurrent: 3,             // Máximo de solicitações simultâneas
-  minTime: 1000,                // Tempo mínimo entre solicitações (1 segundo)
-  reservoir: 50,                // Número máximo de solicitações por minuto
-  reservoirRefreshAmount: 50,
+  maxConcurrent: 5,             // Mais concorrência para produção
+  minTime: 800,                 // Tempo reduzido para melhor performance
+  reservoir: 100,               // Mais solicitações por minuto em produção
+  reservoirRefreshAmount: 100,
   reservoirRefreshInterval: 60 * 1000, // 1 minuto
-  highWater: 80,                // 80% da capacidade antes de começar a retardar
-  strategy: Bottleneck.strategy.LEAK, // Estratégia de vazamento gradual
-  retryAfter: 60 * 1000,        // Tempo de espera após erro de rate limit (1 minuto)
+  highWater: 90,                // 90% da capacidade antes de retardar
+  strategy: Bottleneck.strategy.LEAK,
+  retryAfter: 30 * 1000,        // Tempo de espera reduzido (30 segundos)
 };
 
 // Limitadores separados para diferentes tipos de operações
@@ -67,13 +67,19 @@ export class ShopeeClient {
       config.redirectUrl = 'https://cipshopee.replit.app/api/shopee/callback';
     }
 
-    // Criar instância do Axios
+    // Criar instância do Axios otimizada para produção
     this.axiosInstance = axios.create({
       baseURL: getApiBaseUrl(config.region, false), // Sempre usa o domínio partner.shopeemobile.com
-      timeout: 30000, // 30 segundos
+      timeout: 45000, // 45 segundos para produção (mais tempo para rede instável)
       headers: {
         'Content-Type': 'application/json',
-        'X-Region': config.region, // Adicionar região como header padrão
+        'X-Region': config.region,
+        'X-Shopee-Region': config.region,
+        // Headers específicos para Brasil
+        ...(config.region === 'BR' && {
+          'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+          'X-Shopee-Country': 'BR'
+        })
       },
     });
 
