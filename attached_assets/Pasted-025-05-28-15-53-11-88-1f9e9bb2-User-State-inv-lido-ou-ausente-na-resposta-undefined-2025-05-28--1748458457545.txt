@@ -1,0 +1,140 @@
+025-05-28 15:53:11.88
+1f9e9bb2
+User
+State inválido ou ausente na resposta: undefined
+2025-05-28 15:53:11.88
+1f9e9bb2
+User
+==== RECEBENDO CALLBACK DA SHOPEE ====
+2025-05-28 15:53:11.88
+1f9e9bb2
+User
+Parâmetros recebidos: { code: '4e476d434e4c7770554c4f7859794e6e', shop_id: '404065079' }
+2025-05-28 15:53:11.93
+1f9e9bb2
+User
+6:53:11 PM [express] GET /api/shopee/callback 302 in 313ms
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-cloud-trace-context': 'f51e3a719b176b01d0d35a5ac5e9f557/4016026777188396697',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-forwarded-for': '147.136.184.68, 34.117.33.233, 35.191.12.195,35.184.122.198',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-forwarded-host': 'cipshopee.replit.app',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-forwarded-proto': 'https',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-replit-user-bio': '',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-replit-user-id': '',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-replit-user-name': '',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-replit-user-profile-image': '',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-replit-user-roles': '',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-replit-user-teams': '',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-replit-user-url': '',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+'x-request-id': '40b06a3a3636b1744cee1d6fa5458600:010001633dfa5946:00000099b14b652a'
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+}
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+[Webhook] Assinatura inválida: {
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+received: '877a7b30d344e777b00fd3406f1a0f2eb34cab52b431328df508020797c3734e',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+body: '{"data":{"authorize_type":"shop authorization by user","extra":"shop id 404065079 (BR) has been auth...'
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+}
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+[Webhook] Corpo do webhook: {
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+data: {
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+authorize_type: 'shop authorization by user',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+extra: 'shop id 404065079 (BR) has been authorized successfully',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+shop_id: 404065079,
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+success: 1
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+},
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+partner_id: 2011285,
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+code: 1,
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+timestamp: 1748458384
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+}
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+[Webhook] Validando assinatura: {
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+url: 'https://cipshopee.replit.app/api/shopee/webhook',
+2025-05-28 15:53:13.73
+1f9e9bb2
+User
+bodyLength: 207,
