@@ -161,14 +161,27 @@ export async function setupAuth(app: Express) {
     // Limpar cookie JWT se existir
     res.clearCookie('auth_token');
 
-    req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}/landing`,
-        }).href
-      );
-    });
+    if (req.logout) {
+      req.logout((err) => {
+        if (err) {
+          console.error('Erro no logout:', err);
+        }
+
+        // Destruir sessão completamente
+        if (req.session) {
+          req.session.destroy((sessionErr) => {
+            if (sessionErr) {
+              console.error('Erro ao destruir sessão:', sessionErr);
+            }
+            res.redirect('/');
+          });
+        } else {
+          res.redirect('/');
+        }
+      });
+    } else {
+      res.redirect('/');
+    }
   });
 
   // Rota modificada para pegar os dados do usuário considerando o fallback em memória

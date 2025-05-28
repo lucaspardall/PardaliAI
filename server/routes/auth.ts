@@ -192,7 +192,10 @@ router.get('/logout', (req: Request, res: Response) => {
   if (req.user && req.user.claims && req.user.claims.sub) {
     // Logout do Replit via middleware
     if (req.logout) {
-      return req.logout(() => {
+      return req.logout((err: any) => {
+        if (err) {
+          console.error('Erro no logout Replit:', err);
+        }
         res.redirect('/');
       });
     }
