@@ -26,7 +26,11 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
 
   // Fetch user's stores
-  const { data: stores, isLoading: storesLoading, error: storesError } = useQuery({
+  const { 
+    data: stores, 
+    isLoading: storesLoading, 
+    error: storesError 
+  } = useQuery({
     queryKey: ["/api/stores"],
     queryFn: async () => {
       const response = await fetch('/api/stores', { credentials: 'include' });
