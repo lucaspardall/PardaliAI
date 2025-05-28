@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ClerkProvider } from '@clerk/clerk-react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { HelmetProvider } from 'react-helmet-async';
 
 // Pages
 import LandingPage from "@/pages/landing";
@@ -47,10 +48,11 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <ErrorBoundary>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
+    <HelmetProvider>
+      <ErrorBoundary>
+        <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
             <Switch>
               {/* Public Routes */}
               <Route path="/" component={LandingPage} />
@@ -133,6 +135,7 @@ function App() {
         </QueryClientProvider>
       </ClerkProvider>
     </ErrorBoundary>
+    </HelmetProvider>
   );
 }
 
