@@ -53,10 +53,12 @@ export default function SidebarLayout({
   // Fetch data from API
   const { data: stores } = useQuery({
     queryKey: ["/api/stores"],
+    queryFn: () => apiRequest('GET', '/api/stores').then(res => res.json()),
   });
 
   const { data: notifications } = useQuery({
     queryKey: ["/api/notifications"],
+    queryFn: () => apiRequest('GET', '/api/notifications').then(res => res.json()),
   });
 
   // Base paths for links based on mode

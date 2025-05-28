@@ -51,13 +51,13 @@ export default function SubscriptionPage() {
   // Fetch subscription info
   const { data: subscriptionInfo, isLoading } = useQuery<SubscriptionInfo>({
     queryKey: ['/api/payments/subscription'],
-    queryFn: () => fetch('/api/payments/subscription', { credentials: 'include' }).then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/payments/subscription').then(res => res.json()),
   });
 
   // Fetch available plans
   const { data: plansData } = useQuery({
     queryKey: ['/api/payments/plans'],
-    queryFn: () => fetch('/api/payments/plans', { credentials: 'include' }).then(res => res.json()),
+    queryFn: () => apiRequest('GET', '/api/payments/plans').then(res => res.json()),
   });
 
   // Create checkout session mutation
