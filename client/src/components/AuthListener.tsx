@@ -1,7 +1,3 @@
 
-import React from 'react';
-
-// Componente vazio por enquanto para evitar erros de hooks
-export default function AuthListener() {
-  return null;
-}
+// Arquivo removido - causava erros de hooks
+export {};
