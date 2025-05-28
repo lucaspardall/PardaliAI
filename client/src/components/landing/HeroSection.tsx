@@ -32,14 +32,13 @@ export default function HeroSection() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-            <Button 
+            <ReplitPopupLogin 
               size="lg" 
               className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-              onClick={() => window.location.href = '/api/login'}
             >
               <i className="ri-rocket-line mr-2"></i>
               Começar Agora - GRÁTIS
-            </Button>
+            </ReplitPopupLogin>
 
             <Button asChild variant="outline" size="lg" className="border-2 border-orange-500 text-orange-600 hover:bg-orange-50 px-8 py-3 text-lg font-semibold transition-all duration-300">
               <Link href="#features">

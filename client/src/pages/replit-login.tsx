@@ -236,7 +236,7 @@ export default function ReplitLoginPage() {
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="replit" className="flex items-center gap-2">
                   <i className="ri-replit-fill text-sm"></i>
-                  Replit
+                  Replit (Recomendado)
                 </TabsTrigger>
                 <TabsTrigger value="email" className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
@@ -246,11 +246,16 @@ export default function ReplitLoginPage() {
 
               <TabsContent value="replit" className="space-y-4">
                 {/* Status do Login Replit */}
-                <div className="flex items-center justify-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-center space-x-3 p-4 bg-gradient-to-r from-blue-50 to-orange-50 rounded-lg border border-orange-200">
                   {getStepIcon()}
                   <span className="text-sm font-medium text-gray-700">
                     {getStepText()}
                   </span>
+                </div>
+
+                {/* Dica visual */}
+                <div className="text-center text-xs text-gray-500 bg-orange-50 p-2 rounded">
+                  💡 <strong>Mais rápido:</strong> Login instantâneo com sua conta Replit
                 </div>
 
                 {/* Botão Replit */}

@@ -4,6 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Link } from 'wouter';
+import ReplitPopupLogin from "@/components/ReplitPopupLogin";
 
 function AuthNavigation() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -32,12 +33,11 @@ function AuthNavigation() {
 
   return (
     <div className="flex items-center space-x-4">
-      <Button 
-        onClick={() => window.location.href = '/login'}
+      <ReplitPopupLogin 
         className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-medium"
       >
         Entrar
-      </Button>
+      </ReplitPopupLogin>
     </div>
   );
 }
