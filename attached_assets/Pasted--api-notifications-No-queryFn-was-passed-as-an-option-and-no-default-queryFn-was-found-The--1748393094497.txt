@@ -1,0 +1,17 @@
+[["/api/notifications"]]: No queryFn was passed as an option, and no default queryFn was found. The queryFn parameter is only optional when using a default queryFn. More info here: https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function
+[["/api/stores"]]: No queryFn was passed as an option, and no default queryFn was found. The queryFn parameter is only optional when using a default queryFn. More info here: https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function
+[["/api/notifications"]]: No queryFn was passed as an option, and no default queryFn was found. The queryFn parameter is only optional when using a default queryFn. More info here: https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function
+[["/api/stores"]]: No queryFn was passed as an option, and no default queryFn was found. The queryFn parameter is only optional when using a default queryFn. More info here: https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function
+[["/api/notifications"]]: No queryFn was passed as an option, and no default queryFn was found. The queryFn parameter is only optional when using a default queryFn. More info here: https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function
+[["/api/stores"]]: No queryFn was passed as an option, and no default queryFn was found. The queryFn parameter is only optional when using a default queryFn. More info here: https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function
+at t.value (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+[["/api/notifications"]]: No queryFn was passed as an option, and no default queryFn was found. The queryFn parameter is only optional when using a default queryFn. More info here: https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function
+at t.value (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
+[["/api/stores"]]: No queryFn was passed as an option, and no default queryFn was found. The queryFn parameter is only optional when using a default queryFn. More info here: https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function
+[["/api/notifications"]]: No queryFn was passed as an option, and no default queryFn was found. The queryFn parameter is only optional when using a default queryFn. More info here: https://tanstack.com/query/latest/docs/framework/react/guides/default-query-function

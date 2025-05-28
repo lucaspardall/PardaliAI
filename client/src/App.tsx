@@ -48,14 +48,14 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <HelmetProvider>
-      <ErrorBoundary>
-        <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider>
-            <Switch>
-              {/* Public Routes */}
-              <Route path="/" component={LandingPage} />
+    <ErrorBoundary>
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <HelmetProvider>
+              <Switch>
+                {/* Public Routes */}
+                <Route path="/" component={LandingPage} />
               <Route path="/login" component={LoginPage} />
               <Route path="/signup" component={SignUpPage} />
               <Route path="/shopee-connect" component={ShopeeConnectPage} />
@@ -131,11 +131,11 @@ function App() {
               <Route component={NotFoundPage} />
             </Switch>
             <Toaster />
+            </HelmetProvider>
           </ThemeProvider>
         </QueryClientProvider>
       </ClerkProvider>
     </ErrorBoundary>
-    </HelmetProvider>
   );
 }
 
