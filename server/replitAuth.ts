@@ -158,6 +158,9 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/logout", (req, res) => {
+    // Limpar cookie JWT se existir
+    res.clearCookie('auth_token');
+    
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {

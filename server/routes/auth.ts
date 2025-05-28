@@ -176,6 +176,27 @@ router.post('/logout', (req: Request, res: Response) => {
 });
 
 /**
+ * Rota GET para logout completo (Replit + JWT)
+ */
+router.get('/logout', (req: Request, res: Response) => {
+  // Limpar cookie JWT se existir
+  res.clearCookie('auth_token');
+  
+  // Verificar se é autenticação Replit
+  if (req.user && req.user.claims && req.user.claims.sub) {
+    // Logout do Replit via middleware
+    if (req.logout) {
+      return req.logout(() => {
+        res.redirect('/');
+      });
+    }
+  }
+  
+  // Logout simples para JWT
+  res.redirect('/');
+});
+
+/**
  * Rota para verificar status de autenticação
  */
 router.get('/status', async (req: Request, res: Response) => {

@@ -21,7 +21,7 @@ interface AuthState {
   isLoading: boolean;
 }
 
-export function useAuth(): AuthState {
+export function useAuth(): AuthState & { logout: () => void } {
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['/api/auth/user'],
     queryFn: async () => {
@@ -37,9 +37,15 @@ export function useAuth(): AuthState {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  const logout = () => {
+    // Redirecionar para logout que limpa tanto Replit quanto JWT
+    window.location.href = '/api/logout';
+  };
+
   return {
     user: user || null,
     isAuthenticated: !!user && !error,
-    isLoading
+    isLoading,
+    logout
   };
 }

@@ -47,7 +47,7 @@ export default function SidebarLayout({
     return typeof window !== 'undefined' && window.innerWidth < 768 ? true : false;
   });
 
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   // Fetch data from API
   const { data: stores } = useQuery({
@@ -170,9 +170,7 @@ export default function SidebarLayout({
                   variant="ghost" 
                   size="icon"
                   className="ml-auto text-gray-400 hover:text-white"
-                  onClick={() => {
-                    window.location.href = '/api/logout';
-                  }} 
+                  onClick={logout}
                 >
                   <i className="ri-logout-box-r-line"></i>
                 </Button>
@@ -271,9 +269,7 @@ export default function SidebarLayout({
               variant="ghost" 
               size="icon"
               className="ml-auto text-gray-400 hover:text-white"
-              onClick={() => {
-                window.location.href = '/api/logout';
-              }} 
+              onClick={logout}
             >
               <i className="ri-logout-box-r-line"></i>
             </Button>
