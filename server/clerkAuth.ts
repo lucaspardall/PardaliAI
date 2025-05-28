@@ -50,17 +50,19 @@ export function setupClerkAuth(app: Express) {
   // Rota para obter dados do usuário
   app.get('/api/auth/user', requireAuth(), async (req: any, res) => {
     try {
-      const auth = req.auth();
-      const { userId } = auth;
+      // Verificar se req.auth é uma função ou propriedade
+      const auth = typeof req.auth === 'function' ? req.auth() : req.auth;
+      const { userId } = auth || {};
 
       if (!userId) {
+        console.log('❌ No userId found in auth:', auth);
         return res.status(401).json({ 
           error: 'User not authenticated',
           authenticated: false 
         });
       }
 
-      const clerkUser = auth.user;
+      const clerkUser = auth?.user;
 
       if (!clerkUser) {
         return res.status(401).json({ 

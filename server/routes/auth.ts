@@ -39,7 +39,7 @@ router.get('/status', async (req: Request, res: Response) => {
  */
 router.post('/refresh', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const auth = (req as any).auth();
+    const auth = typeof (req as any).auth === 'function' ? (req as any).auth() : (req as any).auth;
     console.log('🔄 Refresh session for user:', auth?.userId?.slice(0, 8));
     
     res.json({

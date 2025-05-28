@@ -65,7 +65,13 @@ router.post('/portal', isAuthenticated, async (req: Request, res: Response) => {
  */
 router.get('/subscription', isAuthenticated, async (req: Request, res: Response) => {
   try {
-    const { userId } = req.auth();
+    // Verificar se req.auth é uma função ou propriedade
+    const auth = typeof (req as any).auth === 'function' ? (req as any).auth() : (req as any).auth;
+    const { userId } = auth || {};
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
 
     const subscriptionInfo = await PaymentService.getSubscriptionInfo(userId);
     const currentPlan = PAYMENT_PLANS[subscriptionInfo.plan] || PAYMENT_PLANS.free;
