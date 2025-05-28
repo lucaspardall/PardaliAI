@@ -23,7 +23,7 @@ const AiCreditsPage = lazy(() => import('./pages/dashboard/ai-credits'));
 import { HelmetProvider } from 'react-helmet-async';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import DirectLogin from "./components/DirectLogin";
+import DirectLogin from "@/components/DirectLogin";
 
 // Componente de Error Boundary
 interface ErrorBoundaryState {

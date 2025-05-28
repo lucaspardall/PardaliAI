@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import EmailAuth from './auth/EmailAuth';
 
-function DirectLogin() {
+export default function DirectLogin() {
   const { toast } = useToast();
   const [location, setLocation] = useLocation();
   const { user, isLoading: authLoading } = useAuth();
@@ -209,5 +209,3 @@ function DirectLogin() {
     </Card>
   );
 }
-
-export default DirectLogin;
