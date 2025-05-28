@@ -35,12 +35,19 @@ const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 console.log('🔑 Clerk Key detectada:', CLERK_PUBLISHABLE_KEY);
 console.log('🔍 Variáveis de ambiente:', {
   VITE_CLERK_PUBLISHABLE_KEY: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-  NODE_ENV: import.meta.env.NODE_ENV
+  NODE_ENV: import.meta.env.NODE_ENV,
+  MODE: import.meta.env.MODE
 });
 
 if (!CLERK_PUBLISHABLE_KEY) {
   console.error('❌ VITE_CLERK_PUBLISHABLE_KEY não configurado nos Secrets');
   throw new Error('Clerk key missing - Configure nos Secrets do Replit');
+}
+
+// Validar formato da chave
+if (!CLERK_PUBLISHABLE_KEY.startsWith('pk_')) {
+  console.error('❌ Chave Clerk inválida - deve começar com pk_');
+  throw new Error('Invalid Clerk publishable key format');
 }
 
 const queryClient = new QueryClient({
