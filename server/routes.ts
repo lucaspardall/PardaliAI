@@ -10,6 +10,7 @@ import webhookRoutes from './routes/webhook';
 import webhookTestRoutes from './routes/webhookTest';
 import authRouter from './routes/auth';
 import paymentsRouter from './routes/payments';
+import clerkProxyRouter from "./routes/clerk-proxy";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -697,6 +698,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Payment routes
   app.use('/api/payments', paymentsRouter);
+
+    // Proxy Clerk (deve vir primeiro para interceptar requisições)
+  app.use('/api/clerk', clerkProxyRouter);
 
   // Redirecionar login para home com modal do Clerk
   app.get('/api/login', (req, res) => {

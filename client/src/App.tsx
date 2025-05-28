@@ -68,20 +68,24 @@ function App() {
         signInUrl="/login"
         signUpUrl="/signup"
         {...(isReplit && {
-          // Configurações específicas para Replit
+          // Configurações específicas para resolver CORS/fetch no Replit
+          frontendApi: window.location.origin + '/api/clerk',
+          proxyUrl: window.location.origin + '/api/clerk',
+          clerkJSUrl: "https://unpkg.com/@clerk/clerk-js@4/dist/clerk.browser.js",
           allowedRedirectOrigins: [
             window.location.origin,
             'https://*.replit.dev',
-            'https://*.replit.co',
+            'https://*.replit.co', 
             'https://*.replit.app'
           ],
-          // Usar CDN mais estável
-          clerkJSUrl: "https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js",
-          // Configurações de compatibilidade
           isSatellite: false,
           domain: window.location.hostname,
-          proxyUrl: undefined,
-          telemetry: false
+          telemetry: false,
+          // Configurações de retry para Replit
+          retryConfig: {
+            maxRetries: 5,
+            retryDelay: 1000
+          }
         })}
         appearance={{
           variables: {

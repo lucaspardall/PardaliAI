@@ -64,10 +64,27 @@ export function ClerkLoader({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // Etapa 4: Modo de recuperação
-        console.warn('⚠️ [ClerkLoader] Clerk não carregou, ativando modo de recuperação...');
+        // Etapa 4: Modo de recuperação com retry
+        console.warn('⚠️ [ClerkLoader] Clerk não carregou, tentando recuperação...');
+        setLoadingMessage('Tentando reconectar...');
+        setProgress(70);
+        
+        // Tentar forçar reconexão
+        try {
+          if (window.Clerk && typeof window.Clerk.load === 'function') {
+            await window.Clerk.load();
+            if (clerk.loaded && mounted) {
+              console.log('✅ [ClerkLoader] Recuperação bem-sucedida!');
+              setIsReady(true);
+              return;
+            }
+          }
+        } catch (retryError) {
+          console.warn('⚠️ [ClerkLoader] Retry falhou:', retryError);
+        }
+        
         setLoadingMessage('Modo de compatibilidade ativado...');
-        setProgress(80);
+        setProgress(85);
         
         // Timeout final - sempre prosseguir
         finalTimeout = setTimeout(() => {
@@ -80,7 +97,7 @@ export function ClerkLoader({ children }: { children: React.ReactNode }) {
               if (mounted) setIsReady(true);
             }, 500);
           }
-        }, 1000);
+        }, 1500);
 
       } catch (error: any) {
         console.error('❌ [ClerkLoader] Erro:', error);
