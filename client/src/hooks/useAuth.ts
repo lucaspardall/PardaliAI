@@ -40,7 +40,10 @@ export function useAuth(): AuthState & { logout: () => void } {
   const logout = () => {
     // Redirecionar para logout que limpa tanto Replit quanto JWT
     console.log('🔄 Iniciando logout do frontend...');
-    window.location.href = '/api/logout';
+    fetch('/api/logout')
+      .then(() => {
+        window.location.href = '/landing';
+      });
   };
 
   return {
