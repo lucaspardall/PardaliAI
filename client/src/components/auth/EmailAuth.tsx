@@ -76,7 +76,7 @@ export default function EmailAuth({ onSuccess }: EmailAuthProps) {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-lg mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl">
           {isLogin ? 'Entrar' : 'Criar conta'}

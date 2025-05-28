@@ -66,7 +66,7 @@ function DirectLogin() {
   // Modal unificado com as duas opções
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
+      <Card className="w-full max-w-lg shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
         <CardHeader className="space-y-6 pb-8">
           <div className="text-center space-y-4">
             <div className="flex justify-center">

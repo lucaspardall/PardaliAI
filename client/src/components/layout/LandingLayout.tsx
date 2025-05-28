@@ -279,7 +279,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
 
       {/* Modal de Login */}
       <Dialog open={loginModalOpen} onOpenChange={setLoginModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg w-full max-w-[90vw]">
           <DialogHeader>
             <DialogTitle className="text-2xl text-center">
               <i className="ri-shopping-bag-3-line text-primary text-3xl mb-2 block"></i>
