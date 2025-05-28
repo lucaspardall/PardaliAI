@@ -196,13 +196,13 @@ router.get('/logout', (req: Request, res: Response) => {
         if (err) {
           console.error('Erro no logout Replit:', err);
         }
-        res.redirect('/');
+        res.redirect('/landing');
       });
     }
   }
   
   // Logout simples para JWT
-  res.redirect('/');
+  res.redirect('/landing');
 });
 
 /**
