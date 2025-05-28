@@ -7,8 +7,7 @@ import { HelmetProvider } from 'react-helmet-async';
 
 // Pages
 import LandingPage from "@/pages/landing";
-import LoginPage from "@/pages/login";
-import SignUpPage from "@/pages/signup";
+import ReplitLoginPage from "@/pages/replit-login";
 import NotFoundPage from "@/pages/not-found";
 
 // Dashboard Pages
@@ -28,11 +27,8 @@ import ShopeeConnectPage from "@/pages/shopee-connect";
 // Components
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-// Detectar se está no Replit
-const isReplit = window.location.hostname.includes('replit');
-
 console.log('🌍 Hostname:', window.location.hostname);
-console.log('🔧 Ambiente Replit:', isReplit);
+console.log('🔧 Ambiente Replit:', true);
 console.log('🔐 Usando Replit Auth nativo');
 
 // Create a new React Query client
@@ -54,8 +50,8 @@ function App() {
             <Switch>
               {/* Public Routes */}
               <Route path="/" component={LandingPage} />
-              <Route path="/login" component={LoginPage} />
-              <Route path="/signup" component={SignUpPage} />
+              <Route path="/login" component={ReplitLoginPage} />
+              <Route path="/signup" component={ReplitLoginPage} />
               <Route path="/shopee-connect" component={ShopeeConnectPage} />
 
               {/* Protected Dashboard Routes */}

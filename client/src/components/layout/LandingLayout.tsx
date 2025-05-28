@@ -1,11 +1,46 @@
-
 import React, { useState, useEffect } from "react";
 import { useTheme } from "@/components/ui/theme-provider";
 import { Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { SignInButton } from "@clerk/clerk-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import { Link } from 'wouter';
+
+function AuthNavigation() {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <div className="h-8 w-20 bg-white/20 rounded animate-pulse" />;
+  }
+
+  if (isAuthenticated && user) {
+    return (
+      <div className="flex items-center space-x-4">
+        <a href="/dashboard" className="text-white hover:text-orange-200 transition-colors">
+          Dashboard
+        </a>
+        <div className="flex items-center space-x-2">
+          <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center">
+            <span className="text-white text-sm font-medium">
+              {user.firstName?.[0] || user.email[0].toUpperCase()}
+            </span>
+          </div>
+          <span className="text-white text-sm">{user.firstName || user.email}</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-4">
+      <Button 
+        onClick={() => window.location.href = '/login'}
+        className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-medium"
+      >
+        Entrar
+      </Button>
+    </div>
+  );
+}
 
 interface LandingLayoutProps {
   children: React.ReactNode;
@@ -69,16 +104,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
             </Button>
 
             {!isAuthenticated ? (
-              <div className="flex items-center space-x-2">
-                <SignInButton mode="modal">
-                  <Button variant="ghost" className="font-medium">Entrar</Button>
-                </SignInButton>
-                <SignInButton mode="modal">
-                  <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-medium">
-                    Começar Grátis
-                  </Button>
-                </SignInButton>
-              </div>
+              <AuthNavigation />
             ) : (
               <Link href="/dashboard">
                 <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-medium">
