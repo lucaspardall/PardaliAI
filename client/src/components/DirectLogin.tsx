@@ -135,7 +135,7 @@ function DirectLogin() {
               ou
             </span>
           </div>
-        </div></div>
+        </div>
 
         <Button 
           onClick={() => setAuthMethod('email')}
