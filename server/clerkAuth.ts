@@ -3,10 +3,47 @@
 import { clerkMiddleware, requireAuth, getAuth } from '@clerk/express';
 import { Request, Response, NextFunction, Application } from 'express';
 
+// Validação das chaves Clerk
+const validateClerkKeys = () => {
+  const publishableKey = process.env.CLERK_PUBLISHABLE_KEY;
+  const secretKey = process.env.CLERK_SECRET_KEY;
+  
+  if (!publishableKey) {
+    throw new Error('❌ CLERK_PUBLISHABLE_KEY não configurada! Configure nos Secrets do Replit.');
+  }
+  
+  if (!secretKey) {
+    throw new Error('❌ CLERK_SECRET_KEY não configurada! Configure nos Secrets do Replit.');
+  }
+  
+  if (publishableKey === 'pk_test_your_publishable_key_here') {
+    throw new Error('❌ Configure uma CLERK_PUBLISHABLE_KEY válida nos Secrets.');
+  }
+  
+  if (secretKey === 'sk_test_your_secret_key_here') {
+    throw new Error('❌ Configure uma CLERK_SECRET_KEY válida nos Secrets.');
+  }
+  
+  console.log('✅ Chaves Clerk validadas com sucesso');
+  return { publishableKey, secretKey };
+};
+
 // Setup principal do Clerk para Express
 const setupClerkAuth = (app: Application) => {
-  console.log("🔐 Configurando Clerk auth para Express");
-  app.use(clerkMiddleware());
+  try {
+    console.log("🔐 Configurando Clerk auth para Express");
+    
+    // Validar chaves antes de configurar
+    validateClerkKeys();
+    
+    // Configurar middleware Clerk
+    app.use(clerkMiddleware());
+    
+    console.log("✅ Clerk middleware configurado com sucesso");
+  } catch (error) {
+    console.error("❌ Erro ao configurar Clerk:", error);
+    throw error;
+  }
 };
 
 // Middleware de autenticação para uso nas rotas
