@@ -34,11 +34,12 @@ export default function Logo({
       <div className={cn(
         "flex-shrink-0 mr-2 aspect-square",
         sizeClasses[size]
-      )}>
+      )} style={{ minWidth: 'auto', maxWidth: 'none' }}>
         <img 
           src="/logo.svg" 
           alt="CIP Shopee" 
           className="w-full h-full object-contain"
+          style={{ aspectRatio: '1/1' }}
         />
       </div>
       {showText && (
