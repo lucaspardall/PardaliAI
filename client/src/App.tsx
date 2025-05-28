@@ -1,6 +1,7 @@
 import { Route, Switch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { HelmetProvider } from 'react-helmet-async';
@@ -27,6 +28,10 @@ import ShopeeConnectPage from "@/pages/shopee-connect";
 // Components
 import ProtectedRoute from "@/components/ProtectedRoute";
 
+// Auth listener component (assuming it exists and handles session expiration)
+import AuthListener from "@/components/AuthListener";
+import { useEffect } from "react";
+
 // Create a new React Query client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +48,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <HelmetProvider>
+            <AuthListener />
             <Switch>
               {/* Public Routes */}
               <Route path="/" component={LandingPage} />

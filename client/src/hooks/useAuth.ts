@@ -62,7 +62,16 @@ export function useAuth(): AuthState {
             });
           }
         } else if (response.status === 401) {
-          console.log('🔄 Token expirado, redirecionando para login...');
+          console.log('🔄 Token expirado, necessário novo login...');
+          
+          // Mostrar notificação apenas uma vez
+          if (retryCount === 0) {
+            const event = new CustomEvent('auth:expired', {
+              detail: { message: 'Sua sessão expirou. Por favor, faça login novamente.' }
+            });
+            window.dispatchEvent(event);
+          }
+
           if (mounted) {
             setState({
               isAuthenticated: false,
@@ -95,11 +104,21 @@ export function useAuth(): AuthState {
 
     checkAuth();
 
-    const interval = setInterval(checkAuth, 5 * 60 * 1000);
+    // Auto-refresh mais frequente para evitar expiração
+    const interval = setInterval(checkAuth, 2 * 60 * 1000); // 2 minutos
+
+    // Listener para detectar quando a página volta ao foco
+    const handleFocus = () => {
+      console.log('🔄 Página em foco, verificando autenticação...');
+      checkAuth();
+    };
+
+    window.addEventListener('focus', handleFocus);
 
     return () => {
       mounted = false;
       clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 

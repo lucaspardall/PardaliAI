@@ -11,9 +11,14 @@ export default function ReplitLoginPage() {
   const handleLoginWithReplit = () => {
     setIsLoading(true);
 
+    toast({
+      title: "Abrindo janela de login",
+      description: "Uma nova janela será aberta para autenticação...",
+    });
+
     window.addEventListener("message", authComplete);
-    const h = 500;
-    const w = 350;
+    const h = 600; // Altura maior para melhor visualização
+    const w = 400; // Largura maior
     const left = window.screen.width / 2 - w / 2;
     const top = window.screen.height / 2 - h / 2;
 
@@ -30,11 +35,37 @@ export default function ReplitLoginPage() {
         left
     );
 
+    // Verificar se a janela foi bloqueada pelo popup blocker
+    if (!authWindow) {
+      setIsLoading(false);
+      toast({
+        title: "Popup bloqueado",
+        description: "Por favor, permita popups para este site e tente novamente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Timeout de segurança (30 segundos)
+    const timeoutId = setTimeout(() => {
+      if (authWindow && !authWindow.closed) {
+        authWindow.close();
+      }
+      setIsLoading(false);
+      window.removeEventListener("message", authComplete);
+      toast({
+        title: "Tempo limite excedido",
+        description: "O login demorou muito. Tente novamente.",
+        variant: "destructive"
+      });
+    }, 30000);
+
     function authComplete(e: MessageEvent) {
       if (e.data !== "auth_complete") {
         return;
       }
 
+      clearTimeout(timeoutId);
       setIsLoading(false);
       window.removeEventListener("message", authComplete);
 
@@ -43,14 +74,14 @@ export default function ReplitLoginPage() {
       }
 
       toast({
-        title: "Login realizado com sucesso!",
+        title: "✅ Login realizado com sucesso!",
         description: "Redirecionando para o dashboard...",
       });
 
       // Aguardar um pouco antes de redirecionar
       setTimeout(() => {
         window.location.href = "/dashboard";
-      }, 1000);
+      }, 1500);
     }
   };
 
@@ -122,12 +153,12 @@ export default function ReplitLoginPage() {
             <Button 
               onClick={handleLoginWithReplit} 
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02] shadow-lg"
+              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02] shadow-lg disabled:opacity-75 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Autenticando...
+                  <span className="animate-pulse">Abrindo janela de login...</span>
                 </>
               ) : (
                 <>
