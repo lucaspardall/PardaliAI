@@ -1,0 +1,24 @@
+The above error occurred in the <HelmetDispatcher> component:
+
+    at HelmetDispatcher (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-helmet-async.js?v=db580146:705:5)
+    at _a2 (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-helmet-async.js?v=db580146:754:21)
+    at Landing
+    at Route (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=db580146:206:16)
+    at Switch (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=db580146:262:17)
+    at ThemeProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/ui/theme-provider.tsx:25:3)
+    at QueryClientProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=db580146:2909:3)
+    at SWRConfig (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=db580146:1129:11)
+    at OrganizationProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=db580146:2107:3)
+    at ClerkContextProvider (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=db580146:5617:11)
+    at ClerkProviderBase (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=db580146:5701:11)
+    at Hoc (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@clerk_clerk-react.js?v=db580146:3587:5)
+    at ErrorBoundary (https://73ee031f-24e8-4b77-96e8-2cd2724cf5f2-00-wcgide3zqtek.spock.replit.dev/src/components/ErrorBoundary.tsx:22:5)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+ErrorBoundary caught an error: 
+TypeError {}
+ 
+Object {componentStack: "↵    at HelmetDispatcher…"}
+
+Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview
