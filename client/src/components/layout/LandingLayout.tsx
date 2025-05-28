@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import EmailAuth from "@/components/auth/EmailAuth";
+import Logo from "@/components/ui/logo";
 
 interface LandingLayoutProps {
   children: React.ReactNode;
@@ -54,10 +55,7 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
       {/* Header/Navigation */}
       <header className={`sticky top-0 z-50 ${isScrolled ? 'bg-background/95 backdrop-blur-sm shadow-sm' : 'bg-transparent'} transition-all duration-200 py-4`}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center">
-            <i className="ri-bird-fill text-primary text-3xl mr-2"></i>
-            <h1 className="text-2xl font-bold text-foreground font-heading">CIP Shopee</h1>
-          </div>
+          <Logo size="lg" />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
@@ -233,9 +231,8 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between">
             <div className="mb-8 md:mb-0">
-              <div className="flex items-center mb-4">
-                <i className="ri-bird-fill text-primary text-2xl mr-2"></i>
-                <h2 className="text-xl font-bold text-white">CIP Shopee</h2>
+              <div className="mb-4">
+                <Logo size="md" textClassName="text-white" />
               </div>
               <p className="max-w-xs">Otimização inteligente para lojas Shopee com tecnologia de IA.</p>
             </div>
@@ -282,7 +279,9 @@ export default function LandingLayout({ children }: LandingLayoutProps) {
         <DialogContent className="sm:max-w-lg w-full max-w-[90vw]">
           <DialogHeader>
             <DialogTitle className="text-2xl text-center">
-              <i className="ri-shopping-bag-3-line text-primary text-3xl mb-2 block"></i>
+              <div className="flex justify-center mb-2">
+                <Logo size="xl" showText={false} />
+              </div>
               Entre no CIP Shopee
             </DialogTitle>
           </DialogHeader>

@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import EmailAuth from './auth/EmailAuth';
+import Logo from './ui/logo';
 
 function DirectLogin() {
   const { toast } = useToast();
@@ -70,8 +71,8 @@ function DirectLogin() {
         <CardHeader className="space-y-6 pb-8">
           <div className="text-center space-y-4">
             <div className="flex justify-center">
-              <div className="h-16 w-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg">
-                <i className="ri-shopping-bag-3-line text-primary-foreground text-2xl"></i>
+              <div className="h-16 w-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg p-2">
+                <Logo size="lg" showText={false} />
               </div>
             </div>
             <div className="space-y-2">

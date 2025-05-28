@@ -1,0 +1,39 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="birdGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Corpo do pássaro -->
+  <path d="M200 80 C240 80, 280 100, 320 140 C340 160, 350 180, 350 200 C350 240, 330 280, 300 310 C280 330, 250 340, 220 340 C200 340, 180 335, 160 325 C140 315, 120 300, 110 280 C100 260, 95 240, 100 220 C105 200, 115 180, 130 165 C145 150, 165 140, 185 135 C190 133, 195 131, 200 130 Z" fill="url(#birdGradient)"/>
+  
+  <!-- Asa -->
+  <path d="M160 200 C180 190, 200 185, 220 185 C240 185, 260 190, 275 200 C285 207, 290 215, 285 225 C280 235, 270 240, 255 242 C240 244, 225 243, 210 240 C195 237, 180 232, 170 225 C160 218, 155 210, 160 200 Z" fill="#1e3a8a"/>
+  
+  <!-- Olho (destaque laranja) -->
+  <circle cx="240" cy="180" r="18" fill="#fb7c00"/>
+  <circle cx="242" cy="178" r="6" fill="#000"/>
+  
+  <!-- Elementos de tecnologia (circuitos) no topo -->
+  <g stroke="#2563eb" stroke-width="3" fill="#2563eb">
+    <!-- Conexão central -->
+    <circle cx="200" cy="60" r="8"/>
+    <line x1="200" y1="68" x2="200" y2="80"/>
+    
+    <!-- Conexões laterais -->
+    <circle cx="160" cy="40" r="6"/>
+    <line x1="166" y1="45" x2="194" y2="65"/>
+    
+    <circle cx="240" cy="40" r="6"/>
+    <line x1="234" y1="45" x2="206" y2="65"/>
+    
+    <circle cx="280" cy="60" r="6"/>
+    <line x1="274" y1="65" x2="206" y2="65"/>
+    
+    <circle cx="120" cy="70" r="6"/>
+    <line x1="126" y1="75" x2="194" y2="65"/>
+  </g>
+</svg>
