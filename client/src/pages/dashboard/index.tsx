@@ -37,34 +37,27 @@ export default function Dashboard() {
 
   const syncStoreMutation = useMutation({
     mutationFn: async (storeId: number) => {
-      const response = await fetch(`/api/shopee/sync/${storeId}`, {
+      const response = await fetch(`/api/stores/${storeId}/sync`, { 
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include' 
       });
-      if (!response.ok) {
-        throw new Error('Failed to sync store');
-      }
+      if (!response.ok) throw new Error('Failed to sync store');
       return response.json();
     },
-    onSuccess: (data, storeId) => {
-      // Invalidar queries relacionadas para atualizar a UI
-      queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
-      queryClient.invalidateQueries({ queryKey: [activeStore ? `/api/stores/${activeStore}/products?limit=5` : null] });
-      queryClient.invalidateQueries({ queryKey: [activeStore ? `/api/stores/${activeStore}/metrics` : null] });
-
+    onSuccess: () => {
       toast({
-        title: "Sincronização concluída",
-        description: `${data.processed} itens processados em ${Math.round(data.duration / 1000)}s`,
-        variant: data.success ? "default" : "destructive",
+        title: "Sincronização iniciada",
+        description: "A sincronização da sua loja foi iniciada com sucesso.",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
     },
     onError: (error: any) => {
       toast({
         title: "Erro na sincronização",
-        description: error?.message || "Erro desconhecido",
+        description: error.message || "Erro ao sincronizar a loja.",
         variant: "destructive",
       });
-    },
+    }
   });
 
   const handleSyncStore = (storeId: number) => {

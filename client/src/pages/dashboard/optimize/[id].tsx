@@ -28,6 +28,11 @@ export default function OptimizeProduct() {
     isError: productError
   } = useQuery({
     queryKey: [`/api/products/${id}`],
+    queryFn: async () => {
+      const response = await fetch(`/api/products/${id}`, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch product');
+      return response.json();
+    }
   });
   
   // State for optimization
