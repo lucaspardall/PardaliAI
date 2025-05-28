@@ -645,6 +645,11 @@ export class DatabaseStorage implements IStorage {
     const result = await db.select().from(users).where(eq(users.stripeCustomerId, customerId)).limit(1);
     return result[0] || null;
   }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result[0] || null;
+  }
 }
 
 // In-memory storage for development or testing

@@ -2,12 +2,9 @@ import { useState, useEffect } from 'react';
 
 interface ReplitUser {
   id: string;
-  name?: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
+  name: string;
+  email: string;
   profileImage?: string;
-  profileImageUrl?: string;
   bio?: string;
   url?: string;
 }
@@ -27,8 +24,7 @@ export function useAuth(): AuthState {
 
   useEffect(() => {
     let mounted = true;
-    let retryCount = 0;
-    const maxRetries = 3;
+    let timeoutId: NodeJS.Timeout;
 
     const checkAuth = async () => {
       try {
@@ -49,29 +45,11 @@ export function useAuth(): AuthState {
             setState({
               isAuthenticated: true,
               isLoading: false,
-              user: {
-                id: userData.id,
-                email: userData.email,
-                firstName: userData.firstName,
-                lastName: userData.lastName,
-                name: userData.firstName && userData.lastName 
-                  ? `${userData.firstName} ${userData.lastName}` 
-                  : userData.email,
-                profileImage: userData.profileImageUrl
-              }
+              user: userData
             });
           }
         } else if (response.status === 401) {
-          console.log('🔄 Token expirado, necessário novo login...');
-          
-          // Mostrar notificação apenas uma vez
-          if (retryCount === 0) {
-            const event = new CustomEvent('auth:expired', {
-              detail: { message: 'Sua sessão expirou. Por favor, faça login novamente.' }
-            });
-            window.dispatchEvent(event);
-          }
-
+          console.log('❌ Usuário não autenticado');
           if (mounted) {
             setState({
               isAuthenticated: false,
@@ -80,18 +58,17 @@ export function useAuth(): AuthState {
             });
           }
         } else {
-          throw new Error(`Status: ${response.status}`);
+          console.error('❌ Erro inesperado:', response.status);
+          if (mounted) {
+            setState({
+              isAuthenticated: false,
+              isLoading: false,
+              user: null
+            });
+          }
         }
       } catch (error) {
         console.error('❌ Erro ao verificar autenticação:', error);
-
-        if (retryCount < maxRetries) {
-          retryCount++;
-          console.log(`🔄 Tentativa ${retryCount}/${maxRetries}...`);
-          setTimeout(() => checkAuth(), 1000 * retryCount);
-          return;
-        }
-
         if (mounted) {
           setState({
             isAuthenticated: false,
@@ -102,25 +79,27 @@ export function useAuth(): AuthState {
       }
     };
 
+    // Verificação inicial
     checkAuth();
 
-    // Polling menos frequente para reduzir carga
-    const interval = setInterval(checkAuth, 5 * 60 * 1000); // 5 minutos
-
-    // Listener para detectar quando a página volta ao foco
-    const handleFocus = () => {
-      console.log('🔄 Página em foco, verificando autenticação...');
-      checkAuth();
+    // Verificação periódica mais espaçada (apenas se autenticado)
+    const startPeriodicCheck = () => {
+      timeoutId = setTimeout(() => {
+        if (mounted && state.isAuthenticated) {
+          checkAuth().then(() => {
+            if (mounted) startPeriodicCheck();
+          });
+        }
+      }, 5 * 60 * 1000); // 5 minutos
     };
 
-    window.addEventListener('focus', handleFocus);
+    startPeriodicCheck();
 
     return () => {
       mounted = false;
-      clearInterval(interval);
-      window.removeEventListener('focus', handleFocus);
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, []);
+  }, [state.isAuthenticated]);
 
   return state;
 }

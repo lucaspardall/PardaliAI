@@ -694,6 +694,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Payment routes
   app.use('/api/payments', paymentsRouter);
+    // Rota de login
+  app.get('/login', (req, res) => {
+    res.sendFile(join(__dirname, "../client/dist/index.html"));
+  });
 
   // Create HTTP server
   const httpServer = createServer(app);
@@ -739,3 +743,5 @@ function generateSampleMetrics(storeId: number, days: number): any[] {
 
   return metrics;
 }
+import express from "express";
+import { join } from "path";
