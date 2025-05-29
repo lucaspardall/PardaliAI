@@ -322,59 +322,77 @@ export function webhookParser(req: Request, res: Response, next: Function): void
 
 
 /**
- * Processa evento de webhook sem tentar enviar resposta HTTP
+ * Processa evento de webhook da Shopee
  */
-export async function processShopeeWebhookEvent(eventBody: any): Promise<void> {
+export async function processShopeeWebhookEvent(eventData: any): Promise<void> {
   try {
-    const { code, data, shop_id, timestamp, msg_id } = eventBody;
+    console.log('[Webhook] Processando evento:', eventData);
 
-    console.log(`[Webhook] Processando evento - Código: ${code}, Loja: ${shop_id}, Timestamp: ${timestamp}, MSG ID: ${msg_id}`);
-
-    // Processar evento baseado no código
-    switch (code) {
-      case 0: // Test push
-        console.log('[Webhook] Webhook de teste recebido');
-        break;
-
-      case 1: // Shop authorization by user
-        console.log('[Webhook] Autorização de loja pelo usuário:', data);
-        await handleShopAuthorizationByUser(data, shop_id);
-        break;
-
-      case 3: // Shop authorization
-        await handleShopAuthorization(data, shop_id);
-        break;
-
-      case 4: // Order status update
-        await handleOrderUpdate(data, shop_id);
-        break;
-
-      case 5: // Shop deauthorization
-        await handleShopDeauthorization(data, shop_id);
-        break;
-
-      case 6: // Product update
-        console.log('[Webhook] Atualização de produto:', data);
-        break;
-
-      case 7: // Banned item
-        console.log('[Webhook] Item banido:', data);
-        break;
-
-      case 9: // Shop update
-        console.log('[Webhook] Atualização da loja:', data);
-        break;
-
-      default:
-        console.log(`[Webhook] Código de evento não tratado: ${code}`, {
-          eventCode: code,
-          data,
-          shopId: shop_id
-        });
+    // Validar dados básicos
+    if (!eventData || typeof eventData !== 'object') {
+      console.warn('[Webhook] Dados de evento inválidos');
+      return;
     }
 
+    const { code, shop_id, data, timestamp } = eventData;
+
+    if (!shop_id) {
+      console.warn('[Webhook] Shop ID ausente no evento');
+      return;
+    }
+
+    // Converter shop_id para string de forma segura
+    const shopIdStr = String(shop_id);
+
+    console.log(`[Webhook] Buscando loja ${shopIdStr} no banco...`);
+
+    // Buscar loja no banco com tratamento de erro
+    let store;
+    try {
+      store = await storage.getStoreByShopId(shopIdStr);
+    } catch (dbError) {
+      console.error(`[Webhook] Erro ao buscar loja ${shopIdStr}:`, dbError);
+      return;
+    }
+
+    if (!store) {
+      console.warn(`[Webhook] Loja ${shopIdStr} não encontrada no banco`);
+      return;
+    }
+
+    console.log(`[Webhook] Loja ${store.shopName} encontrada, processando evento ${code}...`);
+
+    // Processar diferentes tipos de eventos com validação
+    try {
+      switch (Number(code)) {
+        case 1: // Order update
+          if (data && typeof data === 'object') {
+            await processOrderUpdate(store.id, data);
+          }
+          break;
+        case 2: // Product update  
+          if (data && typeof data === 'object') {
+            await processProductUpdate(store.id, data);
+          }
+          break;
+        case 3: // Shop update
+          if (data && typeof data === 'object') {
+            await processShopUpdate(store.id, data);
+          }
+          break;
+        default:
+          console.log(`[Webhook] Evento não reconhecido: ${code}`);
+      }
+    } catch (processError) {
+      console.error(`[Webhook] Erro ao processar evento ${code}:`, processError);
+      return;
+    }
+
+    console.log(`[Webhook] ✅ Evento processado com sucesso para loja ${shopIdStr}`);
+
   } catch (error) {
-    console.error('[Webhook] Erro no processamento do evento:', error);
+    console.error('[Webhook] Erro crítico no processamento:', error);
+    // Não re-throw para evitar crash do servidor
   }
 }
 
@@ -387,10 +405,10 @@ async function handleShopAuthorizationByUser(data: any, shop_id: string): Promis
 
     if (data.success === 1) {
       console.log(`[Webhook] ✅ Loja ${shop_id} autorizada com sucesso`);
-      
+
       // Aqui você pode implementar lógica adicional se necessário
       // Como atualizar o status da loja no banco de dados
-      
+
     } else {
       console.log(`[Webhook] ❌ Falha na autorização da loja ${shop_id}`);
     }

@@ -455,12 +455,13 @@ export class DatabaseStorage implements IStorage {
 
   async getStoreByShopId(shopId: string): Promise<ShopeeStore | undefined> {
     try {
-      console.log(`Buscando loja por shopId: ${shopId}`);
-
+      // Validar entrada
       if (!shopId || typeof shopId !== 'string') {
-        console.error('ShopId inválido:', shopId);
+        console.warn('getStoreByShopId: shopId inválido:', shopId);
         return undefined;
       }
+
+      console.log(`Buscando loja por shopId: ${shopId}`);
 
       const stores = await this.executeWithRetry(async () => {
         // Usar query mais explícita para evitar prepared statement vazio
@@ -475,7 +476,7 @@ export class DatabaseStorage implements IStorage {
       console.log(`Loja encontrada para shopId ${shopId}:`, store ? 'Sim' : 'Não');
       return store;
     } catch (error) {
-      console.error(`Erro ao buscar loja por shopId ${shopId}:`, error);
+      console.error('Erro ao buscar loja por shopId ${shopId}:', error);
       return undefined;
     }
   }
