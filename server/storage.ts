@@ -950,8 +950,6 @@ export class MemStorage implements IStorage {
     return [];
   }
 
-  The code has been modified to include the storeDiagnoses table in the import statement from "@shared/schema".```text
-
   async getAiUsageAnalytics(userId: string, days = 30): Promise<any> {
     return {
       totalUsed: 0,
