@@ -1,0 +1,100 @@
+2025-05-29 11:15:36.63
+64f20cf7
+User
+✅ Conexão com banco estabelecida
+2025-05-29 11:15:37.65
+64f20cf7
+User
+Erro na tentativa 1/5: {
+2025-05-29 11:15:37.65
+64f20cf7
+User
+message: 'bind message supplies 1 parameters, but prepared statement "" requires 0',
+2025-05-29 11:15:37.65
+64f20cf7
+User
+code: '08P01',
+2025-05-29 11:15:37.65
+64f20cf7
+User
+detail: undefined,
+2025-05-29 11:15:37.65
+64f20cf7
+User
+severity: 'ERROR',
+2025-05-29 11:15:37.65
+64f20cf7
+User
+position: undefined
+2025-05-29 11:15:37.65
+64f20cf7
+User
+}
+2025-05-29 11:15:37.75
+64f20cf7
+User
+Erro na execução de query após múltiplas tentativas: NeonDbError: bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-05-29 11:15:37.75
+64f20cf7
+User
+at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+2025-05-29 11:15:37.75
+64f20cf7
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-05-29 11:15:37.75
+64f20cf7
+User
+at async file:///home/runner/workspace/dist/index.js:466:28
+2025-05-29 11:15:37.75
+64f20cf7
+User
+at async executeWithRetry (file:///home/runner/workspace/dist/index.js:428:26)
+2025-05-29 11:15:37.75
+64f20cf7
+User
+at async Function.query (file:///home/runner/workspace/dist/index.js:458:18)
+2025-05-29 11:15:37.75
+64f20cf7
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-05-29 11:15:37.75
+64f20cf7
+User
+at async DatabaseStorage.getStoreByShopId (file:///home/runner/workspace/dist/index.js:718:25)
+2025-05-29 11:15:37.75
+64f20cf7
+User
+at async handleShopAuthorization (file:///home/runner/workspace/dist/index.js:2841:19)
+2025-05-29 11:15:37.75
+64f20cf7
+User
+at async processShopeeWebhookEvent (file:///home/runner/workspace/dist/index.js:3011:9) {
+2025-05-29 11:15:37.75
+64f20cf7
+User
+severity: 'ERROR',
+2025-05-29 11:15:37.75
+64f20cf7
+User
+code: '08P01',
+2025-05-29 11:15:37.75
+64f20cf7
+User
+detail: undefined,
+2025-05-29 11:15:37.75
+64f20cf7
+User
+hint: undefined,
+2025-05-29 11:15:37.75
+64f20cf7
+User
+position: undefined,
+2025-05-29 11:15:37.75
+64f20cf7
+User
+internalPosition: undefined,
+2025-05-29 11:15:37.75
+64f20cf7
+User
+internalQuery: undefined,
