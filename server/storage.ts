@@ -127,58 +127,104 @@ export class DatabaseStorage implements IStorage {
   }
 
     /**
-   * Inicializar o storage
+   * Inicializar o storage com verificações robustas
    */
   async initialize(): Promise<void> {
     try {
-      console.log('🔌 Verificando conexão com banco...');
+      console.log('🔌 Inicializando conexão com banco de dados...');
 
-      // Teste básico de conexão com query mais simples
-      const testQuery = await this.db.execute(sql`SELECT 1 as test`);
-      console.log('✅ Teste de conexão básica:', testQuery.rows[0]);
+      // Obter instância do banco
+      this.db = await this.getDb();
 
-      // Teste de tabela específica
-      const userTest = await this.db.select().from(users).limit(1);
-      console.log('✅ Teste de tabela users:', userTest.length >= 0 ? 'OK' : 'ERRO');
+      // Teste 1: Verificação básica de conectividade
+      console.log('📡 Teste 1: Conectividade básica...');
+      const basicTest = await this.executeWithRetry(async () => {
+        return await this.db!.execute(sql`SELECT 1 as test, NOW() as timestamp`);
+      });
+      console.log('✅ Conectividade básica:', basicTest.rows[0]);
 
-      console.log('✅ Conexão com banco estabelecida');
+      // Teste 2: Verificação de schema
+      console.log('📊 Teste 2: Verificação de schema...');
+      const schemaTest = await this.executeWithRetry(async () => {
+        return await this.db!.execute(sql`
+          SELECT table_name 
+          FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name IN ('users', 'shopee_stores', 'products')
+          ORDER BY table_name
+        `);
+      });
+      
+      const requiredTables = ['users', 'shopee_stores', 'products'];
+      const existingTables = schemaTest.rows.map((row: any) => row.table_name);
+      const missingTables = requiredTables.filter(table => !existingTables.includes(table));
+      
+      if (missingTables.length > 0) {
+        console.warn('⚠️ Tabelas faltando:', missingTables);
+      } else {
+        console.log('✅ Schema verificado - todas as tabelas principais existem');
+      }
+
+      // Teste 3: Operação simples
+      console.log('🔍 Teste 3: Operação de leitura...');
+      await this.executeWithRetry(async () => {
+        return await this.db!.select().from(users).limit(1);
+      });
+      console.log('✅ Operações de leitura funcionando');
+
+      console.log('🎉 Storage inicializado com sucesso!');
     } catch (error) {
-      console.error('❌ Erro ao conectar com banco:', error);
-      throw error;
+      console.error('❌ Falha na inicialização do storage:', error);
+      throw new Error(`Storage initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  private async executeWithRetry<T>(operation: () => Promise<T>, maxRetries: number = 5): Promise<T> {
+  private async executeWithRetry<T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> {
+    let lastError;
+    
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const result = await operation();
+        
+        if (attempt > 1) {
+          console.log(`[Storage] ✅ Operação bem-sucedida após ${attempt} tentativas`);
+        }
+        
         return result;
       } catch (error: any) {
-        console.error(`Erro na tentativa ${attempt}/${maxRetries}:`, {
-          message: error.message,
+        lastError = error;
+
+        // Classificar erro
+        const isRetryableError = error.code === 'ECONNREFUSED' || 
+                                error.code === 'ENOTFOUND' ||
+                                error.message?.includes('connection timed out') ||
+                                error.message?.includes('server closed the connection');
+
+        console.error(`[Storage] Erro tentativa ${attempt}/${maxRetries}:`, {
           code: error.code,
-          detail: error.detail,
-          severity: error.severity,
-          position: error.position,
-          sourceError: error.sourceError
+          message: error.message?.substring(0, 150),
+          retryable: isRetryableError
         });
 
-        // Se for erro de prepared statement, não vale a pena tentar novamente
-        if (error.code === '08P01' && error.message?.includes('prepared statement')) {
-          console.error('Erro de prepared statement detectado - parando tentativas');
+        // Não fazer retry para erros não relacionados à conexão
+        if (!isRetryableError) {
+          console.error('[Storage] ❌ Erro não recuperável - parando tentativas');
           throw error;
         }
 
         if (attempt === maxRetries) {
-          console.error('Erro na execução de query após múltiplas tentativas:', error);
+          console.error('[Storage] ❌ Máximo de tentativas atingido');
           throw error;
         }
 
-        // Aguardar antes de tentar novamente
-        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+        // Backoff progressivo apenas para erros de conexão
+        const waitTime = Math.min(1000 * attempt, 5000);
+        console.log(`[Storage] ⏳ Aguardando ${waitTime}ms antes da próxima tentativa...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
-    throw new Error('Maximum retry attempts reached');
+    
+    throw lastError;
   }
 
   // User operations
