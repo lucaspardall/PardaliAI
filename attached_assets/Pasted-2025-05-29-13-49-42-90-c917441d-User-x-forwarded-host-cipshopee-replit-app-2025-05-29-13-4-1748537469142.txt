@@ -1,0 +1,180 @@
+2025-05-29 13:49:42.90
+c917441d
+User
+"x-forwarded-host": "cipshopee.replit.app",
+2025-05-29 13:49:42.90
+c917441d
+User
+"x-forwarded-proto": "https",
+2025-05-29 13:49:42.90
+c917441d
+User
+"x-replit-user-bio": "",
+2025-05-29 13:49:42.90
+c917441d
+User
+"x-replit-user-id": "",
+2025-05-29 13:49:42.90
+c917441d
+User
+"x-replit-user-name": "",
+2025-05-29 13:49:42.90
+c917441d
+User
+"x-replit-user-profile-image": "",
+2025-05-29 13:49:42.90
+c917441d
+User
+"x-replit-user-roles": "",
+2025-05-29 13:49:42.90
+c917441d
+User
+"x-replit-user-teams": "",
+2025-05-29 13:49:42.90
+c917441d
+User
+"x-replit-user-url": "",
+2025-05-29 13:49:42.90
+c917441d
+User
+"x-request-id": "1c459a9f364915927600f4a4723b1400:01000158821c8dad:00000060b0192b38"
+2025-05-29 13:49:42.90
+c917441d
+User
+}
+2025-05-29 13:49:42.90
+c917441d
+User
+- Body: {
+2025-05-29 13:49:42.90
+c917441d
+User
+"data": {
+2025-05-29 13:49:42.90
+c917441d
+User
+"authorize_type": "shop authorization by user",
+2025-05-29 13:49:42.90
+c917441d
+User
+"extra": "shop id 404065079 (BR) has been authorized successfully",
+2025-05-29 13:49:42.90
+c917441d
+User
+"shop_id": 404065079,
+2025-05-29 13:49:42.90
+c917441d
+User
+"success": 1
+2025-05-29 13:49:42.90
+c917441d
+User
+},
+2025-05-29 13:49:42.90
+c917441d
+User
+"partner_id": 2011285,
+2025-05-29 13:49:42.90
+c917441d
+User
+"code": 1,
+2025-05-29 13:49:42.90
+c917441d
+User
+"timestamp": 1748537371
+2025-05-29 13:49:42.90
+c917441d
+User
+}
+2025-05-29 13:49:42.90
+c917441d
+User
+4:49:42 PM [express] POST /api/shopee/webhook 200 in 3ms :: {"message":"Webhook received successfull…
+2025-05-29 13:49:42.90
+c917441d
+User
+[Webhook] Processando evento: {
+2025-05-29 13:49:42.90
+c917441d
+User
+data: {
+2025-05-29 13:49:42.90
+c917441d
+User
+authorize_type: 'shop authorization by user',
+2025-05-29 13:49:42.90
+c917441d
+User
+extra: 'shop id 404065079 (BR) has been authorized successfully',
+2025-05-29 13:49:42.90
+c917441d
+User
+shop_id: 404065079,
+2025-05-29 13:49:42.90
+c917441d
+User
+success: 1
+2025-05-29 13:49:42.90
+c917441d
+User
+},
+2025-05-29 13:49:42.90
+c917441d
+User
+partner_id: 2011285,
+2025-05-29 13:49:42.90
+c917441d
+User
+code: 1,
+2025-05-29 13:49:42.90
+c917441d
+User
+timestamp: 1748537371
+2025-05-29 13:49:42.90
+c917441d
+User
+}
+2025-05-29 13:49:42.90
+c917441d
+User
+[Webhook] Shop ID ausente no evento
+2025-05-29 13:50:59.44
+c917441d
+User
+[Routes] 📥 Webhook Shopee recebido:
+2025-05-29 13:50:59.44
+c917441d
+User
+- IP: 35.188.87.224
+2025-05-29 13:50:59.44
+c917441d
+User
+- User-Agent: Go-http-client/1.1
+2025-05-29 13:50:59.44
+c917441d
+User
+- Headers: {
+2025-05-29 13:50:59.44
+c917441d
+User
+"host": "cipshopee.replit.app",
+2025-05-29 13:50:59.44
+c917441d
+User
+"user-agent": "Go-http-client/1.1",
+2025-05-29 13:50:59.44
+c917441d
+User
+"content-length": "224",
+2025-05-29 13:50:59.44
+c917441d
+User
+"accept-encoding": "gzip",
+2025-05-29 13:50:59.44
+c917441d
+User
+"authorization": "857fb0b298f59b2a6ca4d24584e7c2a618708917a3356d4a2080a9d697b676bd",
+2025-05-29 13:50:59.44
+c917441d
+User
+"content-type": "application/json",
