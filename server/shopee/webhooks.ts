@@ -326,10 +326,10 @@ export function webhookParser(req: Request, res: Response, next: Function): void
 async function processOrderUpdate(storeId: string, data: any): Promise<void> {
   try {
     console.log(`[Webhook] Processando atualização de pedido para loja ${storeId}:`, data);
-    
+
     // Implementar lógica de atualização de pedido
     // Por exemplo: salvar no banco, notificar usuário, etc.
-    
+
   } catch (error) {
     console.error(`[Webhook] Erro ao processar atualização de pedido:`, error);
   }
@@ -341,10 +341,10 @@ async function processOrderUpdate(storeId: string, data: any): Promise<void> {
 async function processProductUpdate(storeId: string, data: any): Promise<void> {
   try {
     console.log(`[Webhook] Processando atualização de produto para loja ${storeId}:`, data);
-    
+
     // Implementar lógica de atualização de produto
     // Por exemplo: sincronizar dados, atualizar cache, etc.
-    
+
   } catch (error) {
     console.error(`[Webhook] Erro ao processar atualização de produto:`, error);
   }
@@ -356,10 +356,10 @@ async function processProductUpdate(storeId: string, data: any): Promise<void> {
 async function processShopUpdate(storeId: string, data: any): Promise<void> {
   try {
     console.log(`[Webhook] Processando atualização de loja ${storeId}:`, data);
-    
+
     // Implementar lógica de atualização de loja
     // Por exemplo: atualizar informações no banco, etc.
-    
+
   } catch (error) {
     console.error(`[Webhook] Erro ao processar atualização de loja:`, error);
   }
@@ -381,10 +381,26 @@ export async function processShopeeWebhookEvent(eventData: any): Promise<void> {
 
     const { code, shop_id, data, timestamp } = eventData;
 
-    if (!shop_id) {
-      console.warn('[Webhook] Shop ID ausente no evento');
-      return;
-    }
+    // Extrair shop_id do evento (múltiplas fontes possíveis)
+  const shopId = event.shop_id || 
+                 event.data?.shop_id || 
+                 event.shopid || 
+                 event.data?.shopid;
+
+  console.log('[Webhook] Buscando shop_id em:', {
+    'event.shop_id': event.shop_id,
+    'event.data?.shop_id': event.data?.shop_id,
+    'event.shopid': event.shopid,
+    'event.data?.shopid': event.data?.shopid,
+    'shopId_encontrado': shopId
+  });
+
+  if (!shopId) {
+    console.log('[Webhook] ❌ Shop ID ausente no evento - dados completos:', JSON.stringify(event, null, 2));
+    return;
+  }
+
+  console.log(`[Webhook] ✅ Shop ID encontrado: ${shopId}`);
 
     // Converter shop_id para string de forma segura
     const shopIdStr = String(shop_id);
