@@ -31,13 +31,20 @@ export default function Dashboard() {
     const urlParams = new URLSearchParams(window.location.search);
     const shopeeConnected = urlParams.get('shopeeConnected');
     const storeId = urlParams.get('storeId');
+    const success = urlParams.get('success');
 
-    if (shopeeConnected === 'true') {
+    // Verificar múltiplos indicadores de sucesso
+    if (shopeeConnected === 'true' || success === 'store_connected') {
       console.log('🎉 Shopee conectado com sucesso! Atualizando dados...');
 
       // Invalidar todas as queries relacionadas a stores
       queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shopee/status"] });
+
+      // Forçar refetch imediato
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/stores"] });
+      }, 1000);
 
       // Se tivermos storeId, definir como loja ativa
       if (storeId) {
@@ -50,8 +57,10 @@ export default function Dashboard() {
         description: "Sua loja foi conectada com sucesso. Carregando dados...",
       });
 
-      // Limpar parâmetros da URL
-      window.history.replaceState({}, '', '/dashboard');
+      // Limpar parâmetros da URL após um delay
+      setTimeout(() => {
+        window.history.replaceState({}, '', '/dashboard');
+      }, 2000);
     }
   }, [location, queryClient]);
 

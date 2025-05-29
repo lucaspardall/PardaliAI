@@ -38,15 +38,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Store endpoints
-  app.get('/api/stores', isAuthenticated, async (req: any, res) => {
+  // Get user's stores
+  app.get('/api/stores', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
+      console.log('[API] Buscando stores para usuário:', userId);
+
       const stores = await storage.getStoresByUserId(userId);
+      console.log('[API] Stores encontradas:', stores.length);
+
       res.json(stores);
     } catch (error) {
-      console.error("Error fetching stores:", error);
-      res.status(500).json({ message: "Failed to fetch stores" });
+      console.error('[API] Erro ao buscar stores do usuário:', error);
+      res.status(500).json({
+        message: 'Failed to fetch stores',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
