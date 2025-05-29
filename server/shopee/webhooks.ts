@@ -255,6 +255,11 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
         console.log('[Webhook] Atualização da loja:', data);
         break;
 
+      case 10: // Notification (mensagens/chat)
+        console.log('[Webhook] Notificação recebida:', data);
+        await handleChatNotification(data, shop_id);
+        break;
+
       default:
         console.log(`[Webhook] Código de evento não tratado: ${code}`, {
           eventCode: code,
@@ -476,5 +481,54 @@ async function handleShopAuthorizationByUser(data: any, shop_id: string): Promis
 
   } catch (error) {
     console.error(`[Webhook] Erro ao processar autorização da loja ${shop_id}:`, error);
+  }
+}
+
+/**
+ * Handler para notificações de chat/mensagens (código 10)
+ */
+async function handleChatNotification(data: any, shop_id: number): Promise<void> {
+  try {
+    console.log(`[Webhook] Processando notificação de chat para loja ${shop_id}:`, data);
+
+    const { content, type } = data;
+    
+    if (type === 'notification' && content) {
+      const { user_id, conversation_id, type: contentType } = content;
+      
+      // Encontrar a loja no banco de dados
+      const store = await storage.getStoreByShopId(shop_id.toString());
+
+      if (store) {
+        // Criar notificação baseada no tipo de evento
+        let notificationTitle = 'Nova Atividade de Chat';
+        let notificationMessage = '';
+
+        switch (contentType) {
+          case 'mark_as_replied':
+            notificationTitle = 'Mensagem Respondida';
+            notificationMessage = `Uma mensagem foi marcada como respondida na loja ${store.shopName}`;
+            break;
+          default:
+            notificationMessage = `Nova atividade de chat na loja ${store.shopName}`;
+        }
+
+        await storage.createNotification({
+          userId: store.userId,
+          title: notificationTitle,
+          message: notificationMessage,
+          type: 'info',
+          isRead: false,
+          createdAt: new Date()
+        });
+
+        console.log(`[Webhook] ✅ Notificação de chat criada para usuário ${store.userId}`);
+      } else {
+        console.log(`[Webhook] ⚠️ Loja ${shop_id} não encontrada para notificação de chat`);
+      }
+    }
+
+  } catch (error) {
+    console.error(`[Webhook] ❌ Erro ao processar notificação de chat:`, error);
   }
 }

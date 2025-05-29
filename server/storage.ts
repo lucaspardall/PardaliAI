@@ -154,11 +154,11 @@ export class DatabaseStorage implements IStorage {
           ORDER BY table_name
         `);
       });
-      
+
       const requiredTables = ['users', 'shopee_stores', 'products'];
       const existingTables = schemaTest.rows.map((row: any) => row.table_name);
       const missingTables = requiredTables.filter(table => !existingTables.includes(table));
-      
+
       if (missingTables.length > 0) {
         console.warn('⚠️ Tabelas faltando:', missingTables);
       } else {
@@ -181,15 +181,15 @@ export class DatabaseStorage implements IStorage {
 
   private async executeWithRetry<T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> {
     let lastError;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const result = await operation();
-        
+
         if (attempt > 1) {
           console.log(`[Storage] ✅ Operação bem-sucedida após ${attempt} tentativas`);
         }
-        
+
         return result;
       } catch (error: any) {
         lastError = error;
@@ -223,7 +223,7 @@ export class DatabaseStorage implements IStorage {
         await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
-    
+
     throw lastError;
   }
 
@@ -245,11 +245,10 @@ export class DatabaseStorage implements IStorage {
           .limit(1);
       });
 
-      const user = userResults[0];
-      console.log(`Usuário encontrado para ID ${id}:`, user ? 'Sim' : 'Não');
-      return user;
+      console.log(`Usuário encontrado:`, userResults.length > 0);
+      return userResults[0];
     } catch (error) {
-      console.error(`Erro ao buscar usuário por ID ${id}:`, error);
+      console.error(`Erro ao buscar usuário ${id}:`, error);
       return undefined;
     }
   }
