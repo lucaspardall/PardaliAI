@@ -1,0 +1,124 @@
+2025-05-29 08:39:17.91
+387030ef
+User
+internalPosition: undefined,
+2025-05-29 08:39:17.91
+387030ef
+User
+internalQuery: undefined,
+2025-05-29 08:39:17.91
+387030ef
+User
+where: undefined,
+2025-05-29 08:39:17.91
+387030ef
+User
+schema: undefined,
+2025-05-29 08:39:17.91
+387030ef
+User
+table: undefined,
+2025-05-29 08:39:17.91
+387030ef
+User
+column: undefined,
+2025-05-29 08:39:17.91
+387030ef
+User
+dataType: undefined,
+2025-05-29 08:39:17.91
+387030ef
+User
+constraint: undefined,
+2025-05-29 08:39:17.91
+387030ef
+User
+file: 'postgres.c',
+2025-05-29 08:39:17.91
+387030ef
+User
+line: '1735',
+2025-05-29 08:39:17.91
+387030ef
+User
+routine: 'exec_bind_message',
+2025-05-29 08:39:17.91
+387030ef
+User
+sourceError: undefined
+2025-05-29 08:39:17.91
+387030ef
+User
+}
+2025-05-29 08:39:17.91
+387030ef
+User
+Erro na tentativa 1/5: {
+2025-05-29 08:39:17.91
+387030ef
+User
+message: 'bind message supplies 1 parameters, but prepared statement "" requires 0',
+2025-05-29 08:39:17.91
+387030ef
+User
+code: '08P01',
+2025-05-29 08:39:17.91
+387030ef
+User
+detail: undefined,
+2025-05-29 08:39:17.91
+387030ef
+User
+severity: 'ERROR',
+2025-05-29 08:39:17.91
+387030ef
+User
+position: undefined
+2025-05-29 08:39:17.91
+387030ef
+User
+}
+2025-05-29 08:39:17.91
+387030ef
+User
+Erro na execução de query após múltiplas tentativas: NeonDbError: bind message supplies 1 parameters, but prepared statement "" requires 0
+2025-05-29 08:39:17.91
+387030ef
+User
+at execute (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1556:55)
+2025-05-29 08:39:17.91
+387030ef
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-05-29 08:39:17.91
+387030ef
+User
+at async file:///home/runner/workspace/dist/index.js:466:28
+2025-05-29 08:39:17.91
+387030ef
+User
+at async executeWithRetry (file:///home/runner/workspace/dist/index.js:428:26)
+2025-05-29 08:39:17.91
+387030ef
+User
+at async Function.query (file:///home/runner/workspace/dist/index.js:458:18)
+2025-05-29 08:39:17.91
+387030ef
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-05-29 08:39:17.91
+387030ef
+User
+at async DatabaseStorage.getStoresByUserId (file:///home/runner/workspace/dist/index.js:654:26)
+2025-05-29 08:39:17.91
+387030ef
+User
+at async file:///home/runner/workspace/dist/index.js:6299:22 {
+2025-05-29 08:39:17.91
+387030ef
+User
+severity: 'ERROR',
+2025-05-29 08:39:17.91
+387030ef
+User
+code: '08P01',
