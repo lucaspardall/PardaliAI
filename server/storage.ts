@@ -947,7 +947,8 @@ export class MemStorage implements IStorage {
 
   //Implementações de MemStorage para os métodos de histórico e relatório
   async getAiCreditsHistory(userId: string, limit = 50, offset = 0): Promise<AiCreditsHistory[]> {
-    return [];
+    return```text
+[];
   }
 
   async getAiUsageAnalytics(userId: string, days = 30): Promise<any> {

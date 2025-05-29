@@ -150,6 +150,9 @@ function Router() {
       <Route path="/dashboard/diagnosis">
         {() => <ProtectedRoute><Diagnosis /></ProtectedRoute>}
       </Route>
+      <Route path="/dashboard/diagnosis/:storeId">
+        {() => <ProtectedRoute><Diagnosis /></ProtectedRoute>}
+      </Route>
       <Route path="/dashboard/store/connect">
         {() => <ProtectedRoute><ConnectStore /></ProtectedRoute>}
       </Route>

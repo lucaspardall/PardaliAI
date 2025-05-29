@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "wouter";
+import { useLocation } from "wouter";
 import SidebarLayout from "@/components/layout/SidebarLayout";
 import ScoreGauge from "@/components/dashboard/ScoreGauge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +57,8 @@ interface StoreDiagnosis {
 }
 
 export default function Diagnosis() {
-  const { storeId } = useParams();
+  const [location] = useLocation();
+  const storeId = location.split('/')[3] || '1'; // Fallback para store ID
   const queryClient = useQueryClient();
   const [expandedRecommendations, setExpandedRecommendations] = useState<Set<string>>(new Set());
 
