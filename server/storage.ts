@@ -100,6 +100,62 @@ export class DatabaseStorage implements IStorage {
     }
     return this.db;
   }
+
+    /**
+   * Inicializar o storage
+   */
+  async initialize(): Promise<void> {
+    try {
+      console.log('🔌 Verificando conexão com banco...');
+
+      // Teste básico de conexão com query mais simples
+      const testQuery = await this.db.execute(sql`SELECT 1 as test`);
+      console.log('✅ Teste de conexão básica:', testQuery.rows[0]);
+
+      // Teste de tabela específica
+      const userTest = await this.db.select().from(users).limit(1);
+      console.log('✅ Teste de tabela users:', userTest.length >= 0 ? 'OK' : 'ERRO');
+
+      console.log('✅ Conexão com banco estabelecida');
+    } catch (error) {
+      console.error('❌ Erro ao conectar com banco:', error);
+      throw error;
+    }
+  }
+
+  private async executeWithRetry<T>(operation: () => Promise<T>, maxRetries: number = 5): Promise<T> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await operation();
+        return result;
+      } catch (error: any) {
+        console.error(`Erro na tentativa ${attempt}/${maxRetries}:`, {
+          message: error.message,
+          code: error.code,
+          detail: error.detail,
+          severity: error.severity,
+          position: error.position,
+          sourceError: error.sourceError
+        });
+
+        // Se for erro de prepared statement, não vale a pena tentar novamente
+        if (error.code === '08P01' && error.message?.includes('prepared statement')) {
+          console.error('Erro de prepared statement detectado - parando tentativas');
+          throw error;
+        }
+
+        if (attempt === maxRetries) {
+          console.error('Erro na execução de query após múltiplas tentativas:', error);
+          throw error;
+        }
+
+        // Aguardar antes de tentar novamente
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+      }
+    }
+    throw new Error('Maximum retry attempts reached');
+  }
+
   // User operations
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -297,23 +353,30 @@ export class DatabaseStorage implements IStorage {
   // Store operations
   async getStoresByUserId(userId: string): Promise<ShopeeStore[]> {
     console.log(`Buscando lojas para o usuário: ${userId}`);
-    try {
-      // Usando o Drizzle ORM sem SQL direto
-      const stores = await db
-        .select()
-        .from(shopeeStores)
-        .where(eq(shopeeStores.userId, userId))
-        .orderBy(desc(shopeeStores.createdAt));
 
-      console.log(`Encontradas ${stores.length} lojas para o usuário ${userId}`);
+    try {
+      // Verificar se userId está válido
+      if (!userId || typeof userId !== 'string') {
+        console.error('UserId inválido:', userId);
+        return [];
+      }
+
+      const stores = await this.executeWithRetry(async () => {
+        // Usar query builder mais explícito para evitar problemas de prepared statement
+        const query = db
+          .select()
+          .from(shopeeStores)
+          .where(eq(shopeeStores.userId, userId));
+
+        console.log('Executando query de busca de lojas...');
+        return await query;
+      });
+
+      console.log(`Lojas encontradas para usuário ${userId}:`, stores.length);
       return stores;
     } catch (error) {
-      console.error("Erro detalhado em getStoresByUserId:", error);
-      if (error instanceof Error) {
-        console.error("Mensagem:", error.message);
-        console.error("Stack:", error.stack);
-      }
-      // Retorna array vazio em caso de erro para não quebrar a aplicação
+      console.error(`Erro ao buscar lojas para usuário ${userId}:`, error);
+      // Retornar array vazio em caso de erro para não quebrar a aplicação
       return [];
     }
   }
@@ -876,8 +939,7 @@ export class MemStorage implements IStorage {
       updatedAt: now,
       images: product.images || []
     };
-    this.products.set(id, newProduct);
-    return newProduct;
+    this.products.set(id, newProduct);    return newProduct;
   }
 
   async updateProduct(id: number, data: Partial<Product>): Promise<Product | undefined> {
