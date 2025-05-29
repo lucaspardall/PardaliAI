@@ -33,6 +33,45 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
   // Check if user has reached store limit
   const hasReachedStoreLimit = user && stores && stores.length >= user.storeLimit;
 
+  // Fetch production status
+  const { data: productionStatus } = useQuery({
+    queryKey: ["/api/shopee-status/production-status"],
+    queryFn: () => apiRequest("GET", "/api/shopee-status/production-status"),
+    enabled: !!user
+  });
+
+  // Integration test mutation
+  const integrationTestMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/shopee-status/integration-test");
+    },
+    onSuccess: (result) => {
+      if (result.success) {
+        toast({
+          title: "✅ Teste de integração bem-sucedido!",
+          description: `Conectado com sucesso. ${result.tests.productFetch.count} produtos encontrados.`,
+          variant: "success",
+        });
+      } else {
+        toast({
+          title: "❌ Teste de integração falhou",
+          description: result.error || "Erro no teste de integração",
+          variant: "destructive",
+        });
+      }
+      
+      // Refresh status
+      queryClient.invalidateQueries({ queryKey: ["/api/shopee-status/production-status"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro no teste",
+        description: error.message || "Falha ao executar teste de integração",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Handle store connection mutation
   const connectStoreMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -118,6 +157,11 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
     }
   };
 
+  // Handle integration test
+  const handleIntegrationTest = () => {
+    integrationTestMutation.mutate();
+  };
+
   // Função para simular conexão OAuth (para ambiente de desenvolvimento)
   const handleSimulateOAuth = () => {
     setIsConnecting(true);
@@ -183,6 +227,63 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
   if (stores && stores.length > 0) {
     return (
       <div className="space-y-6">
+        {/* Production Status Card */}
+        {productionStatus && (
+          <Card className={productionStatus.readyForProduction ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {productionStatus.readyForProduction ? (
+                  <i className="ri-check-circle-line text-green-600"></i>
+                ) : (
+                  <i className="ri-alert-circle-line text-yellow-600"></i>
+                )}
+                Status da Integração Shopee
+              </CardTitle>
+              <CardDescription>
+                {productionStatus.readyForProduction 
+                  ? "✅ Sua integração está pronta para buscar dados reais da Shopee!"
+                  : "⚠️ Alguns ajustes são necessários antes de usar dados reais"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Credenciais configuradas:</span>
+                  <Badge variant={productionStatus.checks.credentials.configured ? "success" : "destructive"}>
+                    {productionStatus.checks.credentials.configured ? "Sim" : "Não"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Lojas com tokens válidos:</span>
+                  <Badge variant={productionStatus.checks.stores.withValidTokens > 0 ? "success" : "destructive"}>
+                    {productionStatus.checks.stores.withValidTokens}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Conexão com API:</span>
+                  <Badge variant={productionStatus.checks.apiConnection?.success ? "success" : "destructive"}>
+                    {productionStatus.checks.apiConnection?.success ? "OK" : "Falha"}
+                  </Badge>
+                </div>
+              </div>
+              
+              {productionStatus.recommendations.length > 0 && (
+                <div className="mt-4 p-3 bg-yellow-100 rounded-md">
+                  <p className="text-sm font-medium mb-2">Recomendações:</p>
+                  <ul className="text-sm space-y-1">
+                    {productionStatus.recommendations.map((rec: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <i className="ri-arrow-right-s-line text-yellow-600 mt-0.5"></i>
+                        {rec}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Existing stores */}
         <div>
           <h2 className="text-xl font-semibold mb-4">Lojas Conectadas</h2>
@@ -193,19 +294,38 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
           </div>
         </div>
 
-        {/* Test production connection button for existing stores */}
+        {/* Integration Test Section */}
         <div className="mt-6">
           <Card className="bg-blue-50 border-blue-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <i className="ri-test-tube-line text-blue-600"></i>
-                Testar Conexão de Produção
+                Teste de Integração Completa
               </CardTitle>
               <CardDescription>
-                Teste a conexão real com a API da Shopee usando credenciais de produção.
+                Execute um teste completo da integração com dados reais da Shopee.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <Button 
+                onClick={handleIntegrationTest} 
+                disabled={integrationTestMutation.isPending}
+                className="w-full"
+                variant="outline"
+              >
+                {integrationTestMutation.isPending ? (
+                  <>
+                    <i className="ri-loader-2-line animate-spin mr-2"></i>
+                    Executando teste...
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-play-circle-line mr-2"></i>
+                    Testar Integração Completa
+                  </>
+                )}
+              </Button>
+              
               <Button 
                 onClick={() => handleConnectOAuth('production')} 
                 disabled={isConnecting || connectStoreMutation.isPending}
@@ -215,12 +335,12 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
                 {(isConnecting || connectStoreMutation.isPending) ? (
                   <>
                     <i className="ri-loader-2-line animate-spin mr-2"></i>
-                    Testando conexão...
+                    Conectando...
                   </>
                 ) : (
                   <>
                     <i className="ri-shopee-line mr-2"></i>
-                    Testar Conexão de Produção
+                    Reconectar com Shopee
                   </>
                 )}
               </Button>

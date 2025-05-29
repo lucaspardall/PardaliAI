@@ -11,6 +11,8 @@ import webhookTestRoutes from './routes/webhookTest';
 import authRouter from './routes/auth';
 import paymentsRouter from './routes/payments';
 import diagnosisRoutes from './routes/diagnosis';
+import shopeeStatusRoutes from './routes/shopee-status'; // Added shopeeStatusRoutes
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -22,6 +24,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/shopee', shopeeRoutes);
   app.use('/api/webhook', webhookRoutes);
   app.use('/api/diagnosis', diagnosisRoutes);
+  app.use('/api/shopee-status', shopeeStatusRoutes); // Added shopeeStatusRoutes
 
   // Rotas de teste (apenas em desenvolvimento)
   if (process.env.NODE_ENV === 'development') {
