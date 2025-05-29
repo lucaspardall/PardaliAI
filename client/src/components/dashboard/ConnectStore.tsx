@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -419,5 +418,171 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
         </p>
       </CardFooter>
     </Card>
+  );
+}
+```
+
+```typescript
+import SidebarLayout from "@/components/layout/SidebarLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
+
+interface ShopeeStatus {
+  connected: boolean;
+  stores: Array<{
+    id: number;
+    shopId: string;
+    shopName: string;
+    isActive: boolean;
+    region: string;
+    connectedAt: string;
+    totalProducts: number;
+  }>;
+}
+
+export default function ConnectStore() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: shopeeStatus, isLoading } = useQuery({
+    queryKey: ["/api/shopee/status"],
+    queryFn: () => apiRequest("GET", "/api/shopee/status"),
+  });
+
+  // Verificar se houve sucesso na conexão via URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('shopeeConnected') === 'true') {
+      toast({
+        title: "🎉 Loja conectada com sucesso!",
+        description: "Sua loja Shopee foi conectada. Iniciando sincronização...",
+        variant: "success",
+      });
+
+      // Invalidar queries para atualizar o dashboard
+      queryClient.invalidateQueries({ queryKey: ["/api/shopee/status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
+
+      // Limpar URL params
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [toast, queryClient]);
+
+  // Mutation para sincronizar loja
+  const syncStoreMutation = useMutation({
+    mutationFn: async (storeId: number) => {
+      return apiRequest("POST", `/api/shopee/sync/${storeId}`);
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "✅ Sincronização concluída",
+        description: `${data.processed} produtos sincronizados em ${Math.round(data.duration / 1000)}s`,
+        variant: "success",
+      });
+
+      // Invalidar queries para atualizar dados
+      queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/shopee/status"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Erro na sincronização",
+        description: error.message || "Falha ao sincronizar produtos da loja",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleConnect = () => {
+    window.location.href = '/api/shopee/authorize';
+  };
+
+  const handleSync = (storeId: number) => {
+    syncStoreMutation.mutate(storeId);
+  };
+
+  return (
+    <SidebarLayout>
+      <div className="py-8">
+        <div className="container mx-auto px-4">
+          <h1 className="text-2xl font-semibold mb-6">Dashboard</h1>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Conexão Shopee</CardTitle>
+              <CardDescription>
+                Gerencie a conexão com sua loja Shopee e sincronize seus produtos.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <p>Carregando status da Shopee...</p>
+              ) : shopeeStatus?.connected ? (
+                <>
+                  <div className="mb-4">
+                    <p className="text-sm text-muted-foreground">
+                      Sua conta Shopee está conectada.
+                    </p>
+                  </div>
+
+                  {shopeeStatus.stores.map((store) => (
+                    <div key={store.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                          <i className="ri-store-2-line text-orange-600"></i>
+                        </div>
+                        <div>
+                          <p className="font-medium">{store.shopName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {store.totalProducts} produtos • {store.region}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={store.isActive ? "success" : "secondary"}>
+                          {store.isActive ? "Ativa" : "Inativa"}
+                        </Badge>
+                        {store.isActive && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleSync(store.id)}
+                            disabled={syncStoreMutation.isPending}
+                          >
+                            {syncStoreMutation.isPending ? (
+                              <>
+                                <i className="ri-loader-2-line animate-spin mr-1"></i>
+                                Sincronizando...
+                              </>
+                            ) : (
+                              <>
+                                <i className="ri-refresh-line mr-1"></i>
+                                Sincronizar
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Conecte sua conta Shopee para começar a gerenciar seus produtos.
+                  </p>
+                  <Button onClick={handleConnect}>Conectar Shopee</Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </SidebarLayout>
   );
 }
