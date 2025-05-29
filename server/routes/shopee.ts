@@ -829,6 +829,8 @@ router.get('/stores/:storeId/products', isAuthenticated, async (req: Request, re
  * Webhook endpoint para receber atualizações da Shopee
  */
 router.post('/webhook', async (req: Request, res: Response) => {
+  let responseSent = false;
+
   try {
     console.log(`[Routes] 📥 Webhook Shopee recebido:`);
     console.log(`- IP: ${req.ip}`);
@@ -837,27 +839,33 @@ router.post('/webhook', async (req: Request, res: Response) => {
     console.log(`- Body:`, JSON.stringify(req.body, null, 2));
 
     // Responder imediatamente com sucesso para Shopee
-    res.status(200).json({ 
-      message: 'Webhook received successfully',
-      timestamp: new Date().toISOString(),
-      received: true
-    });
+    if (!responseSent && !res.headersSent) {
+      responseSent = true;
+      res.status(200).json({ 
+        message: 'Webhook received successfully',
+        timestamp: new Date().toISOString(),
+        received: true
+      });
+    }
 
-    // Processar webhook em background
-    const { handleShopeeWebhook } = await import('../shopee/webhooks');
+    // Processar webhook em background SEM passar res (para evitar tentativa de resposta dupla)
+    const { processShopeeWebhookEvent } = await import('../shopee/webhooks');
     setImmediate(() => {
-      handleShopeeWebhook(req, res).catch(error => {
+      processShopeeWebhookEvent(req.body).catch(error => {
         console.error('[Routes] Erro no processamento do webhook:', error);
       });
     });
 
   } catch (error) {
     console.error('[Routes] Erro crítico no webhook da Shopee:', error);
-    res.status(200).json({ 
-      message: 'Webhook received',
-      error: 'Processing failed but acknowledged',
-      timestamp: new Date().toISOString()
-    });
+    if (!responseSent && !res.headersSent) {
+      responseSent = true;
+      res.status(200).json({ 
+        message: 'Webhook received',
+        error: 'Processing failed but acknowledged',
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 });
 
@@ -1296,79 +1304,7 @@ router.post('/stores/:storeId/inventory/apply-optimizations', isAuthenticated, a
   }
 });
 
-/**
- * Webhook da Shopee para receber notificações
- */
-router.post('/webhook', async (req: Request, res: Response) => {
-  let responseSent = false;
 
-  try {
-    console.log('==== RECEBENDO WEBHOOK DA SHOPEE ====');
-
-    const rawBody = (req as any).rawBody;
-    const signature = req.get('Authorization');
-
-    if (!signature) {
-      console.log('[Webhook] Assinatura ausente');
-      if (!responseSent) {
-        responseSent = true;
-        return res.status(401).json({ message: 'Signature missing' });
-      }
-      return;
-    }
-
-    // Parse do corpo como JSON
-    let body;
-    try {
-      body = JSON.parse(rawBody.toString());
-    } catch (parseError) {
-      console.error('[Webhook] Erro ao analisar o corpo JSON:', parseError);
-      if (!responseSent) {
-        responseSent = true;
-        return res.status(400).json({ message: 'Invalid JSON body' });
-      }
-      return;
-    }
-    console.log('Webhook payload:', JSON.stringify(body, null, 2));
-
-    // Validar assinatura
-    const { validateSignature } = await import('../shopee/webhooks');
-    const isValid = await validateSignature(req.url, rawBody, signature);
-
-    if (!isValid) {
-      console.log('[Webhook] Assinatura inválida');
-      if (!responseSent) {
-        responseSent = true;
-        return res.status(401).json({ message: 'Invalid signature' });
-      }
-      return;
-    }
-
-    // Responder imediatamente
-    if (!responseSent) {
-      responseSent = true;
-      res.status(200).json({ success: true, message: 'Webhook received' });
-    }
-
-    // Processar webhook em background APÓS responder
-    const { handleShopeeWebhook } = await import('../shopee/webhooks');
-    setImmediate(() => {
-      handleShopeeWebhook(req, res).catch(error => {
-        console.error('[Webhook] Erro no processamento em background:', error);
-      });
-    });
-
-  } catch (error: any) {
-    console.error('[Routes] Erro no processamento do webhook:', error);
-    if (!responseSent && !res.headersSent) {
-      responseSent = true;
-      res.status(500).json({
-        message: 'Webhook processing failed',
-        error: error.message
-      });
-    }
-  }
-});
 
 /**
  * Callback de autorização da Shopee

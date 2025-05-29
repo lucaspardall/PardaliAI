@@ -225,6 +225,11 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
         console.log('[Webhook] Webhook de teste recebido');
         break;
 
+      case 1: // Shop authorization by user (novo)
+        console.log('[Webhook] Autorização de loja pelo usuário:', data);
+        await handleShopAuthorizationByUser(data, shop_id);
+        break;
+
       case 3: // Shop authorization
         await handleShopAuthorization(data, shop_id);
         break;
@@ -313,4 +318,84 @@ export function webhookParser(req: Request, res: Response, next: Function): void
       res.status(400).json({ error: 'Invalid JSON' });
     }
   });
+}
+
+
+/**
+ * Processa evento de webhook sem tentar enviar resposta HTTP
+ */
+export async function processShopeeWebhookEvent(eventBody: any): Promise<void> {
+  try {
+    const { code, data, shop_id, timestamp, msg_id } = eventBody;
+
+    console.log(`[Webhook] Processando evento - Código: ${code}, Loja: ${shop_id}, Timestamp: ${timestamp}, MSG ID: ${msg_id}`);
+
+    // Processar evento baseado no código
+    switch (code) {
+      case 0: // Test push
+        console.log('[Webhook] Webhook de teste recebido');
+        break;
+
+      case 1: // Shop authorization by user
+        console.log('[Webhook] Autorização de loja pelo usuário:', data);
+        await handleShopAuthorizationByUser(data, shop_id);
+        break;
+
+      case 3: // Shop authorization
+        await handleShopAuthorization(data, shop_id);
+        break;
+
+      case 4: // Order status update
+        await handleOrderUpdate(data, shop_id);
+        break;
+
+      case 5: // Shop deauthorization
+        await handleShopDeauthorization(data, shop_id);
+        break;
+
+      case 6: // Product update
+        console.log('[Webhook] Atualização de produto:', data);
+        break;
+
+      case 7: // Banned item
+        console.log('[Webhook] Item banido:', data);
+        break;
+
+      case 9: // Shop update
+        console.log('[Webhook] Atualização da loja:', data);
+        break;
+
+      default:
+        console.log(`[Webhook] Código de evento não tratado: ${code}`, {
+          eventCode: code,
+          data,
+          shopId: shop_id
+        });
+    }
+
+  } catch (error) {
+    console.error('[Webhook] Erro no processamento do evento:', error);
+  }
+}
+
+/**
+ * Handler para autorização de loja por usuário (código 1)
+ */
+async function handleShopAuthorizationByUser(data: any, shop_id: string): Promise<void> {
+  try {
+    console.log(`[Webhook] Processando autorização de loja ${shop_id} pelo usuário:`, data);
+
+    if (data.success === 1) {
+      console.log(`[Webhook] ✅ Loja ${shop_id} autorizada com sucesso`);
+      
+      // Aqui você pode implementar lógica adicional se necessário
+      // Como atualizar o status da loja no banco de dados
+      
+    } else {
+      console.log(`[Webhook] ❌ Falha na autorização da loja ${shop_id}`);
+    }
+
+  } catch (error) {
+    console.error(`[Webhook] Erro ao processar autorização da loja ${shop_id}:`, error);
+  }
 }
