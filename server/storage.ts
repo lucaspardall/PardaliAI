@@ -1,31 +1,53 @@
 import {
   users,
+  upsertUserSchema,
+  shopeeStores,
+  insertShopeeStoreSchema,
+  products,
+  insertProductSchema,
+  productOptimizations,
+  insertProductOptimizationSchema,
+  storeMetrics,
+  insertStoreMetricSchema,
+  aiRequests,
+  insertAiRequestSchema,
+  notifications,
+  insertNotificationSchema,
+  systemLogs,
+  insertSystemLogSchema,
+  apiCache,
+  insertApiCacheSchema,
+  aiCreditsHistory,
+  insertAiCreditsHistorySchema,
+  orders,
+  insertOrderSchema,
+  storeDiagnoses,
+  insertStoreDiagnosisSchema,
   type User,
   type UpsertUser,
-  shopeeStores,
   type ShopeeStore,
   type InsertShopeeStore,
-  products,
   type Product,
   type InsertProduct,
-  productOptimizations,
   type ProductOptimization,
   type InsertProductOptimization,
-  storeMetrics,
   type StoreMetric,
   type InsertStoreMetric,
-  aiRequests,
   type AiRequest,
   type InsertAiRequest,
-  notifications,
   type Notification,
   type InsertNotification,
-  orders,
+  type SystemLog,
+  type InsertSystemLog,
+  type ApiCache,
+  type InsertApiCache,
+  type AiCreditsHistory,
+  type InsertAiCreditsHistory,
   type Order,
   type InsertOrder,
-  aiCreditsHistory,
-  type AiCreditsHistory,
-} from "@shared/schema";
+  type StoreDiagnosis,
+  type InsertStoreDiagnosis
+} from "../shared/schema";
 import { db } from "./db";
 import { eq, and, desc, gt, lt, gte, lte, sql } from "drizzle-orm";
 import { isAuthenticated } from "./replitAuth";
@@ -163,7 +185,7 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
       console.log(`Buscando usuário por ID: ${id}`);
-      
+
       if (!id || typeof id !== 'string') {
         console.error('UserId inválido:', id);
         return undefined;
@@ -408,7 +430,7 @@ export class DatabaseStorage implements IStorage {
   async getStoreById(id: number): Promise<ShopeeStore | undefined> {
     try {
       console.log(`Buscando loja por ID: ${id}`);
-      
+
       if (!id || typeof id !== 'number') {
         console.error('StoreId inválido:', id);
         return undefined;
@@ -434,7 +456,7 @@ export class DatabaseStorage implements IStorage {
   async getStoreByShopId(shopId: string): Promise<ShopeeStore | undefined> {
     try {
       console.log(`Buscando loja por shopId: ${shopId}`);
-      
+
       if (!shopId || typeof shopId !== 'string') {
         console.error('ShopId inválido:', shopId);
         return undefined;
@@ -776,7 +798,7 @@ export class DatabaseStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | null> {
     try {
       console.log(`Buscando usuário por email: ${email}`);
-      
+
       if (!email || typeof email !== 'string') {
         console.error('Email inválido:', email);
         return null;
@@ -927,6 +949,8 @@ export class MemStorage implements IStorage {
   async getAiCreditsHistory(userId: string, limit = 50, offset = 0): Promise<AiCreditsHistory[]> {
     return [];
   }
+
+  The code has been modified to include the storeDiagnoses table in the import statement from "@shared/schema".```text
 
   async getAiUsageAnalytics(userId: string, days = 30): Promise<any> {
     return {

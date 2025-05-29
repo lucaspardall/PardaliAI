@@ -316,6 +316,59 @@ export const insertApiCacheSchema = createInsertSchema(apiCache).omit({ id: true
 export type InsertApiCache = z.infer<typeof insertApiCacheSchema>;
 export type ApiCache = typeof apiCache.$inferSelect;
 
+// Tabela de diagnósticos da loja
+export const storeDiagnoses = pgTable("store_diagnoses", {
+  id: serial("id").primaryKey(),
+  storeId: integer("store_id").notNull().references(() => shopeeStores.id, { onDelete: "cascade" }),
+  overallScore: real("overall_score").notNull(), // Score de 0-10
+  categoryScores: jsonb("category_scores").$type<CategoryScores>().default({}),
+  strengths: jsonb("strengths").$type<string[]>().default([]),
+  weaknesses: jsonb("weaknesses").$type<string[]>().default([]),
+  recommendations: jsonb("recommendations").$type<TacticalRecommendation[]>().default([]),
+  benchmarkData: jsonb("benchmark_data").$type<BenchmarkData>().default({}),
+  metricsUsed: jsonb("metrics_used").$type<Record<string, any>>().default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => {
+  return [
+    index("idx_diagnoses_store_date").on(table.storeId, table.createdAt),
+    index("idx_diagnoses_score").on(table.overallScore)
+  ];
+});
+
+// Tipos para diagnóstico
+export interface CategoryScores {
+  ctr: number;
+  inventory: number;
+  sales: number;
+  optimization: number;
+  engagement: number;
+}
+
+export interface TacticalRecommendation {
+  id: string;
+  category: string;
+  priority: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  actionSteps: string[];
+  expectedImpact: string;
+  estimatedTime: string;
+}
+
+export interface BenchmarkData {
+  industryAverage: CategoryScores;
+  topPerformers: CategoryScores;
+  yourPosition: {
+    percentile: number;
+    rank: string; // 'excellent', 'good', 'average', 'below_average', 'poor'
+  };
+}
+
+export const insertStoreDiagnosisSchema = createInsertSchema(storeDiagnoses).omit({ id: true });
+export type InsertStoreDiagnosis = z.infer<typeof insertStoreDiagnosisSchema>;
+export type StoreDiagnosis = typeof storeDiagnoses.$inferSelect;
+
 // Tabela de pedidos da Shopee
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
