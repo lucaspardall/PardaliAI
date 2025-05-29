@@ -292,5 +292,5 @@ export interface ShopeeProductPerformance {
   add_to_cart_percentage: number;
   conversion_rate: number;
   sales_30_days: number;
-  revenue_30_days: number;days: number;
+  revenue_30_days: number;
 }

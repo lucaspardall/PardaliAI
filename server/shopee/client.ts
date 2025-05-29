@@ -162,6 +162,34 @@ export class ShopeeClient {
   }
 
   /**
+   * Definir tokens de autenticação
+   */
+  setTokens(tokens: { accessToken: string; refreshToken: string; expiresAt: Date; shopId: string }): void {
+    this.config.accessToken = tokens.accessToken;
+    this.config.shopId = tokens.shopId;
+  }
+
+  /**
+   * Definir headers customizados
+   */
+  setRequestHeaders(headers: Record<string, string>): void {
+    Object.assign(this.client.defaults.headers.common, headers);
+  }
+
+  /**
+   * Validar conexão com a API
+   */
+  async validateConnection(): Promise<boolean> {
+    try {
+      const response = await this.get('/api/v2/shop/get_shop_info');
+      return !response.error;
+    } catch (error) {
+      console.error('[ShopeeClient] Connection validation failed:', error);
+      return false;
+    }
+  }
+
+  /**
    * Obter configuração atual (sem dados sensíveis)
    */
   getConfig(): Partial<ShopeeClientConfig> {

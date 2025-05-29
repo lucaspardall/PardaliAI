@@ -194,7 +194,7 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
     }
 
     // Validar assinatura
-    const isValidSignature = validateWebhookSignature(req, partnerKey);
+    const isValidSignature = await validateWebhookSignature(req, partnerKey);
     if (!isValidSignature) {
       console.error('[Webhook] Assinatura inválida:', {
         received: req.headers['authorization'],
@@ -318,6 +318,51 @@ export function webhookParser(req: Request, res: Response, next: Function): void
       res.status(400).json({ error: 'Invalid JSON' });
     }
   });
+}
+
+/**
+ * Processa atualização de pedido
+ */
+async function processOrderUpdate(storeId: string, data: any): Promise<void> {
+  try {
+    console.log(`[Webhook] Processando atualização de pedido para loja ${storeId}:`, data);
+    
+    // Implementar lógica de atualização de pedido
+    // Por exemplo: salvar no banco, notificar usuário, etc.
+    
+  } catch (error) {
+    console.error(`[Webhook] Erro ao processar atualização de pedido:`, error);
+  }
+}
+
+/**
+ * Processa atualização de produto
+ */
+async function processProductUpdate(storeId: string, data: any): Promise<void> {
+  try {
+    console.log(`[Webhook] Processando atualização de produto para loja ${storeId}:`, data);
+    
+    // Implementar lógica de atualização de produto
+    // Por exemplo: sincronizar dados, atualizar cache, etc.
+    
+  } catch (error) {
+    console.error(`[Webhook] Erro ao processar atualização de produto:`, error);
+  }
+}
+
+/**
+ * Processa atualização de loja
+ */
+async function processShopUpdate(storeId: string, data: any): Promise<void> {
+  try {
+    console.log(`[Webhook] Processando atualização de loja ${storeId}:`, data);
+    
+    // Implementar lógica de atualização de loja
+    // Por exemplo: atualizar informações no banco, etc.
+    
+  } catch (error) {
+    console.error(`[Webhook] Erro ao processar atualização de loja:`, error);
+  }
 }
 
 

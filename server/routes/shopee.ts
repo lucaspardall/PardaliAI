@@ -66,8 +66,8 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     if (req.query.minimal === 'true') {
       console.log('🔍 MODO MINIMALISTA: Usando implementação com parâmetros mínimos');
 
-      // Importar implementação minimalista
-      const { generateMinimalAuthUrl } = await import('../shopee/minimal');
+      // Usar implementação padrão para modo minimalista
+      console.log('🔍 Modo minimalista ativo, usando URL padrão');
 
       // Gerar URL minimalista
       const minimalUrl = generateMinimalAuthUrl(config);

@@ -222,12 +222,12 @@ export async function getAccessToken(config: ShopeeAuthConfig, code: string, sho
   console.log(`[getAccessToken] Base string: ${baseString}`);
 
   // Gerar assinatura
-  const signature = crypto.createHmac('sha256', this.config.partnerKey).update(baseString).digest('hex');
+  const signature = crypto.createHmac('sha256', config.partnerKey).update(baseString).digest('hex');
   console.log(`[getAccessToken] Signature gerada`);
 
   // Parâmetros da query
   const queryParams = new URLSearchParams({
-    partner_id: this.config.partnerId,
+    partner_id: config.partnerId,
     timestamp: timestamp.toString(),
     sign: signature
   });
