@@ -306,15 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const productId = parseInt(req.params.id);
-
-      // Check user AI credits
-      const user = await storage.getUser(userId);
-      if (!user || (user.aiCreditsLeft <= 0 && user.plan === 'free')) {
-        return res.status(403).json({ 
-          message: "No AI credits left. Please upgrade your plan.",
-          creditsLeft: user?.aiCreditsLeft || 0
-        });
-      }
+      const priority = req.body.priority || 'normal';
 
       const product = await storage.getProductById(productId);
       if (!product) {
@@ -327,22 +319,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Not authorized to optimize this product" });
       }
 
-      // Process AI optimization
-      const { optimization, request } = await aiService.optimizeProduct(userId, product);
+      // Process AI optimization with queue
+      const result = await aiService.optimizeProduct(userId, product, priority);
 
-      // Create optimization record
-      const newOptimization = await storage.createOptimization(optimization);
-
-      // Deduct AI credit if user is on free plan
-      if (user.plan === 'free') {
-        await storage.updateUserAiCredits(
-          userId, 
-          Math.max(0, user.aiCreditsLeft - 1),
-          'used',
-          `Otimização do produto: ${product.name}`,
-          { type: 'optimization', id: newOptimization.id }
-        );
-      }
+      res.json({
+        message: "Optimization request queued successfully",
+        requestId: result.requestId,
+        status: "queued"
+      });
 
       res.status(201).json({
         optimization: newOptimization,
@@ -513,6 +497,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           await storage.updateProduct(product.id, productUpdates);
+
+
+  // Criar anúncio com IA
+  app.post('/api/ai/create-ad', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { productData, adType, priority } = req.body;
+
+      const result = await aiService.createAd(userId, productData, adType, priority);
+
+      res.json({
+        message: "Ad creation request queued successfully",
+        requestId: result.requestId,
+        status: "queued"
+      });
+    } catch (error) {
+      console.error("Error creating ad:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to create ad"
+      });
+    }
+  });
+
+  // Analisar loja com IA
+  app.post('/api/stores/:id/analyze', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const storeId = parseInt(req.params.id);
+      const priority = req.body.priority || 'normal';
+
+      // Verificar se usuário tem acesso à loja
+      const store = await storage.getStoreById(storeId);
+      if (!store || store.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to analyze this store" });
+      }
+
+      const result = await aiService.analyzeStore(userId, storeId, priority);
+
+      res.json({
+        message: "Store analysis request queued successfully",
+        requestId: result.requestId,
+        status: "queued"
+      });
+    } catch (error) {
+      console.error("Error analyzing store:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to analyze store"
+      });
+    }
+  });
+
+  // Analisar campanha com IA
+  app.post('/api/ai/analyze-campaign', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { campaignData, priority } = req.body;
+
+      const result = await aiService.analyzeCampaign(userId, campaignData, priority);
+
+      res.json({
+        message: "Campaign analysis request queued successfully",
+        requestId: result.requestId,
+        status: "queued"
+      });
+    } catch (error) {
+      console.error("Error analyzing campaign:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to analyze campaign"
+      });
+    }
+  });
+
+  // Status da fila de IA
+  app.get('/api/ai/queue-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const status = await aiService.getQueueStatus(userId);
+      res.json(status);
+    } catch (error) {
+      console.error("Error getting queue status:", error);
+      res.status(500).json({ message: "Failed to get queue status" });
+    }
+  });
+
+  // Status de request específico
+  app.get('/api/ai/requests/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const requestId = parseInt(req.params.id);
+
+      const request = await storage.getAiRequestById(requestId);
+      if (!request || request.userId !== userId) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+
+      res.json(request);
+    } catch (error) {
+      console.error("Error getting request status:", error);
+      res.status(500).json({ message: "Failed to get request status" });
+    }
+  });
+
         }
       }
 
