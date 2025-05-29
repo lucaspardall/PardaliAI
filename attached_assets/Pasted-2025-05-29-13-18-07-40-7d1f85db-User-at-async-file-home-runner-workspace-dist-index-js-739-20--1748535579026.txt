@@ -1,0 +1,128 @@
+2025-05-29 13:18:07.40
+7d1f85db
+User
+at async file:///home/runner/workspace/dist/index.js:739:20
+2025-05-29 13:18:07.40
+7d1f85db
+User
+at async file:///home/runner/workspace/dist/index.js:6815:22 {
+2025-05-29 13:18:07.40
+7d1f85db
+User
+detail: undefined,
+2025-05-29 13:18:07.40
+7d1f85db
+User
+hint: undefined,
+2025-05-29 13:18:07.40
+7d1f85db
+User
+position: undefined,
+2025-05-29 13:18:07.40
+7d1f85db
+User
+internalQuery: undefined,
+2025-05-29 13:18:07.40
+7d1f85db
+User
+where: undefined,
+2025-05-29 13:18:07.40
+7d1f85db
+User
+dataType: undefined,
+2025-05-29 13:18:07.40
+7d1f85db
+User
+routine: 'exec_bind_message',
+2025-05-29 13:18:07.40
+7d1f85db
+User
+sourceError: undefined
+2025-05-29 13:18:08.04
+7d1f85db
+User
+Erro na tentativa 1/5: {
+2025-05-29 13:18:08.04
+7d1f85db
+User
+at async file:///home/runner/workspace/dist/index.js:6815:22 {
+2025-05-29 13:18:49.06
+7d1f85db
+User
+[Routes] 📥 Webhook Shopee recebido:
+2025-05-29 13:18:49.06
+7d1f85db
+User
+- IP: 35.232.67.78
+2025-05-29 13:18:49.06
+7d1f85db
+User
+- User-Agent: Go-http-client/1.1
+2025-05-29 13:18:49.06
+7d1f85db
+User
+- Headers: {
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"host": "cipshopee.replit.app",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"user-agent": "Go-http-client/1.1",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"content-length": "207",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"accept-encoding": "gzip",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"authorization": "42d62a636417585856e1c685716afd5263dc7b07651c6c20dc744b5a99035f63",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"content-type": "application/json",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"reqid": "1f33b6023648a713abfcd14961f6eb00:000000089060c5fb:0000000000000000",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"round": "0",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"server-timing": "depproxy;dur=1748535529021, pid1req;dur=1748535529059",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"shopee-baggage": "DT=3,CID=global",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"traceparent": "00-5569e794000de39e50075f8cd2d4d832-de27be9c02853684-01",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"via": "1.1 google",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"x-cloud-trace-context": "5569e794000de39e50075f8cd2d4d832/16007972977778177668;o=1",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"x-forwarded-for": "147.136.184.69, 34.117.33.233, 35.191.10.118,35.232.67.78",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"x-forwarded-host": "cipshopee.replit.app",
+2025-05-29 13:18:49.06
+7d1f85db
+User
+"x-forwarded-proto": "https",
