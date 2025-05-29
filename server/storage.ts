@@ -29,6 +29,8 @@ import {
 import { db } from "./db";
 import { eq, and, desc, gt, lt, gte, lte, sql } from "drizzle-orm";
 import { isAuthenticated } from "./replitAuth";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import * as schema from "@shared/schema";
 
 export interface IStorage {
   // User operations
@@ -96,6 +98,7 @@ export class DatabaseStorage implements IStorage {
 
   private async getDb() {
     if (!this.db) {
+      const { connectWithRetry } = await import('./db');
       this.db = await connectWithRetry();
     }
     return this.db;
@@ -158,8 +161,29 @@ export class DatabaseStorage implements IStorage {
 
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    try {
+      console.log(`Buscando usuário por ID: ${id}`);
+      
+      if (!id || typeof id !== 'string') {
+        console.error('UserId inválido:', id);
+        return undefined;
+      }
+
+      const userResults = await this.executeWithRetry(async () => {
+        return await db
+          .select()
+          .from(users)
+          .where(eq(users.id, id))
+          .limit(1);
+      });
+
+      const user = userResults[0];
+      console.log(`Usuário encontrado para ID ${id}:`, user ? 'Sim' : 'Não');
+      return user;
+    } catch (error) {
+      console.error(`Erro ao buscar usuário por ID ${id}:`, error);
+      return undefined;
+    }
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -382,19 +406,56 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStoreById(id: number): Promise<ShopeeStore | undefined> {
-    const [store] = await db
-      .select()
-      .from(shopeeStores)
-      .where(eq(shopeeStores.id, id));
-    return store;
+    try {
+      console.log(`Buscando loja por ID: ${id}`);
+      
+      if (!id || typeof id !== 'number') {
+        console.error('StoreId inválido:', id);
+        return undefined;
+      }
+
+      const stores = await this.executeWithRetry(async () => {
+        return await db
+          .select()
+          .from(shopeeStores)
+          .where(eq(shopeeStores.id, id))
+          .limit(1);
+      });
+
+      const store = stores[0];
+      console.log(`Loja encontrada para ID ${id}:`, store ? 'Sim' : 'Não');
+      return store;
+    } catch (error) {
+      console.error(`Erro ao buscar loja por ID ${id}:`, error);
+      return undefined;
+    }
   }
 
   async getStoreByShopId(shopId: string): Promise<ShopeeStore | undefined> {
-    const [store] = await db
-      .select()
-      .from(shopeeStores)
-      .where(eq(shopeeStores.shopId, shopId));
-    return store;
+    try {
+      console.log(`Buscando loja por shopId: ${shopId}`);
+      
+      if (!shopId || typeof shopId !== 'string') {
+        console.error('ShopId inválido:', shopId);
+        return undefined;
+      }
+
+      const stores = await this.executeWithRetry(async () => {
+        // Usar query mais explícita para evitar prepared statement vazio
+        return await db
+          .select()
+          .from(shopeeStores)
+          .where(eq(shopeeStores.shopId, shopId))
+          .limit(1);
+      });
+
+      const store = stores[0];
+      console.log(`Loja encontrada para shopId ${shopId}:`, store ? 'Sim' : 'Não');
+      return store;
+    } catch (error) {
+      console.error(`Erro ao buscar loja por shopId ${shopId}:`, error);
+      return undefined;
+    }
   }
 
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
@@ -714,15 +775,26 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | null> {
     try {
-      const result = await this.db
-        .select()
-        .from(users)
-        .where(eq(users.email, email))
-        .limit(1);
+      console.log(`Buscando usuário por email: ${email}`);
+      
+      if (!email || typeof email !== 'string') {
+        console.error('Email inválido:', email);
+        return null;
+      }
 
-      return result[0] || null;
+      const userResults = await this.executeWithRetry(async () => {
+        return await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+      });
+
+      const user = userResults[0] || null;
+      console.log(`Usuário encontrado para email ${email}:`, user ? 'Sim' : 'Não');
+      return user;
     } catch (error) {
-      console.error('Erro ao buscar usuário por email:', error);
+      console.error(`Erro ao buscar usuário por email ${email}:`, error);
       return null;
     }
   }
