@@ -1,0 +1,124 @@
+025-05-29 09:07:58.50
+8dda1026
+User
+url: 'https://cipshopee.replit.app/api/shopee/webhook',
+2025-05-29 09:07:58.50
+8dda1026
+User
+bodyLength: 207,
+2025-05-29 09:07:58.50
+8dda1026
+User
+baseStringLength: 255,
+2025-05-29 09:07:58.50
+8dda1026
+User
+received: '9a34afb81cf2092b8be8...',
+2025-05-29 09:07:58.50
+8dda1026
+User
+calculated: 'aff109ceaf788a3165bf...',
+2025-05-29 09:07:58.50
+8dda1026
+User
+match: false
+2025-05-29 09:07:58.50
+8dda1026
+User
+}
+2025-05-29 09:07:58.50
+8dda1026
+User
+[Webhook] Evento recebido - Código: 1, Loja: undefined, Timestamp: 1748520470, MSG ID: undefined
+2025-05-29 09:07:58.50
+8dda1026
+User
+[Webhook] Código de evento não tratado: 1 {
+2025-05-29 09:07:58.50
+8dda1026
+User
+eventCode: 1,
+2025-05-29 09:07:58.50
+8dda1026
+User
+data: {
+2025-05-29 09:07:58.50
+8dda1026
+User
+authorize_type: 'shop authorization by user',
+2025-05-29 09:07:58.50
+8dda1026
+User
+extra: 'shop id 404065079 (BR) has been authorized successfully',
+2025-05-29 09:07:58.50
+8dda1026
+User
+shop_id: 404065079,
+2025-05-29 09:07:58.50
+8dda1026
+User
+success: 1
+2025-05-29 09:07:58.50
+8dda1026
+User
+},
+2025-05-29 09:07:58.50
+8dda1026
+User
+shopId: undefined
+2025-05-29 09:07:58.50
+8dda1026
+User
+}
+2025-05-29 09:07:58.50
+8dda1026
+User
+[Webhook] Erro no processamento: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+2025-05-29 09:07:58.50
+8dda1026
+User
+at ServerResponse.setHeader (node:_http_outgoing:655:11)
+2025-05-29 09:07:58.50
+8dda1026
+User
+at ServerResponse.header (/home/runner/workspace/node_modules/express/lib/response.js:794:10)
+2025-05-29 09:07:58.50
+8dda1026
+User
+at ServerResponse.send (/home/runner/workspace/node_modules/express/lib/response.js:174:12)
+2025-05-29 09:07:58.50
+8dda1026
+User
+at ServerResponse.json (/home/runner/workspace/node_modules/express/lib/response.js:278:15)
+2025-05-29 09:07:58.50
+8dda1026
+User
+at res.json (file:///home/runner/workspace/dist/index.js:6909:28)
+2025-05-29 09:07:58.50
+8dda1026
+User
+at handleShopeeWebhook (file:///home/runner/workspace/dist/index.js:2918:21)
+2025-05-29 09:07:58.50
+8dda1026
+User
+at Immediate._onImmediate (file:///home/runner/workspace/dist/index.js:4756:7)
+2025-05-29 09:07:58.50
+8dda1026
+User
+at process.processImmediate (node:internal/timers:483:21) {
+2025-05-29 09:07:58.50
+8dda1026
+User
+code: 'ERR_HTTP_HEADERS_SENT'
+2025-05-29 09:07:58.50
+8dda1026
+User
+}
+2025-05-29 09:07:58.50
+8dda1026
+User
+[Routes] Erro no processamento do webhook: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+2025-05-29 09:07:58.50
+8dda1026
+User
+at ServerResponse.setHeader (node:_http_outgoing:655:11)
