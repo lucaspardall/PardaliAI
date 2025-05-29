@@ -1,3 +1,3 @@
-Timestamp: 1748526416
+Timestamp: 1748536898
 
-URL de Autorização: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748526416&sign=481cc6d0e71413cd57e83ab5cef2fb857496eb75efcc59819360a675ba47af06&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748526416244
+URL de Autorização: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748536898&sign=21b88cee4abda0c89017425d5ada5eb3f829ab95415ea4fb3acea411e129a51e&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748536898802
