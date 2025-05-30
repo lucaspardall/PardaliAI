@@ -376,8 +376,13 @@ async function processShopUpdate(storeId: string, data: any): Promise<void> {
  * Processa evento de webhook da Shopee
  */
 export async function processShopeeWebhookEvent(eventData: any): Promise<void> {
+  const { type, data, shop_id, timestamp } = eventData;
+
+  console.log(`[Webhook] Processando evento: ${type} para shop ${shop_id}`);
+
   try {
-    console.log('[Webhook] Processando evento:', eventData);
+    // Log do evento para debug
+    console.log(`[Webhook] Dados do evento:`, JSON.stringify(eventData, null, 2));
 
     // Validar dados básicos
     if (!eventData || typeof eventData !== 'object') {
@@ -402,7 +407,7 @@ export async function processShopeeWebhookEvent(eventData: any): Promise<void> {
   });
 
   if (!shopId) {
-    console.log('[Webhook] ❌ Shop ID ausente no evento - dados completos:', JSON.stringify(event, null, 2));
+    console.log('[Webhook] ❌ Shop ID ausente no evento - dados completos:', JSON.stringify(eventData, null, 2));
     return;
   }
 
@@ -493,10 +498,10 @@ async function handleChatNotification(data: any, shop_id: number): Promise<void>
     console.log(`[Webhook] Processando notificação de chat para loja ${shop_id}:`, data);
 
     const { content, type } = data;
-    
+
     if (type === 'notification' && content) {
       const { user_id, conversation_id, type: contentType } = content;
-      
+
       // Encontrar a loja no banco de dados
       const store = await storage.getStoreByShopId(shop_id.toString());
 
