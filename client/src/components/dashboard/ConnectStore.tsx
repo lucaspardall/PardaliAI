@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import StoreDetails from "./StoreDetails";
@@ -223,6 +224,17 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
     );
   }
 
+  // Auto-refresh stores every 30 seconds
+  useEffect(() => {
+    if (stores && stores.length > 0) {
+      const interval = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }
+  }, [stores, queryClient]);
+
   // If user already has stores, show them
   if (stores && stores.length > 0) {
     return (
@@ -286,7 +298,29 @@ export default function ConnectStore({ onSuccess }: ConnectStoreProps) {
 
         {/* Existing stores */}
         <div>
-          <h2 className="text-xl font-semibold mb-4">Lojas Conectadas</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Lojas Conectadas</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/stores"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/shopee-status/production-status"] });
+                toast({
+                  title: "Atualizando dados...",
+                  description: "Buscando informações mais recentes das lojas",
+                });
+              }}
+              disabled={storesLoading}
+            >
+              {storesLoading ? (
+                <i className="ri-loader-2-line animate-spin mr-2"></i>
+              ) : (
+                <i className="ri-refresh-line mr-2"></i>
+              )}
+              Atualizar
+            </Button>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             {stores.map((store: any) => (
               <StoreDetails key={store.id} store={store} />
