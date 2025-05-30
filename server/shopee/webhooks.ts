@@ -35,16 +35,16 @@ async function validateWebhookSignature(req: Request, partnerKey: string): Promi
     // Reconstrói a URL exatamente como a Shopee espera
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers['host'] || '';
-    
+
     // Remove porta se existir (Shopee não inclui porta na assinatura)
     const cleanHost = host.split(':')[0];
-    
+
     // Garante que o path começa com /
     const path = req.originalUrl.startsWith('/') ? req.originalUrl : `/${req.originalUrl}`;
-    
+
     // URL completa sem query string para assinatura
     const url = `${protocol}://${cleanHost}${path.split('?')[0]}`;
-    
+
     // Serializa o body mantendo a ordem das chaves
     const bodyString = JSON.stringify(req.body, Object.keys(req.body).sort());
 
@@ -53,7 +53,7 @@ async function validateWebhookSignature(req: Request, partnerKey: string): Promi
  */
 function extractShopIdFromExtra(extra?: string): number | undefined {
   if (!extra) return undefined;
-  
+
   // Regex para extrair shop id do texto
   const match = extra.match(/shop id (\d+)/i);
   return match ? parseInt(match[1], 10) : undefined;
@@ -67,23 +67,23 @@ async function handleWebhookEvent(code: number, data: any, shopId?: number, time
     case 0: // Test push
       console.log('[Webhook] Webhook de teste recebido');
       break;
-      
+
     case 1: // Shop authorization by user
       await handleShopAuthorizationByUser(data, shopId);
       break;
-      
+
     case 3: // Shop deauthorization
       await handleShopDeauthorization(data, shopId);
       break;
-      
+
     case 4: // Order status update
       await handleOrderStatusUpdate(data, shopId);
       break;
-      
+
     case 5: // Order tracking update  
       await handleOrderTrackingUpdate(data, shopId);
       break;
-      
+
     default:
       console.warn(`[Webhook] Código de evento não tratado: ${code}`, data);
   }
@@ -98,9 +98,9 @@ async function handleOrderStatusUpdate(data: any, shopId?: number): Promise<void
       console.warn('[Webhook] Shop ID ausente para atualização de pedido');
       return;
     }
-    
+
     console.log(`[Webhook] Processando atualização de pedido para loja ${shopId}:`, data);
-    
+
     const store = await storage.getStoreByShopId(shopId.toString());
     if (store) {
       // Criar notificação para o usuário
@@ -127,9 +127,9 @@ async function handleOrderTrackingUpdate(data: any, shopId?: number): Promise<vo
       console.warn('[Webhook] Shop ID ausente para rastreamento');
       return;
     }
-    
+
     console.log(`[Webhook] Processando rastreamento para loja ${shopId}:`, data);
-    
+
     const store = await storage.getStoreByShopId(shopId.toString());
     if (store) {
       await storage.createNotification({
@@ -147,17 +147,17 @@ async function handleOrderTrackingUpdate(data: any, shopId?: number): Promise<vo
 }
 
 
-    
+
     // String base para assinatura
     const baseString = `${url}|${bodyString}`;
-    
+
     // Calcula HMAC-SHA256
     const calculatedSignature = createHmac('sha256', partnerKey)
       .update(baseString)
       .digest('hex');
-    
+
     const match = authorization === calculatedSignature;
-    
+
     if (!match) {
       console.error('[Webhook] Assinatura inválida:', {
         url,
@@ -167,7 +167,7 @@ async function handleOrderTrackingUpdate(data: any, shopId?: number): Promise<vo
         calculated: calculatedSignature.substring(0, 20) + '...'
       });
     }
-    
+
     return match;
   } catch (error) {
     console.error('[Webhook] Erro na validação:', error);
@@ -497,21 +497,21 @@ export async function processShopeeWebhookEvent(eventData: any): Promise<void> {
     }
 
     const { code, data, timestamp } = eventData;
-    
+
     // Extrai shop_id de diferentes localizações possíveis
     const shopId = data?.shop_id || 
                    data?.shopid || 
                    eventData.shop_id || 
                    eventData.shopid ||
                    extractShopIdFromExtra(data?.extra);
-    
+
     console.log(`[Webhook] Evento recebido - Código: ${code}, Loja: ${shopId}, Timestamp: ${timestamp}`);
-    
+
     if (!shopId && code !== 0) { // code 0 é teste e não precisa de shop_id
       console.error('[Webhook] Shop ID não encontrado no evento:', JSON.stringify(eventData, null, 2));
       return;
     }
-    
+
     // Processa evento com shop_id correto
     await handleWebhookEvent(code, data, shopId, timestamp);
 
