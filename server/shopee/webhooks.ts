@@ -180,9 +180,10 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
     console.log('[Webhook] Recebendo webhook - Headers:', req.headers);
     console.log('[Webhook] Corpo do webhook:', req.body);
 
-    const partnerKey = process.env.SHOPEE_PARTNER_KEY;
+    // Usar Push Partner Key para webhooks (diferente da API Partner Key)
+    const partnerKey = process.env.SHOPEE_PUSH_PARTNER_KEY || process.env.SHOPEE_PARTNER_KEY;
     if (!partnerKey) {
-      console.error('[Webhook] SHOPEE_PARTNER_KEY não configurada');
+      console.error('[Webhook] SHOPEE_PUSH_PARTNER_KEY não configurada');
       return res.status(500).json({ error: 'Server configuration error' });
     }
 

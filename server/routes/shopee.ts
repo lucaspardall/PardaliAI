@@ -31,7 +31,7 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
 
     const config = {
       partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
-      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
+      partnerKey: process.env.SHOPEE_PARTNER_KEY || '477a724873627457486972b4a704f756948624776a546f5441706e7a515a64',
       redirectUrl: redirectUrl,
       region: 'BR'  // Região brasileira para produção
     };

@@ -301,3 +301,12 @@ export async function refreshAccessToken(config: ShopeeAuthConfig, refreshToken:
   const authManager = new ShopeeAuthManager(config);
   return authManager.refreshAccessToken(refreshToken, shopId);
 }
+// Configuração para produção no Brasil
+const PRODUCTION_CONFIG = {
+  partnerId: '2011285',
+  partnerKey: '477a724873627457486972b4a704f756948624776a546f5441706e7a515a64', // Live API Partner Key correto
+  pushPartnerKey: '4c4a694d516b577475716656535842785252665442516866546a4d7155504f47', // Live Push Partner Key
+  redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback',
+  region: 'BR' as const,
+  baseUrl: 'https://partner.shopeemobile.com'
+};
