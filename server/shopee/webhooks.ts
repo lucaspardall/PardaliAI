@@ -181,7 +181,7 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
     console.log('[Webhook] Corpo do webhook:', req.body);
 
     // Usar Push Partner Key para webhooks (diferente da API Partner Key)
-    const partnerKey = process.env.SHOPEE_PUSH_PARTNER_KEY || process.env.SHOPEE_PARTNER_KEY;
+    const partnerKey = process.env.SHOPEE_PUSH_PARTNER_KEY || '4c4a694d516b577475716656535842785252665442516866546a4d7155504f47';
     if (!partnerKey) {
       console.error('[Webhook] SHOPEE_PUSH_PARTNER_KEY não configurada');
       return res.status(500).json({ error: 'Server configuration error' });
@@ -376,10 +376,6 @@ async function processShopUpdate(storeId: string, data: any): Promise<void> {
  * Processa evento de webhook da Shopee
  */
 export async function processShopeeWebhookEvent(eventData: any): Promise<void> {
-  const { type, data, shop_id, timestamp } = eventData;
-
-  console.log(`[Webhook] Processando evento: ${type} para shop ${shop_id}`);
-
   try {
     // Log do evento para debug
     console.log(`[Webhook] Dados do evento:`, JSON.stringify(eventData, null, 2));
@@ -390,13 +386,14 @@ export async function processShopeeWebhookEvent(eventData: any): Promise<void> {
       return;
     }
 
+    // Desestruturar corretamente (sem redeclaração)
     const { code, shop_id, data, timestamp } = eventData;
 
     // Extrair shop_id do evento (múltiplas fontes possíveis)
-  const shopId = event.shop_id || 
-                 event.data?.shop_id || 
-                 event.shopid || 
-                 event.data?.shopid;
+    const shopId = shop_id || 
+                   eventData.data?.shop_id || 
+                   eventData.shopid || 
+                   eventData.data?.shopid;
 
   console.log('[Webhook] Buscando shop_id em:', {
     'event.shop_id': event.shop_id,
