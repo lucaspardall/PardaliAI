@@ -308,6 +308,6 @@ const PRODUCTION_CONFIG = {
   pushPartnerKey: '4c4a694d516b577475716656535842785252665442516866546a4d7155504f47', // Live Push Partner Key
   redirectUrl: 'https://cipshopee.replit.app/api/shopee/callback',
   region: 'BR'
-}s const,
+} as const,
   baseUrl: 'https://partner.shopeemobile.com'
 };
