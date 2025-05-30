@@ -5,6 +5,7 @@ import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import { isAuthenticated } from '../replitAuth';
 import fs from 'fs';
+import { webhookLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
@@ -828,9 +829,7 @@ router.get('/stores/:storeId/products', isAuthenticated, async (req: Request, re
 /**
  * Webhook endpoint para receber atualizações da Shopee
  */
-router.post('/webhook', async (req: Request, res: Response) => {
-  let responseSent = false;
-
+router.post('/webhook', webhookLimiter, async (req: Request, res: Response) => {
   try {
     console.log(`[Routes] 📥 Webhook Shopee recebido:`);
     console.log(`- IP: ${req.ip}`);
@@ -838,33 +837,29 @@ router.post('/webhook', async (req: Request, res: Response) => {
     console.log(`- Headers:`, JSON.stringify(req.headers, null, 2));
     console.log(`- Body:`, JSON.stringify(req.body, null, 2));
 
-    // Responder imediatamente com sucesso para Shopee
-    if (!responseSent && !res.headersSent) {
-      responseSent = true;
-      res.status(200).json({ 
-        message: 'Webhook received successfully',
-        timestamp: new Date().toISOString(),
-        received: true
-      });
-    }
-
-    // Processar webhook em background SEM passar res (para evitar tentativa de resposta dupla)
-    const { processShopeeWebhookEvent } = await import('../shopee/webhooks');
-    setImmediate(() => {
-      processShopeeWebhookEvent(req.body).catch(error => {
-        console.error('[Routes] Erro no processamento do webhook:', error);
-      });
+    // Responde imediatamente ao Shopee (sempre 200 para evitar retry)
+    res.status(200).json({ 
+      message: 'Webhook received successfully',
+      timestamp: new Date().toISOString(),
+      received: true
+    });
+    
+    // Processa o webhook em background após responder
+    setImmediate(async () => {
+      try {
+        const { processShopeeWebhookEvent } = await import('../shopee/webhooks');
+        await processShopeeWebhookEvent(req.body);
+      } catch (error) {
+        console.error('[Routes] Erro no processamento background:', error);
+        // Não tenta responder novamente - apenas loga o erro
+      }
     });
 
   } catch (error) {
     console.error('[Routes] Erro crítico no webhook da Shopee:', error);
-    if (!responseSent && !res.headersSent) {
-      responseSent = true;
-      res.status(200).json({ 
-        message: 'Webhook received',
-        error: 'Processing failed but acknowledged',
-        timestamp: new Date().toISOString()
-      });
+    // Se houver erro antes de responder, retorna erro
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Webhook failed' });
     }
   }
 });

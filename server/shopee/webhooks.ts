@@ -26,41 +26,151 @@ export const WEBHOOK_CODES = {
  */
 async function validateWebhookSignature(req: Request, partnerKey: string): Promise<boolean> {
   try {
-    const receivedSignature = req.headers['authorization'];
-
-    if (!receivedSignature) {
-      console.error('[Webhook] Assinatura não encontrada no header authorization');
+    const authorization = req.headers.authorization as string;
+    if (!authorization) {
+      console.error('[Webhook] Authorization header ausente');
       return false;
     }
 
-    // Reconstruir a URL completa do webhook
+    // Reconstrói a URL exatamente como a Shopee espera
     const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers['host'];
-    const url = `${protocol}://${host}${req.originalUrl}`;
+    const host = req.headers['x-forwarded-host'] || req.headers['host'] || '';
+    
+    // Remove porta se existir (Shopee não inclui porta na assinatura)
+    const cleanHost = host.split(':')[0];
+    
+    // Garante que o path começa com /
+    const path = req.originalUrl.startsWith('/') ? req.originalUrl : `/${req.originalUrl}`;
+    
+    // URL completa sem query string para assinatura
+    const url = `${protocol}://${cleanHost}${path.split('?')[0]}`;
+    
+    // Serializa o body mantendo a ordem das chaves
+    const bodyString = JSON.stringify(req.body, Object.keys(req.body).sort());
 
-    // Corpo da requisição como string JSON
-    const bodyString = JSON.stringify(req.body);
+/**
+ * Helper para extrair shop_id do campo extra
+ */
+function extractShopIdFromExtra(extra?: string): number | undefined {
+  if (!extra) return undefined;
+  
+  // Regex para extrair shop id do texto
+  const match = extra.match(/shop id (\d+)/i);
+  return match ? parseInt(match[1], 10) : undefined;
+}
 
-    // String base para assinatura: URL|BODY
+/**
+ * Handler principal para eventos de webhook
+ */
+async function handleWebhookEvent(code: number, data: any, shopId?: number, timestamp?: number): Promise<void> {
+  switch (code) {
+    case 0: // Test push
+      console.log('[Webhook] Webhook de teste recebido');
+      break;
+      
+    case 1: // Shop authorization by user
+      await handleShopAuthorizationByUser(data, shopId);
+      break;
+      
+    case 3: // Shop deauthorization
+      await handleShopDeauthorization(data, shopId);
+      break;
+      
+    case 4: // Order status update
+      await handleOrderStatusUpdate(data, shopId);
+      break;
+      
+    case 5: // Order tracking update  
+      await handleOrderTrackingUpdate(data, shopId);
+      break;
+      
+    default:
+      console.warn(`[Webhook] Código de evento não tratado: ${code}`, data);
+  }
+}
+
+/**
+ * Handler para atualização de status de pedido
+ */
+async function handleOrderStatusUpdate(data: any, shopId?: number): Promise<void> {
+  try {
+    if (!shopId) {
+      console.warn('[Webhook] Shop ID ausente para atualização de pedido');
+      return;
+    }
+    
+    console.log(`[Webhook] Processando atualização de pedido para loja ${shopId}:`, data);
+    
+    const store = await storage.getStoreByShopId(shopId.toString());
+    if (store) {
+      // Criar notificação para o usuário
+      await storage.createNotification({
+        userId: store.userId,
+        title: 'Pedido Atualizado',
+        message: `Pedido ${data.ordersn} foi atualizado`,
+        type: 'info',
+        isRead: false,
+        createdAt: new Date()
+      });
+    }
+  } catch (error) {
+    console.error('[Webhook] Erro ao processar atualização de pedido:', error);
+  }
+}
+
+/**
+ * Handler para atualização de rastreamento
+ */
+async function handleOrderTrackingUpdate(data: any, shopId?: number): Promise<void> {
+  try {
+    if (!shopId) {
+      console.warn('[Webhook] Shop ID ausente para rastreamento');
+      return;
+    }
+    
+    console.log(`[Webhook] Processando rastreamento para loja ${shopId}:`, data);
+    
+    const store = await storage.getStoreByShopId(shopId.toString());
+    if (store) {
+      await storage.createNotification({
+        userId: store.userId,
+        title: 'Rastreamento Atualizado',
+        message: `Rastreamento ${data.tracking_no} atualizado`,
+        type: 'info',
+        isRead: false,
+        createdAt: new Date()
+      });
+    }
+  } catch (error) {
+    console.error('[Webhook] Erro ao processar rastreamento:', error);
+  }
+}
+
+
+    
+    // String base para assinatura
     const baseString = `${url}|${bodyString}`;
-
-    // Gerar assinatura HMAC-SHA256
+    
+    // Calcula HMAC-SHA256
     const calculatedSignature = createHmac('sha256', partnerKey)
       .update(baseString)
       .digest('hex');
-
-    console.log('[Webhook] Validando assinatura:', {
-      url,
-      bodyLength: bodyString.length,
-      baseStringLength: baseString.length,
-      received: receivedSignature.substring(0, 20) + '...',
-      calculated: calculatedSignature.substring(0, 20) + '...',
-      match: calculatedSignature === receivedSignature
-    });
-
-    return calculatedSignature === receivedSignature;
+    
+    const match = authorization === calculatedSignature;
+    
+    if (!match) {
+      console.error('[Webhook] Assinatura inválida:', {
+        url,
+        bodyLength: bodyString.length,
+        baseStringLength: baseString.length,
+        received: authorization.substring(0, 20) + '...',
+        calculated: calculatedSignature.substring(0, 20) + '...'
+      });
+    }
+    
+    return match;
   } catch (error) {
-    console.error('[Webhook] Erro na validação da assinatura:', error);
+    console.error('[Webhook] Erro na validação:', error);
     return false;
   }
 }
@@ -181,7 +291,7 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
     console.log('[Webhook] Corpo do webhook:', req.body);
 
     // Usar Push Partner Key para webhooks (diferente da API Partner Key)
-    const partnerKey = process.env.SHOPEE_PUSH_PARTNER_KEY || '4c4a694d516b577475716656535842785252665442516866546a4d7155504f47';
+    const partnerKey = process.env.SHOPEE_PUSH_PARTNER_KEY || process.env.SHOPEE_PARTNER_KEY || '4c4a694d516b577475716656535842785252665442516866546a4d7155504f47';
     if (!partnerKey) {
       console.error('[Webhook] SHOPEE_PUSH_PARTNER_KEY não configurada');
       return res.status(500).json({ error: 'Server configuration error' });
@@ -386,34 +496,30 @@ export async function processShopeeWebhookEvent(eventData: any): Promise<void> {
       return;
     }
 
-    // Desestruturar corretamente (sem redeclaração)
-    const { code, shop_id, data, timestamp } = eventData;
+    const { code, data, timestamp } = eventData;
+    
+    // Extrai shop_id de diferentes localizações possíveis
+    const shopId = data?.shop_id || 
+                   data?.shopid || 
+                   eventData.shop_id || 
+                   eventData.shopid ||
+                   extractShopIdFromExtra(data?.extra);
+    
+    console.log(`[Webhook] Evento recebido - Código: ${code}, Loja: ${shopId}, Timestamp: ${timestamp}`);
+    
+    if (!shopId && code !== 0) { // code 0 é teste e não precisa de shop_id
+      console.error('[Webhook] Shop ID não encontrado no evento:', JSON.stringify(eventData, null, 2));
+      return;
+    }
+    
+    // Processa evento com shop_id correto
+    await handleWebhookEvent(code, data, shopId, timestamp);
 
-    // Extrair shop_id do evento (múltiplas fontes possíveis)
-    const shopId = shop_id || 
-                   eventData.data?.shop_id || 
-                   eventData.shopid || 
-                   eventData.data?.shopid;
+    // Converter shop_id para string de forma segura se existir
+    const shopIdStr = shopId ? String(shopId) : null;
 
-  console.log('[Webhook] Buscando shop_id em:', {
-    'event.shop_id': event.shop_id,
-    'event.data?.shop_id': event.data?.shop_id,
-    'event.shopid': event.shopid,
-    'event.data?.shopid': event.data?.shopid,
-    'shopId_encontrado': shopId
-  });
-
-  if (!shopId) {
-    console.log('[Webhook] ❌ Shop ID ausente no evento - dados completos:', JSON.stringify(eventData, null, 2));
-    return;
-  }
-
-  console.log(`[Webhook] ✅ Shop ID encontrado: ${shopId}`);
-
-    // Converter shop_id para string de forma segura
-    const shopIdStr = String(shop_id);
-
-    console.log(`[Webhook] Buscando loja ${shopIdStr} no banco...`);
+    if (shopIdStr) {
+      console.log(`[Webhook] Buscando loja ${shopIdStr} no banco...`);
 
     // Buscar loja no banco com tratamento de erro
     let store;
