@@ -1,0 +1,116 @@
+2025-05-29 22:08:17.18
+002b6795
+User
+},
+2025-05-29 22:08:17.18
+002b6795
+User
+shop_id: 404065079,
+2025-05-29 22:08:17.18
+002b6795
+User
+code: 4,
+2025-05-29 22:08:17.18
+002b6795
+User
+timestamp: 1748567291
+2025-05-29 22:08:17.18
+002b6795
+User
+}
+2025-05-29 22:08:17.18
+002b6795
+User
+[Webhook] Erro crítico no processamento: ReferenceError: event is not defined
+2025-05-29 22:08:17.18
+002b6795
+User
+at processShopeeWebhookEvent (file:///home/runner/workspace/dist/index.js:3118:20)
+2025-05-29 22:08:17.18
+002b6795
+User
+at Immediate._onImmediate (file:///home/runner/workspace/dist/index.js:5054:7)
+2025-05-29 22:08:17.18
+002b6795
+User
+at process.processImmediate (node:internal/timers:483:21)
+2025-05-29 22:08:26.71
+002b6795
+User
+==== RECEBENDO CALLBACK DA SHOPEE ====
+2025-05-29 22:08:26.71
+002b6795
+User
+Parâmetros recebidos: { code: '68487475746d70574741554a7466616a', shop_id: '404065079' }
+2025-05-29 22:08:26.71
+002b6795
+User
+Headers recebidos: {
+2025-05-29 22:08:26.71
+002b6795
+User
+host: 'cipshopee.replit.app',
+2025-05-29 22:08:26.71
+002b6795
+User
+'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
+2025-05-29 22:08:26.71
+002b6795
+User
+accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+2025-05-29 22:08:26.71
+002b6795
+User
+'accept-encoding': 'gzip, deflate, br, zstd',
+2025-05-29 22:08:26.71
+002b6795
+User
+'accept-language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+2025-05-29 22:08:26.71
+002b6795
+User
+cookie: '__clerk_db_jwt_84w8FeoJ=dvb_2x47vsEspUIj12Bz0xD6k2Wk8XJ; __clerk_db_jwt=dvb_2x47vsEspUIj12Bz0xD6k2Wk8XJ; __session=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18yeDNCcFZFSVJib3A5NEswWUcwOE40UzRScFEiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2NpcHNob3BlZS5yZXBsaXQuYXBwIiwiZXhwIjoxNzQ3NTE4NDA3LCJmdmEiOls5MCwtMV0sImlhdCI6MTc0NzUxODM0NywiaXNzIjoiaHR0cHM6Ly9lbWluZW50LW1hcm1vdC00Ny5jbGVyay5hY2NvdW50cy5kZXYiLCJuYmYiOjE3NDc1MTgzMzcsInNpZCI6InNlc3NfMnhFcDhXRWFhdVNqU2hUQ1luQjZIUTlxNUJ4Iiwic3ViIjoidXNlcl8yeDNHMXpOZzAwOXp2NFNsMm5WSWpFUlgwcDYiLCJ2IjoyfQ.pnGWr5h-8oI42DQGnNN1ArShqx3SKappP4RYgkS9SAbKKUsYo8cb9wKjzS9L9IP9Z7LgZbKmXmCubjBwyLGVRdIUwC4WpZuPW9F0_t-fJMYYLVGJ__uUjesNAwOnSTeW2WO6OcmvsfDY047CNNb3h_-kEbcqUV_XTkRwlYxzN-ekT4unvaAZ__vRaSoM2PcYrOlM9noGKUMFw4qQLfyInYcVaGVDijg05NzSMbzqFhuxQkup1CLJ692zSYbYyhBo6z3bO2T3tFVCfSgWRSZMfYswPcYULcTPQ46cw5Iy4vb-0rD6W5Rp71wyVFBpzwytxhkSVxbfGQYwW2X3ooeTRQ; __session_84w8FeoJ=eyJhbGciOiJSUzI1NiIsImNhdCI6ImNsX0I3ZDRQRDExMUFBQSIsImtpZCI6Imluc18yeDNCcFZFSVJib3A5NEswWUcwOE40UzRScFEiLCJ0eXAiOiJKV1QifQ.eyJhenAiOiJodHRwczovL2NpcHNob3BlZS5yZXBsaXQuYXBwIiwiZXhwIjoxNzQ3NTE4NDA3LCJmdmEiOls5MCwtMV0sImlhdCI6MTc0NzUxODM0NywiaXNzIjoiaHR0cHM6Ly9lbWluZW50LW1hcm1vdC00Ny5jbGVyay5hY2NvdW50cy5kZXYiLCJuYmYiOjE3NDc1MTgzMzcsInNpZCI6InNlc3NfMnhFcDhXRWFhdVNqU2hUQ1luQjZIUTlxNUJ4Iiwic3ViIjoidXNlcl8yeDNHMXpOZzAwOXp2NFNsMm5WSWpFUlgwcDYiLCJ2IjoyfQ.pnGWr5h-8oI42DQGnNN1ArShqx3SKappP4RYgkS9SAbKKUsYo8cb9wKjzS9L9IP9Z7LgZbKmXmCubjBwyLGVRdIUwC4WpZuPW9F0_t-fJMYYLVGJ__uUjesNAwOnSTeW2WO6OcmvsfDY047CNNb3h_-kEbcqUV_XTkRwlYxzN-ekT4unvaAZ__vRaSoM2PcYrOlM9noGKUMFw4qQLfyInYcVaGVDijg05NzSMbzqFhuxQkup1CLJ692zSYbYyhBo6z3bO2T3tFVCfSgWRSZMfYswPcYULcTPQ46cw5Iy4vb-0rD6W5Rp71wyVFBpzwytxhkSVxbfGQYwW2X3ooeTRQ; connect.sid=s%3AHRgmrizaJaxQREoSibXCqYSCshGqeGXu.zXp3zPD7fTO8wvAedWkd8QftYQQPq%2BsTviDLBaCn7%2Fc',
+2025-05-29 22:08:26.71
+002b6795
+User
+priority: 'u=0, i',
+2025-05-29 22:08:26.71
+002b6795
+User
+referer: 'https://open.shopee.com/',
+2025-05-29 22:08:26.71
+002b6795
+User
+'sec-ch-ua': '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
+2025-05-29 22:08:26.71
+002b6795
+User
+'sec-ch-ua-mobile': '?0',
+2025-05-29 22:08:26.71
+002b6795
+User
+'sec-ch-ua-platform': '"Windows"',
+2025-05-29 22:08:26.71
+002b6795
+User
+'sec-fetch-dest': 'document',
+2025-05-29 22:08:26.71
+002b6795
+User
+'sec-fetch-mode': 'navigate',
+2025-05-29 22:08:26.71
+002b6795
+User
+'sec-fetch-site': 'cross-site',
+2025-05-29 22:08:26.71
+002b6795
+User
+'sec-fetch-user': '?1',
+2025-05-29 22:08:26.71
+002b6795
+User
+'server-timing': 'depproxy;dur=1748567306550, pid1req;dur=1748567306574',
+2025-05-29 22:08:26.71
+002b6795
+User
+traceparent: '00-0ebd8d54412aae5ea47c48d99ac99013-6be285bd4255d18d-00',
