@@ -1,0 +1,202 @@
+# Guia de Implementação - Correções API Shopee
+
+## 🚨 Prioridade das Correções
+
+### 1. CRÍTICO - Correção Imediata (Impede funcionamento)
+- **Headers já enviados** - Webhook retorna erro 500
+- **Validação de assinatura** - Todos webhooks são rejeitados
+
+### 2. ALTO - Correção Urgente (Funcionalidade comprometida)  
+- **Shop ID não extraído** - Eventos não são processados
+- **Handlers não implementados** - Eventos são ignorados
+
+### 3. MÉDIO - Correção Importante (Melhoria necessária)
+- **Configuração hardcoded** - Risco de segurança
+- **Rate limiting ausente** - Risco de bloqueio pela Shopee
+- **Client com falhas** - Tokens expiram sem renovação
+
+### 4. BAIXO - Melhorias (Qualidade)
+- **Logs excessivos** - Performance e segurança
+- **Error handling** - Melhor diagnóstico
+
+## 📋 Passo a Passo da Implementação
+
+### Passo 1: Configurar Variáveis de Ambiente
+
+Adicione ao seu `.env`:
+
+```env
+# Credenciais Shopee
+SHOPEE_PARTNER_ID=seu_partner_id_aqui
+SHOPEE_PARTNER_KEY=sua_partner_key_aqui
+SHOPEE_PUSH_PARTNER_KEY=sua_push_partner_key_aqui
+SHOPEE_REDIRECT_URL=https://seu-dominio.com/api/shopee/callback
+SHOPEE_REGION=BR
+
+# Ambiente
+NODE_ENV=production
+
+# Redis (para rate limiting)
+REDIS_URL=redis://localhost:6379
+```
+
+⚠️ **IMPORTANTE**: A `SHOPEE_PUSH_PARTNER_KEY` é diferente da `SHOPEE_PARTNER_KEY`. Você precisa obter ambas no painel da Shopee.
+
+### Passo 2: Instalar Dependências
+
+```bash
+npm install express-rate-limit rate-limit-redis node-cache winston
+npm install --save-dev @types/node-cache
+```
+
+### Passo 3: Aplicar Correções Críticas
+
+#### A. Corrigir Webhook (Headers Duplos)
+
+1. Abra `server/routes/shopee.ts`
+2. Substitua o endpoint `/webhook` pelo código fornecido
+3. Teste com curl:
+
+```bash
+curl -X POST http://localhost:3000/api/shopee/webhook \
+  -H "Content-Type: application/json" \
+  -d '{"code":0,"timestamp":1234567890}'
+```
+
+#### B. Corrigir Validação de Assinatura
+
+1. Abra `server/shopee/webhooks.ts`
+2. Substitua a função `validateWebhookSignature`
+3. Verifique se está usando `SHOPEE_PUSH_PARTNER_KEY`
+
+### Passo 4: Aplicar Correções de Alta Prioridade
+
+#### A. Corrigir Extração do Shop ID
+
+1. Substitua `processShopeeWebhookEvent` com o novo código
+2. Adicione a função `extractShopIdFromExtra`
+
+#### B. Implementar Handlers
+
+1. Adicione as funções de handler para cada tipo de evento
+2. Implemente `updateStoreStatus` no seu banco de dados
+
+### Passo 5: Configurar Rate Limiting
+
+1. Crie `server/middleware/rateLimiter.ts`
+2. Aplique nos routes:
+
+```typescript
+// server/routes/shopee.ts
+import { shopeeApiLimiter, webhookLimiter } from '../middleware/rateLimiter';
+
+// Para webhooks
+router.post('/webhook', webhookLimiter, async (req, res) => {
+  // ...
+});
+
+// Para API calls
+router.use('/api/*', shopeeApiLimiter);
+```
+
+### Passo 6: Melhorar Sistema de Logs
+
+1. Crie `server/utils/logger.ts`
+2. Substitua todos `console.log` por `logger.info`
+3. Configure logs estruturados para produção
+
+### Passo 7: Testes de Validação
+
+#### Teste 1: Webhook de Teste
+```bash
+# Gere assinatura correta e teste
+node scripts/test-webhook.js
+```
+
+#### Teste 2: Autorização de Loja
+Simule um evento de autorização e verifique se:
+- Shop ID é extraído corretamente
+- Status é atualizado no banco
+- Sincronização é agendada
+
+#### Teste 3: Rate Limiting
+Execute múltiplas requisições e verifique se o limite é respeitado
+
+## 🔍 Monitoramento Pós-Implementação
+
+### Métricas para Acompanhar
+
+1. **Taxa de Sucesso de Webhooks**
+   - Meta: >99%
+   - Alerta se <95%
+
+2. **Tempo de Resposta do Webhook**
+   - Meta: <200ms
+   - Alerta se >500ms
+
+3. **Taxa de Erro de Assinatura**
+   - Meta: 0%
+   - Qualquer erro deve ser investigado
+
+4. **Rate Limit Hits**
+   - Monitorar quantas vezes o limite é atingido
+   - Ajustar se necessário
+
+### Logs para Monitorar
+
+```typescript
+// Adicione estes logs para debugging
+logger.info('webhook_received', {
+  code: eventData.code,
+  shopId: shopId,
+  timestamp: new Date().toISOString(),
+  signatureValid: isValid
+});
+
+logger.info('webhook_processed', {
+  code: eventData.code,
+  shopId: shopId,
+  duration: Date.now() - startTime,
+  success: true
+});
+```
+
+## 🚀 Checklist de Deploy
+
+- [ ] Variáveis de ambiente configuradas
+- [ ] Redis configurado para rate limiting
+- [ ] Logs estruturados ativados
+- [ ] Webhook testado com assinatura válida
+- [ ] Handlers implementados para eventos principais
+- [ ] Rate limiting testado
+- [ ] Monitoramento configurado
+- [ ] Backup do código anterior realizado
+
+## 📊 Resultado Esperado
+
+Após implementar todas as correções:
+
+- ✅ Taxa de sucesso de webhooks: ~100%
+- ✅ Assinaturas validadas corretamente
+- ✅ Shop ID sempre extraído
+- ✅ Eventos processados adequadamente
+- ✅ Sistema protegido contra rate limit
+- ✅ Logs apropriados para produção
+- ✅ Errors tratados sem expor informações sensíveis
+
+## 🆘 Troubleshooting
+
+### Problema: Assinatura ainda inválida
+1. Verifique se está usando `SHOPEE_PUSH_PARTNER_KEY` (não a API key)
+2. Confirme o formato exato da URL (sem porta, com protocolo)
+3. Teste com a ferramenta de debug da Shopee
+
+### Problema: Shop ID ainda undefined
+1. Faça log do payload completo do webhook
+2. Verifique todas as possíveis localizações do shop_id
+3. Implemente extração do campo `extra` como fallback
+
+### Problema: Rate limit muito restritivo
+1. Ajuste os valores baseado no seu volume
+2. Considere implementar queue para processar em lote
+3. Use Redis para compartilhar limite entre instâncias

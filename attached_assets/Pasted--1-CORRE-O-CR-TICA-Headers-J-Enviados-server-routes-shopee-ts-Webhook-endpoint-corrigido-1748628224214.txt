@@ -1,0 +1,345 @@
+// 1. CORREÇÃO CRÍTICA: Headers Já Enviados
+// server/routes/shopee.ts - Webhook endpoint corrigido
+
+router.post('/webhook', async (req: Request, res: Response) => {
+  try {
+    // Responde imediatamente ao Shopee
+    res.status(200).json({ message: 'Webhook received successfully' });
+    
+    // Processa o webhook em background após responder
+    setImmediate(async () => {
+      try {
+        const { processShopeeWebhookEvent } = await import('../shopee/webhooks');
+        await processShopeeWebhookEvent(req.body);
+      } catch (error) {
+        console.error('[Webhook] Erro no processamento background:', error);
+        // Não tenta responder novamente - apenas loga o erro
+      }
+    });
+  } catch (error) {
+    // Se houver erro antes de responder, retorna erro
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Webhook failed' });
+    }
+  }
+});
+
+// 2. CORREÇÃO CRÍTICA: Validação de Assinatura
+// server/shopee/webhooks.ts
+
+async function validateWebhookSignature(req: Request, partnerKey: string): Promise<boolean> {
+  try {
+    const authorization = req.headers.authorization as string;
+    if (!authorization) {
+      console.error('[Webhook] Authorization header ausente');
+      return false;
+    }
+
+    // Reconstrói a URL exatamente como a Shopee espera
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers['host'] || '';
+    
+    // Remove porta se existir (Shopee não inclui porta na assinatura)
+    const cleanHost = host.split(':')[0];
+    
+    // Garante que o path começa com /
+    const path = req.originalUrl.startsWith('/') ? req.originalUrl : `/${req.originalUrl}`;
+    
+    // URL completa sem query string para assinatura
+    const url = `${protocol}://${cleanHost}${path.split('?')[0]}`;
+    
+    // Serializa o body mantendo a ordem das chaves
+    const bodyString = JSON.stringify(req.body, Object.keys(req.body).sort());
+    
+    // String base para assinatura
+    const baseString = `${url}|${bodyString}`;
+    
+    // Calcula HMAC-SHA256
+    const calculatedSignature = crypto
+      .createHmac('sha256', partnerKey)
+      .update(baseString)
+      .digest('hex');
+    
+    const match = authorization === calculatedSignature;
+    
+    if (!match) {
+      console.error('[Webhook] Assinatura inválida:', {
+        url,
+        bodyLength: bodyString.length,
+        baseStringLength: baseString.length,
+        received: authorization.substring(0, 20) + '...',
+        calculated: calculatedSignature.substring(0, 20) + '...'
+      });
+    }
+    
+    return match;
+  } catch (error) {
+    console.error('[Webhook] Erro na validação:', error);
+    return false;
+  }
+}
+
+// 3. CORREÇÃO: Extração correta do Shop ID
+// server/shopee/webhooks.ts
+
+export async function processShopeeWebhookEvent(eventData: any): Promise<void> {
+  const { code, data, timestamp } = eventData;
+  
+  // Extrai shop_id de diferentes localizações possíveis
+  const shopId = data?.shop_id || 
+                 data?.shopid || 
+                 eventData.shop_id || 
+                 eventData.shopid ||
+                 extractShopIdFromExtra(data?.extra);
+  
+  console.log(`[Webhook] Evento recebido - Código: ${code}, Loja: ${shopId}, Timestamp: ${timestamp}`);
+  
+  if (!shopId && code !== 0) { // code 0 é teste e não precisa de shop_id
+    console.error('[Webhook] Shop ID não encontrado no evento:', JSON.stringify(eventData, null, 2));
+  }
+  
+  // Processa evento com shop_id correto
+  await handleWebhookEvent(code, data, shopId, timestamp);
+}
+
+// Helper para extrair shop_id do campo extra
+function extractShopIdFromExtra(extra?: string): number | undefined {
+  if (!extra) return undefined;
+  
+  // Regex para extrair shop id do texto
+  const match = extra.match(/shop id (\d+)/i);
+  return match ? parseInt(match[1], 10) : undefined;
+}
+
+// 4. CORREÇÃO: Configuração de Keys Apropriadas
+// server/config/shopee.config.ts
+
+interface ShopeeConfig {
+  partnerId: string;
+  partnerKey: string;
+  pushPartnerKey: string;
+  redirectUrl: string;
+  region: string;
+  isProduction: boolean;
+}
+
+export const shopeeConfig: ShopeeConfig = {
+  partnerId: process.env.SHOPEE_PARTNER_ID!,
+  partnerKey: process.env.SHOPEE_PARTNER_KEY!,
+  pushPartnerKey: process.env.SHOPEE_PUSH_PARTNER_KEY!, // Key específica para webhooks
+  redirectUrl: process.env.SHOPEE_REDIRECT_URL!,
+  region: process.env.SHOPEE_REGION || 'BR',
+  isProduction: process.env.NODE_ENV === 'production'
+};
+
+// Validação na inicialização
+export function validateShopeeConfig(): void {
+  const required = [
+    'SHOPEE_PARTNER_ID',
+    'SHOPEE_PARTNER_KEY', 
+    'SHOPEE_PUSH_PARTNER_KEY',
+    'SHOPEE_REDIRECT_URL'
+  ];
+  
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    throw new Error(`Variáveis de ambiente ausentes: ${missing.join(', ')}`);
+  }
+  
+  // Não loga valores sensíveis em produção
+  if (!shopeeConfig.isProduction) {
+    console.log('[Config] Configuração Shopee carregada (development)');
+  }
+}
+
+// 5. CORREÇÃO: Implementação dos Handlers de Webhook
+// server/shopee/webhooks.ts
+
+async function handleWebhookEvent(code: number, data: any, shopId?: number, timestamp?: number): Promise<void> {
+  switch (code) {
+    case 0: // Test push
+      console.log('[Webhook] Webhook de teste recebido');
+      break;
+      
+    case 1: // Shop authorization by user
+      await handleShopAuthorizationByUser(data, shopId);
+      break;
+      
+    case 3: // Shop deauthorization
+      await handleShopDeauthorization(data, shopId);
+      break;
+      
+    case 4: // Order status update
+      await handleOrderStatusUpdate(data, shopId);
+      break;
+      
+    case 5: // Order tracking update  
+      await handleOrderTrackingUpdate(data, shopId);
+      break;
+      
+    default:
+      console.warn(`[Webhook] Código de evento não tratado: ${code}`, data);
+  }
+}
+
+// Handler para autorização de loja
+async function handleShopAuthorizationByUser(data: any, shopId?: number): Promise<void> {
+  try {
+    if (!shopId) {
+      throw new Error('Shop ID não fornecido para autorização');
+    }
+    
+    console.log(`[Webhook] Processando autorização da loja ${shopId}`);
+    
+    // Atualiza status da loja no banco
+    await updateStoreStatus(shopId, 'authorized', {
+      authorizedAt: new Date(),
+      authorizeType: data.authorize_type,
+      extra: data.extra
+    });
+    
+    // Inicia sincronização inicial
+    scheduleInitialSync(shopId);
+    
+  } catch (error) {
+    console.error('[Webhook] Erro ao processar autorização:', error);
+    throw error;
+  }
+}
+
+// 6. CORREÇÃO: Rate Limiting
+// server/middleware/rateLimiter.ts
+
+import rateLimit from 'express-rate-limit';
+import RedisStore from 'rate-limit-redis';
+import { redisClient } from '../config/redis';
+
+// Rate limiter para API calls da Shopee
+export const shopeeApiLimiter = rateLimit({
+  store: new RedisStore({
+    client: redisClient,
+    prefix: 'shopee_api:'
+  }),
+  windowMs: 60 * 1000, // 1 minuto
+  max: 100, // Shopee permite ~100 calls/minuto
+  message: 'Limite de requisições excedido. Tente novamente em breve.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter específico para webhooks
+export const webhookLimiter = rateLimit({
+  windowMs: 1000, // 1 segundo
+  max: 10, // Máximo 10 webhooks por segundo
+  skipSuccessfulRequests: false
+});
+
+// 7. CORREÇÃO: Cliente Shopee com Retry e Cache
+// server/shopee/client.ts
+
+import NodeCache from 'node-cache';
+
+const clientCache = new NodeCache({ stdTTL: 300 }); // Cache de 5 minutos
+
+export async function loadShopeeClientForStore(shopId: number): Promise<ShopeeClient | null> {
+  try {
+    // Verifica cache primeiro
+    const cached = clientCache.get<ShopeeClient>(`client_${shopId}`);
+    if (cached) return cached;
+    
+    // Busca credenciais do banco
+    const store = await getStoreCredentials(shopId);
+    if (!store || !store.accessToken) {
+      console.error(`[Client] Loja ${shopId} não tem token de acesso`);
+      return null;
+    }
+    
+    // Verifica se token está expirado
+    if (isTokenExpired(store.tokenExpiry)) {
+      console.log(`[Client] Token expirado para loja ${shopId}, renovando...`);
+      const newTokens = await refreshAccessToken(store.refreshToken, shopId);
+      if (!newTokens) return null;
+      
+      store.accessToken = newTokens.accessToken;
+      store.refreshToken = newTokens.refreshToken;
+      store.tokenExpiry = newTokens.expiry;
+    }
+    
+    // Cria cliente
+    const client = new ShopeeClient({
+      partnerId: shopeeConfig.partnerId,
+      partnerKey: shopeeConfig.partnerKey,
+      accessToken: store.accessToken,
+      shopId: shopId,
+      region: shopeeConfig.region
+    });
+    
+    // Adiciona ao cache
+    clientCache.set(`client_${shopId}`, client);
+    
+    return client;
+  } catch (error) {
+    console.error(`[Client] Erro ao carregar cliente para loja ${shopId}:`, error);
+    return null;
+  }
+}
+
+// 8. CORREÇÃO: Sistema de Logging Apropriado
+// server/utils/logger.ts
+
+import winston from 'winston';
+
+const logLevel = process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+
+export const logger = winston.createLogger({
+  level: logLevel,
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    })
+  ]
+});
+
+// Sobrescreve console.log em produção
+if (process.env.NODE_ENV === 'production') {
+  console.log = (...args) => logger.info(args.join(' '));
+  console.error = (...args) => logger.error(args.join(' '));
+  console.warn = (...args) => logger.warn(args.join(' '));
+}
+
+// 9. CORREÇÃO: Error Handling Apropriado
+// server/middleware/errorHandler.ts
+
+export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+  // Log completo do erro (não exposto ao cliente)
+  logger.error({
+    error: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+    ip: req.ip,
+    timestamp: new Date().toISOString()
+  });
+  
+  // Resposta ao cliente sem expor detalhes sensíveis
+  if (res.headersSent) {
+    return next(err);
+  }
+  
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  res.status(500).json({
+    error: 'Internal server error',
+    message: isProduction ? 'An error occurred processing your request' : err.message,
+    ...(isProduction ? {} : { stack: err.stack })
+  });
+}
