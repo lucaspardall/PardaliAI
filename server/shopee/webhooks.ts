@@ -521,49 +521,50 @@ export async function processShopeeWebhookEvent(eventData: any): Promise<void> {
     if (shopIdStr) {
       console.log(`[Webhook] Buscando loja ${shopIdStr} no banco...`);
 
-    // Buscar loja no banco com tratamento de erro
-    let store;
-    try {
-      store = await storage.getStoreByShopId(shopIdStr);
-    } catch (dbError) {
-      console.error(`[Webhook] Erro ao buscar loja ${shopIdStr}:`, dbError);
-      return;
-    }
+      // Buscar loja no banco com tratamento de erro
+      let store;
+      try {
+        store = await storage.getStoreByShopId(shopIdStr);
+      } catch (dbError) {
+        console.error(`[Webhook] Erro ao buscar loja ${shopIdStr}:`, dbError);
+        return;
+      }
 
     if (!store) {
-      console.warn(`[Webhook] Loja ${shopIdStr} não encontrada no banco`);
-      return;
-    }
-
-    console.log(`[Webhook] Loja ${store.shopName} encontrada, processando evento ${code}...`);
-
-    // Processar diferentes tipos de eventos com validação
-    try {
-      switch (Number(code)) {
-        case 1: // Order update
-          if (data && typeof data === 'object') {
-            await processOrderUpdate(store.id, data);
-          }
-          break;
-        case 2: // Product update  
-          if (data && typeof data === 'object') {
-            await processProductUpdate(store.id, data);
-          }
-          break;
-        case 3: // Shop update
-          if (data && typeof data === 'object') {
-            await processShopUpdate(store.id, data);
-          }
-          break;
-        default:
-          console.log(`[Webhook] Evento não reconhecido: ${code}`);
+        console.warn(`[Webhook] Loja ${shopIdStr} não encontrada no banco`);
+        return;
       }
-    } catch (processError) {
-      console.error(`[Webhook] Erro ao processar evento ${code}:`, processError);
-      return;
-    }
 
-    console.log(`[Webhook] ✅ Evento processado com sucesso para loja ${shopIdStr}`);
+      console.log(`[Webhook] Loja ${store.shopName} encontrada, processando evento ${code}...`);
+
+      // Processar diferentes tipos de eventos com validação
+      try {
+        switch (Number(code)) {
+          case 1: // Order update
+            if (data && typeof data === 'object') {
+              await processOrderUpdate(store.id, data);
+            }
+            break;
+          case 2: // Product update  
+            if (data && typeof data === 'object') {
+              await processProductUpdate(store.id, data);
+            }
+            break;
+          case 3: // Shop update
+            if (data && typeof data === 'object') {
+              await processShopUpdate(store.id, data);
+            }
+            break;
+          default:
+            console.log(`[Webhook] Evento não reconhecido: ${code}`);
+        }
+      } catch (processError) {
+        console.error(`[Webhook] Erro ao processar evento ${code}:`, processError);
+        return;
+      }
+
+      console.log(`[Webhook] ✅ Evento processado com sucesso para loja ${shopIdStr}`);
+    }
 
   } catch (error) {
     console.error('[Webhook] Erro crítico no processamento:', error);
