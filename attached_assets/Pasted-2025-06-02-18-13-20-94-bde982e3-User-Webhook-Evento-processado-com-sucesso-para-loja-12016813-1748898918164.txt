@@ -1,0 +1,148 @@
+2025-06-02 18:13:20.94
+bde982e3
+User
+[Webhook] ✅ Evento processado com sucesso para loja 1201681388
+2025-06-02 18:14:17.50
+bde982e3
+User
+[Routes] 📥 Webhook Shopee recebido:
+2025-06-02 18:14:17.50
+bde982e3
+User
+- IP: 34.69.33.25
+2025-06-02 18:14:17.50
+bde982e3
+User
+- User-Agent: Go-http-client/1.1
+2025-06-02 18:14:17.50
+bde982e3
+User
+- Headers: {
+2025-06-02 18:14:17.50
+bde982e3
+User
+"host": "cipshopee.replit.app",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"user-agent": "Go-http-client/1.1",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"content-length": "190",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"accept-encoding": "gzip",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"authorization": "ec18f0c3a280790be04c544872771ca9751082596fbab9f58ac8fd71e71466c9",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"content-type": "application/json",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"reqid": "1f33b602369d3f252834da06893ff400:0000009eb54f033c:0000000000000000",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"round": "0",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"server-timing": "depproxy;dur=1748898857451, pid1req;dur=1748898857501",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"shopee-baggage": "CID=br,DT=3",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"traceparent": "00-7a3ad3d766bd1090e41aca04515c7b84-32f2000722c08cc7-01",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"via": "1.1 google",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-cloud-trace-context": "7a3ad3d766bd1090e41aca04515c7b84/3670996676908190919;o=1",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-forwarded-for": "147.136.184.2, 34.117.33.233, 35.191.3.145,34.69.33.25",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-forwarded-host": "cipshopee.replit.app",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-forwarded-proto": "https",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-replit-user-bio": "",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-replit-user-id": "",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-replit-user-name": "",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-replit-user-profile-image": "",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-replit-user-roles": "",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-replit-user-teams": "",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-replit-user-url": "",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"x-request-id": "1f33b602369d3f252834da06893ff400:0100013e712ec3f6:0000009eb54f033c"
+2025-06-02 18:14:17.50
+bde982e3
+User
+}
+2025-06-02 18:14:17.50
+bde982e3
+User
+- Body: {
+2025-06-02 18:14:17.50
+bde982e3
+User
+"msg_id": "64ca21a1369d3e770e8c84193b1a3900",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"data": {
+2025-06-02 18:14:17.50
+bde982e3
+User
+"ordersn": "250603HCBX4VU9",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"package_number": "OFG202597402185182",
+2025-06-02 18:14:17.50
+bde982e3
+User
+"status": "READY"
+2025-06-02 18:14:17.50
+bde982e3
+User
+},
