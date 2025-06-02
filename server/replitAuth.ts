@@ -28,7 +28,8 @@ const getOidcConfig = memoize(
 const inMemoryUsers: Record<string, User> = {};
 
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const sessionTtl = 24 * 60 * 60; // 24 hours in seconds
+  const sessionTtlMs = sessionTtl * 1000; // 24 hours in milliseconds
 
   // Usar PostgreSQL para armazenamento de sessão
   const PgStore = connectPg(session);
@@ -36,18 +37,22 @@ export function getSession() {
     // Usar o cliente SQL com a função 'query' que adicionamos
     pool: sql,
     tableName: 'sessions',
-    createTableIfMissing: true
+    createTableIfMissing: true,
+    ttl: sessionTtl, // 24h TTL
+    touchAfter: 900, // Only update once every 15 minutes (900 seconds)
   });
 
   return session({
     secret: process.env.SESSION_SECRET || 'temp-session-secret-for-development',
-    resave: false,
-    saveUninitialized: false,
+    resave: false, // Don't save session if unmodified
+    saveUninitialized: false, // Don't save empty sessions
+    rolling: false, // Don't reset expiry on every request
     store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: false, // Definir como false para desenvolvimento para permitir cookies em HTTP
-      maxAge: sessionTtl,
+      secure: process.env.NODE_ENV === 'production', // Secure cookies in production
+      sameSite: 'lax',
+      maxAge: sessionTtlMs, // 24 hours
     },
   });
 }
