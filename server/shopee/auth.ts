@@ -199,6 +199,32 @@ export function getAuthorizationUrl(config: ShopeeAuthConfig): string {
   return authManager.getAuthorizationUrl();
 }
 
+// Tipo para normalizar resposta de tokens
+type TokenResponse = {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+};
+
+function sanitizeTokenResponse(res: any): TokenResponse {
+  // Normaliza tokens que podem vir como objeto ou string
+  const access_token = typeof res.access_token === 'string' 
+    ? res.access_token 
+    : res.access_token?.token ?? '';
+
+  const refresh_token = typeof res.refresh_token === 'string'
+    ? res.refresh_token
+    : res.refresh_token?.token ?? '';
+
+  const expires_in = Number(res.expire_in ?? res.expires_in ?? res.expiresIn ?? 0);
+
+  return {
+    access_token,
+    refresh_token,
+    expires_in
+  };
+}
+
 /**
  * Função de conveniência para obter tokens de acesso
  */
@@ -282,9 +308,11 @@ export async function getAccessToken(config: ShopeeAuthConfig, code: string, sho
 
     console.log(`[getAccessToken] ✅ Tokens obtidos com sucesso!`);
 
+    const sanitizedTokens = sanitizeTokenResponse(responseData);
+
     return {
-      accessToken: responseData.access_token,
-      refreshToken: responseData.refresh_token || '',
+      accessToken: sanitizedTokens.access_token,
+      refreshToken: sanitizedTokens.refresh_token || '',
       expiresAt
     };
 

@@ -499,32 +499,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStoreByShopId(shopId: string): Promise<ShopeeStore | undefined> {
+    console.log(`Buscando loja por shopId: ${shopId}`);
     try {
-      // Validar entrada
-      if (!shopId || typeof shopId !== 'string') {
-        console.warn('getStoreByShopId: shopId inválido:', shopId);
-        return undefined;
-      }
+      const stores = await db
+        .select()
+        .from(shopeeStores)
+        .where(eq(shopeeStores.shopId, shopId.toString()))
+        .limit(1);
 
-      console.log(`Buscando loja por shopId: ${shopId}`);
-
-      const stores = await this.executeWithRetry(async () => {
-        // Usar query mais explícita para evitar prepared statement vazio
-        return await db
-          .select()
-          .from(shopeeStores)
-          .where(eq(shopeeStores.shopId, shopId))
-          .limit(1);
-      });
-
-      const store = stores[0];
-      console.log(`Loja encontrada para shopId ${shopId}:`, store ? 'Sim' : 'Não');
-      return store;
+      return stores[0];
     } catch (error) {
-      console.error('Erro ao buscar loja por shopId ${shopId}:', error);
-      return undefined;
+      console.error("Erro ao buscar loja por shopId:", error);
+      throw error;
     }
-  }
+  },
 
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
     const [newNotification] = await db
@@ -953,6 +941,7 @@ export class MemStorage implements IStorage {
     if (!user) return undefined;
 
     const updatedUser: User = {
+```text
       ...user,
       plan,
       planExpiresAt: expiresAt,
