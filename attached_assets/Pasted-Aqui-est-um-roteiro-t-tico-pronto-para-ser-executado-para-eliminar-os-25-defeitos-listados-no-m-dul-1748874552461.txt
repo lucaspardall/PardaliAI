@@ -1,0 +1,47 @@
+Aqui está um roteiro tático—pronto para ser executado—para eliminar os 25 defeitos listados no módulo Shopee do CIP.
+(Ordenei em Hotfix, Short Sprint e Refactor & Hardening para que a sua equipe possa “pegar e correr” sem travar a operação.)
+
+1 · HOTFIX (hoje → +24 h)
+Objetivo	Ação direta	Bloco de código / comando
+Remover chaves hard-coded (🔴 #3, 🟡 #10)	1. Exclua valores default. 2. Pare o container, defina variáveis no painel do Render
+RENDER→Environment → Add Secret	ts // server/routes/shopee.ts<br>export const SHOPEE_PARTNER_ID = assertEnv('SHOPEE_PARTNER_ID');<br>export const SHOPEE_PARTNER_KEY = assertEnv('SHOPEE_PARTNER_KEY');
+Assinatura HMAC única e obrigatória (🔴 #1)	Substitua validateWebhookSignature por versão enxuta e desligue fallback em dev	ts import crypto from 'crypto';<br>export function validSig(rawBody: string, sig: string, key: string){<br> const hash = crypto.createHmac('sha256', key).update(rawBody).digest('hex');<br> return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(sig));<br>}
+Bloqueio de concor­rên­cia (🔴 #4)	Enfileire cada shop_id em BullMQ/Redis	ts await queue.add('webhook', payload, { jobId: data.shop_id, removeOnComplete:true });
+Timeout + retry no cliente HTTP (🟠 #9)	Axios global:	ts axios.defaults.timeout = 8000;<br>axiosRetry(axios, { retries:3, retryDelay:axiosRetry.exponentialDelay });
+Silenciar logs sensíveis (🟡 #11, 🔒 #25)	Troque console.log por pino com redact	ts const log = pino({ redact:['headers.authorization','body'] });
+
+Deploy rápido: commit → git push render main → teste um webhook real; se a assinatura falhar, a rota devolve 401.
+
+2 · SHORT SPRINT (3-5 dias)
+Tema	Entregável	Por quê
+Persistência de jobs (🟠 #6)	Redis (BullMQ) + tabela webhook_jobs (Prisma) para histórico	Reprocessamento pós-restart e auditoria
+Tratamento de erro unificado (🟠 #5, 🟡 #18)	Middleware errorHandler → JSON: {code,message,traceId}	Depuração mais rápida e API consistente
+Rate-limit & back-off (🟠 #8)	Wrapper shopeeRequest() que respeita headers Retry-After	Evita bloqueio da conta
+CSRF/state obrigatório (🔒 #24)	Gere csrfToken (nano-id) na auth url e valide no callback	Bloqueia hijack de autorização
+Cache com TTL (🟡 #14)	Redis set(key,val,'EX',900)	Dados expirados ≠ bugs fantasma
+Logs de negócio	Pino transport → Logflare ou Grafana Loki	Telemetria contínua
+
+3 · REFACTOR & HARDENING (≤ 2 semanas)
+Ponto	Estratégia
+Arquitetura de camadas (Problemas 21-23)	➜ routes apenas HTTP/validação → services (lógica) → repositories (I/O).
+Use zod para validação de DTOs.
+Imports circulares (🔴 #2)	Split storage em módulo independente. Utilize ESLint import/no-cycle.
+Type-safety (🟢 #17)	Ative "strict": true no tsconfig e refatore any.
+Testes unitários (🟢 #20)	Vitest + supertest para rotas; cenários de assinatura ok/ko.
+Documentação (🟢 #19)	JSDoc + Swagger UI auto-gerado (express-zod-swagger).
+
+Scripts de auxílio
+bash
+Copiar
+Editar
+# 1. Migração para Redis (BullMQ)
+npm i bullmq ioredis pino pino-pretty axios-retry vitest
+
+# 2. Lint + testes
+npm run lint && npm run test
+4 · MONITORAMENTO CONTÍNUO
+Grafana/Loki dashboard → métricas de latência, taxa de erro e fila.
+
+Sentry → captura de exceções não tratadas.
+
+Cron diário → /health/shopee pinga endpoint e valida assinatura mock.
