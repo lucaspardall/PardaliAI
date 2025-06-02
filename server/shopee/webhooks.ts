@@ -335,7 +335,19 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
 
     const { code, data, shop_id, timestamp, msg_id } = req.body;
 
-    console.log(`[Webhook] Evento recebido - Código: ${code}, Loja: ${shop_id}, Timestamp: ${timestamp}, MSG ID: ${msg_id}`);
+    // Detectar tipo de evento automaticamente se código não estiver presente
+    let eventCode = code;
+    if (!eventCode && data) {
+      if (data.ordersn && data.package_number && data.status) {
+        eventCode = 15; // Package status update
+        console.log(`[Webhook] Detectado automaticamente como evento de pacote (código 15)`);
+      } else if (data.ordersn && data.tracking_no) {
+        eventCode = 4; // Order status update
+        console.log(`[Webhook] Detectado automaticamente como evento de pedido (código 4)`);
+      }
+    }
+
+    console.log(`[Webhook] Evento recebido - Código: ${eventCode}, Loja: ${shop_id}, Timestamp: ${timestamp}, MSG ID: ${msg_id}`);
 
     // Verificar se é um evento duplicado baseado no msg_id
     if (msg_id) {
@@ -344,7 +356,7 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
     }
 
     // Processar webhook baseado no código
-    switch (code) {
+    switch (eventCode) {
       case 0: // Test push
         console.log('[Webhook] Webhook de teste recebido');
         break;
@@ -384,9 +396,14 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
         await handleChatNotification(data, shop_id);
         break;
 
+      case 15: // Package status update
+        console.log('[Webhook] Atualização de status de pacote:', data);
+        await handlePackageStatusUpdate(data, shop_id);
+        break;
+
       default:
-        console.log(`[Webhook] Código de evento não tratado: ${code}`, {
-          eventCode: code,
+        console.log(`[Webhook] Código de evento não tratado: ${eventCode}`, {
+          eventCode,
           data,
           shopId: shop_id
         });
@@ -396,9 +413,12 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
     res.status(200).json({ 
       message: 'ok',
       processed: true,
-      eventCode: code,
-      msgId: msg_id
+      eventCode,
+      msgId: msg_id,
+      autoDetected: !code && eventCode
     });
+
+    console.log(`[Webhook] ✅ Evento processado com sucesso - Código: ${eventCode}, MSG ID: ${msg_id}`);
 
   } catch (error) {
     console.error('[Webhook] Erro no processamento:', error);
