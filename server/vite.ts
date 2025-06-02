@@ -36,8 +36,22 @@ export async function setupVite(app: Express, server: Server) {
         process.exit(1);
       },
     },
-    server: serverOptions,
+    server: {
+      middlewareMode: true,
+      hmr: { 
+        port: 5173,
+        overlay: false,
+        timeout: 30000
+      },
+      watch: {
+        usePolling: false,
+        interval: 1000
+      }
+    },
     appType: "custom",
+    optimizeDeps: {
+      include: ['react', 'react-dom']
+    }
   });
 
   app.use(vite.middlewares);
