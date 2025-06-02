@@ -1,0 +1,128 @@
+2025-06-02 17:46:40.86
+87076463
+User
+"x-replit-user-profile-image": "",
+2025-06-02 17:46:40.86
+87076463
+User
+"x-replit-user-roles": "",
+2025-06-02 17:46:40.86
+87076463
+User
+"x-replit-user-teams": "",
+2025-06-02 17:46:40.86
+87076463
+User
+"x-replit-user-url": "",
+2025-06-02 17:46:40.86
+87076463
+User
+"x-request-id": "38f466a9369cdc64cd9d8f080168e900:010001728e1eed4a:0000004957e8b1b8"
+2025-06-02 17:46:40.86
+87076463
+User
+}
+2025-06-02 17:46:40.86
+87076463
+User
+- Body: {
+2025-06-02 17:46:40.86
+87076463
+User
+"msg_id": "64ca21a1369cdc0415eb464924de8200",
+2025-06-02 17:46:40.86
+87076463
+User
+"data": {
+2025-06-02 17:46:40.86
+87076463
+User
+"completed_scenario": "",
+2025-06-02 17:46:40.86
+87076463
+User
+"items": [],
+2025-06-02 17:46:40.86
+87076463
+User
+"ordersn": "250602ETXYCQQ3",
+2025-06-02 17:46:40.86
+87076463
+User
+"status": "CANCELLED",
+2025-06-02 17:46:40.86
+87076463
+User
+"update_time": 1748897194
+2025-06-02 17:46:40.86
+87076463
+User
+},
+2025-06-02 17:46:40.86
+87076463
+User
+"shop_id": 404065079,
+2025-06-02 17:46:40.86
+87076463
+User
+"code": 3,
+2025-06-02 17:46:40.86
+87076463
+User
+"timestamp": 1748897194
+2025-06-02 17:46:40.86
+87076463
+User
+}
+2025-06-02 17:46:40.86
+87076463
+User
+8:46:40 PM [express] POST /api/shopee/webhook 200 in 1ms :: {"message":"Webhook received successfull…
+2025-06-02 17:46:40.86
+87076463
+User
+[Webhook] Erro crítico no processamento: ReferenceError: handleWebhookEvent is not defined
+2025-06-02 17:46:40.86
+87076463
+User
+at processShopeeWebhookEvent (file:///home/runner/workspace/dist/index.js:3217:5)
+2025-06-02 17:46:40.86
+87076463
+User
+at WebhookQueue.executeWebhookJob (file:///home/runner/workspace/dist/index.js:3357:17)
+2025-06-02 17:46:40.86
+87076463
+User
+at async WebhookQueue.processWebhook (file:///home/runner/workspace/dist/index.js:3348:11)
+2025-06-02 17:46:40.86
+87076463
+User
+at async Immediate. (file:///home/runner/workspace/dist/index.js:5246:11)
+2025-06-02 17:46:40.86
+87076463
+User
+[Webhook] Processando evento para loja 404065079
+2025-06-02 17:46:40.86
+87076463
+User
+[Webhook] Dados do evento: {
+2025-06-02 17:46:40.86
+87076463
+User
+"msg_id": "64ca21a1369cdc0415eb464924de8200",
+2025-06-02 17:46:40.86
+87076463
+User
+"data": {
+2025-06-02 17:46:40.86
+87076463
+User
+"completed_scenario": "",
+2025-06-02 17:46:40.86
+87076463
+User
+"items": [],
+2025-06-02 17:46:40.86
+87076463
+User
+"ordersn": "250602ETXYCQQ3",
