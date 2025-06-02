@@ -28,7 +28,9 @@ const getOidcConfig = memoize(
 const inMemoryUsers: Record<string, User> = {};
 
 export function getSession() {
-  const sessionTtl = 24 * 60 * 60; // 24 hours in seconds
+  console.log('🔧 Session middleware loading with optimized config...');
+  
+  const sessionTtl = 86400; // 24 hours in seconds
   const sessionTtlMs = sessionTtl * 1000; // 24 hours in milliseconds
 
   // Usar PostgreSQL para armazenamento de sessão
@@ -42,10 +44,12 @@ export function getSession() {
     touchAfter: 900, // Only update once every 15 minutes (900 seconds)
   });
 
+  console.log('✅ Session store configured with touchAfter: 900 seconds');
+
   return session({
     secret: process.env.SESSION_SECRET || 'temp-session-secret-for-development',
-    resave: false, // Don't save session if unmodified
     saveUninitialized: false, // Don't save empty sessions
+    resave: false, // Don't save session if unmodified
     rolling: false, // Don't reset expiry on every request
     store: sessionStore,
     cookie: {
