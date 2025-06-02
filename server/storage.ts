@@ -512,7 +512,7 @@ export class DatabaseStorage implements IStorage {
       console.error("Erro ao buscar loja por shopId:", error);
       throw error;
     }
-  },
+  }
 
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
     const [newNotification] = await db
