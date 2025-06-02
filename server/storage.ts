@@ -499,32 +499,39 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStoreByShopId(shopId: string): Promise<ShopeeStore | undefined> {
-    console.log(`Buscando loja por shopId: ${shopId}`);
+    console.log(`[Storage] Buscando loja por shopId: ${shopId}`);
+
+    // Validar que shopId é uma string válida
+    if (!shopId || typeof shopId !== 'string') {
+      console.error(`[Storage] shopId inválido: ${shopId}`);
+      return undefined;
+    }
+
+    // Converter para string se for número
+    const shopIdStr = String(shopId).trim();
 
     try {
-      // Validar entrada
-      if (!shopId || typeof shopId !== 'string') {
-        console.error('shopId inválido:', shopId);
-        return undefined;
-      }
-
-      // Garantir que shopId é string
-      const shopIdStr = String(shopId).trim();
-
-      if (!shopIdStr) {
-        console.error('shopId vazio após conversão');
-        return undefined;
-      }
-
       const stores = await db
         .select()
         .from(shopeeStores)
         .where(eq(shopeeStores.shopId, shopIdStr))
         .limit(1);
 
+      console.log(`[Storage] Resultado da busca: ${stores.length} store(s) encontrada(s)`);
       return stores[0];
     } catch (error) {
-      console.error('Erro ao buscar loja por shopId:', error);
+      console.error('[Storage] Erro ao buscar loja por shopId:', error);
+
+      // Log detalhado do erro para debug
+      if (error && typeof error === 'object') {
+        console.error('[Storage] Detalhes do erro:', {
+          message: (error as any).message,
+          code: (error as any).code,
+          type: (error as any).type,
+          severity: (error as any).severity
+        });
+      }
+
       return undefined;
     }
   }
@@ -933,7 +940,7 @@ export class MemStorage implements IStorage {
   }
 
   async getUserById(id: string): Promise<User | undefined> {
-    return this.getUser(id);
+    returnthis.getUser(id);
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {

@@ -109,8 +109,8 @@ const executeWithRetry = async (fn: Function, maxRetries = 3): Promise<any> => {
 
       // Estratégias diferentes por tipo de erro
       if (isPreparedStatementError) {
-        // Não vale a pena retry para prepared statement
-        console.error('[DB] ❌ Erro de prepared statement - não fazendo retry');
+        console.log(`[DB] ❌ Erro de prepared statement - query: ${text.substring(0, 100)}...`);
+        console.log(`[DB] ❌ Parâmetros fornecidos: ${params?.length || 0} - ${JSON.stringify(params?.slice(0, 3))}`);
         throw err;
       }
 

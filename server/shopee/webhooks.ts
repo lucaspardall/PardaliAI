@@ -248,8 +248,15 @@ async function handleShopDeauthorization(data: any, shopId?: number): Promise<vo
       return;
     }
 
-    // Converter para string de forma segura
-    const shopIdStr = String(shopId);
+    // Converter para string de forma segura e validar
+    const shopIdStr = String(shopId).trim();
+    
+    if (!shopIdStr || shopIdStr === 'undefined' || shopIdStr === 'null') {
+      console.error('[Webhook] shopId inválido após conversão:', shopIdStr);
+      return;
+    }
+
+    console.log(`[Webhook] Processando desautorização para loja ID: ${shopIdStr}`);
     
     // Encontrar a loja no banco de dados
     const store = await storage.getStoreByShopId(shopIdStr);
