@@ -941,7 +941,6 @@ export class MemStorage implements IStorage {
     if (!user) return undefined;
 
     const updatedUser: User = {
-```text
       ...user,
       plan,
       planExpiresAt: expiresAt,
