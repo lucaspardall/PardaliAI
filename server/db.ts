@@ -31,28 +31,28 @@ let connectionStatus: { isConnected: boolean; lastCheck: number } = {
 const checkConnection = async (): Promise<boolean> => {
   const now = Date.now();
   const cacheExpiry = 30000; // 30 segundos
-  
+
   // Se verificou recentemente e estava conectado, retorna true
   if (connectionStatus.isConnected && (now - connectionStatus.lastCheck) < cacheExpiry) {
     return true;
   }
-  
+
   try {
     // Log apenas em desenvolvimento ou se passou muito tempo
     const shouldLog = process.env.NODE_ENV === 'development' || (now - connectionStatus.lastCheck) > 60000;
-    
+
     if (shouldLog) {
       console.log("🔌 Verificando conexão com banco...");
     }
-    
+
     await rawSql("SELECT 1");
-    
+
     connectionStatus = { isConnected: true, lastCheck: now };
-    
+
     if (shouldLog) {
       console.log("✅ Conexão com banco estabelecida");
     }
-    
+
     return true;
   } catch (err) {
     connectionStatus = { isConnected: false, lastCheck: now };
@@ -73,7 +73,7 @@ const executeWithRetry = async (fn: Function, maxRetries = 3): Promise<any> => {
       }
 
       const result = await fn();
-      
+
       // Log de sucesso apenas após retry
       if (attempt > 0) {
         console.log(`[DB] ✅ Sucesso após ${attempt + 1} tentativas`);
@@ -148,7 +148,7 @@ const enhancedSql = Object.assign(rawSql, {
       return await executeWithRetry(async () => {
         // Normalizar parâmetros
         const normalizedParams = Array.isArray(params) ? params.filter(p => p !== undefined) : [];
-        
+
         // Log para debug (apenas em desenvolvimento e para queries importantes)
         if (process.env.NODE_ENV === 'development' && !text.includes('sessions')) {
           console.log(`[DB] Query: ${text.substring(0, 100)}...`);
@@ -156,7 +156,7 @@ const enhancedSql = Object.assign(rawSql, {
         }
 
         let result;
-        
+
         // Executar query com ou sem parâmetros
         if (normalizedParams.length === 0) {
           // Query sem parâmetros - usar template literal

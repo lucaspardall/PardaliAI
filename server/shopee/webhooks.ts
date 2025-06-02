@@ -238,12 +238,21 @@ async function handleOrderUpdate(data: any, shopId: number): Promise<void> {
 /**
  * Processa webhook de desautorização de loja
  */
-async function handleShopDeauthorization(data: any, shopId: number): Promise<void> {
+async function handleShopDeauthorization(data: any, shopId?: number): Promise<void> {
   console.log(`[Webhook] Loja ${shopId} desautorizada:`, data);
 
   try {
+    // Validar shopId
+    if (!shopId) {
+      console.error('[Webhook] shopId ausente para desautorização');
+      return;
+    }
+
+    // Converter para string de forma segura
+    const shopIdStr = String(shopId);
+    
     // Encontrar a loja no banco de dados
-    const store = await storage.getStoreByShopId(shopId.toString());
+    const store = await storage.getStoreByShopId(shopIdStr);
 
     if (store) {
       // Marcar loja como inativa
@@ -263,6 +272,8 @@ async function handleShopDeauthorization(data: any, shopId: number): Promise<voi
       });
 
       console.log(`[Webhook] Loja ${shopId} marcada como inativa`);
+    } else {
+      console.warn(`[Webhook] Loja ${shopId} não encontrada no banco de dados`);
     }
   } catch (error) {
     console.error(`[Webhook] Erro ao processar desautorização da loja ${shopId}:`, error);

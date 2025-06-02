@@ -500,17 +500,32 @@ export class DatabaseStorage implements IStorage {
 
   async getStoreByShopId(shopId: string): Promise<ShopeeStore | undefined> {
     console.log(`Buscando loja por shopId: ${shopId}`);
+
     try {
+      // Validar entrada
+      if (!shopId || typeof shopId !== 'string') {
+        console.error('shopId inválido:', shopId);
+        return undefined;
+      }
+
+      // Garantir que shopId é string
+      const shopIdStr = String(shopId).trim();
+
+      if (!shopIdStr) {
+        console.error('shopId vazio após conversão');
+        return undefined;
+      }
+
       const stores = await db
         .select()
         .from(shopeeStores)
-        .where(eq(shopeeStores.shopId, shopId.toString()))
+        .where(eq(shopeeStores.shopId, shopIdStr))
         .limit(1);
 
       return stores[0];
     } catch (error) {
-      console.error("Erro ao buscar loja por shopId:", error);
-      throw error;
+      console.error('Erro ao buscar loja por shopId:', error);
+      return undefined;
     }
   }
 
@@ -931,7 +946,7 @@ export class MemStorage implements IStorage {
       planStatus: userData.planStatus || 'active',
       aiCreditsLeft: userData.aiCreditsLeft || 10,
       storeLimit: userData.storeLimit || 1
-    };
+        };
     this.users.set(user.id, user);
     return user;
   }
@@ -1010,7 +1025,18 @@ export class MemStorage implements IStorage {
   }
 
   async getStoreByShopId(shopId: string): Promise<ShopeeStore | undefined> {
-    return Array.from(this.stores.values()).find(store => store.shopId === shopId);
+    if (!shopId || typeof shopId !== 'string') {
+      console.error('shopId inválido:', shopId);
+      return undefined;
+    }
+
+    const shopIdStr = String(shopId).trim();
+
+    if (!shopIdStr) {
+      console.error('shopId vazio após conversão');
+      return undefined;
+    }
+    return Array.from(this.stores.values()).find(store => store.shopId === shopIdStr);
   }
 
   async createStore(store: InsertShopeeStore): Promise<ShopeeStore> {
