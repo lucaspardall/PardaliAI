@@ -149,8 +149,8 @@ const enhancedSql = Object.assign(rawSql, {
         // Normalizar parâmetros
         const normalizedParams = Array.isArray(params) ? params.filter(p => p !== undefined) : [];
         
-        // Log para debug (apenas em desenvolvimento)
-        if (process.env.NODE_ENV === 'development') {
+        // Log para debug (apenas em desenvolvimento e para queries importantes)
+        if (process.env.NODE_ENV === 'development' && !text.includes('sessions')) {
           console.log(`[DB] Query: ${text.substring(0, 100)}...`);
           console.log(`[DB] Params: ${normalizedParams.length} parameters`);
         }
