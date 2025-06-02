@@ -1,0 +1,52 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+⚠️ Stripe não configurado. Configure STRIPE_SECRET_KEY no arquivo .env para usar funcionalidades de pagamento.
+7:54:59 PM [express] Conexão com o banco de dados estabelecida com sucesso
+🔧 Session middleware loading with optimized config...
+✅ Session store configured with touchAfter: 900 seconds
+7:54:59 PM [express] Server running on port 5000
+[DB] Query: SELECT to_regclass($1::text)...
+[DB] Params: 1 parameters
+7:55:10 PM [express] GET /api/auth/user 200 in 41ms :: {"id":"41750934","email":"llouback4@gmail.com…
+7:55:10 PM [express] GET /api/auth/user 200 in 48ms :: {"id":"41750934","email":"llouback4@gmail.com…
+[API] Buscando stores para usuário: 41750934
+[API] Stores encontradas: 0
+7:55:11 PM [express] GET /api/stores 304 in 39ms :: []
+7:55:11 PM [express] GET /api/notifications 304 in 53ms :: []
+7:55:11 PM [express] GET /api/shopee-status/production-status 304 in 42ms :: {"readyForProduction":f…
+======= INICIANDO FLUXO DE AUTORIZAÇÃO SHOPEE =======
+Usuário autenticado: {
+  claims: {
+    aud: '73ee031f-24e8-4b77-96e8-2cd2724cf5f2',
+    exp: 1748529999,
+    iat: 1748526399,
+    iss: 'https://replit.com/oidc',
+    sub: '41750934',
+    email: 'llouback4@gmail.com',
+    at_hash: 'Ij3NF3XnpM5TmqBfgi_tHQ',
+    username: 'llouback4',
+    auth_time: 1748526399,
+    last_name: 'Louback',
+    first_name: 'Lucas'
+  },
+  expires_at: 1748529999,
+  access_token: 'I2pWXTV3wdtwRZmsHhf4V6HOeY3nFP10ofH9UMtq8tu',
+  refresh_token: 'LwLT5Q0N7VHIv5r8oTq72gjxTv3M0lYV28Nu5K-arb7'
+}
+Ambiente: development
+Informações de configuração da API:
+Partner ID: 2011285
+URL de redirecionamento configurada: https://cipshopee.replit.app/api/shopee/callback
+===================================================
+URL de redirecionamento que será usada: https://cipshopee.replit.app/api/shopee/callback
+[Shopee Auth] Base string: 2011285/api/v2/shop/auth_partner1748894117
+[Shopee Auth] Generated signature: 323171ee8cabd6a6539c53e816a4faebcfb0f71a499e03a0aad59b16792cf6c2
+✅ URL de autorização OAuth gerada com sucesso: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748894117&sign=323171ee8cabd6a6539c53e816a4faebcfb0f71a499e03a0aad59b16792cf6c2&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748894117149
+🔄 Status 302 é esperado - indica redirecionamento para login da Shopee
+✅ URL salva em arquivo para inspeção: shopee_auth_url.txt
+🚀 Redirecionando para autorização OAuth da Shopee...
+📋 URL completa: https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=2011285&timestamp=1748894117&sign=323171ee8cabd6a6539c53e816a4faebcfb0f71a499e03a0aad59b16792cf6c2&redirect=https%3A%2F%2Fcipshopee.replit.app%2Fapi%2Fshopee%2Fcallback&state=cipshopee_1748894117149
+ℹ️  NOTA: Status 302 é normal - indica redirecionamento para login da Shopee
+7:55:17 PM [express] GET /api/shopee/authorize 302 in 128ms
