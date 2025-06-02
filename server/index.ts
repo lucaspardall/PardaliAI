@@ -31,11 +31,9 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    
-    // Log apenas APIs importantes e com status de erro ou tempo alto
-    if (path.startsWith("/api") && (res.statusCode >= 400 || duration > 1000)) {
+    if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse && res.statusCode >= 400) {
+      if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 

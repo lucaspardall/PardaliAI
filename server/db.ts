@@ -149,11 +149,8 @@ const enhancedSql = Object.assign(rawSql, {
         // Normalizar parâmetros
         const normalizedParams = Array.isArray(params) ? params.filter(p => p !== undefined) : [];
         
-        // Log para debug (apenas queries importantes, excluindo sistema)
-        const systemQueries = ['sessions', 'to_regclass', 'pg_', 'information_schema'];
-        const isSystemQuery = systemQueries.some(pattern => text.toLowerCase().includes(pattern));
-        
-        if (process.env.NODE_ENV === 'development' && !isSystemQuery && normalizedParams.length > 0) {
+        // Log para debug (apenas em desenvolvimento e para queries importantes)
+        if (process.env.NODE_ENV === 'development' && !text.includes('sessions')) {
           console.log(`[DB] Query: ${text.substring(0, 100)}...`);
           console.log(`[DB] Params: ${normalizedParams.length} parameters`);
         }
