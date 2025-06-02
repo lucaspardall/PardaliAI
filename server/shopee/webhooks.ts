@@ -62,7 +62,7 @@ function extractShopIdFromExtra(extra?: string): number | undefined {
 /**
  * Handler principal para eventos de webhook
  */
-async function handleWebhookEvent(code: number, data: any, shopId?: number, timestamp?: number): Promise<void> {
+export async function handleWebhookEvent(code: number, data: any, shopId?: number, timestamp?: number): Promise<void> {
   switch (code) {
     case 0: // Test push
       console.log('[Webhook] Webhook de teste recebido');
@@ -82,6 +82,10 @@ async function handleWebhookEvent(code: number, data: any, shopId?: number, time
 
     case 5: // Order tracking update  
       await handleOrderTrackingUpdate(data, shopId);
+      break;
+
+    case 15: // Package status update
+      await handlePackageStatusUpdate(data, shopId);
       break;
 
     default:
@@ -143,6 +147,54 @@ async function handleOrderTrackingUpdate(data: any, shopId?: number): Promise<vo
     }
   } catch (error) {
     console.error('[Webhook] Erro ao processar rastreamento:', error);
+  }
+}
+
+/**
+ * Handler para atualização de status de pacote (código 15)
+ */
+async function handlePackageStatusUpdate(data: any, shopId?: number): Promise<void> {
+  try {
+    if (!shopId) {
+      console.warn('[Webhook] Shop ID ausente para atualização de pacote');
+      return;
+    }
+
+    console.log(`[Webhook] Processando atualização de pacote para loja ${shopId}:`, data);
+
+    const { ordersn, package_number, status } = data;
+
+    const store = await storage.getStoreByShopId(shopId.toString());
+    if (store) {
+      // Criar notificação baseada no status
+      let statusMessage = '';
+      switch (status) {
+        case 'READY':
+          statusMessage = 'pronto para envio';
+          break;
+        case 'SHIPPED':
+          statusMessage = 'enviado';
+          break;
+        case 'DELIVERED':
+          statusMessage = 'entregue';
+          break;
+        default:
+          statusMessage = `status: ${status}`;
+      }
+
+      await storage.createNotification({
+        userId: store.userId,
+        title: 'Status do Pacote Atualizado',
+        message: `Pedido ${ordersn} (${package_number}) - ${statusMessage}`,
+        type: 'info',
+        isRead: false,
+        createdAt: new Date()
+      });
+
+      console.log(`[Webhook] Notificação criada para atualização do pacote ${package_number}`);
+    }
+  } catch (error) {
+    console.error('[Webhook] Erro ao processar atualização de pacote:', error);
   }
 }
 
