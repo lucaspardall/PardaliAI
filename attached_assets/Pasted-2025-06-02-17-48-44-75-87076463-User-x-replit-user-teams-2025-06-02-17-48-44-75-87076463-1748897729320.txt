@@ -1,0 +1,313 @@
+2025-06-02 17:48:44.75
+87076463
+User
+"x-replit-user-teams": "",
+2025-06-02 17:48:44.75
+87076463
+User
+"x-replit-user-url": "",
+2025-06-02 17:48:44.75
+87076463
+User
+"x-request-id": "370776b4369ce3c92d18001c023fb400:010001abf5c19902:000000878a8504e3"
+2025-06-02 17:48:44.75
+87076463
+User
+}
+2025-06-02 17:48:44.75
+87076463
+User
+- Body: {
+2025-06-02 17:48:44.75
+87076463
+User
+"msg_id": "64ca21a1369ce35143cb2308470cac00",
+2025-06-02 17:48:44.75
+87076463
+User
+"data": {
+2025-06-02 17:48:44.75
+87076463
+User
+"ordersn": "250603HB2WTWG6",
+2025-06-02 17:48:44.75
+87076463
+User
+"package_number": "OFG202596025123331",
+2025-06-02 17:48:44.75
+87076463
+User
+"status": "READY"
+2025-06-02 17:48:44.75
+87076463
+User
+},
+2025-06-02 17:48:44.75
+87076463
+User
+"shop_id": 1201681388,
+2025-06-02 17:48:44.75
+87076463
+User
+"code": 15,
+2025-06-02 17:48:44.75
+87076463
+User
+"timestamp": 1748897316
+2025-06-02 17:48:44.75
+87076463
+User
+}
+2025-06-02 17:48:44.75
+87076463
+User
+8:48:44 PM [express] POST /api/shopee/webhook 200 in 1ms :: {"message":"Webhook received successfull…
+2025-06-02 17:48:44.75
+87076463
+User
+[Webhook] Processando evento para loja 1201681388
+2025-06-02 17:48:44.75
+87076463
+User
+[Webhook] Dados do evento: {
+2025-06-02 17:48:44.75
+87076463
+User
+"msg_id": "64ca21a1369ce35143cb2308470cac00",
+2025-06-02 17:48:44.75
+87076463
+User
+"data": {
+2025-06-02 17:48:44.75
+87076463
+User
+"ordersn": "250603HB2WTWG6",
+2025-06-02 17:48:44.75
+87076463
+User
+"package_number": "OFG202596025123331",
+2025-06-02 17:48:44.75
+87076463
+User
+"status": "READY"
+2025-06-02 17:48:44.75
+87076463
+User
+},
+2025-06-02 17:48:44.75
+87076463
+User
+"shop_id": 1201681388,
+2025-06-02 17:48:44.75
+87076463
+User
+"code": 15,
+2025-06-02 17:48:44.75
+87076463
+User
+"timestamp": 1748897316
+2025-06-02 17:48:44.75
+87076463
+User
+}
+2025-06-02 17:48:44.75
+87076463
+User
+[Webhook] Evento recebido - Código: 15, Loja: 1201681388, Timestamp: 1748897316
+2025-06-02 17:48:44.75
+87076463
+User
+[Webhook] Erro crítico no processamento: ReferenceError: handleWebhookEvent is not defined
+2025-06-02 17:48:44.75
+87076463
+User
+at processShopeeWebhookEvent (file:///home/runner/workspace/dist/index.js:3217:5)
+2025-06-02 17:48:44.75
+87076463
+User
+at WebhookQueue.executeWebhookJob (file:///home/runner/workspace/dist/index.js:3357:17)
+
+
+O ChatGPT disse:
+
+Pensou por 4 segundos
+O erro ReferenceError: handleWebhookEvent is not defined indica que, dentro de processShopeeWebhookEvent, você está chamando uma função que não existe (ou não foi importada) no escopo atual. Para corrigir, siga estes passos:
+
+1. Verifique onde deveria residir handleWebhookEvent
+Normalmente, a estrutura de um webhook Shopee poderia ser algo assim:
+
+ts
+Copiar
+Editar
+// src/handlers/shopee.ts (ou algo equivalente)
+export async function handleWebhookEvent(data: {
+  ordersn: string;
+  package_number: string;
+  status: string;
+}) {
+  // lógica de negócio: atualizar pedido no banco, notificar usuário, etc.
+  // Exemplo mínimo:
+  console.log('Tratando evento Shopee:', data.ordersn, data.status);
+  // ...seu código de processamento aqui...
+}
+Se esse arquivo não existir ou não exportar handleWebhookEvent, o Node acabará reclamando que a função não está definida.
+
+2. Importe/Addicione a definição antes de usar
+No seu ponto de entrada (onde está processShopeeWebhookEvent), certifique-se de:
+
+Ter criado (ou importado) o handleWebhookEvent.
+
+Estar chamando o nome correto.
+
+Por exemplo, se sua estrutura for:
+
+kotlin
+Copiar
+Editar
+src/
+ ├─ index.ts              ← aqui você registra o Express e a fila de webhooks
+ └─ handlers/
+     └─ shopee.ts         ← aqui fica a função handleWebhookEvent
+Então, em index.ts (ou onde estiver processShopeeWebhookEvent), faça:
+
+ts
+Copiar
+Editar
+// src/index.ts ou dist/index.js (antes da transpilação)
+import { handleWebhookEvent } from './handlers/shopee';
+
+// ...
+
+async function processShopeeWebhookEvent(event: any) {
+  try {
+    const { data } = event;
+    // validações básicas
+    if (!data.ordersn || !data.package_number) {
+      throw new Error('Payload incompleto');
+    }
+    // chame a função corretamente
+    await handleWebhookEvent({
+      ordersn: data.ordersn,
+      package_number: data.package_number,
+      status: data.status,
+    });
+  } catch (err) {
+    console.error('[Webhook] Erro crítico no processamento:', err);
+    throw err;
+  }
+}
+
+// Exemplo de enfileiramento
+class WebhookQueue {
+  // ...
+  async executeWebhookJob(event: any) {
+    // ...
+    await processShopeeWebhookEvent(event);
+  }
+  // ...
+}
+Pontos importantes:
+
+Confirme se ./handlers/shopee.ts (ou caminho equivalente) realmente exporta handleWebhookEvent.
+
+Se estiver em JavaScript puro (sem TypeScript), ajuste o require/module.exports:
+
+js
+Copiar
+Editar
+// handlers/shopee.js
+async function handleWebhookEvent(data) {
+  console.log('Tratando Shopee:', data.ordersn, data.status);
+  // ...
+}
+module.exports = { handleWebhookEvent };
+js
+Copiar
+Editar
+// index.js (ou dist/index.js)
+const { handleWebhookEvent } = require('./handlers/shopee');
+// ...
+3. Se você nomeou o método de outra forma, corrija a chamada
+Às vezes o nome real da função não bate com o que você está chamando. Verifique se, por exemplo, não foi escrito:
+
+ts
+Copiar
+Editar
+// handlers/shopee.ts
+export async function processShopeeEvent(...) { … }
+e você tentou chamar handleWebhookEvent(...). Nesse caso, basta alinhar:
+
+Ou renomear a exportação para handleWebhookEvent,
+
+Ou ajustar sua chamada para processShopeeEvent(...).
+
+4. Validação rápida de definição
+Assim que fizer as alterações, adicione um console.log antes de chamar para garantir que a função esteja acessível:
+
+ts
+Copiar
+Editar
+async function processShopeeWebhookEvent(event: any) {
+  console.log('>> handleWebhookEvent existe?', typeof handleWebhookEvent);
+  // deve imprimir ">> handleWebhookEvent existe? function"
+  await handleWebhookEvent({ /* ... */ });
+}
+Se ainda imprimir undefined, significa que o import não está correto ou o caminho do arquivo está errado.
+
+5. Exemplo mínimo completo
+Para garantir que não falte nada, veja um fluxo simplificado sem TypeScript:
+
+js
+Copiar
+Editar
+// handlers/shopee.js
+async function handleWebhookEvent({ ordersn, package_number, status }) {
+  console.log('Evento Shopee:', ordersn, package_number, status);
+  // ... sua lógica de negócio continua aqui ...
+}
+module.exports = { handleWebhookEvent };
+js
+Copiar
+Editar
+// index.js
+const express = require('express');
+const bodyParser = require('body-parser');
+const { handleWebhookEvent } = require('./handlers/shopee');
+
+const app = express();
+app.use(bodyParser.json());
+
+app.post('/api/shopee/webhook', async (req, res) => {
+  try {
+    const event = req.body;
+    console.log('[Webhook] Dados do evento:', event);
+
+    // Chamada ao processador de fila ou direto:
+    await handleWebhookEvent({
+      ordersn: event.data.ordersn,
+      package_number: event.data.package_number,
+      status: event.data.status,
+    });
+
+    return res.status(200).json({ message: 'Webhook processed successfully' });
+  } catch (err) {
+    console.error('[Webhook] Erro crítico:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.listen(3000, () => console.log('Listening on port 3000'));
+Teste com curl ou via Shopee para garantir que o log Evento Shopee: apareça e que não haja ReferenceError.
+
+Resumo Rápido de Ação
+Crie ou localize o arquivo que deveria ter handleWebhookEvent.
+
+Exporte essa função (em TS: export function handleWebhookEvent(...), em JS: module.exports = { handleWebhookEvent }).
+
+Importe/require em index.ts (ou onde chama processShopeeWebhookEvent).
+
+Alinhe nome da função: garanta que a chamada (handleWebhookEvent(...)) coincide com o nome exportado.
+
+Reimplante/compile e rode novamente; o ReferenceError deve desaparecer.
+
+Assim que o handleWebhookEvent estiver definido e importado corretamente, o webhook será processado sem esse erro crítico.
