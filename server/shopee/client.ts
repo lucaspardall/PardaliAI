@@ -20,10 +20,10 @@ export class ShopeeClient {
   constructor(config: ShopeeClientConfig) {
     this.config = config;
 
-    // Configurar cliente axios com configurações seguras
+    // Configurar cliente axios com timeout e retry
     this.client = axios.create({
       baseURL: config.baseURL || 'https://partner.shopeemobile.com',
-      timeout: 30000,
+      timeout: 8000, // 8 segundos
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'CIP-Shopee-Client/1.0'
@@ -60,18 +60,35 @@ export class ShopeeClient {
       }
     );
 
+    // Interceptor com retry automático
     this.client.interceptors.response.use(
       (response) => {
         console.log(`[ShopeeClient] Response ${response.status} from ${response.config.url}`);
         return response;
       },
-      (error) => {
-        console.error('[ShopeeClient] Response error:', {
-          url: error.config?.url,
-          status: error.response?.status,
-          message: error.message
-        });
-        return Promise.reject(error);
+      async (error) => {
+        const config = error.config;
+        
+        // Implementar retry com backoff exponencial
+        if (!config || config.__retryCount >= 3) {
+          console.error('[ShopeeClient] Response error (max retries):', {
+            url: config?.url,
+            status: error.response?.status,
+            message: error.message
+          });
+          return Promise.reject(error);
+        }
+        
+        config.__retryCount = config.__retryCount || 0;
+        config.__retryCount += 1;
+        
+        // Delay exponencial: 1s, 2s, 4s
+        const delay = Math.pow(2, config.__retryCount - 1) * 1000;
+        
+        console.log(`[ShopeeClient] Retry ${config.__retryCount}/3 after ${delay}ms for ${config.url}`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this.client.request(config);
       }
     );
   }

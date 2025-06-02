@@ -23,16 +23,28 @@ router.get('/authorize', isAuthenticated, async (req: Request, res: Response) =>
     console.log("===================================================");
 
     // Configuração otimizada para produção brasileira
-    const redirectUrl = process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback';
+    const redirectUrl = process.env.SHOPEE_REDIRECT_URL;
+    
+    if (!redirectUrl) {
+      throw new Error('SHOPEE_REDIRECT_URL é obrigatória');
+    }
 
     // Log apenas em desenvolvimento
     if (process.env.NODE_ENV === 'development') {
       console.log("URL de redirecionamento que será usada:", redirectUrl);
     }
 
+    // Validar credenciais obrigatórias
+    const partnerId = process.env.SHOPEE_PARTNER_ID;
+    const partnerKey = process.env.SHOPEE_PARTNER_KEY;
+    
+    if (!partnerId || !partnerKey) {
+      throw new Error('SHOPEE_PARTNER_ID e SHOPEE_PARTNER_KEY são obrigatórios');
+    }
+
     const config = {
-      partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
-      partnerKey: process.env.SHOPEE_PARTNER_KEY || '477a724873627457486972b4a704f756948624776a546f5441706e7a515a64',
+      partnerId,
+      partnerKey,
       redirectUrl: redirectUrl,
       region: 'BR'  // Região brasileira para produção
     };
@@ -273,11 +285,19 @@ router.get('/callback', isAuthenticated, async (req: Request, res: Response) => 
     console.log(`🏪 ID da loja: ${shop_id}`);
     console.log(`🔄 Iniciando troca de código por tokens de acesso...`);
 
-    // Configuração da integração Shopee
+    // Validar credenciais obrigatórias
+    const partnerId = process.env.SHOPEE_PARTNER_ID;
+    const partnerKey = process.env.SHOPEE_PARTNER_KEY;
+    const redirectUrl = process.env.SHOPEE_REDIRECT_URL;
+    
+    if (!partnerId || !partnerKey || !redirectUrl) {
+      throw new Error('Credenciais Shopee obrigatórias não configuradas');
+    }
+
     const config = {
-      partnerId: process.env.SHOPEE_PARTNER_ID || '2011285',
-      partnerKey: process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661',
-      redirectUrl: process.env.SHOPEE_REDIRECT_URL || 'https://cipshopee.replit.app/api/shopee/callback',
+      partnerId,
+      partnerKey,
+      redirectUrl,
       region: 'BR'  // Configurado explicitamente para Brasil
     };
 
@@ -844,14 +864,19 @@ router.post('/webhook', webhookLimiter, async (req: Request, res: Response) => {
       received: true
     });
     
-    // Processa o webhook em background após responder
+    // Processa o webhook em background usando queue
     setImmediate(async () => {
       try {
-        const { processShopeeWebhookEvent } = await import('../shopee/webhooks');
-        await processShopeeWebhookEvent(req.body);
+        const { webhookQueue } = await import('../shopee/webhookQueue');
+        const shopId = req.body.shop_id || req.body.data?.shop_id;
+        
+        if (shopId) {
+          await webhookQueue.processWebhook(shopId.toString(), req.body);
+        } else {
+          console.warn('[Routes] Shop ID não encontrado no webhook');
+        }
       } catch (error) {
-        console.error('[Routes] Erro no processamento background:', error);
-        // Não tenta responder novamente - apenas loga o erro
+        console.error('[Routes] Erro no processamento do webhook:', error);
       }
     });
 

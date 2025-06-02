@@ -281,10 +281,15 @@ export async function handleShopeeWebhook(req: Request, res: Response): Promise<
   const signature = req.headers['authorization'] as string;
   const body = req.body;
 
-  // Log detalhado para debug
+  // Log seguro para debug
   console.log('[Webhook] 📥 Processando webhook da Shopee');
-  console.log('[Webhook] Assinatura recebida:', signature);
-  console.log('[Webhook] Corpo da requisição:', JSON.stringify(body, null, 2));
+  console.log('[Webhook] Assinatura presente:', !!signature);
+  console.log('[Webhook] Corpo da requisição (seguro):', {
+    code: body.code,
+    shop_id: body.shop_id,
+    timestamp: body.timestamp,
+    hasData: !!body.data
+  });
 
   try {
     console.log('[Webhook] Recebendo webhook - Headers:', req.headers);
