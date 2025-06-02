@@ -1,0 +1,232 @@
+2025-06-02 11:39:44.19
+1f82cf3f
+User
+'x-replit-user-teams': '',
+2025-06-02 11:39:44.19
+1f82cf3f
+User
+'x-replit-user-url': ''
+2025-06-02 11:39:44.19
+1f82cf3f
+User
+}
+2025-06-02 11:39:44.19
+1f82cf3f
+User
+URL completa: /callback?code=496b454b62684a515978446c42425a42&shop_id=404065079
+2025-06-02 11:39:44.19
+1f82cf3f
+User
+Método: GET
+2025-06-02 11:39:44.19
+1f82cf3f
+User
+✅ Código de autorização recebido: 496b454b62684a515978446c42425a42
+2025-06-02 11:39:44.19
+1f82cf3f
+User
+🏪 ID da loja: 404065079
+2025-06-02 11:39:44.19
+1f82cf3f
+User
+🔄 Iniciando troca de código por tokens de acesso...
+2025-06-02 11:39:44.19
+1f82cf3f
+User
+Iniciando troca de código por tokens...
+2025-06-02 11:39:44.20
+1f82cf3f
+User
+[getAccessToken] Iniciando troca de código por tokens...
+2025-06-02 11:39:44.20
+1f82cf3f
+User
+[getAccessToken] Shop ID: 404065079
+2025-06-02 11:39:44.20
+1f82cf3f
+User
+[getAccessToken] Code: 496b454b62...
+2025-06-02 11:39:44.20
+1f82cf3f
+User
+[getAccessToken] Base string: 2011285/api/v2/auth/token/get1748875184
+2025-06-02 11:39:44.20
+1f82cf3f
+User
+[getAccessToken] Signature gerada
+2025-06-02 11:39:44.20
+1f82cf3f
+User
+[getAccessToken] URL: https://partner.shopeemobile.com/api/v2/auth/token/get?partner_id=2011285&timestamp=1748875184&sign=23e8b81266be05b35c6072db49c27f67c81d2e9f514fb7ae281d3f77a5da4b4e
+2025-06-02 11:39:44.20
+1f82cf3f
+User
+[getAccessToken] Enviando requisição...
+2025-06-02 11:39:45.08
+1f82cf3f
+User
+[getAccessToken] Status: 200
+2025-06-02 11:39:45.08
+1f82cf3f
+User
+[getAccessToken] Resposta recebida: { hasAccessToken: true, hasRefreshToken: true, expiresIn: 14431 }
+2025-06-02 11:39:45.08
+1f82cf3f
+User
+[getAccessToken] ✅ Tokens obtidos com sucesso!
+2025-06-02 11:39:45.08
+1f82cf3f
+User
+Verificando se loja 404065079 já existe no banco...
+2025-06-02 11:39:45.08
+1f82cf3f
+User
+Buscando loja por shopId: 404065079
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+[DB] Erro tentativa 1/3: {
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+type: 'PREPARED_STATEMENT',
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+code: '08P01',
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+message: 'bind message supplies 1 parameters, but prepared statement "" requires 0',
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+severity: 'ERROR'
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+}
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+[DB] ❌ Erro de prepared statement - não fazendo retry
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+[Storage] Erro tentativa 1/3: {
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+code: undefined,
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+message: 'text2.substring is not a function',
+2025-06-02 11:39:45.14
+1f82cf3f
+User
+retryable: false
+
+
+O ChatGPT disse:
+
+Pensou por 16 segundos
+Ainda não está 100% – o callback da Shopee passou, mas agora surgiram dois bugs novos:
+
+🔥 Log	Diagnóstico
+08P01 bind message supplies 1 parameters, but prepared statement "" requires 0	Você enviou params [ … ] para uma query sem $1 placeholder. O driver PG derruba a conexão.
+text2.substring is not a function	Alguma rotina de “Storage” espera string, mas recebeu objeto/array (provavelmente o JSON dos tokens).
+
+Abaixo vai o patch rápido + explicação.
+
+1 · Corrigir a query findStoreByShopId
+ts
+Copiar
+Editar
+// antes (gera 08P01)
+const sql = `SELECT * FROM stores WHERE shop_id = ${shopId}`;  // << já embutiu o valor
+const store = await pool.query(sql, [shopId]);                 // 1 param, 0 placeholder
+
+// depois (escolha A – parametrizado)
+const store = await pool.query(
+  `SELECT * FROM stores WHERE shop_id = $1`,
+  [shopId]
+);
+
+// …ou escolha B (template, sem params)
+const store = await pool.query(
+  `SELECT * FROM stores WHERE shop_id = ${shopId}`
+);               // <- sem array de params
+Checklist
+▸ Grep no repositório por bind message supplies – troque qualquer caso semelhante.
+▸ Se usa Prisma ou Drizzle, o erro vem de um sql.raw mal­formado: confira placeholders.
+
+2 · Sanitizar o armazenamento dos tokens
+Causa
+text2.substring aparece quando você faz algo como:
+
+ts
+Copiar
+Editar
+const refreshToken = response.refresh_token.substring(0, 4);
+e refresh_token veio como object:
+
+json
+Copiar
+Editar
+{ "refresh_token": { "token": "...", "expiry": ... } }
+Fix
+ts
+Copiar
+Editar
+type TokenResponse = {
+  access_token: string;
+  refresh_token: string;      // garanta que é string
+  expires_in: number;
+};
+
+function mapShopeeTokens(res: any): TokenResponse {
+  // normaliza antes de salvar
+  const refresh_token =
+    typeof res.refresh_token === 'string'
+      ? res.refresh_token
+      : res.refresh_token?.token ?? '';
+
+  const access_token =
+    typeof res.access_token === 'string'
+      ? res.access_token
+      : res.access_token?.token ?? '';
+
+  return {
+    access_token,
+    refresh_token,
+    expires_in: Number(res.expire_in ?? res.expiresIn ?? 0)
+  };
+}
+Salve apenas strings na tabela stores (varchar(255) ou text).
+
+3 · Reinicie e valide
+pnpm dev → abra /callback outra vez.
+
+No log ideal você verá:
+
+csharp
+Copiar
+Editar
+[getAccessToken] ✅ Tokens obtidos com sucesso!
+[Storage] Loja criada/atualizada ♻️
+Sem 08P01 nem substring.
+
+Extra: sessão ainda ruidosa?
+Se aqueles SELECT/UPDATE "sessions" continuarem, confirme:
+
+ts
+Copiar
+Editar
+saveUninitialized:false,
+resave:false,
+rolling:false,
+touchAfter:900          // se usa connect-pg-simple v8+
+e reinicie o Repl – o spam some.
+
+Pronto! Faz esses ajustes e me mostra o novo log se aparecer outro erro.
