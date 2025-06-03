@@ -1,0 +1,211 @@
+025-06-02 21:29:54.38
+afc504a8
+User
+update_time: 1748910590
+2025-06-02 21:29:54.38
+afc504a8
+User
+}
+2025-06-02 21:29:54.38
+afc504a8
+User
+[Webhook] Processando desautorização para loja ID: 1201681388
+2025-06-02 21:29:54.38
+afc504a8
+User
+[Storage] Buscando loja por shopId: 1201681388
+2025-06-02 21:29:54.48
+afc504a8
+User
+[DB] Retry 2/3
+2025-06-02 21:29:54.58
+afc504a8
+User
+[DB] Retry 3/3
+2025-06-02 21:29:54.58
+afc504a8
+User
+[Webhook] Buscando loja 1201681388 no banco...
+2025-06-02 21:29:54.58
+afc504a8
+User
+[Storage] Buscando loja por shopId: 1201681388
+2025-06-02 21:29:54.73
+afc504a8
+User
+[DB] Retry 2/3
+2025-06-02 21:29:54.83
+afc504a8
+User
+type: 'OTHER',
+2025-06-02 21:29:54.83
+afc504a8
+User
+code: undefined,
+2025-06-02 21:29:54.83
+afc504a8
+User
+message: 'Query inválida: object recebido em vez de string',
+2025-06-02 21:29:54.83
+afc504a8
+User
+severity: undefined
+2025-06-02 21:29:54.83
+afc504a8
+User
+}
+2025-06-02 21:29:54.83
+afc504a8
+User
+[DB] ❌ Todas tentativas falharam
+2025-06-02 21:29:54.83
+afc504a8
+User
+Erro na execução de query: {
+2025-06-02 21:29:54.83
+afc504a8
+User
+query: 'Query inválida',
+2025-06-02 21:29:54.83
+afc504a8
+User
+paramCount: 2,
+2025-06-02 21:29:54.83
+afc504a8
+User
+error: 'Query inválida: object recebido em vez de string',
+2025-06-02 21:29:54.83
+afc504a8
+User
+code: undefined
+2025-06-02 21:29:54.83
+afc504a8
+User
+}
+2025-06-02 21:29:54.83
+afc504a8
+User
+[Storage] Erro ao buscar loja por shopId: Error: Query inválida: object recebido em vez de string
+2025-06-02 21:29:54.83
+afc504a8
+User
+at file:///home/runner/workspace/dist/index.js:478:21
+2025-06-02 21:29:54.83
+afc504a8
+User
+at executeWithRetry (file:///home/runner/workspace/dist/index.js:431:32)
+2025-06-02 21:29:54.83
+afc504a8
+User
+at async Function.query (file:///home/runner/workspace/dist/index.js:476:18)
+2025-06-02 21:29:54.83
+afc504a8
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-06-02 21:29:54.83
+afc504a8
+User
+at async DatabaseStorage.getStoreByShopId (file:///home/runner/workspace/dist/index.js:829:26)
+2025-06-02 21:29:54.83
+afc504a8
+User
+at async processShopeeWebhookEvent (file:///home/runner/workspace/dist/index.js:3290:17)
+2025-06-02 21:29:54.83
+afc504a8
+User
+at async WebhookQueue.executeWebhookJob (file:///home/runner/workspace/dist/index.js:3424:11)
+2025-06-02 21:29:54.83
+afc504a8
+User
+at async WebhookQueue.processWebhook (file:///home/runner/workspace/dist/index.js:3415:11)
+2025-06-02 21:29:54.83
+afc504a8
+User
+at async Immediate. (file:///home/runner/workspace/dist/index.js:5313:11)
+2025-06-02 21:29:54.83
+afc504a8
+User
+[Storage] Detalhes do erro: {
+2025-06-02 21:29:54.83
+afc504a8
+User
+message: 'Query inválida: object recebido em vez de string',
+2025-06-02 21:29:54.83
+afc504a8
+User
+code: undefined,
+
+
+O ChatGPT disse:
+
+Pensou por 14 segundos
+O que o log está dizendo (e por quê está falhando)
+O driver pg/Neon recebeu um objeto (a estrutura que o Drizzle cria para representar a SQL) no lugar da string SQL que ele espera como 1º argumento.
+
+text
+Copiar
+Editar
+Query inválida: object recebido em vez de string
+paramCount: 2            ← ele percebeu 2 “parâmetros”, mas o 1º não é uma string
+Isso normalmente acontece quando fazemos algo assim:
+
+ts
+Copiar
+Editar
+// ❌ exemplo do que costuma dar o erro
+const stmt = db.select().from(stores).where(eq(stores.shopId, shopId)); // stmt é um objeto DrizzleSQL
+await client.query(stmt);        // ← client.query espera string, recebeu objeto
+3 formas rápidas de corrigir
+Opção	O que muda	Exemplo enxuto
+1. Usar o método .execute() do próprio Drizzle	Deixa o Drizzle chamar o driver para você. Não passa por client.query.	```ts
+const store = await db.select()		
+.from(stores)		
+.where(eq(stores.shopId, shopId))		
+.limit(1)		
+.execute(); // 👈 resolve		
+
+|
+Copiar
+Editar
+| **2. Passar `sql.sql` e `sql.params` manualmente** | Se você realmente quer usar `client.query`. |```ts
+const stmt = db.select().from(stores).where(eq(stores.shopId, shopId));
+const { sql, params } = stmt.toSQL(); // ou .sql & .params em versões antigas
+await client.query(sql, params);
+```|
+| **3. Usar a API `db.query.<table>.findFirst` (mais simples)** | Abstração de alto nível do Drizzle 2.x+ |```ts
+import { eq } from "drizzle-orm";
+const store = await db.query.stores.findFirst({
+  where: eq(stores.shopId, shopId),
+});
+```|
+
+---
+
+### Onde mexer no seu código
+
+Pelo stack-trace o ponto crítico fica em `DatabaseStorage.getStoreByShopId` (dist/index.js:829).  
+Procure algo como:
+
+```ts
+// algo parecido com isto ↓
+const result = await db.query(stmt);      // stmt é objeto
+Troque por uma das abordagens da tabela. O caminho mais direto é:
+
+ts
+Copiar
+Editar
+export async function getStoreByShopId(shopId: string) {
+  return await db.query.stores.findFirst({
+    where: eq(stores.shopId, shopId),
+  });
+}
+Checklist pós-ajuste
+Transpile/Build novamente (tsx, ts-node ou esbuild) para garantir que dist/ reflita a mudança.
+
+Desative o retry temporariamente ou aumente o delay para não bater 3 vezes no mesmo erro durante testes.
+
+Logue a SQL gerada (console.log(stmt.toSQL())) na primeira execução para confirmar que o placeholder $1 (ou ?) está entrando certo e o valor de shopId vem como string.
+
+Feito isso, a exceção “object recebido em vez de string” deve desaparecer e o webhook de desautorização deve concluir sem retries nem falhas.
+
+Se precisar checar outra parte do pipeline (fila WebhookQueue, workers, etc.), manda aqui o trecho que olhamos juntos.
