@@ -109,8 +109,7 @@ const executeWithRetry = async (fn: Function, maxRetries = 3): Promise<any> => {
 
       // Estratégias diferentes por tipo de erro
       if (isPreparedStatementError) {
-        console.log(`[DB] ❌ Erro de prepared statement - query: ${text.substring(0, 100)}...`);
-        console.log(`[DB] ❌ Parâmetros fornecidos: ${params?.length || 0} - ${JSON.stringify(params?.slice(0, 3))}`);
+        console.error('[DB] ❌ Erro de prepared statement - verifique a compatibilidade de parâmetros');
         throw err;
       }
 
@@ -146,10 +145,16 @@ const enhancedSql = Object.assign(rawSql, {
   query: async (text: string, params: any[] = []) => {
     try {
       return await executeWithRetry(async () => {
-        // Normalizar parâmetros
-        const normalizedParams = Array.isArray(params) ? params.filter(p => p !== undefined) : [];
+        // Validar e normalizar entrada
+        if (!text || typeof text !== 'string') {
+          throw new Error(`Query inválida: ${typeof text} recebido em vez de string`);
+        }
 
-        // Log para debug (apenas em desenvolvimento e para queries importantes)
+        // Normalizar parâmetros - remover undefined e null
+        const normalizedParams = Array.isArray(params) ? 
+          params.filter(p => p !== undefined && p !== null) : [];
+
+        // Log seguro para debug
         if (process.env.NODE_ENV === 'development' && !text.includes('sessions')) {
           console.log(`[DB] Query: ${text.substring(0, 100)}...`);
           console.log(`[DB] Params: ${normalizedParams.length} parameters`);
@@ -157,13 +162,30 @@ const enhancedSql = Object.assign(rawSql, {
 
         let result;
 
-        // Executar query com ou sem parâmetros
+        // Executar query com validação de parâmetros
         if (normalizedParams.length === 0) {
-          // Query sem parâmetros - usar template literal
+          // Query sem parâmetros - usar template literal direto
           result = await rawSql`${text}`;
         } else {
-          // Query com parâmetros - usar função com array
-          result = await rawSql(text, normalizedParams);
+          // Query com parâmetros - validar antes de executar
+          try {
+            result = await rawSql(text, normalizedParams);
+          } catch (paramError: any) {
+            if (paramError.code === '08P01') {
+              console.error(`[DB] Erro de prepared statement:`, {
+                query: text.substring(0, 100),
+                expectedParams: 0,
+                providedParams: normalizedParams.length,
+                params: normalizedParams.slice(0, 3)
+              });
+              
+              // Tentar executar sem parâmetros se a query não espera nenhum
+              console.log(`[DB] Tentando executar query sem parâmetros...`);
+              result = await rawSql`${text}`;
+            } else {
+              throw paramError;
+            }
+          }
         }
 
         // Normalizar resultado
@@ -175,8 +197,10 @@ const enhancedSql = Object.assign(rawSql, {
         return normalizedResult;
       });
     } catch (err: any) {
+      // Log de erro seguro
+      const safeQuery = typeof text === 'string' ? text.substring(0, 100) : 'Query inválida';
       console.error("Erro na execução de query:", {
-        query: text.substring(0, 100),
+        query: safeQuery,
         paramCount: params?.length || 0,
         error: err.message,
         code: err.code
