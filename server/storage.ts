@@ -499,49 +499,85 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStoreByShopId(shopId: string): Promise<ShopeeStore | undefined> {
-    console.log(`[Storage] Buscando loja por shopId: ${shopId}`);
-
-    // Validar que shopId é uma string válida
-    if (!shopId || typeof shopId !== 'string') {
-      console.error(`[Storage] shopId inválido: ${shopId}`);
-      return undefined;
-    }
-
-    // Converter para string se for número
-    const shopIdStr = String(shopId).trim();
-
     try {
-      const stores = await db
-        .select()
-        .from(shopeeStores)
-        .where(eq(shopeeStores.shopId, shopIdStr))
-        .limit(1);
+      console.log(`[Storage] Buscando loja por shopId: ${shopId}`);
 
-      console.log(`[Storage] Resultado da busca: ${stores.length} store(s) encontrada(s)`);
-      return stores[0];
-    } catch (error) {
-      console.error('[Storage] Erro ao buscar loja por shopId:', error);
-
-      // Log detalhado do erro para debug
-      if (error && typeof error === 'object') {
-        console.error('[Storage] Detalhes do erro:', {
-          message: (error as any).message,
-          code: (error as any).code,
-          type: (error as any).type,
-          severity: (error as any).severity
-        });
+      if (!shopId || shopId.trim() === '') {
+        console.warn('[Storage] shopId vazio ou inválido');
+        return undefined;
       }
 
-      return undefined;
+      const result = await this.executeWithRetry(async () => {
+        // Usar SQL direto para evitar problemas de prepared statement
+        const query = `SELECT * FROM shopee_stores WHERE shop_id = $1 LIMIT 1`;
+        const dbResult = await sql.query(query, [shopId]);
+        return dbResult.rows;
+      });
+
+      if (!result || result.length === 0) {
+        console.log(`[Storage] Nenhuma loja encontrada para shopId: ${shopId}`);
+        return undefined;
+      }
+
+      const store = result[0];
+      console.log(`[Storage] Loja encontrada: ${store.shop_name} (ID: ${store.id})`);
+
+      // Converter snake_case para camelCase para compatibilidade
+      return {
+        id: store.id,
+        userId: store.user_id,
+        shopId: store.shop_id,
+        shopName: store.shop_name,
+        accessToken: store.access_token,
+        refreshToken: store.refresh_token,
+        expiresAt: store.expires_at,
+        isActive: store.is_active,
+        createdAt: store.created_at,
+        updatedAt: store.updated_at
+      };
+    } catch (error) {
+      console.error(`[Storage] Erro ao buscar loja por shopId:`, error);
+      throw error;
     }
   }
 
   async createNotification(notificationData: InsertNotification): Promise<Notification> {
-    const [newNotification] = await db
-      .insert(notifications)
-      .values(notificationData)
-      .returning();
-    return newNotification;
+    try {
+      const result = await this.executeWithRetry(async () => {
+        const query = `
+          INSERT INTO notifications (user_id, title, message, type, is_read, created_at)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING *
+        `;
+        const dbResult = await sql.query(query, [
+          notificationData.userId,
+          notificationData.title,
+          notificationData.message,
+          notificationData.type,
+          notificationData.isRead,
+          notificationData.createdAt
+        ]);
+        return dbResult.rows;
+      });
+
+      if (!result || result.length === 0) {
+        throw new Error('Falha ao criar notificação');
+      }
+
+      const created = result[0];
+      return {
+        id: created.id,
+        userId: created.user_id,
+        title: created.title,
+        message: created.message,
+        type: created.type,
+        isRead: created.is_read,
+        createdAt: created.created_at
+      };
+    } catch (error) {
+      console.error('[Storage] Erro ao criar notificação:', error);
+      throw error;
+    }
   }
 
   async createStore(store: InsertShopeeStore): Promise<ShopeeStore> {
