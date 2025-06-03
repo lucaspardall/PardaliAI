@@ -508,10 +508,12 @@ export class DatabaseStorage implements IStorage {
       }
 
       const result = await this.executeWithRetry(async () => {
-        // Usar SQL direto para evitar problemas de prepared statement
-        const query = `SELECT * FROM shopee_stores WHERE shop_id = $1 LIMIT 1`;
-        const dbResult = await sql.query(query, [shopId]);
-        return dbResult.rows;
+        const db = await this.getDb();
+        return await db
+          .select()
+          .from(shopeeStores)
+          .where(eq(shopeeStores.shopId, shopId))
+          .limit(1);
       });
 
       if (!result || result.length === 0) {
@@ -520,21 +522,9 @@ export class DatabaseStorage implements IStorage {
       }
 
       const store = result[0];
-      console.log(`[Storage] Loja encontrada: ${store.shop_name} (ID: ${store.id})`);
+      console.log(`[Storage] Loja encontrada: ${store.shopName} (ID: ${store.id})`);
 
-      // Converter snake_case para camelCase para compatibilidade
-      return {
-        id: store.id,
-        userId: store.user_id,
-        shopId: store.shop_id,
-        shopName: store.shop_name,
-        accessToken: store.access_token,
-        refreshToken: store.refresh_token,
-        expiresAt: store.expires_at,
-        isActive: store.is_active,
-        createdAt: store.created_at,
-        updatedAt: store.updated_at
-      };
+      return store;
     } catch (error) {
       console.error(`[Storage] Erro ao buscar loja por shopId:`, error);
       throw error;
