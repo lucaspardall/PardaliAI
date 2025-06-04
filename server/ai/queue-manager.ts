@@ -26,6 +26,7 @@ export class AIQueueManager extends EventEmitter {
   
   private readonly PRIORITY_ORDER = ['urgent', 'high', 'medium', 'low'];
   private readonly MAX_CONCURRENT_JOBS = 3;
+  private readonly MAX_LISTENERS = 50; // Limite de listeners para prevenir memory leak
   private readonly RETRY_DELAYS = {
     urgent: 5000,   // 5 segundos
     high: 10000,    // 10 segundos  
@@ -35,6 +36,24 @@ export class AIQueueManager extends EventEmitter {
 
   constructor() {
     super();
+    
+    // Configurar limite de listeners para prevenir memory leak
+    this.setMaxListeners(this.MAX_LISTENERS);
+    
+    // Log de warning quando próximo do limite
+    this.on('newListener', () => {
+      const currentListeners = this.listenerCount('item_added') + this.listenerCount('item_processed');
+      if (currentListeners > this.MAX_LISTENERS * 0.8) {
+        console.warn(`[Queue] Próximo do limite de listeners: ${currentListeners}/${this.MAX_LISTENERS}`);
+      }
+    });
+
+    // Cleanup automático de listeners antigos
+    this.on('removeListener', () => {
+      const currentListeners = this.listenerCount('item_added') + this.listenerCount('item_processed');
+      console.log(`[Queue] Listeners ativos: ${currentListeners}/${this.MAX_LISTENERS}`);
+    });
+    
     this.initializeQueues();
     this.startWorkers();
   }
@@ -137,6 +156,43 @@ export class AIQueueManager extends EventEmitter {
     }
     
     return null;
+  }
+
+  /**
+   * Cleanup de listeners e recursos
+   */
+  cleanup(): void {
+    console.log('[Queue] Iniciando cleanup de recursos');
+    
+    // Remover todos os listeners
+    this.removeAllListeners();
+    
+    // Limpar filas
+    this.queues.clear();
+    this.processing.clear();
+    this.workers.clear();
+    
+    console.log('[Queue] Cleanup concluído');
+  }
+
+  /**
+   * Obtém estatísticas de memória
+   */
+  getMemoryStats(): any {
+    return {
+      listeners: {
+        item_added: this.listenerCount('item_added'),
+        item_processed: this.listenerCount('item_processed'),
+        total: this.listenerCount('item_added') + this.listenerCount('item_processed'),
+        max: this.MAX_LISTENERS
+      },
+      queues: {
+        total: this.queues.size,
+        items: Array.from(this.queues.values()).reduce((sum, queue) => sum + queue.length, 0)
+      },
+      processing: this.processing.size,
+      workers: this.workers.size
+    };
   }
 
   /**

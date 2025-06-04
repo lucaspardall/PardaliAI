@@ -9,28 +9,58 @@ import { storage } from '../storage';
 const router = Router();
 
 /**
- * Valida a assinatura do webhook da Shopee
+ * Valida a assinatura do webhook da Shopee com timing-safe comparison
  */
 function validateWebhookSignature(bodyString: string, receivedSignature: string, partnerKey: string): boolean {
-  if (!receivedSignature) {
-    console.error('[Webhook] Assinatura não encontrada no header Authorization');
+  if (!receivedSignature || typeof receivedSignature !== 'string') {
+    console.error('[Webhook] Assinatura não encontrada ou inválida no header Authorization');
     return false;
   }
 
-  // Calcular assinatura HMAC-SHA256 usando o body exato
-  const calculatedSignature = crypto
-    .createHmac('sha256', partnerKey)
-    .update(bodyString)
-    .digest('hex');
+  if (!partnerKey || typeof partnerKey !== 'string') {
+    console.error('[Webhook] Partner key não configurado ou inválido');
+    return false;
+  }
 
-  console.log('[Webhook] Validação:', {
-    bodyLength: bodyString.length,
-    receivedSig: receivedSignature.substring(0, 20) + '...',
-    calculatedSig: calculatedSignature.substring(0, 20) + '...',
-    match: calculatedSignature === receivedSignature
-  });
+  if (!bodyString || typeof bodyString !== 'string') {
+    console.error('[Webhook] Body da requisição inválido');
+    return false;
+  }
 
-  return calculatedSignature === receivedSignature;
+  try {
+    // Calcular assinatura HMAC-SHA256 usando o body exato
+    const calculatedSignature = crypto
+      .createHmac('sha256', partnerKey)
+      .update(bodyString, 'utf8')
+      .digest('hex');
+
+    // Usar timing-safe comparison para prevenir timing attacks
+    const receivedBuffer = Buffer.from(receivedSignature, 'hex');
+    const calculatedBuffer = Buffer.from(calculatedSignature, 'hex');
+
+    // Verificar se os tamanhos são iguais primeiro
+    if (receivedBuffer.length !== calculatedBuffer.length) {
+      console.error('[Webhook] Tamanhos de assinatura diferentes');
+      return false;
+    }
+
+    // Timing-safe comparison
+    const isValid = crypto.timingSafeEqual(receivedBuffer, calculatedBuffer);
+
+    console.log('[Webhook] Validação:', {
+      bodyLength: bodyString.length,
+      signatureValid: isValid,
+      // Não logar assinaturas completas por segurança
+      hasReceivedSig: !!receivedSignature,
+      hasCalculatedSig: !!calculatedSignature
+    });
+
+    return isValid;
+
+  } catch (error) {
+    console.error('[Webhook] Erro na validação de assinatura:', error);
+    return false;
+  }
 }
 
 /**
@@ -112,23 +142,38 @@ async function handleShopDeauthorization(shopId: string) {
  */
 router.post('/shopee/webhook', async (req: Request, res: Response) => {
   try {
+    // Validar headers obrigatórios
+    const contentType = req.headers['content-type'];
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('[Webhook] Content-Type inválido:', contentType);
+      return res.status(400).json({ error: 'Invalid Content-Type' });
+    }
+
+    // Obter partner key do ambiente (obrigatório)
+    const partnerKey = process.env.SHOPEE_PUSH_PARTNER_KEY || process.env.SHOPEE_PARTNER_KEY;
+    if (!partnerKey) {
+      console.error('[Webhook] SHOPEE_PUSH_PARTNER_KEY não configurado');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
     // Obter o body como string para validação de assinatura
     const bodyString = JSON.stringify(req.body);
     const receivedSignature = req.headers['authorization'] as string;
     
     console.log('[Webhook] Recebido:', {
-      contentType: req.headers['content-type'],
-      authorization: receivedSignature ? receivedSignature.substring(0, 20) + '...' : 'não presente',
-      bodySize: bodyString.length
+      contentType,
+      hasAuthorization: !!receivedSignature,
+      bodySize: bodyString.length,
+      userAgent: req.headers['user-agent'],
+      ip: req.ip
     });
 
-    // Validar assinatura
-    const partnerKey = process.env.SHOPEE_PARTNER_KEY || '4a4d474641714b566471634a566e4668434159716a6261526b634a69536e4661';
+    // Validar assinatura OBRIGATORIAMENTE
     const isValidSignature = validateWebhookSignature(bodyString, receivedSignature, partnerKey);
 
     if (!isValidSignature) {
-      console.error('[Webhook] Assinatura inválida');
-      return res.status(401).json({ error: 'Invalid signature' });
+      console.error('[Webhook] Assinatura inválida - webhook rejeitado');
+      return res.status(401).json({ error: 'Unauthorized - Invalid signature' });
     }
 
     // Parse do body
